@@ -31,7 +31,7 @@ When a user interacts with the GenAI app, the flow is as follows:
 The first step of utilizing this repo is performing a git clone of the repository.
 
 ```
-git clone git@ssh.gitlab.aws.dev:gen-ai-field-playbook-pocs/amazon-bedrock-chat.git
+git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 4 key files,

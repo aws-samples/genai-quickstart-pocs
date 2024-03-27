@@ -26,13 +26,14 @@ When a user interacts with the GenAI app, the flow is as follows:
 1. Amazon Bedrock Access and CLI Credentials.
 2. Amazon Redshift Access and the ability to create an Amazon Redshift Provisioned cluster.
 3. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3100/).
+4. Please note that this project leverages the [langchain-experimental](https://pypi.org/project/langchain-experimental/) package which has known vulnerabilities.
 
 ## Step 1:
 
 The first step of utilizing this repo is performing a git clone of the repository.
 
 ```
-git clone git@ssh.gitlab.aws.dev:gen-ai-field-playbook-pocs/amazon-bedrock-amazon-redshift-poc.git
+git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor.The file structure of this repo is broken into 4 key files,
