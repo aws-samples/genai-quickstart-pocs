@@ -1,0 +1,496 @@
+- answer: There are 15086 rows in the artists table.
+  input: How many rows are in the artists table?
+  sql_cmd: SELECT count(*) FROM artists;
+  sql_result: '[(15086,)]'
+  table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+- answer: There are 2 artist names starts with 'A'.
+  input: How many artist names starts with 'A'?
+  sql_cmd: SELECT * FROM artists WHERE full_name LIKE 'a%';
+  sql_result: '[(2,)]'
+  table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+- answer: There are 839 artists whose nationality is French.
+  input: How many artists are there where nationality is French?
+  sql_cmd: SELECT count(*) FROM artists WHERE nationality = 'French';
+  sql_result: '[(839,)]'
+  table_info: |
+    table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+- answer: There are 121211 rows in the artworks table.
+  input: How many rows are in the artworks table?
+  sql_cmd: SELECT count(*) FROM artworks;
+  sql_result: '[(121211,)]'
+  table_info: |
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+
+- answer: There are 121211 pieces of artwork.
+  input: How many pieces of artwork are there?
+  sql_cmd: SELECT count(*) FROM artworks;
+  sql_result: '[(121211,)]'
+  table_info: |
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: There are 1278 artworks by Pablo Picasso.
+  input: How many artworks are by the artist 'Pablo Picasso'?
+  sql_cmd: |
+    SELECT count(*)
+    FROM artworks
+    JOIN artists ON artists.artist_id = artworks.artist_id
+    WHERE artists.full_name = 'Pablo Picasso';
+  sql_result: '[(1278,)]'
+  table_info: |
+    table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: |
+    The 10 most prolific artists are:
+    1. Eugène Atget - 5050 artworks
+    2. Louise Bourgeois - 3317 artworks
+    3. Ludwig Mies van der Rohe - 2561 artworks
+    4. Unknown photographer - 1569 artworks
+    5. Jean Dubuffet - 1354 artworks
+    6. Lee Friedlander - 1316 artworks
+    7. Pablo Picasso - 1278 artworks
+    8. Marc Chagall - 1162 artworks
+    9. Henri Matisse - 1060 artworks
+    10. Pierre Bonnard - 894 artworks
+  input: What are the 10 most prolific artists? Return their name and count of artwork.
+  sql_cmd: |
+    SELECT artists.full_name, COUNT(artworks.artwork_id) AS artwork_count
+    FROM artists
+    JOIN artworks ON artists.artist_id = artworks.artist_id
+    GROUP BY artists.full_name
+    ORDER BY artwork_count DESC
+    LIMIT 10;
+  sql_result: "[('Eugène Atget',5050),('Louise Bourgeois',3317),('Ludwig Mies van der Rohe',2561),('Unknown photographer',1569),('Jean Dubuffet',1354),('Lee Friedlander',1316),('Pablo Picasso',1278),('Marc Chagall',1162),('Henri Matisse',1060),('Pierre Bonnard',894)]"
+  table_info: |
+    table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: There are 1588 artworks classified as sculptures.
+  input: How many artworks are classified as sculptures?
+  sql_cmd: SELECT count(*) FROM artworks WHERE classification = 'Sculpture';
+  sql_result: '[(1588, )]'
+  table_info: |
+    table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: |
+    The five most common artwork classifications are:
+    1. Photograph - 26541
+    2. Print - 25426
+    3. Illustrated_Book - 23716
+    4. Not_Assigned - 11034
+    5. Drawing - 10549
+
+  input: What the five most common artwork classifications?
+  sql_cmd: |
+    SELECT classification, COUNT(classification)
+    FROM artworks
+    GROUP BY classification
+    ORDER BY COUNT(classification) DESC
+    LIMIT 5;
+  sql_result: "[('Photograph',26541),('Print',25426),('Illustrated_Book',23716),('Not_Assigned',11034),('Drawing',10549)]"
+  table_info: |
+    table_info: |
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: The nationality of artists who created the most artworks is American, with a total of 53956 artworks.
+  input: What nationality of artists created the most artworks?
+  sql_cmd: |
+    SELECT artists.nationality, count(*) as num_artworks
+    FROM artists
+    JOIN artworks ON artists.artist_id = artworks.artist_id
+    GROUP BY artists.nationality
+    ORDER BY num_artworks DESC
+    LIMIT 1;
+  sql_result: "[('American', 53956)]"
+  table_info: |
+    table_info: |
+    CREATE TABLE artists
+    (
+        artist_id integer NOT NULL,
+        full_name character varying(200),
+        nationality character varying(50),
+        gender character varying(25),
+        birth_year integer,
+        death_year integer,
+        CONSTRAINT artists_pk PRIMARY KEY (artist_id)
+    )
+
+    /*
+    3 rows from artists table:
+    "artist_id"	"full_name"	"nationality"	"gender"	"birth_year"	"death_year"
+    1	"Robert Arneson"	"American"	"Male"	1930	1992
+    2	"Doroteo Arnaiz"	"Spanish"	"Male"	1936
+    3	"Bill Arnold"	"American"	"Male"	1941
+    */
+
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
+- answer: The nationality of artists who created the most artworks is American, with a total of 53956 artworks.
+  input: What are the three newest pieces of artwork? Artwork must have a date. Return the title and date for each.
+  sql_cmd: |
+    SELECT title, date
+    FROM artworks
+    WHERE date IS NOT NULL
+    ORDER BY date DESC
+    LIMIT 3;
+  sql_result: "[('A Day in the Life of Bliss',2017),('Domus June 2015',2016),('Métissage / Camouflage',2016)]"
+  table_info: |
+    table_info: |
+    CREATE TABLE artworks
+    (
+        artwork_id integer NOT NULL,
+        title character varying(500),
+        artist_id integer NOT NULL,
+        date integer,
+        medium character varying(250),
+        dimensions text,
+        acquisition_date text,
+        credit text,
+        catalogue character varying(250),
+        department character varying(250),
+        classification character varying(250),
+        object_number text,
+        diameter_cm text,
+        circumference_cm text,
+        height_cm text,
+        length_cm text,
+        width_cm text,
+        depth_cm text,
+        weight_kg text,
+        durations integer,
+        CONSTRAINT artworks_pk PRIMARY KEY (artwork_id)
+    )
+
+    /*
+    3 rows from artworks table:
+    "artwork_id"	"title"	"artist_id"	"date"	"medium"	"dimensions"	"acquisition_date"	"credit"	"catalogue"	"department"	"classification"	"object_number"	"diameter_cm"	"circumference_cm"	"height_cm"	"length_cm"	"width_cm"	"depth_cm"	"weight_kg"	"durations"
+    102312	"Watching the Game"	2422	1934	"Gelatin silver print"	"9 3/4 x 6 7/16' (24.8 x 16.4 cm)"	"2006-05-11"	"Purchase"	"N"	"Photography"	"Photograph"	"397.2006"			"24.8"		"16.4"
+    103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
+    10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
+    */
