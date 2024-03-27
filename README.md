@@ -4,7 +4,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 
 ##### Authors: Brian Maguire, Dom Bavaro, Ryan Doty, Sudeesh Sasidharan, Tarik Makota
 
-## Samples
+## Sample Proof of Concepts
 
 1. **Amazon-Bedrock-Summarization-Long-Document-POC**
    This sample demonstrates using Amazon Bedrock and Generative AI to implement a long document summarization use case. Users can upload large PDF documents, which are chunked and summarized using Amazon Bedrock.
