@@ -28,7 +28,7 @@ if question := st.chat_input("Ask me about anything...but actually...anything...
         # making sure there are no messages present when generating the answer
         message_placeholder = st.empty()
         # putting a spinning icon to show that the query is in progress
-        with st.status("Determining the best possible answer!", expanded=True) as status:
+        with st.status("Determining the best possible answer!", expanded=False) as status:
             # passing the question into the kendra search function, which later invokes the llm
             answer = prompt_finder(question)
             # writing the answer to the front end
