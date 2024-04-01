@@ -1,0 +1,63 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="50">
+            <item index="0" class="java.lang.String" itemvalue="huggingface-hub" />
+            <item index="1" class="java.lang.String" itemvalue="python-dotenv" />
+            <item index="2" class="java.lang.String" itemvalue="srsly" />
+            <item index="3" class="java.lang.String" itemvalue="fsspec" />
+            <item index="4" class="java.lang.String" itemvalue="spacy" />
+            <item index="5" class="java.lang.String" itemvalue="filelock" />
+            <item index="6" class="java.lang.String" itemvalue="langchain" />
+            <item index="7" class="java.lang.String" itemvalue="safetensors" />
+            <item index="8" class="java.lang.String" itemvalue="docutils" />
+            <item index="9" class="java.lang.String" itemvalue="sympy" />
+            <item index="10" class="java.lang.String" itemvalue="tokenizers" />
+            <item index="11" class="java.lang.String" itemvalue="GitPython" />
+            <item index="12" class="java.lang.String" itemvalue="pydantic" />
+            <item index="13" class="java.lang.String" itemvalue="transformers" />
+            <item index="14" class="java.lang.String" itemvalue="streamlit" />
+            <item index="15" class="java.lang.String" itemvalue="pypdf" />
+            <item index="16" class="java.lang.String" itemvalue="pathy" />
+            <item index="17" class="java.lang.String" itemvalue="catalogue" />
+            <item index="18" class="java.lang.String" itemvalue="dataclasses-json" />
+            <item index="19" class="java.lang.String" itemvalue="boto3" />
+            <item index="20" class="java.lang.String" itemvalue="pydantic_core" />
+            <item index="21" class="java.lang.String" itemvalue="cymem" />
+            <item index="22" class="java.lang.String" itemvalue="charset-normalizer" />
+            <item index="23" class="java.lang.String" itemvalue="murmurhash" />
+            <item index="24" class="java.lang.String" itemvalue="langsmith" />
+            <item index="25" class="java.lang.String" itemvalue="numexpr" />
+            <item index="26" class="java.lang.String" itemvalue="rsa" />
+            <item index="27" class="java.lang.String" itemvalue="wasabi" />
+            <item index="28" class="java.lang.String" itemvalue="networkx" />
+            <item index="29" class="java.lang.String" itemvalue="confection" />
+            <item index="30" class="java.lang.String" itemvalue="spacy-loggers" />
+            <item index="31" class="java.lang.String" itemvalue="awscli" />
+            <item index="32" class="java.lang.String" itemvalue="pyasn1" />
+            <item index="33" class="java.lang.String" itemvalue="spacy-legacy" />
+            <item index="34" class="java.lang.String" itemvalue="preshed" />
+            <item index="35" class="java.lang.String" itemvalue="smart-open" />
+            <item index="36" class="java.lang.String" itemvalue="blis" />
+            <item index="37" class="java.lang.String" itemvalue="urllib3" />
+            <item index="38" class="java.lang.String" itemvalue="typer" />
+            <item index="39" class="java.lang.String" itemvalue="botocore" />
+            <item index="40" class="java.lang.String" itemvalue="rich" />
+            <item index="41" class="java.lang.String" itemvalue="packaging" />
+            <item index="42" class="java.lang.String" itemvalue="torch" />
+            <item index="43" class="java.lang.String" itemvalue="langcodes" />
+            <item index="44" class="java.lang.String" itemvalue="tqdm" />
+            <item index="45" class="java.lang.String" itemvalue="s3transfer" />
+            <item index="46" class="java.lang.String" itemvalue="colorama" />
+            <item index="47" class="java.lang.String" itemvalue="mpmath" />
+            <item index="48" class="java.lang.String" itemvalue="thinc" />
+            <item index="49" class="java.lang.String" itemvalue="Pillow" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
