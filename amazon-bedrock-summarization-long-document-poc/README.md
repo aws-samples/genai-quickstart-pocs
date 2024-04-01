@@ -2,6 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a long document summarization use case. The application is constructed with a simple streamlit frontend where users can upload large documents and get them summarized.
 
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create summaries of large PDF files with chunking logic.
@@ -75,13 +76,47 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 15 & 33 in the doc_summarizer.py file:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 15 in the doc_summarizer.py file to set your region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
 
-modelId = 'anthropic.claude-v2'
 ```
+Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the summarizer() function in the doc_summarizer.py file to look like:
+
+```python
+def summarizer(prompt_data) -> str:
+    """
+    This function creates the summary of each individual chunk as well as the final summary.
+    :param prompt_data: This is the prompt along with the respective chunk of text, at the end it contains all summary chunks combined.
+    :return: A summary of the respective chunk of data passed in or the final summary that is a summary of all summary chunks.
+    """
+    # setting the key parameters to invoke Amazon Bedrock
+    body = json.dumps({"prompt": prompt_data,
+                       "max_tokens_to_sample": 8191,
+                       "temperature": 0,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       })
+    # the specific Amazon Bedrock model you are using
+    modelId = 'anthropic.claude-v2'
+    # type of data that should be expected upon invocation
+    accept = 'application/json'
+    contentType = 'application/json'
+    # the invocation of bedrock, with all of the parameters you have configured
+    response = bedrock.invoke_model(body=body,
+                                    modelId=modelId,
+                                    accept=accept,
+                                    contentType=contentType)
+    # gathering the response from bedrock, and parsing to get specifically the answer
+    response_body = json.loads(response.get('body').read())
+    answer = response_body.get('completion')
+    # returning the final summary for that chunk of text
+    return answer
+```
+
+You can then change the modelId variable to the model of your choice.
 
 ## Step 4:
 
