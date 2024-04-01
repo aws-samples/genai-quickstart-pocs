@@ -158,25 +158,30 @@ def llm_answer_generator(question_with_prompt):
     """
     # body of data with parameters that is passed into the bedrock invoke model request
     # TODO: TUNE THESE PARAMETERS AS YOU SEE FIT
-    body = json.dumps({"prompt": question_with_prompt,
-                       "max_tokens_to_sample": 8191,
-                       "temperature": 0,
-                       "top_k": 250,
-                       "top_p": 0.5,
-                       "stop_sequences": []
-                       })
-    # configure model specifics such as specific model
-    modelId = 'anthropic.claude-v2'
-    accept = 'application/json'
-    contentType = 'application/json'
-    # Invoking the bedrock model with your specifications
-    response = bedrock.invoke_model(body=body,
-                                    modelId=modelId,
-                                    accept=accept,
-                                    contentType=contentType)
-    # the body of the response that was generated
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": question_with_prompt
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    # retrieving the specific completion field, where you answer will be
-    answer = response_body.get('completion')
-    # returning the answer as a final result, which ultimately gets returned to the end user
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
     return answer
