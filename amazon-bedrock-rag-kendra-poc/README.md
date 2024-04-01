@@ -2,6 +2,8 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra. The application is constructed with a simple streamlit frontend where users can ask questions against documents stored in Amazon Kendra.
 
+![Alt text](images/demo.gif)
+
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions, and answer questions against indexed documents in Amazon Kendra.
@@ -75,7 +77,7 @@ You will first need to create a .env file in the root of this repo. Within the .
 
 ```
 profile_name=<aws_cli_profile_name>
-kendra_index=<kendra_index>
+kendra_index=<kendra_index_ID>
 ```
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
@@ -88,13 +90,73 @@ Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your A
 4. Select the appropriate provisioning editions and create ![Alt text](images/specify_provisioning_kendra.png "Kendra Edition Selection")
 5. You can find your Kendra Index ID in the console as seen in the screenshot: ![Alt text](images/kendra_screen_shot.png "Kendra Index")
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 44 & 46 in the kendra_bedrock_query.py file:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 11 in the kendra_bedrock_query.py file to change the region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
-
-modelId = 'anthropic.claude-v2'
 ```
+
+Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the invokeLLM() function in the kendra_bedrock_query.py to look like:
+
+```python
+def invokeLLM(question, kendra_response):
+    """
+    This function takes in the question from the user, along with the Kendra responses as context to generate an answer
+    for the user on the frontend.
+    :param question: The question the user is asking that was asked via the frontend input text box.
+    :param kendra_response: The response from the Kendra document retrieve query, used as context to generate a better
+    answer.
+    :return: Returns the final answer that will be provided to the end-user of the application who asked the original
+    question.
+    """
+    # Setup Bedrock client
+    bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com')
+    # configure model specifics such as specific model
+    modelId = 'anthropic.claude-v2'
+    accept = 'application/json'
+    contentType = 'application/json'
+    # prompt that is passed into the LLM with the Kendra Retrieval context and question
+    # TODO: FEEL FREE TO EDIT THIS PROMPT TO CATER TO YOUR USE CASE
+    prompt_data = f"""\n\nHuman:    
+Answer the following question to the best of your ability based on the context provided.
+Provide an answer and provide sources and the source link to where the relevant information can be found. Include this at the end of the response
+Do not include information that is not relevant to the question.
+Only provide information based on the context provided, and do not make assumptions
+Only Provide the source if relevant information came from that source in your answer
+Use the provided examples as reference
+###
+Question: {question}
+
+Context: {kendra_response}
+
+###
+
+\n\nAssistant:
+
+"""
+    # body of data with parameters that is passed into the bedrock invoke model request
+    # TODO: TUNE THESE PARAMETERS AS YOU SEE FIT
+    body = json.dumps({"prompt": prompt_data,
+                       "max_tokens_to_sample": 8191,
+                       "temperature": 0,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       })
+    # Invoking the bedrock model with your specifications
+    response = bedrock.invoke_model(body=body,
+                                    modelId=modelId,
+                                    accept=accept,
+                                    contentType=contentType)
+    # the body of the response that was generated
+    response_body = json.loads(response.get('body').read())
+    # retrieving the specific completion field, where you answer will be
+    answer = response_body.get('completion')
+    # returning the answer as a final result, which ultimately gets returned to the end user
+    return answer
+```
+
+You can then change the modelId variable to the model of your choice.
 
 ## Step 4:
 
