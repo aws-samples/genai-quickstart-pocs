@@ -76,13 +76,49 @@ profile_name=<AWS_CLI_PROFILE_NAME>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 23 & 122 in the prompt_finder_and_invoke_llm.py file:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 23 in the prompt_finder_and_invoke_llm.py file to set the appropriate region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com')
-
-modelId = 'anthropic.claude-v2'
 ```
+
+Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the llm_answer_generator() function in the prompt_finder_and_invoke_llm.py to look like:
+
+```python
+def llm_answer_generator(question_with_prompt):
+    """
+    This function is used to invoke Amazon Bedrock using the finalized prompt that was created by the prompt_finder(question)
+    function.
+    :param question_with_prompt: This is the finalized prompt that includes semantically similar prompts, chat history,
+    and the users question all in a proper multi-shot format.
+    :return: The final answer to the users question.
+    """
+    # body of data with parameters that is passed into the bedrock invoke model request
+    # TODO: TUNE THESE PARAMETERS AS YOU SEE FIT
+    body = json.dumps({"prompt": question_with_prompt,
+                       "max_tokens_to_sample": 8191,
+                       "temperature": 0,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       })
+    # configure model specifics such as specific model
+    modelId = 'anthropic.claude-v2'
+    accept = 'application/json'
+    contentType = 'application/json'
+    # Invoking the bedrock model with your specifications
+    response = bedrock.invoke_model(body=body,
+                                    modelId=modelId,
+                                    accept=accept,
+                                    contentType=contentType)
+    # the body of the response that was generated
+    response_body = json.loads(response.get('body').read())
+    # retrieving the specific completion field, where you answer will be
+    answer = response_body.get('completion')
+    # returning the answer as a final result, which ultimately gets returned to the end user
+    return answer
+```
+You can then change the modelId variable to the model of your choice.
 
 ## Step 4:
 
