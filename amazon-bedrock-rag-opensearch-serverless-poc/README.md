@@ -2,6 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create custom embeddings stored in Amazon OpenSearch Serverless with the ability ask questions against the stored documents. The application is constructed with a RAG based architecture where users can ask questions against the indexed embeddings within OpenSearch Serverless.
 
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions, and answer questions against embedded and indexed documents in Amazon OpenSearch Serverless Vector Search.
@@ -89,8 +90,8 @@ To create our Amazon OpenSearch Vector Search Collection we will:
 With our Amazon OpenSearch Serverless Vector Search collection created, we now must create our Vector Index. As soon as this is created we will begin indexing our PDF document.
 
 1. Within the OpenSearch Serverless Collection we just created, we will select "Create vector index" ![Alt text](images/create_vector_index.png "Create Vector Index")
-2. We will then input a Vector Index Name, Vector Field Name, Dimensions and distance metric... **BE SURE TO NOTE DOWN THE VECTOR INDEX NAME AND VECTOR FIELD NAME**. The Dimensions field is expecting an integer, in our case since we are using the 'amazon.titan-e1t-medium' embeddings model, the dimension size will be 4096. If you plan on using a different embeddings model you will need to change this value to represent the output vector size of that specific model. Then Select "Create" ![Alt text](images/create_vector_index_details.png "Create Vector Index Details")
-3. **_OPTIONAL:_** If you want to add meta-data to your documents that you plan on indexing, you must specify those fields in this vector index configuration. If you plan on adding meta-data you will need to reconfigure some of the code in the docs_to_openSearch.py file ![Alt text](images/add_meta_data.png "Add Meta-Data")
+2. We will then input a Vector Index Name, Vector Field Name, Dimensions and distance metric... **BE SURE TO NOTE DOWN THE VECTOR INDEX NAME AND VECTOR FIELD NAME**. The Dimensions field is expecting an integer, in our case since we are using the 'amazon.titan-embed-text-v1' embeddings model, the dimension size will be 1536. If you plan on using a different embeddings model you will need to change this value to represent the output vector size of that specific model. Then Select "Create" ![Alt text](images/create_vector_index_name.png "Create Vector Index Details") ![Alt text](images/vector_field.png "Create Vector Index Details")
+3. **_OPTIONAL:_** If you want to add meta-data to your documents that you plan on indexing, you must specify those fields in this vector index configuration. If you plan on adding meta-data you will need to reconfigure some of the code in the docs_to_openSearch.py file ![Alt text](images/metadata.png "Add Meta-Data")
 
 ## Step 5:
 
@@ -105,6 +106,105 @@ vector_field_name=<vector_field_name>
 ```
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
+
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 12 in the query_against_openSearch.py file to change the region:
+
+```
+bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
+```
+Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the answer_query() function in the query_against_openSearch.py to look like:
+
+```python
+def answer_query(user_input):
+    """
+    This function takes the user question, creates an embedding of that question,
+    and performs a KNN search on your Amazon OpenSearch Index. Using the most similar results it feeds that into the Prompt
+    and LLM as context to generate an answer.
+    :param user_input: This is the natural language question that is passed in through the app.py file.
+    :return: The answer to your question from the LLM based on the context that was provided by the KNN search of OpenSearch.
+    """
+    # Setting primary variables, of the user input
+    userQuery = user_input
+    # formatting the user input
+    userQueryBody = json.dumps({"inputText": userQuery})
+    # creating an embedding of the user input to perform a KNN search with
+    userVectors = get_embedding(userQueryBody)
+    # the query parameters for the KNN search performed by Amazon OpenSearch with the generated User Vector passed in.
+    # TODO: If you wanted to add pre-filtering on the query you could by editing this query!
+    query = {
+        "size": 3,
+        "query": {
+            "knn": {
+                "vectors": {
+                    "vector": userVectors, "k": 3
+                }
+            }
+        },
+        "_source": True,
+        "fields": ["text"],
+    }
+    # performing the search on OpenSearch passing in the query parameters constructed above
+    response = client.search(
+        body=query,
+        index=os.getenv("vector_index_name")
+    )
+
+    # Format Json responses into text
+    similaritysearchResponse = ""
+    # iterating through all the findings of Amazon openSearch and adding them to a single string to pass in as context
+    for i in response["hits"]["hits"]:
+        outputtext = i["fields"]["text"]
+        similaritysearchResponse = similaritysearchResponse + "Info = " + str(outputtext)
+
+        similaritysearchResponse = similaritysearchResponse
+    # Configuring the Prompt for the LLM
+    # TODO: EDIT THIS PROMPT TO OPTIMIZE FOR YOUR USE CASE
+    prompt_data = f"""\n\nHuman: You are an AI assistant that will help people answer questions they have about [YOUR TOPIC]. Answer the provided question to the best of your ability using the information provided in the Context. 
+    Summarize the answer and provide sources to where the relevant information can be found. 
+    Include this at the end of the response.
+    Provide information based on the context provided.
+    Format the output in human readable format - use paragraphs and bullet lists when applicable
+    Answer in detail with no preamble
+    If you are unable to answer accurately, please say so.
+    Please mention the sources of where the answers came from by referring to page numbers, specific books and chapters!
+
+    Question: {userQuery}
+
+    Here is the text you should use as context: {similaritysearchResponse}
+
+    \n\nAssistant:
+
+    """
+    # Configuring the model parameters, preparing for inference
+    # TODO: TUNE THESE PARAMETERS TO OPTIMIZE FOR YOUR USE CASE
+    body = json.dumps({"prompt": prompt_data,
+                       "max_tokens_to_sample": 4096,
+                       "temperature": 0.5,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       })
+
+    # Run infernce on the LLM
+    # Configuring the specific model you are using
+    modelId = "anthropic.claude-v2"  # change this to use a different version from the model provider
+    accept = "application/json"
+    contentType = "application/json"
+    # invoking the bedrock API, passing in all specific parameters
+    response = bedrock.invoke_model(body=body,
+                                    modelId=modelId,
+                                    accept=accept,
+                                    contentType=contentType)
+
+    # loading in the response from bedrock
+    response_body = json.loads(response.get('body').read())
+    # retrieving the specific completion field, where you answer will be
+    answer = response_body.get('completion')
+    # returning the answer as a final result, which ultimately gets returned to the end user
+    return answer
+```
+
+You can then change the modelId variable to the model of your choice.
 
 ## Step 6:
 

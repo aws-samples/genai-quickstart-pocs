@@ -35,7 +35,7 @@ def get_embedding(body):
     :return: A vector containing the embeddings of the passed in content
     """
     # defining the embeddings model
-    modelId = 'amazon.titan-e1t-medium'
+    modelId = 'amazon.titan-embed-text-v1'
     accept = 'application/json'
     contentType = 'application/json'
     # invoking the embedding model
@@ -107,28 +107,30 @@ def answer_query(user_input):
     """
     # Configuring the model parameters, preparing for inference
     # TODO: TUNE THESE PARAMETERS TO OPTIMIZE FOR YOUR USE CASE
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 4096,
-                       "temperature": 0.5,
-                       "top_k": 250,
-                       "top_p": 0.5,
-                       "stop_sequences": []
-                       })
-
-    # Run infernce on the LLM
-    # Configuring the specific model you are using
-    modelId = "anthropic.claude-v2"  # change this to use a different version from the model provider
-    accept = "application/json"
-    contentType = "application/json"
-    # invoking the bedrock API, passing in all specific parameters
-    response = bedrock.invoke_model(body=body,
-                                    modelId=modelId,
-                                    accept=accept,
-                                    contentType=contentType)
-
-    # loading in the response from bedrock
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 4096,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_data
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    # retrieving the specific completion field, where you answer will be
-    answer = response_body.get('completion')
-    # returning the answer as a final result, which ultimately gets returned to the end user
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
     return answer
