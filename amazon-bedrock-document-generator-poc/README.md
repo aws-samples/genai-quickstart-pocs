@@ -78,8 +78,6 @@ profile_name=<AWS_CLI_PROFILE_NAME>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
-
 Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 12 in the document_generator.py file to set the appropriate region:
 
 ```
