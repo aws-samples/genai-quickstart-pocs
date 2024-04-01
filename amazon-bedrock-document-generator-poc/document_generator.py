@@ -47,24 +47,33 @@ Assistant: Here is a draft based on the provided user input and template
 
 """
     # Add the prompt to the body to be passed to the Bedrock API along with parameters
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 5000,
-                       "temperature": .2,
-                       "stop_sequences": []
-                       })
-    # configure the modelID of the model you are trying to use
-    modelId = "anthropic.claude-v2"  # change this to use a different version from the model provider if you want to switch
-    accept = "application/json"
-    contentType = "application/json"
-    # Call the Bedrock API, and invoke the LLM Model of your choice
-    response = bedrock.invoke_model(
-        body=body, modelId=modelId, accept=accept, contentType=contentType
-    )
-    # Parse the Response and store it in the llmOutput variable
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_data
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    llmOutput = response_body.get('completion')
-    # Return the LLM response
-    return llmOutput
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
+    return answer
 
 def invoke_llm_refine(bedrock, user_feedback, previous_version, doc_template) -> str:
     """
@@ -105,24 +114,33 @@ Assistant: Here is a modified draft press release based on the provided user fee
 
 """
     # Add the prompt to the body to be passed to the Bedrock API along with parameters
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 5000,
-                       "temperature": .2,
-                       "stop_sequences": []
-                       })
-    # configure the modelID of the model you are trying to use
-    modelId = "anthropic.claude-v2"  # change this to use a different version from the model provider if you want to switch
-    accept = "application/json"
-    contentType = "application/json"
-    # Call the Bedrock API, and invoke the LLM Model of your choice
-    response = bedrock.invoke_model(
-        body=body, modelId=modelId, accept=accept, contentType=contentType
-    )
-    # Parse the Response and store it in the llmOutput variable
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_data
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    llmOutput = response_body.get('completion')
-    # Return the LLM response
-    return llmOutput
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
+    return answer
 
 def generate_doc(user_input) -> str:
     """
