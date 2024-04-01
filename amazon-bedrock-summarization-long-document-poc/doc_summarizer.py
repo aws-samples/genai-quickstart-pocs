@@ -4,7 +4,6 @@ import os
 import botocore.config
 from dotenv import load_dotenv
 from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
-import tiktoken
 from pypdf import PdfReader
 
 # loading environment variables
@@ -22,27 +21,36 @@ def summarizer(prompt_data) -> str:
     :return: A summary of the respective chunk of data passed in or the final summary that is a summary of all summary chunks.
     """
     # setting the key parameters to invoke Amazon Bedrock
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 8191,
-                       "temperature": 0,
-                       "top_k": 250,
-                       "top_p": 0.5,
-                       "stop_sequences": []
-                       })
-    # the specific Amazon Bedrock model you are using
-    modelId = 'anthropic.claude-v2'
-    # type of data that should be expected upon invocation
-    accept = 'application/json'
-    contentType = 'application/json'
-    # the invocation of bedrock, with all of the parameters you have configured
-    response = bedrock.invoke_model(body=body,
-                                    modelId=modelId,
-                                    accept=accept,
-                                    contentType=contentType)
-    # gathering the response from bedrock, and parsing to get specifically the answer
+    # body of data with parameters that is passed into the bedrock invoke model request
+    # TODO: TUNE THESE PARAMETERS AS YOU SEE FIT
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_data
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    # anthropic.claude-3-haiku-20240307-v1:0
+    # anthropic.claude-3-sonnet-20240229-v1:0
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-haiku-20240307-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    answer = response_body.get('completion')
-    # returning the final summary for that chunk of text
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
     return answer
 
 
@@ -86,12 +94,12 @@ def Chunk_and_Summarize(uploaded_file) -> str:
         # the summary string
         summary += summarizer(prompt)
         # printing out the number of tokens contained in each chunk to provide a status update
-        print(f"\n\nNumber of tokens for Chunk {index + 1} with the prompt: {num_tokens_from_string(prompt)} tokens")
+        print(f"\n\nChunk: {index + 1}")
         print("-------------------------------------------------------------------------------------------------------")
     # after we have generated the summaries of each chunk of text, and appended them to the single summary string,
     # we pass it into the final summary prompt
     final_summary_prompt = f"""\n\nHuman: You will be given a set of summaries from a document. Create a cohesive 
-    summary from the provided individual summaries. The summary should very detailed and at least 2 pages. 
+    summary from the provided individual summaries. The summary should very detailed. 
     Summaries: {summary}
             \n\nAssistant:"""
     # generating the final summary of all the summaries we have previously generated.
