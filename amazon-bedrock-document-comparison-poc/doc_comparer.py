@@ -29,27 +29,32 @@ def llm_compare(prompt_data) -> str:
     :return: A string containing a list of the differences between the two PDF documents the user uploaded.
     """
     # setting the key parameters to invoke Amazon Bedrock
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 8191,
-                       "temperature": 0,
-                       "top_k": 250,
-                       "top_p": 0.5,
-                       "stop_sequences": []
-                       })
-    # the specific Amazon Bedrock model we are using
-    modelId = 'anthropic.claude-v2'
-    # type of data that should be expected upon invocation
-    accept = 'application/json'
-    contentType = 'application/json'
-    # the invocation of bedrock, with all the parameters you have configured
-    response = bedrock.invoke_model(body=body,
-                                    modelId=modelId,
-                                    accept=accept,
-                                    contentType=contentType)
-    # gathering the response from bedrock, and parsing to get specifically the answer
+    prompt = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 4096,
+        "temperature": 0.5,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_data
+                    }
+                ]
+            }
+        ]
+    }
+    # formatting the prompt as a json string
+    json_prompt = json.dumps(prompt)
+    # invoking Claude3, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                    accept="application/json", contentType="application/json")
+    # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
-    answer = response_body.get('completion')
-    # returning the final list of differences between uploaded documents
+    # the final string returned to the end user
+    answer = response_body['content'][0]['text']
+    # returning the final string to the end user
     return answer
 
 

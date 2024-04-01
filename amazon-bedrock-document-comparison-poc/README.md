@@ -2,6 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a document comparison use case. The application is constructed with a simple streamlit frontend where users can upload 2 versions of a document and get all changes between documents listed.
 
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to perform document comparison between two uploaded PDFs.
@@ -74,14 +75,44 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 20 & 39 in the doc_comparer.py file:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 20 in the doc_comparer.py file to set the appropriate region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
-
-modelId = 'anthropic.claude-v2'
 ```
-
+Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the llm_compare() function in the doc_comparer.py to look like:
+```python
+def llm_compare(prompt_data) -> str:
+    """
+    This function uses a large language model to create a list of differences between each uploaded document.
+    :param prompt_data: This is the final prompt that contains semantically similar prompts, along with the two documents the user is asking to compare.
+    :return: A string containing a list of the differences between the two PDF documents the user uploaded.
+    """
+    # setting the key parameters to invoke Amazon Bedrock
+    body = json.dumps({"prompt": prompt_data,
+                       "max_tokens_to_sample": 8191,
+                       "temperature": 0,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       })
+    # the specific Amazon Bedrock model we are using
+    modelId = 'anthropic.claude-v2'
+    # type of data that should be expected upon invocation
+    accept = 'application/json'
+    contentType = 'application/json'
+    # the invocation of bedrock, with all the parameters you have configured
+    response = bedrock.invoke_model(body=body,
+                                    modelId=modelId,
+                                    accept=accept,
+                                    contentType=contentType)
+    # gathering the response from bedrock, and parsing to get specifically the answer
+    response_body = json.loads(response.get('body').read())
+    answer = response_body.get('completion')
+    # returning the final list of differences between uploaded documents
+    return answer
+```
+You can then change the modelId variable to the model of your choice.
 ## Step 4:
 
 As soon as you have successfully cloned the repo, created a virtual environment, activated it, installed the requirements.txt, and created a .env file, your application should be ready to go.
