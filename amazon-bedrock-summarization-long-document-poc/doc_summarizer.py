@@ -42,8 +42,6 @@ def summarizer(prompt_data) -> str:
     # formatting the prompt as a json string
     json_prompt = json.dumps(prompt)
     # invoking Claude3, passing in our prompt
-    # anthropic.claude-3-haiku-20240307-v1:0
-    # anthropic.claude-3-sonnet-20240229-v1:0
     response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-haiku-20240307-v1:0",
                                     accept="application/json", contentType="application/json")
     # getting the response from Claude3 and parsing it to return to the end user
