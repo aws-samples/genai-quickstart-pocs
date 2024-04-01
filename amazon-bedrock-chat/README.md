@@ -74,7 +74,7 @@ You will first need to create a .env file in the root of this repo. Within the .
 profile_name=<AWS_CLI_PROFILE_NAME>
 ```
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
+Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
 Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 23 in the prompt_finder_and_invoke_llm.py file to set the appropriate region:
 
