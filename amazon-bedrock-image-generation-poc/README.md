@@ -1,7 +1,8 @@
 # Amazon-Bedrock-Image-Generation-POC
 
-This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a image generation use case. The application is constructed with a simple streamlit frontend where users can input text requests to generate images based on the text input.
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement an image generation use case. The application is constructed with a simple streamlit frontend where users can input text requests to generate images based on the text input.
 
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create images based on text input requests.
@@ -71,14 +72,14 @@ You will first need to create a .env file in the root of this repo. Within the .
 profile_name=<AWS_CLI_PROFILE_NAME>
 ```
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
+Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
 Depending on the region and model that you are planning to use with Amazon Bedrock (please note that only a few models can generate images based on text input), you may need to reconfigure line 13 & 31 in the image_generation.py file:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
 
-modelId = 'stability.stable-diffusion-xl-v0'
+modelId = 'stability.stable-diffusion-xl-v1'
 ```
 
 ## Step 4:
@@ -90,4 +91,4 @@ To start up the application with its basic frontend you simply need to run the f
 streamlit run app.py
 ```
 
-As soon as the application is up and running in your browser of choice you can begin uploading PDF documents and generating summaries.
+As soon as the application is up and running in your browser of choice you can begin creating images!

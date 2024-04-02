@@ -28,7 +28,7 @@ def image_generator(question):
                        "steps": 150,
                        })
     # Specifying the specific model we want to use with Amazon Bedrock
-    modelId = 'stability.stable-diffusion-xl-v0'
+    modelId = 'stability.stable-diffusion-xl-v1'
     # Specifying the data type that we are passing into Amazon Bedrock for the invocation
     accept = 'application/json'
     contentType = 'application/json'

@@ -2,6 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a ChatGPT alternative. The application is constructed with a simple streamlit frontend where users can input zero shot requests to satisfy a broad range of use cases.
 
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock in a similar fashion to ChatGPT.
