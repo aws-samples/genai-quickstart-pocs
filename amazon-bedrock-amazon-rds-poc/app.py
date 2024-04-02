@@ -26,7 +26,7 @@ if question := st.chat_input("Ask about your data stored in Amazon Relational Da
         # making sure there are no messages present when generating the answer
         message_placeholder = st.empty()
         # putting a spinning icon to show that the query is in progress
-        with st.status("Determining the best possible answer!", expanded=True) as status:
+        with st.status("Determining the best possible answer!", expanded=False) as status:
             # passing the question into the rds_answer function, which later invokes the llm
             answer = rds_answer(question)
             # writing the answer to the front end
