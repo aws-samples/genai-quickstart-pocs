@@ -52,7 +52,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 
 - Amazon Bedrock Access and CLI Credentials
 - Python 3.9 or 3.10 installed on your machine
-- Additional prerequisites specific to each sample (e.g., Snowflake account, Amazon Kendra index, etc.)
+- Additional prerequisites specific to each sample (e.g., RDS Database, Amazon Kendra index, etc.)
 
 ## Getting Started
 
