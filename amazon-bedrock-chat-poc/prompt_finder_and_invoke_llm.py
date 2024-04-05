@@ -10,7 +10,7 @@ from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.prompts.example_selector.semantic_similarity import (
     SemanticSimilarityExampleSelector,
 )
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 
 # loading in environment variables
 load_dotenv()
