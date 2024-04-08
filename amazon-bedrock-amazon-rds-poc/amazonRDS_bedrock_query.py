@@ -10,7 +10,7 @@ from langchain.llms import Bedrock
 from langchain.prompts.example_selector.semantic_similarity import (
     SemanticSimilarityExampleSelector,
 )
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_experimental.sql import SQLDatabaseChain
 
 # Loading environment variables
