@@ -1,2 +1,5 @@
 .idea/
 __pycache__
+venv/
+.env
+chat_history.txt
