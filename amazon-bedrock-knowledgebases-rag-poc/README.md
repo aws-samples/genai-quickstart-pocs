@@ -10,7 +10,7 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
 
 The architecture and flow of the sample application will be:
 
-![Alt text](images/gen_ai_opensearch.png "POC Architecture")
+![Alt text](images/architecture_diagram.png "POC Architecture")
 
 When a user interacts with the GenAI app, the flow is as follows:
 
