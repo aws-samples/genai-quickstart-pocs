@@ -18,10 +18,13 @@ knowledge_base_id = os.getenv('knowledge_base_id')
 
 def get_contexts(query, kbId, numberOfResults=5):
     """
-    This function is used to generate the contexts for each question the user submits.
-    :param body: This is the question that is passed in to get the contexts
-    :return: A string of contexts for the question asked by the user
+    This function takes a query, knowledge base id, and number of results as input, and returns the contexts for the query.
+    :param query: This is the natural language query that is passed in through the app.py file.
+    :param kbId: This is the knowledge base id that is gathered from the .env file.
+    :param numberOfResults: This is the number of results that are returned from the knowledge base.
+    :return: The contexts for the query.
     """
+    # getting the contexts for the query from the knowledge base
     results = bedrock_agent_runtime.retrieve(
         retrievalQuery= {
             'text': query
@@ -33,11 +36,12 @@ def get_contexts(query, kbId, numberOfResults=5):
             }
         }
     )
-    
+    #  creating a list to store the contexts
     contexts = []
-    
+    #   adding the contexts to the list
     for retrievedResult in results['retrievalResults']: 
         contexts.append(retrievedResult['content']['text'])
+    #  returning the contexts
     return contexts
 
 

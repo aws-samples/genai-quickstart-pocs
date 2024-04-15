@@ -48,6 +48,10 @@ This repository contains sample code demonstrating various use cases leveraging 
 14. **Amazon-Bedrock-Claude3-Streaming-Response-POC** 
     This sample illustrates the utilization of Amazon Bedrock and Generative AI to implement streaming responses. The application is designed with a straightforward Streamlit frontend, enabling users to input zero-shot requests directly against Claude 3, utilizing a streaming response technique while leveraging the Anthropic Messages API structure.
     ![Alt text](amazon-bedrock-claude3-streaming-response-poc/images/demo.gif)
+15. **Amazon-Bedrock-Knowledgebases-RAG-POC** 
+    This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases, allowing users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock.
+    ![Alt text](amazon-bedrock-knowledgebases-rag-poc/images/demo.gif)
+
 ## Prerequisites
 
 - Amazon Bedrock Access and CLI Credentials

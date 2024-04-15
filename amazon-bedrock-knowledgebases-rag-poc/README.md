@@ -2,7 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create vector embeddings for your data sources using Amazon Bedrock Knowledge bases with the ability ask questions against the stored documents. The application is constructed with a RAG based architecture where users can ask questions against the Knowledge bases.
 
-![Alt text](images/demo_image.png)
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions, and answer questions against Amazon Bedrock Knowledge bases.
