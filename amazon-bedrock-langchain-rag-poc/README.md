@@ -108,7 +108,7 @@ bedrock_agent_runtime = boto3.client('bedrock-agent-runtime','us-east-1')
 ```
 Since this repository is configured to leverage Amazon Titan or Anthropic Claude 3 models, the prompt payload is structured in formats required for the invocation of these two models. 
 If you wanted to leverage other Amazon Bedrock models, you can update query_with_langchain.py code. 
-For example if you to call Amazon Titan Lite instead of Amazon Titan Express, you can update call_titan funciton in query_with_langchain to look like this:
+For example if you to call Amazon Titan Lite instead of Amazon Titan Express, you can update call_titan funciton in query_with_langchain.py to look like this:
 
 ```python
 
@@ -148,7 +148,7 @@ def call_titan(query, retriever):
 You can then change the model_id param value to the other available models from Amazon Titan.
 
 This repository is configured to leverage Knowledge bases. 
-If you want to use other Vector DBs that are not supported in Amazon Bedrock Knowledge Bases, or want to directly retreive contexts from Vector DB using langchain, you can refere to [this Langchain documentation](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
+If you want to use other Vector DBs that are not supported in Amazon Bedrock Knowledge Bases, or want to directly retreive contexts from Vector DB using langchain, you can refere to [this Langchain documentation](https://python.langchain.com/docs/modules/data_connection/retrievers/vectorstore/).
 
 
 ## Step 7:
