@@ -1,6 +1,6 @@
 # Amazon-Bedrock-Langchain-RAG-POC
 
-This is sample code demonstrating the use of Amazon Bedrock and Generative AI using Langchain as orchestrator with the ability ask questions against the stored documents. This sample uses Knowledge bases as to retrieve the stored documents, how you can extend or update this sample to retrieve your stored documents from any Vector DB.
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI using Langchain as orchestrator with the ability ask questions against the stored documents. This sample uses Knowledge bases as to retrieve the stored documents, however you can extend or update this sample to retrieve your stored documents from any Vector DB.
 
 ![Alt text](images/demo_image.png)
 # **Goal of this Repo:**
@@ -100,7 +100,7 @@ llm_model = < LLM model that you want to use for the POC, either "amazon-titan" 
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 13 and 14 in the query_against_knowledgeBases.py file to change the region:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 19 and 20 in the query_with_langchain.py file to change the region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1')
@@ -131,7 +131,7 @@ def call_titan(query, retriever):
 
     # Setting LLM method from the Language Bedrock library
     llm = Bedrock(
-        client=bedrock, model_id="amazon.titan-text-lite-v1", model_kwargs={}
+        client=bedrock, model_id="amazon.titan-text-lite-v1", model_kwargs={} #updating the model_id param to to Amazon Titan Lite
     )
 
     # Invoke Amazon Titan using the Langchain llm method
