@@ -1,10 +1,8 @@
 import streamlit as st
 from query_with_langchain import answer_query
 
-import os
-
 # Header/Title of streamlit app
-st.title(f""":rainbow[RAG with Amazon Knowledge Bases]""")
+st.title(f""":rainbow[RAG with Amazon Knowledge Bases and Langchain]""")
 
 # configuring values for session state
 if "messages" not in st.session_state:

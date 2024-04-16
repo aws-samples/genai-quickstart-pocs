@@ -2,7 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI using Langchain as orchestrator with the ability ask questions against the stored documents. This sample uses Knowledge bases as to retrieve the stored documents, however you can extend or update this sample to retrieve your stored documents from any Vector DB.
 
-![Alt text](images/demo_image.png)
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions orchestrated using Langchain, and answer questions against your stored documents.

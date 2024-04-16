@@ -15,13 +15,11 @@ load_dotenv()
 
 # instantiating the Bedrock client, and passing in the CLI profile
 boto3.setup_default_session(profile_name=os.getenv("profile_name"))
-
 bedrock = boto3.client("bedrock-runtime", "us-east-1")
 bedrock_agent_runtime = boto3.client("bedrock-agent-runtime", "us-east-1")
 
 # getting the knowledge base id from the env variable
 knowledge_base_id = os.getenv("knowledge_base_id")
-
 # Models to use
 llm_model = os.getenv("llm_model")  # either "amazon-titan" or "anthropic-claude"
 
@@ -35,16 +33,16 @@ def get_contexts(query, kbId, numberOfResults=5):
     :param numberOfResults: This is the number of results that are returned from the knowledge base.
     :return: The contexts for the query.
     """
-
-    # getting the contexts for the query from the knowledge base
+    # getting the contexts for the query from the knowledge base using the langchain retriever
     retriever = AmazonKnowledgeBasesRetriever(
+        credentials_profile_name=os.getenv("profile_name"),
         knowledge_base_id=kbId,
-        retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 4}},
+        retrieval_config={"vectorSearchConfiguration": {"numberOfResults": numberOfResults}},
     )
 
     #  creating a list to store the contexts
     retriever.get_relevant_documents(query=query)
-
+    # return the list of contexts retrieved from the knowledge base
     return retriever
 
 
@@ -66,7 +64,7 @@ def call_titan(query, retriever):
 
     # Setting LLM method from the Language Bedrock library
     llm = Bedrock(
-        client=bedrock, model_id="amazon.titan-text-express-v1", model_kwargs={}
+        client=bedrock, model_id="amazon.titan-text-express-v1", model_kwargs=model_kwargs
     )
 
     # Invoke Amazon Titan using the Langchain llm method
