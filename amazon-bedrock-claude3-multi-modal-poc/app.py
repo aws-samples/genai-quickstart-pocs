@@ -45,7 +45,7 @@ with st.container():
                 # write a success message saying the image has been successfully saved
                 st.success(f'Image {File.name} is successfully saved!')
                 # running the image to text task, and outputting the results to the front end
-                st.write(image_to_text(File.name, text))
+                st.write(image_to_text(save_path, text))
                 # removing the image file that was temporarily saved to perform the question and answer task
                 os.remove(save_path)
         # if an Image is not uploaded, but a question is, the text_to_text function is invoked
