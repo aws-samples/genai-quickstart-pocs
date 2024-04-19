@@ -54,6 +54,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 16. **Amazon-Bedrock-Langchain-RAG-POC:** 
     This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases using Langchain to help orchestrate the retrieval of information from the knowledge base. This allows users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock, and Langchain as an orchestrator.
     ![Alt text](amazon-bedrock-langchain-rag-poc/images/demo.gif)
+17. **Amazon-Bedrock-Asynchronous-Invocation-POC:** 
+    This sample implements asynchronous invocations with Amazon Bedrock allowing users to make multiple simultaneous calls to Bedrock models to decrease overall latency. This allows users to ask questions against 3+ models simultaneously, demonstrating the decrease in latency by doing it asynchronously vs sequentially.
+    ![Alt text](amazon-bedrock-asynchronous-invocation-poc/images/demo.gif)
 
 ## Prerequisites
 
