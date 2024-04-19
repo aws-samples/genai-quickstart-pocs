@@ -63,8 +63,6 @@ Matertials:
 - Siding: Wood
 - Roof: Shingles
 - Foundation: Masonry
-- Exterior: Brick
-- Interior: Wood
 Features
 - Swimming Pool
 - Back Yard
