@@ -37,8 +37,8 @@ The first step of utilizing this repo is performing a git clone of the repositor
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
-After cloning the repo onto your local machine, open it up in your favorite code editor.The file structure of this repo is broken into 4 key files,
-the app.py file, the docs_to_openSearch.py file, the query_against_knowledgebases.py file and the requirements.txt.
+After cloning the repo onto your local machine, open it up in your favorite code editor.The file structure of this repo is broken into 3 key files,
+the app.py file, the query_against_knowledgebases.py file and the requirements.txt.
 The app.py file houses the frontend application (a streamlit app).
 The query_against_knowledgeBases.py file houses the logic for taking a user question and letting the LLM generate a response, this includes both the Knowledge bases get contexts calls and Amazon Bedrock LLM API invocation.
 The requirements.txt file contains all necessary dependencies for this sample application to work.
@@ -123,52 +123,48 @@ def answer_query(user_input):
 
     # Configuring the Prompt for the LLM
     # TODO: EDIT THIS PROMPT TO OPTIMIZE FOR YOUR USE CASE
-    prompt_data = """
-    You are a Question and answering assistant and your responsibility is to answer user questions based on provided context
-    
-    Here is the context to reference:
-    <context>
-    {context_str}
-    </context>
+    prompt_data = f"""\n\nHuman: You are an AI assistant that will help people answer questions they have about [YOUR TOPIC]. Answer the provided question to the best of your ability using the information provided in the Context. 
+    Summarize the answer and provide sources to where the relevant information can be found. 
+    Include this at the end of the response.
+    Provide information based on the context provided.
+    Format the output in human readable format - use paragraphs and bullet lists when applicable
+    Answer in detail with no preamble
+    If you are unable to answer accurately, please say so.
+    Please mention the sources of where the answers came from by referring to page numbers, specific books and chapters!
 
-    Referencing the context, answer the user question
-    <question>
-    {query_str}
-    </question>
+    Question: {userQuery}
+
+    Here is the text you should use as context: {userContexts}
+
+    \n\nAssistant:
+
     """
-
-    # formatting the prompt template to add context and user query
-    formatted_prompt_data = prompt_data.format(context_str=userContexts, query_str=userQuery)
-
     # Configuring the model parameters, preparing for inference
     # TODO: TUNE THESE PARAMETERS TO OPTIMIZE FOR YOUR USE CASE
-    prompt = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 4096,
-        "temperature": 0.5,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": formatted_prompt_data
-                    }
-                ]
-            }
-        ]
-    }
+    prompt = {"prompt": prompt_data,
+                       "max_tokens_to_sample": 4096,
+                       "temperature": 0.5,
+                       "top_k": 250,
+                       "top_p": 0.5,
+                       "stop_sequences": []
+                       }
     
     # formatting the prompt as a json string
     json_prompt = json.dumps(prompt)    
 
-    # invoking Claude3, passing in our prompt
-    response = bedrock.invoke_model(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+    # Configuring the specific model you are using
+    modelId = "anthropic.claude-v2:1"  # change this to use a different version from the model provider
+    
+    # invoking Claude2, passing in our prompt
+    response = bedrock.invoke_model(body=json_prompt, modelId=modelId,
                                     accept="application/json", contentType="application/json")
-    # getting the response from Claude3 and parsing it to return to the end user
+                                    
+    # getting the response from Claude2 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
+    
     # the final string returned to the end user
-    answer = response_body['content'][0]['text']
+    answer = response_body.get('completion')
+    
     # returning the final string to the end user
     return answer
 ```
