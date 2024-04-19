@@ -77,6 +77,3 @@ def analyze_image(image):
   response = chain.invoke({"question": "<question>Can you do analyze this image in detail?</question>"})
 
   return response
-
-
-#print(analyze_image("./images/house.jpeg"))

@@ -34,8 +34,8 @@ git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 3 key files,
-the app.py file, the image_generation.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
-The image_generation.py file houses the logic of the application, including the Amazon Bedrock API invocations to generate an image.
+the app.py file, the image_analysis.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
+The image_analysis.py file houses the logic of the application, including the Amazon Bedrock API invocations to generate descriptions of an image.
 The requirements.txt file contains all necessary dependencies for this sample application to work.
 
 ## Step 2:
@@ -74,12 +74,19 @@ profile_name=<AWS_CLI_PROFILE_NAME>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-Depending on the region and model that you are planning to use with Amazon Bedrock (please note that only a few models can generate images based on text input), you may need to reconfigure line 13 & 31 in the image_generation.py file:
+Depending on the region and model that you are planning to use with Amazon Bedrock (please note that only a few models can analyze images), you may need to reconfigure model params in the image_analysis file:
 
 ```
-bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
+brclient = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com',config=config)
 
-modelId = 'stability.stable-diffusion-xl-v1'
+#model params
+model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
+```
+
+You may also choose to customize the system prompt to align with a pecific use-case, or to get specific responses back about your images. 
+
+```
+  system_prompt = "You are an expert in image analysis and classification. The question will be contained within the <question></question> tags. Before answering, think step by step in <thinking> tags as you analyze every part of the image. Provide your answer within the <answer></answer> tags. Incude a JSON structured response describing image attributes contained within the <json></json> tags. Always add line breaks between each section of your response"
 ```
 
 ## Step 4:
@@ -91,4 +98,4 @@ To start up the application with its basic frontend you simply need to run the f
 streamlit run app.py
 ```
 
-As soon as the application is up and running in your browser of choice you can begin creating images!
+As soon as the application is up and running in your browser of choice you can begin analyzing JPEG images!
