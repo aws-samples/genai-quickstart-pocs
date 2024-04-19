@@ -1,8 +1,10 @@
 import boto3
 import base64
 import os
+import json
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import BedrockChat
+from dotenv import load_dotenv
 
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -10,7 +12,10 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 
-os.environ["AWS_PROFILE"] = "trevx"
+load_dotenv()
+
+#os.environ["AWS_PROFILE"] = "trevx"
+os.getenv('trevx')
 
 # Params 
 max_tokens = 5000
@@ -31,7 +36,7 @@ def convert_image_to_base64(image):
     base64_image = base64.b64encode(image_data).decode("utf-8")
     return base64_image
 
-def get_taxonomy(image):
+def analyze_image(image):
   
   model_kwargs = {
     "max_tokens": max_tokens,  
@@ -47,30 +52,8 @@ def get_taxonomy(image):
 
   img_base64 = convert_image_to_base64(image)
 
-# Update industry with the industry expertise needed to best understand the images
-  industry = "Real Estate"
-
 # System prompt
-  system_prompt = f"""You are an expert in {industry}. The question will be contained within the <question></question> tags. Before answering, think step by step in <thinking> tags and analyze every part of the image. Provide your answer within the <answer></answer> tags. Incude a taxonomic analysis in the response contained within the <taxonomy></taxonomy> tags. Use the following example as a reference for the taxonomic analysis:
-
-<taxonomy>
-Category: Home
-Type: Multi-Family
-Subtype: Condominium
-Floors: Two Stories
-Landscaping: Large back yard with tall pine trees and garden
-Matertials:
-- Siding: Wood
-- Roof: Shingles
-- Foundation: Masonry
-Features
-- Swimming Pool
-- Back Yard
-- Garage
-- Basement
-- Attic
-</taxonomy>
-"""
+  system_prompt = "You are an expert in image analysis and classification. The question will be contained within the <question></question> tags. Before answering, think step by step in <thinking> tags as you analyze every part of the image. Provide your answer within the <answer></answer> tags. Incude a JSON structured response describing image attributes contained within the <json></json> tags. Always add line breaks between each section of your response"
 
   human_prompt = [{
     "type": "image_url",
@@ -88,8 +71,6 @@ Features
   
   chain = prompt | model | StrOutputParser()
 
-  response = chain.invoke({"question": "<question>Can you do a taxonomic analysis for this image?</question>"})
+  response = chain.invoke({"question": "<question>Can you do analyze this image in detail?</question>"})
 
   return response
-
-#print(get_taxonomy("house.jpeg"))

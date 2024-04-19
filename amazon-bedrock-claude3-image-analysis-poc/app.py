@@ -1,7 +1,7 @@
 import streamlit as st
 from pathlib import Path
 import os
-import image_taxonomy as helper
+import image_analysis as helper
 import time
 #from dotenv import load_dotenv
 
@@ -9,7 +9,7 @@ import time
 #load_dotenv()
 
 # title of the streamlit app
-st.title(f""":rainbow[Image Taxonomy with Amazon Bedrock]""")
+st.title(f""":rainbow[Image Analysis with Amazon Bedrock]""")
 
 # default container that houses the document upload field
 with st.container():
@@ -34,14 +34,14 @@ with st.container():
             # creates a timer to time the length of the summarization task and starts the timer
             start = time.time()
             # running the summarization task, and outputting the results to the front end
-            st.write(helper.get_taxonomy(save_path))
+            st.write(helper.analyze_image(save_path))
             # ending the timer
             end = time.time()
             # using the timer, we calculate the minutes and seconds it took to perform the summarization task
             seconds = int(((end - start) % 60))
             minutes = int((end - start) // 60)
             # string to highlight the amount of time taken to complete the summarization task
-            total_time = f"""Time taken to generate a taxonomy:
+            total_time = f"""Time taken to analyze image:
             Minutes: {minutes} Seconds: {round(seconds, 2)}"""
             # sidebar is created to display the total time taken to complete the summarization task
             with st.sidebar:
