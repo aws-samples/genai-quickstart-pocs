@@ -2,6 +2,7 @@ import boto3
 import base64
 import os
 import json
+import botocore.config
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import BedrockChat
 from dotenv import load_dotenv
@@ -12,21 +13,22 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 
+#os.environ["AWS_PROFILE"] = "trevx"
 load_dotenv()
 
-#os.environ["AWS_PROFILE"] = "trevx"
-os.getenv('trevx')
+# configuring our CLI profile name
+boto3.setup_default_session(profile_name=os.getenv('profile_name'))
+# increasing the timeout period when invoking bedrock
+config = botocore.config.Config(connect_timeout=120, read_timeout=120)
 
-# Params 
+brclient = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com',config=config)
+
+#model params
+model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
 max_tokens = 5000
 temperature = 0
 top_p = 1
-model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
 
-brclient = boto3.client(
-    service_name="bedrock-runtime",
-    region_name="us-east-1",
-)
 
 
 def convert_image_to_base64(image):
@@ -70,7 +72,11 @@ def analyze_image(image):
   prompt = ChatPromptTemplate.from_messages([system_message_template, human_message_template])
   
   chain = prompt | model | StrOutputParser()
+  print(chain)
 
   response = chain.invoke({"question": "<question>Can you do analyze this image in detail?</question>"})
 
   return response
+
+
+#print(analyze_image("./images/house.jpeg"))

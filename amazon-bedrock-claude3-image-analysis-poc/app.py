@@ -3,10 +3,9 @@ from pathlib import Path
 import os
 import image_analysis as helper
 import time
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load environment variables
-#load_dotenv()
+load_dotenv()
 
 # title of the streamlit app
 st.title(f""":rainbow[Image Analysis with Amazon Bedrock]""")
