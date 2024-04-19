@@ -2,7 +2,7 @@
 
 This is sample code demonstrating the use of Amazon Bedrock and Multi-Modal Generative AI models from Anthropic to implement an image analysis use case. The application is constructed with a simple streamlit frontend where users can upload a jpeg, and get a description of the image.
 
-![Alt text](images/demo1.gif)
+![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users with the ability to analyze images with Generative AI. This can be integrated into applications like image classification, reverse image lookup, object detection and more. This repo comes iwth a basic streamlit front-end to help users stand up a proof of concept and experiment with image analysis use-cases quickly.
