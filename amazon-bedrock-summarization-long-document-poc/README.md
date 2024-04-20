@@ -44,7 +44,7 @@ The requirements.txt file contains all necessary dependencies for this sample ap
 Set up a python virtual environment in the root directory of the repository and ensure that you are using Python 3.9. This can be done by running the following commands:
 
 ```
-pip install virtualenv
+pip3 install virtualenv
 python3.9 -m venv venv
 ```
 
