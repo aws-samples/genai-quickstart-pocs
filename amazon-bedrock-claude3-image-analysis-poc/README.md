@@ -1,6 +1,6 @@
 # Amazon-Bedrock-Image-Analysis-POC
 
-This is sample code demonstrating the use of Amazon Bedrock and Multi-Modal Generative AI models from Anthropic to implement an image analysis use case. The application is constructed with a simple streamlit frontend where users can upload a jpeg, and get a description of the image.
+This is sample code demonstrating the use of Amazon Bedrock and Multi-Modal Generative AI models from Anthropic to implement an image analysis use case. The application is constructed with a simple streamlit frontend where users can upload a 1 page jpeg, png or PDF and get a description of the image.
 
 ![Alt text](images/demo1.gif)
 # **Goal of this Repo:**
@@ -15,7 +15,7 @@ The architecture and flow of the sample application will be:
 When a user interacts with the GenAI app, the flow is as follows:
 
 1. The user uploads an image for bedrock model to analyze. (app.py).
-2. The streamlit app, takes the image input, and invokes Amazon Bedrock to generate a description (image_analysis.py).
+2. The streamlit app, takes the image input, and invokes Amazon Bedrock to generate a description (analyze_images.py).
 3. The image created by Amazon Bedrock is returned and displayed on the streamlit app (app.py).
 
 # How to use this Repo:
@@ -34,8 +34,8 @@ git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 3 key files,
-the app.py file, the image_analysis.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
-The image_analysis.py file houses the logic of the application, including the Amazon Bedrock API invocations to generate descriptions of an image.
+the app.py file, the analyze_images.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
+The analyze_images.py file houses the logic of the application, including the Amazon Bedrock API invocations to generate descriptions of an image.
 The requirements.txt file contains all necessary dependencies for this sample application to work.
 
 ## Step 2:
@@ -74,7 +74,7 @@ profile_name=<AWS_CLI_PROFILE_NAME>
 
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-Depending on the region and model that you are planning to use with Amazon Bedrock (please note that only a few models can analyze images), you may need to reconfigure model params in the image_analysis file:
+Depending on the region and model that you are planning to use with Amazon Bedrock (please note that only a few models can analyze images), you may need to reconfigure model paramaters in the image_analysis file. You might also choose to customize your prompts if this POC is for an industry-specific use-case analyzing a specific type of image:
 
 ```
 brclient = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com',config=config)
