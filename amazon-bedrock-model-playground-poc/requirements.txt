@@ -21,7 +21,7 @@ numpy==1.26.4
 packaging==24.0
 pandas==2.2.2
 pillow==10.3.0
-pip==23.2.1
+pip==23.3
 protobuf==4.25.3
 pyarrow==16.0.0
 pydeck==0.8.1b0
