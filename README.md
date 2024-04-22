@@ -57,6 +57,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 17. **Amazon-Bedrock-Asynchronous-Invocation-POC:** 
     This sample implements asynchronous invocations with Amazon Bedrock allowing users to make multiple simultaneous calls to Bedrock models to decrease overall latency. This allows users to ask questions against 3+ models simultaneously, demonstrating the decrease in latency by doing it asynchronously vs sequentially.
     ![Alt text](amazon-bedrock-asynchronous-invocation-poc/images/demo.gif)
+18. **Amazon-Bedrock-Model-Playground-POC:** 
+    This sample implements an Amazon Bedrock Gen AI Model playground that allows users to select any LLM offered by Amazon Bedrock and ask zero shot questions directly against it. This provides business users the ability to experiment with different Amazon Bedrock LLMs without having access to the AWS console.
+    ![Alt text](amazon-bedrock-model-playground-poc/images/demo.gif)
 
 ## Prerequisites
 

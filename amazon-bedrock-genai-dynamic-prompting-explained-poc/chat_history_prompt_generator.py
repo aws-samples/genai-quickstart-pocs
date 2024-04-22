@@ -7,7 +7,7 @@ def chat_history(session_state):
     This function takes the current session state, including the user question and the LLM response, parses it, and formats
     it into a prompt. It preserves the session state up to 4 questions/answers and then removes the oldest question/answer.
     It writes the formatted questions and answers to the chat_history.txt file so that it can be easily injected to the
-    final prompt in the prompt_finder_and_invoke_llm.py file.
+    final prompt in the model_invoker.py file.
     :param session_state: The session state that is passed in from the front end that contains each individual user question
     and LLM answer.
     """
