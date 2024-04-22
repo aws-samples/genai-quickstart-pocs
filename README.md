@@ -60,6 +60,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 18. **Amazon-Bedrock-Model-Playground-POC:** 
     This sample implements an Amazon Bedrock Gen AI Model playground that allows users to select any LLM offered by Amazon Bedrock and ask zero shot questions directly against it. This provides business users the ability to experiment with different Amazon Bedrock LLMs without having access to the AWS console.
     ![Alt text](amazon-bedrock-model-playground-poc/images/demo.gif)
+19. **Amazon-Bedrock-Claude3-Image-Analysis-POC:** 
+    This sample implements an image analysis app that uses Amazon Bedrock and Claude3 to collect data from an image and return as JSON. This provides users the ability to quickly experiment with image analysis use-cases and customize the JSON response to the needs of their image analysis use-case.
+    ![Alt text](amazon-bedrock-claude3-image-analysis-poc/images/demo.gif)
 
 ## Prerequisites
 
