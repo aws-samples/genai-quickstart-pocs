@@ -27,7 +27,7 @@ When a user interacts with the GenAI app, the flow is as follows:
 
 1. Amazon Bedrock Access and CLI Credentials.
 2. Appropriate permissions to configure Amazon OpenSearch Serverless Vector Search.
-3. Ensure Python 3.9 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+3. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
 
 ## Step 1:
 
@@ -50,7 +50,7 @@ Set up a python virtual environment in the root directory of the repository and 
 
 ```
 pip install virtualenv
-python3.9 -m venv venv
+python3.10 -m venv venv
 ```
 
 The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
