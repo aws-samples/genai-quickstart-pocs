@@ -24,7 +24,7 @@ When a user interacts with the GenAI app, the flow is as follows:
 
 ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials.
+1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
 2. Amazon Athena Access and the ability to create a Amazon Athena database and tables.
 3. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3100/).
 4. Please note that this project leverages the [langchain-experimental](https://pypi.org/project/langchain-experimental/) package which has known vulnerabilities.
