@@ -1,0 +1,6 @@
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.csproj.AssemblyReference.cache
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.GeneratedMSBuildEditorConfig.editorconfig
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.AssemblyInfoInputs.cache
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.AssemblyInfo.cs
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.csproj.CoreCompileInputs.cache
+D:\AWSDEV\genai-quickstart-pocs-dot-net\amazon-bedrock-document-generator-poc\Amazon.Bedrock.Poc\Document.Generator.Claude3\obj\Debug\net6.0\QuickStart.MvcApplicationPartsAssemblyInfo.cache

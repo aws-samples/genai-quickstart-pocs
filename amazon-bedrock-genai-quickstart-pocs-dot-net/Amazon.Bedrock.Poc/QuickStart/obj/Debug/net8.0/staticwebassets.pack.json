@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.QuickStart.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.QuickStart.props",
+      "PackagePath": "build\\QuickStart.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.QuickStart.props",
+      "PackagePath": "buildMultiTargeting\\QuickStart.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.QuickStart.props",
+      "PackagePath": "buildTransitive\\QuickStart.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

@@ -1,0 +1,113 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {}
+  },
+  "projects": {
+    "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+        "projectName": "QuickStart",
+        "projectPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+        "packagesPath": "C:\\Users\\pratipb\\.nuget\\packages\\",
+        "outputPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "D:\\Users\\pratipb\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "AWSSDK.Bedrock": {
+              "target": "Package",
+              "version": "[3.7.302.5, )"
+            },
+            "AWSSDK.BedrockAgentRuntime": {
+              "target": "Package",
+              "version": "[3.7.305.6, )"
+            },
+            "AWSSDK.BedrockRuntime": {
+              "target": "Package",
+              "version": "[3.7.302.5, )"
+            },
+            "LangChain": {
+              "target": "Package",
+              "version": "[0.13.0, )"
+            },
+            "LangChain.Core": {
+              "target": "Package",
+              "version": "[0.13.0, )"
+            },
+            "LangChain.Databases.Sqlite": {
+              "target": "Package",
+              "version": "[0.14.0, )"
+            },
+            "LangChain.DocumentLoaders.Pdf": {
+              "target": "Package",
+              "version": "[0.14.0, )"
+            },
+            "LangChain.Providers.Amazon.Bedrock": {
+              "target": "Package",
+              "version": "[0.13.0, )"
+            },
+            "MudBlazor": {
+              "target": "Package",
+              "version": "[6.*, )"
+            },
+            "MudBlazor.Markdown": {
+              "target": "Package",
+              "version": "[0.1.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
