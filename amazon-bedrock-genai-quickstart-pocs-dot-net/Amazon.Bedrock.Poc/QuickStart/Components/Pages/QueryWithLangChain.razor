@@ -5,6 +5,9 @@
 @using System.Text.Json.Nodes;
 @using System.Threading.Channels;
 @using Amazon;
+@using Amazon.Bedrock
+@using Amazon.BedrockAgent
+@using Amazon.BedrockAgent.Model
 @using Amazon.BedrockAgentRuntime
 @using Amazon.BedrockAgentRuntime.Model
 @using Amazon.BedrockRuntime;
@@ -20,6 +23,11 @@
 @using LangChain.Providers.Amazon.Bedrock;
 @using LangChain.DocumentLoaders;
 @using LangChain.Splitters.Text;
+
+@inject AmazonBedrockAgentClient agentClient
+@inject AmazonBedrockAgentRuntimeClient agentRuntimeClient
+@inject AmazonBedrockClient bedrockClient
+
 @rendermode InteractiveServer
 
 <MudPopoverProvider />
@@ -34,7 +42,16 @@
     <EditForm Model="@Model" OnSubmit="Submit">
         <MudCard>
             <MudCardContent>                
-                
+                <MudSelect T="KnowledgeBaseModel" @bind-Value="knowledgeBaseModel" Label="Select Knowledge Base" ToStringFunc="@_selectConverter" AnchorOrigin="Origin.BottomCenter">
+                    @if (knowledgeBaseModels != null)
+                    {
+                        @foreach (var item in knowledgeBaseModels)
+                        {
+                            knowledgeBaseModel ??= item;
+                            <MudSelectItem Value="@item"   />
+                        }
+                    }
+                </MudSelect>
                 <MudTextField @bind-Value="Model!.Query"  Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" OnAdornmentClick="Submit" />
 
             </MudCardContent>
@@ -59,15 +76,39 @@
     protected override void OnInitialized() => Model ??= new();
     private string outputText;
     const string KNOWLEDGE_BASE_ID = "CEIXPAB1CN";
+    private List<KnowledgeBaseModel> knowledgeBaseModels;
+    private KnowledgeBaseModel knowledgeBaseModel;
+
+    readonly Func<KnowledgeBaseModel, string> _selectConverter = kb => string.Concat(kb?.KnowledgeBaseName, "-", kb?.KnowledgeBaseId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var knowledgeBaseResponse = await agentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest()
+        {
+            MaxResults = 25
+
+        });
+
+        knowledgeBaseModels = new List<KnowledgeBaseModel>();
+        foreach (var item in knowledgeBaseResponse?.KnowledgeBaseSummaries)
+        {
+            knowledgeBaseModel = new KnowledgeBaseModel();
+            knowledgeBaseModel.KnowledgeBaseName = item.Name;
+            knowledgeBaseModel.KnowledgeBaseId = item.KnowledgeBaseId;
+            knowledgeBaseModels.Add(knowledgeBaseModel);
+        }
+    }
+
 
     private async void Submit()
     {       
         var query = Model?.Query;
         string claudeModelId = "anthropic.claude-3-haiku-20240307-v1:0";
-        
+
         if (!string.IsNullOrEmpty(query))
         {
             outputText = await InvokeClaudeAsync(query, claudeModelId);
+
         }
 
         StateHasChanged();
@@ -75,12 +116,12 @@
     }
 
 
-    public static async Task<string> InvokeClaudeAsync(string query, string claudeModelId)
+    public  async Task<string> InvokeClaudeAsync(string query, string claudeModelId)
     {
         string generatedText = "";
         try
         {
-            AmazonBedrockAgentRuntimeClient agentClient = new AmazonBedrockAgentRuntimeClient(RegionEndpoint.USEast1);
+            //agentClient = new AmazonBedrockAgentRuntimeClient(RegionEndpoint.USEast1);
             var request = new RetrieveAndGenerateRequest
                 {
                     Input = new RetrieveAndGenerateInput { Text = query },
@@ -89,7 +130,7 @@
                         Type = RetrieveAndGenerateType.KNOWLEDGE_BASE,
                         KnowledgeBaseConfiguration = new KnowledgeBaseRetrieveAndGenerateConfiguration
                         {
-                            KnowledgeBaseId = KNOWLEDGE_BASE_ID,
+                            KnowledgeBaseId = knowledgeBaseModel.KnowledgeBaseId,
                             ModelArn = claudeModelId,
                             RetrievalConfiguration = new KnowledgeBaseRetrievalConfiguration
                             {
@@ -101,7 +142,7 @@
                         }
                     }
                 };
-            var response = await agentClient!.RetrieveAndGenerateAsync(request);
+            var response = await agentRuntimeClient.RetrieveAndGenerateAsync(request);
 
             if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -134,10 +175,16 @@
         return generatedText;
     }
 
-   
+
 
     public class QueryModel
     {
         public string? Query { get; set; }
+    }
+
+    public class KnowledgeBaseModel
+    {
+        public string KnowledgeBaseId { get; set; }
+        public string KnowledgeBaseName { get; set; }
     }
 }

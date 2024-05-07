@@ -9,6 +9,7 @@
   
   <ItemGroup>
 	<PackageReference Include="AWSSDK.Bedrock" Version="3.7.302.5" />
+	<PackageReference Include="AWSSDK.BedrockAgent" Version="3.7.308.1" />
 	<PackageReference Include="AWSSDK.BedrockAgentRuntime" Version="3.7.305.6" />
 	<PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.302.5" />
 	<PackageReference Include="LangChain" Version="0.13.0" />

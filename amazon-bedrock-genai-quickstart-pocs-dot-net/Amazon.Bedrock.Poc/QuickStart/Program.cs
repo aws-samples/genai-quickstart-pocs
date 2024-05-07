@@ -1,6 +1,12 @@
 using QuickStart.Components;
 using MudBlazor;
 using MudBlazor.Services;
+using Amazon.Bedrock;
+using Amazon.BedrockRuntime;
+using Amazon;
+using Amazon.BedrockAgentRuntime;
+using Microsoft.Extensions.DependencyInjection;
+using Amazon.BedrockAgent;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +16,31 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 builder.Services.AddMudMarkdownServices();
+
+builder.Services.AddSingleton(
+    new AmazonBedrockRuntimeClient(new AmazonBedrockRuntimeConfig()
+    {
+        RegionEndpoint = RegionEndpoint.USEast1
+    }));
+builder.Services.AddSingleton(
+    new AmazonBedrockClient(new AmazonBedrockConfig()
+    {
+        RegionEndpoint = RegionEndpoint.USEast1
+    }));
+
+builder.Services.AddSingleton(
+     new AmazonBedrockAgentRuntimeClient(new AmazonBedrockAgentRuntimeConfig()
+     {
+         RegionEndpoint = RegionEndpoint.USEast1
+     }));
+
+
+builder.Services.AddSingleton(
+     new AmazonBedrockAgentClient(new AmazonBedrockAgentConfig()
+     {
+         RegionEndpoint = RegionEndpoint.USEast1
+     }));
+
 
 var app = builder.Build();
 

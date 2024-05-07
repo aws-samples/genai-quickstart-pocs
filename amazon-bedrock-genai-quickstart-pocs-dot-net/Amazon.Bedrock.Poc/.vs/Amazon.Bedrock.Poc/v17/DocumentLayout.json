@@ -1,21 +1,34 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\",
+  "WorkspaceRootPath": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\routes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\routes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\Home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\DocumentGeneratorForm.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\QueryWithLangChain.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\pages\\querywithlangchain.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\pages\\querywithlangchain.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\components\\pages\\documentgeneratorform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\components\\pages\\documentgeneratorform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|d:\\git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\amazon.bedrock.poc\\quickstart\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C9C6C52-3CED-4AD3-9682-D8B9F428EE9A}|QuickStart\\QuickStart.csproj|solutionrelative:quickstart\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,61 +43,93 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Program.cs",
-              "RelativeDocumentMoniker": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Program.cs",
-              "ToolTip": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Program.cs",
-              "RelativeToolTip": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Program.cs",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-06T20:53:43.24Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Readme.md",
-              "DocumentMoniker": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Readme.md",
-              "RelativeDocumentMoniker": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Readme.md",
-              "ToolTip": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Readme.md",
-              "RelativeToolTip": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Readme.md",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2024-05-06T20:53:18.811Z"
+              "Title": "Routes.razor",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Routes.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\Routes.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Routes.razor",
+              "RelativeToolTip": "QuickStart\\Components\\Routes.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2024-05-07T14:40:49.189Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Home.razor",
-              "DocumentMoniker": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\Home.razor",
-              "RelativeDocumentMoniker": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\Home.razor",
-              "ToolTip": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\Home.razor",
-              "RelativeToolTip": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\Home.razor",
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Layout\\NavMenu.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\Layout\\NavMenu.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Layout\\NavMenu.razor",
+              "RelativeToolTip": "QuickStart\\Components\\Layout\\NavMenu.razor",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2024-05-06T20:52:51.512Z"
+              "WhenOpened": "2024-05-07T14:40:42.63Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainLayout.razor",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Layout\\MainLayout.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\Layout\\MainLayout.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Layout\\MainLayout.razor",
+              "RelativeToolTip": "QuickStart\\Components\\Layout\\MainLayout.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA0AAAAMAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2024-05-07T14:40:36.934Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "DocumentGeneratorForm.razor",
-              "DocumentMoniker": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\DocumentGeneratorForm.razor",
-              "RelativeDocumentMoniker": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\DocumentGeneratorForm.razor",
-              "ToolTip": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\DocumentGeneratorForm.razor",
-              "RelativeToolTip": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\DocumentGeneratorForm.razor",
-              "ViewState": "AQIAADAAAAAAAAAAAAAAAEAAAAAaAAAA",
+              "Title": "App.razor",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\App.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\App.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\App.razor",
+              "RelativeToolTip": "QuickStart\\Components\\App.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2024-05-06T17:08:18.166Z"
+              "WhenOpened": "2024-05-07T14:40:25.969Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Program.cs",
+              "RelativeDocumentMoniker": "QuickStart\\Program.cs",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Program.cs",
+              "RelativeToolTip": "QuickStart\\Program.cs",
+              "ViewState": "AQIAABAAAAAAAAAAAAAAACYAAAAhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-07T13:50:20.553Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DocumentGeneratorForm.razor",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Pages\\DocumentGeneratorForm.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\Pages\\DocumentGeneratorForm.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Pages\\DocumentGeneratorForm.razor",
+              "RelativeToolTip": "QuickStart\\Components\\Pages\\DocumentGeneratorForm.razor",
+              "ViewState": "AQIAADIAAAAAAAAAAAAvwEYAAAAIAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2024-05-07T13:46:29.874Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
               "Title": "QueryWithLangChain.razor",
-              "DocumentMoniker": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\QueryWithLangChain.razor",
-              "RelativeDocumentMoniker": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\QueryWithLangChain.razor",
-              "ToolTip": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\QueryWithLangChain.razor",
-              "RelativeToolTip": "..\\amazon-bedrock-document-generator-poc\\Amazon.Bedrock.Poc\\Document.Generator.Claude3\\Components\\Pages\\QueryWithLangChain.razor",
-              "ViewState": "AQIAADsAAAAAAAAAAAAvwEgAAAAHAAAA",
+              "DocumentMoniker": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Pages\\QueryWithLangChain.razor",
+              "RelativeDocumentMoniker": "QuickStart\\Components\\Pages\\QueryWithLangChain.razor",
+              "ToolTip": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\Components\\Pages\\QueryWithLangChain.razor",
+              "RelativeToolTip": "QuickStart\\Components\\Pages\\QueryWithLangChain.razor",
+              "ViewState": "AQIAAHAAAAAAAAAAAAAiwHwAAAAMAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2024-05-06T16:51:18.674Z"
+              "WhenOpened": "2024-05-07T13:31:41.938Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -74,6 +74,22 @@
           }
         }
       },
+      "AWSSDK.BedrockAgent/3.7.308.1": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.7.303.27, 4.0.0)"
+        },
+        "compile": {
+          "lib/net8.0/AWSSDK.BedrockAgent.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.BedrockAgent.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "AWSSDK.BedrockAgentRuntime/3.7.305.6": {
         "type": "package",
         "dependencies": {
@@ -106,7 +122,7 @@
           }
         }
       },
-      "AWSSDK.Core/3.7.303.26": {
+      "AWSSDK.Core/3.7.303.27": {
         "type": "package",
         "compile": {
           "lib/net8.0/AWSSDK.Core.dll": {
@@ -2646,6 +2662,38 @@
         "tools/uninstall.ps1"
       ]
     },
+    "AWSSDK.BedrockAgent/3.7.308.1": {
+      "sha512": "JhL6lR3Skx8yYAxTuJD43uUEQKABWNuI6hEsI37+5pVREvTthbfMa/8Sobs6A1BZC0Bt2+Rzkx+x3bsXf1Pvdg==",
+      "type": "package",
+      "path": "awssdk.bedrockagent/3.7.308.1",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "analyzers/dotnet/cs/AWSSDK.BedrockAgent.CodeAnalysis.dll",
+        "analyzers/dotnet/cs/SharedAnalysisCode.dll",
+        "awssdk.bedrockagent.3.7.308.1.nupkg.sha512",
+        "awssdk.bedrockagent.nuspec",
+        "images/AWSLogo.png",
+        "lib/net35/AWSSDK.BedrockAgent.dll",
+        "lib/net35/AWSSDK.BedrockAgent.pdb",
+        "lib/net35/AWSSDK.BedrockAgent.xml",
+        "lib/net45/AWSSDK.BedrockAgent.dll",
+        "lib/net45/AWSSDK.BedrockAgent.pdb",
+        "lib/net45/AWSSDK.BedrockAgent.xml",
+        "lib/net8.0/AWSSDK.BedrockAgent.dll",
+        "lib/net8.0/AWSSDK.BedrockAgent.pdb",
+        "lib/net8.0/AWSSDK.BedrockAgent.xml",
+        "lib/netcoreapp3.1/AWSSDK.BedrockAgent.dll",
+        "lib/netcoreapp3.1/AWSSDK.BedrockAgent.pdb",
+        "lib/netcoreapp3.1/AWSSDK.BedrockAgent.xml",
+        "lib/netstandard2.0/AWSSDK.BedrockAgent.dll",
+        "lib/netstandard2.0/AWSSDK.BedrockAgent.pdb",
+        "lib/netstandard2.0/AWSSDK.BedrockAgent.xml",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
     "AWSSDK.BedrockAgentRuntime/3.7.305.6": {
       "sha512": "oO++ReiOO6RraGiZPBLqK84YXgAtz9a9YJ9uBwAkgJUjze7S2XzHsEBRgZtbjDLNpQNiV3D9DEgXMngoINsuig==",
       "type": "package",
@@ -2710,15 +2758,15 @@
         "tools/uninstall.ps1"
       ]
     },
-    "AWSSDK.Core/3.7.303.26": {
-      "sha512": "4QGTkTVTpVyUpnVWaB2W1ggWlnj4WvlsauXG0m6H0cg91nvw+K6l2N5V6dBxP5wxZReASksj8NDrBpJtCE7VQQ==",
+    "AWSSDK.Core/3.7.303.27": {
+      "sha512": "vYc5Ci195j7zBgZvAok+CSSzBJVNHa/DyAFtcVZFD41WfQm8fZg7FIyo+Cn0DYmilkM9DRovYdg5yFgcoI7rIA==",
       "type": "package",
-      "path": "awssdk.core/3.7.303.26",
+      "path": "awssdk.core/3.7.303.27",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "awssdk.core.3.7.303.26.nupkg.sha512",
+        "awssdk.core.3.7.303.27.nupkg.sha512",
         "awssdk.core.nuspec",
         "images/AWSLogo.png",
         "lib/net35/AWSSDK.Core.dll",
@@ -7536,6 +7584,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "AWSSDK.Bedrock >= 3.7.302.5",
+      "AWSSDK.BedrockAgent >= 3.7.308.1",
       "AWSSDK.BedrockAgentRuntime >= 3.7.305.6",
       "AWSSDK.BedrockRuntime >= 3.7.302.5",
       "LangChain >= 0.13.0",
@@ -7553,11 +7602,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+      "projectUniqueName": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
       "projectName": "QuickStart",
-      "projectPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+      "projectPath": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
       "packagesPath": "C:\\Users\\pratipb\\.nuget\\packages\\",
-      "outputPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\obj\\",
+      "outputPath": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "D:\\Users\\pratipb\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -7594,6 +7643,10 @@
           "AWSSDK.Bedrock": {
             "target": "Package",
             "version": "[3.7.302.5, )"
+          },
+          "AWSSDK.BedrockAgent": {
+            "target": "Package",
+            "version": "[3.7.308.1, )"
           },
           "AWSSDK.BedrockAgentRuntime": {
             "target": "Package",

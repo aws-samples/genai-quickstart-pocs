@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "+FJvrvBMKQeQJd9T66wQx+tn6znH6BgORhBM61pnw+8=",
+  "Hash": "Xi9lNXMr0q2/UzEDGif6/omQRhSbkvjSfvk5tEl46g0=",
   "Source": "QuickStart",
   "BasePath": "_content/QuickStart",
   "Mode": "Default",
@@ -10,7 +10,7 @@
     {
       "Name": "QuickStart\\wwwroot",
       "Source": "QuickStart",
-      "ContentRoot": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
+      "ContentRoot": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
       "BasePath": "_content/QuickStart",
       "Pattern": "**"
     }
@@ -5185,10 +5185,10 @@
       "OriginalItemSpec": "C:\\Users\\pratipb\\.nuget\\packages\\mudblazor\\6.19.1\\staticwebassets\\MudBlazor.min.js"
     },
     {
-      "Identity": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\app.css",
+      "Identity": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\app.css",
       "SourceId": "QuickStart",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
+      "ContentRoot": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
       "BasePath": "_content/QuickStart",
       "RelativePath": "app.css",
       "AssetKind": "All",
@@ -5204,10 +5204,10 @@
       "OriginalItemSpec": "wwwroot\\app.css"
     },
     {
-      "Identity": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\favicon.ico",
+      "Identity": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\favicon.ico",
       "SourceId": "QuickStart",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
+      "ContentRoot": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\",
       "BasePath": "_content/QuickStart",
       "RelativePath": "favicon.ico",
       "AssetKind": "All",

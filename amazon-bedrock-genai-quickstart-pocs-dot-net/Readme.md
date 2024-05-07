@@ -7,9 +7,12 @@ This repository contains sample code demonstrating various use cases leveraging 
 1. **Amazon-Bedrock-Document-Generator:**
    This sample demonstrates using Amazon Bedrock and Generative AI to perform document generation based on a document template and user-provided details.
 
+    ![Alt text](images/text-generation.png "document generator")
+ 
 2. **Amazon-Bedrock-Knowledgebases-RAG-POC:** 
     This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases, allowing users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock.
 
+    ![Alt text](images/rag-with-kb.png "RAG with KB")
 
 ## Prerequisites
 

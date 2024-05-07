@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {}
+    "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {}
   },
   "projects": {
-    "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {
+    "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+        "projectUniqueName": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
         "projectName": "QuickStart",
-        "projectPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
+        "projectPath": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\QuickStart.csproj",
         "packagesPath": "C:\\Users\\pratipb\\.nuget\\packages\\",
-        "outputPath": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\obj\\",
+        "outputPath": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "D:\\Users\\pratipb\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -48,6 +48,10 @@
             "AWSSDK.Bedrock": {
               "target": "Package",
               "version": "[3.7.302.5, )"
+            },
+            "AWSSDK.BedrockAgent": {
+              "target": "Package",
+              "version": "[3.7.308.1, )"
             },
             "AWSSDK.BedrockAgentRuntime": {
               "target": "Package",

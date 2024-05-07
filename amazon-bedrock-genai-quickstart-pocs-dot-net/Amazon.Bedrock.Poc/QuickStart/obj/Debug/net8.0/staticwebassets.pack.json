@@ -1,11 +1,11 @@
 {
   "Files": [
     {
-      "Id": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\app.css",
+      "Id": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\app.css",
       "PackagePath": "staticwebassets\\app.css"
     },
     {
-      "Id": "D:\\AWSDEV\\genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\favicon.ico",
+      "Id": "D:\\Git\\genai-quickstart-pocs\\amazon-bedrock-genai-quickstart-pocs-dot-net\\Amazon.Bedrock.Poc\\QuickStart\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {

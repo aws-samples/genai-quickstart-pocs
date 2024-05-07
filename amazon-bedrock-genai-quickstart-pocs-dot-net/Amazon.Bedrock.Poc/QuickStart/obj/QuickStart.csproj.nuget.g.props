@@ -17,9 +17,10 @@
     <Import Project="$(NuGetPackageRoot)mudblazor.markdown\0.1.3\buildTransitive\MudBlazor.Markdown.props" Condition="Exists('$(NuGetPackageRoot)mudblazor.markdown\0.1.3\buildTransitive\MudBlazor.Markdown.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <PkgAWSSDK_Core Condition=" '$(PkgAWSSDK_Core)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.core\3.7.303.26</PkgAWSSDK_Core>
+    <PkgAWSSDK_Core Condition=" '$(PkgAWSSDK_Core)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.core\3.7.303.27</PkgAWSSDK_Core>
     <PkgAWSSDK_BedrockRuntime Condition=" '$(PkgAWSSDK_BedrockRuntime)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.bedrockruntime\3.7.302.5</PkgAWSSDK_BedrockRuntime>
     <PkgAWSSDK_BedrockAgentRuntime Condition=" '$(PkgAWSSDK_BedrockAgentRuntime)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.bedrockagentruntime\3.7.305.6</PkgAWSSDK_BedrockAgentRuntime>
+    <PkgAWSSDK_BedrockAgent Condition=" '$(PkgAWSSDK_BedrockAgent)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.bedrockagent\3.7.308.1</PkgAWSSDK_BedrockAgent>
     <PkgAWSSDK_Bedrock Condition=" '$(PkgAWSSDK_Bedrock)' == '' ">C:\Users\pratipb\.nuget\packages\awssdk.bedrock\3.7.302.5</PkgAWSSDK_Bedrock>
   </PropertyGroup>
 </Project>

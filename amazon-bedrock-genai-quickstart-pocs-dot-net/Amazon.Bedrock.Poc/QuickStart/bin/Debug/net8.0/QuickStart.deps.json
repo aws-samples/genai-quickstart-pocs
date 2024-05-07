@@ -9,6 +9,7 @@
       "QuickStart/1.0.0": {
         "dependencies": {
           "AWSSDK.Bedrock": "3.7.302.5",
+          "AWSSDK.BedrockAgent": "3.7.308.1",
           "AWSSDK.BedrockAgentRuntime": "3.7.305.6",
           "AWSSDK.BedrockRuntime": "3.7.302.5",
           "LangChain": "0.13.0",
@@ -66,7 +67,7 @@
       },
       "AWSSDK.Bedrock/3.7.302.5": {
         "dependencies": {
-          "AWSSDK.Core": "3.7.303.26"
+          "AWSSDK.Core": "3.7.303.27"
         },
         "runtime": {
           "lib/net8.0/AWSSDK.Bedrock.dll": {
@@ -75,9 +76,20 @@
           }
         }
       },
+      "AWSSDK.BedrockAgent/3.7.308.1": {
+        "dependencies": {
+          "AWSSDK.Core": "3.7.303.27"
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.BedrockAgent.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.7.308.1"
+          }
+        }
+      },
       "AWSSDK.BedrockAgentRuntime/3.7.305.6": {
         "dependencies": {
-          "AWSSDK.Core": "3.7.303.26"
+          "AWSSDK.Core": "3.7.303.27"
         },
         "runtime": {
           "lib/net8.0/AWSSDK.BedrockAgentRuntime.dll": {
@@ -88,7 +100,7 @@
       },
       "AWSSDK.BedrockRuntime/3.7.302.5": {
         "dependencies": {
-          "AWSSDK.Core": "3.7.303.26"
+          "AWSSDK.Core": "3.7.303.27"
         },
         "runtime": {
           "lib/net8.0/AWSSDK.BedrockRuntime.dll": {
@@ -97,11 +109,11 @@
           }
         }
       },
-      "AWSSDK.Core/3.7.303.26": {
+      "AWSSDK.Core/3.7.303.27": {
         "runtime": {
           "lib/net8.0/AWSSDK.Core.dll": {
             "assemblyVersion": "3.3.0.0",
-            "fileVersion": "3.7.303.26"
+            "fileVersion": "3.7.303.27"
           }
         }
       },
@@ -1500,6 +1512,13 @@
       "path": "awssdk.bedrock/3.7.302.5",
       "hashPath": "awssdk.bedrock.3.7.302.5.nupkg.sha512"
     },
+    "AWSSDK.BedrockAgent/3.7.308.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JhL6lR3Skx8yYAxTuJD43uUEQKABWNuI6hEsI37+5pVREvTthbfMa/8Sobs6A1BZC0Bt2+Rzkx+x3bsXf1Pvdg==",
+      "path": "awssdk.bedrockagent/3.7.308.1",
+      "hashPath": "awssdk.bedrockagent.3.7.308.1.nupkg.sha512"
+    },
     "AWSSDK.BedrockAgentRuntime/3.7.305.6": {
       "type": "package",
       "serviceable": true,
@@ -1514,12 +1533,12 @@
       "path": "awssdk.bedrockruntime/3.7.302.5",
       "hashPath": "awssdk.bedrockruntime.3.7.302.5.nupkg.sha512"
     },
-    "AWSSDK.Core/3.7.303.26": {
+    "AWSSDK.Core/3.7.303.27": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-4QGTkTVTpVyUpnVWaB2W1ggWlnj4WvlsauXG0m6H0cg91nvw+K6l2N5V6dBxP5wxZReASksj8NDrBpJtCE7VQQ==",
-      "path": "awssdk.core/3.7.303.26",
-      "hashPath": "awssdk.core.3.7.303.26.nupkg.sha512"
+      "sha512": "sha512-vYc5Ci195j7zBgZvAok+CSSzBJVNHa/DyAFtcVZFD41WfQm8fZg7FIyo+Cn0DYmilkM9DRovYdg5yFgcoI7rIA==",
+      "path": "awssdk.core/3.7.303.27",
+      "hashPath": "awssdk.core.3.7.303.27.nupkg.sha512"
     },
     "Azure.AI.OpenAI/1.0.0-beta.13": {
       "type": "package",

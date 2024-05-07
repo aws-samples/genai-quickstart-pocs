@@ -13,6 +13,7 @@
 
 
 @inject ILogger<DocumentGeneratorForm> Logger
+@inject AmazonBedrockRuntimeClient BedrockRuntimeClient
 @rendermode InteractiveServer
 
 <MudPopoverProvider />
@@ -65,14 +66,14 @@
         StateHasChanged();
     } 
 
-    public static async Task<string> InvokeClaudeAsync(string prompt)
+    public  async Task<string> InvokeClaudeAsync(string prompt)
     {
         string claudeModelId = "anthropic.claude-3-sonnet-20240229-v1:0"; 
-        var provider = new BedrockProvider(RegionEndpoint.USEast1);
+      
         // Claude requires you to enclose the prompt as follows:
         string enclosedPrompt = prompt;
 
-        AmazonBedrockRuntimeClient client = new(RegionEndpoint.USEast1);
+        
 
         var messages = new JsonArray()
         {
@@ -92,7 +93,7 @@
         string generatedText = "";
         try
         {
-            InvokeModelResponse response = await client.InvokeModelAsync(new InvokeModelRequest()
+            InvokeModelResponse response = await BedrockRuntimeClient.InvokeModelAsync(new InvokeModelRequest()
                 {
                     ModelId = claudeModelId,
                     Body = AWSSDKUtils.GenerateMemoryStreamFromString(payload),
