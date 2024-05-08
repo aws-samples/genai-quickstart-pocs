@@ -73,7 +73,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 ## Getting Started
 
 1. Clone the repository.
-2. Navigate to the desired sample directory.
+2. Navigte to the desired sample directory.
 3. Set up a Python virtual environment and install the required dependencies.
 4. Configure the necessary environment variables (e.g., AWS credentials, database connections, etc.).
 5. Run the Streamlit application using the provided command.
