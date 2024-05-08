@@ -63,6 +63,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 19. **Amazon-Bedrock-Claude3-Image-Analysis-POC:** 
     This sample implements an image analysis app that uses Amazon Bedrock and Claude3 to collect data from an image and return as JSON. This provides users the ability to quickly experiment with image analysis use-cases and customize the JSON response to the needs of their image analysis use-case.
     ![Alt text](amazon-bedrock-claude3-image-analysis-poc/images/demo.gif)
+20. **Amazon-Bedrock-Guardrails-POC**
+    This sample implements Amazon Bedrock Guardrails to demonstrate how you can leverage guardrails to prevent malicious prompts and repsonse from your generative AI applications built with Amazon Bedrock.
+    ![Alt text](amazon-bedrock-guardrails-poc/images/demo.gif)
 
 ## Prerequisites
 
@@ -73,7 +76,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 ## Getting Started
 
 1. Clone the repository.
-2. Navigte to the desired sample directory.
+2. Navigate to the desired sample directory.
 3. Set up a Python virtual environment and install the required dependencies.
 4. Configure the necessary environment variables (e.g., AWS credentials, database connections, etc.).
 5. Run the Streamlit application using the provided command.
