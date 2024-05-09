@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Amazon.Bedrock.Document.Ggenerator.Poc.props" />
-</Project>

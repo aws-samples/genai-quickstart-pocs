@@ -1,7 +1,0 @@
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.csproj.AssemblyReference.cache
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.GeneratedMSBuildEditorConfig.editorconfig
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.AssemblyInfoInputs.cache
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.AssemblyInfo.cs
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.csproj.CoreCompileInputs.cache
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.MvcApplicationPartsAssemblyInfo.cache
-D:\Git\genai-quickstart-pocs\amazon-bedrock-genai-quickstart-pocs-dot-net\Amazon.Bedrock.Poc\QuickStart\obj\Debug\net8.0\Amazon.Bedrock.Document.Ggenerator.sourcelink.json
