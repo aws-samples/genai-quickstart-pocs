@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\Amazon.Bedrock.Knowledgebases.Rag.Poc.props" />
+</Project>

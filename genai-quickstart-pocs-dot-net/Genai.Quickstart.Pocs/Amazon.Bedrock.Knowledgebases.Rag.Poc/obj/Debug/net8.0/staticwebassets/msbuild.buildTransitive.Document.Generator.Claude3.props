@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\Document.Generator.Claude3.props" />
+</Project>
