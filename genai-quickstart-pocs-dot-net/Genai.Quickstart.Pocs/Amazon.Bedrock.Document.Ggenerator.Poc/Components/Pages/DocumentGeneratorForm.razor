@@ -1,0 +1,159 @@
+﻿@page "/document-generator-form"
+@using System.Runtime.CompilerServices;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using System.Threading.Channels;
+@using Amazon;
+@using Amazon.BedrockRuntime;
+@using Amazon.BedrockRuntime.Model;
+@using Amazon.Runtime.EventStreams;
+@using Amazon.Util;
+@using LangChain.Providers.Amazon.Bedrock
+@using MudBlazor
+
+
+@inject ILogger<DocumentGeneratorForm> Logger
+@inject AmazonBedrockRuntimeClient BedrockRuntimeClient
+@rendermode InteractiveServer
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<PageTitle>Document Generator</PageTitle>
+<MudStack>
+    
+    <AntiforgeryToken />
+    <EditForm Model="@Model" OnSubmit="Submit">
+        <MudCard>
+            <MudCardContent>
+               
+                <h1>Press Release Document Generation Assistant</h1>
+                <h2>Add details about the document you want to create: </h2>                
+                <MudTextField @bind-Value="Model!.Request" Label="Document Details" Variant="Variant.Outlined" Lines="3"></MudTextField>
+
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" >Submit</MudButton>
+            </MudCardActions>
+        </MudCard>    
+ </EditForm>
+        <MudCard>
+            <MudCardContent>              
+                <MudMarkdown Value="@outputText" />
+            </MudCardContent>        
+        </MudCard>
+    </MudStack>
+    
+
+
+@code {
+    [SupplyParameterFromForm]
+    public DocumentGeneratorModel? Model { get; set; }
+
+    protected override void OnInitialized() => Model ??= new();
+    private string outputText;
+
+    private async void Submit()
+    {
+        string userRequest = Model?.Request;
+        Logger.LogInformation("Request = {Request}", userRequest);
+        string docTemplate = GetDocTemplate();
+        string promptData = CreatePromptData(docTemplate, userRequest);
+
+        outputText = await InvokeClaudeAsync(promptData);
+
+        StateHasChanged();
+    } 
+
+    public  async Task<string> InvokeClaudeAsync(string prompt)
+    {
+        string claudeModelId = "anthropic.claude-3-sonnet-20240229-v1:0"; 
+      
+        // Claude requires you to enclose the prompt as follows:
+        string enclosedPrompt = prompt;
+
+        
+
+        var messages = new JsonArray()
+        {
+            new { role = "user", content = new[] { new { type = "text", text =  prompt }  } }
+        } ;
+
+
+
+        string payload = new JsonObject()
+            {
+                { "anthropic_version" , "bedrock-2023-05-31"},
+                { "messages", messages },
+                { "max_tokens", 1000 },
+                { "temperature", 0.5 }
+            }.ToJsonString();
+
+        string generatedText = "";
+        try
+        {
+            InvokeModelResponse response = await BedrockRuntimeClient.InvokeModelAsync(new InvokeModelRequest()
+                {
+                    ModelId = claudeModelId,
+                    Body = AWSSDKUtils.GenerateMemoryStreamFromString(payload),
+                    ContentType = "application/json",
+                    Accept = "application/json"
+                });
+
+            if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            {               
+                var output = JsonNode.ParseAsync(response.Body).Result?["content"][0]["text"]?.GetValue<string>() ?? "";
+                 return output;
+            }
+            else
+            {
+                Console.WriteLine("InvokeModelAsync failed with status code " + response.HttpStatusCode);
+            }
+        }
+        catch (AmazonBedrockRuntimeException e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        return generatedText;
+    }
+
+    private string GetDocTemplate()
+    {
+        return File.ReadAllText(@".\Data\01-doc-template.txt");
+    }
+
+    private string CreatePromptData(string docTemplate, string userRequest)
+    {
+        var promptData = @"
+        Human:
+
+        Generate a document based on the user input and the instructions and format provided in the Document Template below  
+        The tehcnical document should be human readable, well formatted, and broken into the relveant sections.
+        Response should be in valid Markdown syntax 
+        ###
+
+        <Document_Template> " +
+        docTemplate +
+            @"</Document_Template>
+        ###
+        <User_Input>" +
+        userRequest +
+            @"</User_Input>
+        ###
+
+        Assistant: Here is a draft based on the provided user input and template
+
+        """;
+
+        return promptData;
+    }
+
+    public class DocumentGeneratorModel
+    {
+        public string? Request { get; set; }
+
+        
+    }
+    
+}
