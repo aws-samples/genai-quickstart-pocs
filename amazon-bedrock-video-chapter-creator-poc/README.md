@@ -1,4 +1,4 @@
-# Amazon-Bedrock-Video-Chapter-Seach-POC
+# Amazon-Bedrock-Video-Chapter-Creator-POC
 
 This is sample code demonstrating the use of Amazon Transcribe, Amazon OpenSearch Serverless, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample. The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in `.srt` format, you can skip transcribing and jump straight into generating chapters.
 
@@ -56,7 +56,7 @@ After cloning the repo onto your local machine, open it up in your favorite code
 Set up a python virtual environment in the root directory of the repository and ensure that you are using Python 3.11. This can be done by running the following commands (The commands assume you are starting in the root folder of the repository):
 
 ```
-cd amazon-bedrock-video-chapter-search-poc/
+cd amazon-bedrock-video-chapter-creator-poc/
 pip install virtualenv
 python3.11 -m venv venv
 ```

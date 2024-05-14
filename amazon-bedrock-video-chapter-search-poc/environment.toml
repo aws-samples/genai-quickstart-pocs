@@ -1,7 +1,0 @@
-s3_bucket = "" # S3 Bucket where videos live (and subtitles, if they already exist)
-cloudfront_hostname = "" # CloudFront Hostname for the S3 bucket
-opensearch_endpoint = "" #OpenSearch Endpoint URL
-bedrock_region = "us-east-1" #Region used for Bedrock APIs
-opensearch_region = "us-east-1" #Region the OpenSearch Collection Exists
-opensearch_index = "" #OpenSearch Index Name 
-aws_profile_name = "" #AWS CLI Profile Name
