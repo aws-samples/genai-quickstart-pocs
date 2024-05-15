@@ -50,7 +50,7 @@ if video_type == 'Upload Video and Transcribe It':
             status.update(label="Uploading File to S3: ", state="running", expanded=False)
             object_name=upload_to_s3(uploaded_file, filename)
 
-            cf_name = get_cloudfront_name(object_name) #To avoid setting my AWS S3 Bucket to public, i want to serve my data via Cloudfront - this will get the Object's URI from CLoudfront
+            
 
             upload_end = datetime.now()
             upload_time= upload_end - upload_start
@@ -123,37 +123,7 @@ if st.session_state['process_status'] == "READY":
         status.update(label="Finding Start Times: ", state="running", expanded=False)
 
 
-        num_sections = 1
-        previous_timestamp = ""
-        for key in topics:
-            title = key['Title']
-            description = key['Summary']
-            topic_sentence = key['Starting_Sentence']
-
-
-
-        #Fuzzy Partial Ratio Score as Search mechanism
-            fuzzy_results = fuzzy_search(topic_sentence, subtitle_doc, num_sections, total_sections)
-            start_time_fuzzy = starting_time(fuzzy_results, topic_sentence, previous_timestamp)
-            previous_timestamp = start_time_fuzzy
-
-            #yt_suffix_fuzzy = time_math(start_time_fuzzy)
-            video_time = time_math_seconds(start_time_fuzzy.strip())
-
-            #write data into dataframe
-            new_row_data = {'Title': title, 'Summary': description, 'Start Time': start_time_fuzzy, 'Video Link': cf_name}
-            df = add_row(df, new_row_data)
-
-
-            #play video at timestamp
-
-            st.write(title+ ": ")
-            st.video(cf_name, format="video/mp4", start_time=video_time)
-
-            num_sections += 1
-
-            #End of Loop
-
+        
         start_time_end = datetime.now()
         start_time_full = start_time_end - start_time_start
 
