@@ -1,10 +1,10 @@
 ## Quickstart POC to create fine-tuned and pre-trained models in Amazon Bedrock
 
-# **Goal of this Repo:**
+## **Goal of this Repo:**
 The quickstart notebooks helps to quickly setup model customization ( fine-tuning and pre-training) for customer demo's and POC's.
 
-## Roadmap
-Compare cost, performance and latency between fine-tuning, pre-training and standard RAG.
+Here we the data which is used is consumer complaints. You can use your data for specific use-cases.
+
 
 ## Data used 
 #### Consumer Complaints data downloaded from Consumer Finance Protection Bureau to customize foundational models
@@ -19,7 +19,7 @@ The data used in the notebook filters the complaints data for the past one year.
 
 ### Consumer complaints and its handling for credit card or pre-paid cards is a very standard use-case in the FSI industry:
 
-**How this models can be helful after customization:**
+**How this models can be helpful after customization:**
 
 Identifying Trends and Patterns: Businesses can identify common issues and trends within their industry or specific to their company. This insight allows them to address systemic problems, improve their products or services, and enhance overall customer satisfaction.
 
@@ -49,19 +49,25 @@ The first step of utilizing this repo is performing a git clone of the repositor
 git clone https://gitlab.aws.dev/rajacgho/bedrock-model-customization
 ```
 
-After cloning the repo open it in your editor. 
-The file structure of this repo is as follows:
+The data file used for fine tuning and pre-training is in the data folder.
+If you want to use your own data files, copy your file in the folder and update the path in code
+which loads the data file.
 
-'''
-    1.  Data file (complaints-2024-04-08_12_34.csv)  
+**
+Structure of Data File
+**   
+```
+(complaints-2024-04-08_12_34.csv)  
         Data Size: 63,284 rows 
     {
     Data Feature:
      features: ['Date received', 'Product', 'Sub-product', 'Issue', 'Sub-issue', 'Consumer complaint narrative', 'Company public response', 'Company', 'State', 'ZIP code', 'Tags', 'Consumer consent provided?', 'Submitted via', 'Date sent to company', 'Company response to consumer', 'Timely response?', 'Consumer disputed?', 'Complaint ID'
     }
-'''
 
-'''
+``` 
+
+
+```
     2. Notebooks for pre-training
     - [x] Run the notebook in below order:
     - [] continued-pre-train_setup.ipynb
@@ -71,7 +77,7 @@ The file structure of this repo is as follows:
     - [x] Run the notebook in below order:
     - [] fine-tune_titan_express_setup.ipyn
     - [] fine-tune_titan_express_bedrock.ipynb
-'''
+```
 
 ## Step 2:
 
@@ -143,4 +149,5 @@ Total Provisioned thorughput cost for Titan Express (monthly): 26,864.00 USD
 2 models purchased x 14.80 USD per hour x 730 hours in a month = 21,608.00 USD per Month for 6 month commit
 Total Provisioned thorughput cost for Titan Express (monthly): 21,608.00 USD
 '''
-
+## Roadmap
+Compare cost, performance and latency between fine-tuning, pre-training and standard RAG.
