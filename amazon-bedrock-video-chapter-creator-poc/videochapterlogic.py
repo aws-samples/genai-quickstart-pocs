@@ -563,7 +563,7 @@ def persist_doc(doc):
         start_time = time_math_seconds(start_time_temp.strip())
 
         # Get Embeddings - returns vectorized value of input string
-        vectors = get_embedding(bedrock, summary)
+        vectors = get_embedding(summary)
         # Index document
         response = index_doc(
             oss_client, vectors, title, summary, video_source, start_time

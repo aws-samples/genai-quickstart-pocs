@@ -4,6 +4,8 @@ This is sample code demonstrating the use of Amazon Transcribe, Amazon OpenSearc
 
 The sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.
 
+![Amazon Bedrock Video Chapter Creator POC Demo](images/demo.gif)
+
 # **Goal of this Repo:**
 
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create video chapters and searching those chapters. 
@@ -15,13 +17,13 @@ The architecture and flow of the sample application will be:
 
 When a user interacts with the app, the flow is as follows:
 
-1. The user uploads a video file or provides an uploaded file s3 oject to the streamlit app. (ingest-and-transcribe-poc.py).
+1. The user uploads a video file or provides an uploaded file s3 oject to the streamlit app. 
 2. The streamlit app, takes the video, transcribes it and uses the transcription to determine spots that make sense as chapters.
 3. Each chapter is then sent to the LLM to locate a good spot to start the chapter that gives some context as to the content amd doesn't drop the user into the middle of the content.
 4. The chapters are then returned to the user, who can then save the chapters to the OpenSearch Collection. 
 
 On the search side:
-1. The user asks an inquiry via the streamlit app (search-app.py).
+1. The user asks an inquiry via the streamlit app.
 2. The query is passed the the LLM with the OpenSearch collection as a source.
 3. The OpenSearch collection provides the chapter, which is then returned with the video to set the user to the correct spot in the video. 
 
@@ -82,18 +84,19 @@ Open the `environment.toml` file and fill in the properties with your resources
 
 ## Step 4:
 
-As soon as you have successfully cloned the repo, created a virtual environment, activated it, installed the requirements.txt, and setup your environment.tom, your application should be ready to go.
-To start up the application with its basic frontend you simply need to run one of the following commands in your terminal:
+As soon as you have successfully cloned the repo, created a virtual environment, activated it, installed the requirements.txt, and setup your environment.toml, your application should be ready to go.
+To start up the application with its basic frontend you simply need to run the following command in your terminal:
 
-**Running the Upload/Ingestion UI**
+**Running the UI**
 ```
-streamlit run ingest-and-transcribe-app.py
-```
-
-**Running the Search/Lookup UI**
-```
-streamlit run search-app.py
+streamlit run app.py
 ```
 
-*Note: Both UIs can be running at the same time using different terminal windows/sessions. When this is done, they will each have their own HTTP port.*
+# POC Environment
+This section will walk you through the various files that exist in this POC directory.
 
+* `app.py` - This the main application that generates the UI through streamlit. (See above).
+* `videochapterlogic.py` - This is the logic that the UI connects to. The functions perform the logic and API calls to the AWS service endpoints like Amazon Transcribe, Amazon Bedrock, etc. `app.py` imports `videochapterlogic` functions.
+* `environment.toml` - This is the file that contains the configurations specific to your AWS environment like the S3 Bucket or OpenSearch Collection endpoint. The values in this file are required in order for the application to function.
+* `.streamlit/config.toml` - The streamlit configuration file with paremters set to override the default configuration. Generally you won't need to adjust this unless you want to further customize the streamlit app. 
+* `requirements.txt` - The python packages required for the app to function. You will reference this during setup (see above).

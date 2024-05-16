@@ -182,18 +182,18 @@ with st.container():
 
                 # Calculate the total time taken for the process
                 final_time = start_time_end - upload_start
-                st.status(
+                status.write(
                     label=":heavy_check_mark: Request Complete: Total Time: "
                     + str(final_time),
                     state="complete",
                     expanded=False,
                 )
 
-            # Save the results
-            save_results = st.button(
-                "Save", disabled=(st.session_state["process_status"] != "READY")
-            )
-            if save_results:
+        # Save the results
+        save_results = st.button(
+            "Save", disabled=(st.session_state["process_status"] != "READY")
+        )
+        if save_results:
                 st.balloons()
                 save_doc()
                 st.session_state.process_status = "NEW"
