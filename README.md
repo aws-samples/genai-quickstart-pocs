@@ -67,6 +67,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     This sample implements Amazon Bedrock Guardrails to demonstrate how you can leverage guardrails to prevent malicious prompts and repsonse from your generative AI applications built with Amazon Bedrock.
     ![Alt text](amazon-bedrock-guardrails-poc/images/demo.gif)
 
+21. **Amazon-Bedrock-Model-Customiztion-POC**
+    The sample notebooks provide guidance on fine-tuning and pre-training models in Bedrock.
+    The sample data used in the notebooks can be replaced with any data in csv files to create  fine-tuned and pre-trained models using Amazon Titan Express as the base model.
+    
 ## Prerequisites
 
 - Amazon Bedrock Access and CLI Credentials
