@@ -458,7 +458,7 @@ def fuzzy_search(
         return partial_ratio_item
 
     # Anywhere else, remove the first and last parts
-    else:  
+    else:
         first = 0
         last = (len(parts)) - 1
         segments.pop(last)
@@ -527,13 +527,13 @@ def persist_doc(doc):
         str: A message indicating the success or failure of the operation.
     """
     # Opensearch Serverless host
-    host = env_config["opensearch_endpoint"]  
+    host = env_config["opensearch_endpoint"]
     # Opensearch Serverless region
-    region = env_config["opensearch_region"]  
+    region = env_config["opensearch_region"]
     # Opensearch Serverless service - Needed for signing credentials
-    service = "aoss" 
+    service = "aoss"
     # Get the credentials for the current session
-    credentials = session.get_credentials()  
+    credentials = session.get_credentials()
     # Create the AWSV4SignerAuth object
     auth = AWSV4SignerAuth(credentials, region, service)
 
@@ -610,7 +610,7 @@ def index_doc(client, vectors, title, summary, video_source, source_seconds):
 
 
 # Get Embeddings - returns vectorized value of input string
-def get_embedding(bedrock, text):
+def get_embedding(text):
     """
     Returns the embedding of the provided text.
 
@@ -732,7 +732,7 @@ def get_cloudfront_url_for_s3_key(s3_key):
 
 def submit_user_query(userQuery):
 
-    embedding = get_embedding(bedrock, userQuery)
+    embedding = get_embedding(userQuery)
     results = get_knn_results(embedding)
 
     title = results[0]
@@ -741,7 +741,7 @@ def submit_user_query(userQuery):
     timestamp = results[3]
 
     # Answer Question
-    response = invoke_llm_with_user_query(bedrock, userQuery, summary)
+    response = invoke_llm_with_user_query(userQuery, summary)
     print(response)
     st.write(response)
 
@@ -811,7 +811,18 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
         st.session_state.df = df
 
 
-def invoke_llm_with_user_query(bedrock, user_query, summary):
+def invoke_llm_with_user_query(user_query, summary):
+    """
+    Invokes Bedrock with the provided user query and summary.
+
+    Args:
+        user_query (str): The user query.
+        summary (str): The video section summary.
+
+    Returns:
+        str: The response from the Bedrock Model.
+    """
+    # Prompt Data
     prompt_data = f"""
     You are an AI assistant that will help people find relevant video sections
     You will be provided a Video Section summary, use this to describe how the video might help them based on their question
@@ -829,6 +840,8 @@ def invoke_llm_with_user_query(bedrock, user_query, summary):
 
     ouput the response inside a <response> tag.
     """
+
+    # Build the request body
     body = json.dumps(
         {
             "anthropic_version": "bedrock-2023-05-31",
@@ -846,6 +859,7 @@ def invoke_llm_with_user_query(bedrock, user_query, summary):
     accept = "application/json"
     contentType = "application/json"
 
+    # Invoke bedrock and get the response
     response = bedrock.invoke_model(
         body=body, modelId=modelId, accept=accept, contentType=contentType
     )
@@ -855,13 +869,25 @@ def invoke_llm_with_user_query(bedrock, user_query, summary):
     for content in response_content:
         response_text += content["text"]
 
+    # Parse the response from the xml tag
     result = parse_xml(response_text, "response")
-    # make sure the json objects parsed are in an array
+
     return result
 
 
-# Get KNN Results
 def get_knn_results(userVectors):
+    """
+    Retrieves the top 3 results from the KNN index.
+
+    Args:
+        userVectors (list): A list of user vectors.
+
+    Returns:
+        title: the title of the video chapter
+        summary: the summary of the video chapter
+        videolink: the link to the video chapter
+        timestamp: the timestamp of the video chapter
+    """
     # OpenSearch CLient
     host = env_config["opensearch_endpoint"]
     region = env_config["opensearch_region"]
@@ -878,6 +904,7 @@ def get_knn_results(userVectors):
         pool_maxsize=20,
     )
 
+    # create the query that will be sent to OpenSearch
     query = {
         "size": 1,
         "query": {"knn": {"vectors": {"vector": userVectors, "k": 3}}},
@@ -885,13 +912,13 @@ def get_knn_results(userVectors):
         "fields": ["Title", "Summary", "StartTimeSeconds", "VideoSource"],
     }
 
+    # send the query to OpenSearch
     response = client.search(
         body=query,
         index=env_config["opensearch_index"],
     )
 
-    print(response)
-
+    # get the results from the response
     title = response["hits"]["hits"][0]["fields"]["Title"][0]
     summary = response["hits"]["hits"][0]["fields"]["Summary"][0]
     videolink = response["hits"]["hits"][0]["fields"]["VideoSource"][0]

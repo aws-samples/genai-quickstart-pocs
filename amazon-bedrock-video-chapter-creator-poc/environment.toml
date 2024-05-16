@@ -1,7 +1,7 @@
-s3_bucket = "awsrudy-video-chapter-search-demo" # S3 Bucket Name where videos live (and subtitles, if they already exist)
-cloudfront_hostname = "d1q3il47t49xes.cloudfront.net" # CloudFront Hostname for the S3 bucket (e.g. d1w7f0v2oz4t8.cloudfront.net)
-opensearch_endpoint = "207pmrm8nw860f35w8m0.us-east-1.aoss.amazonaws.com" #OpenSearch Endpoint URL (e.g. xxxxxxxxxxxx.us-east-1.aoss.amazonaws.com)
+s3_bucket = "" # S3 Bucket Name where videos live (and subtitles, if they already exist)
+cloudfront_hostname = "" # CloudFront Hostname for the S3 bucket (e.g. d1w7f0v2oz4t8.cloudfront.net)
+opensearch_endpoint = "" #OpenSearch Endpoint URL (e.g. xxxxxxxxxxxx.us-east-1.aoss.amazonaws.com)
 bedrock_region = "us-east-1" #Region used for Bedrock APIs
 opensearch_region = "us-east-1" #Region the OpenSearch Collection Exists
-opensearch_index = "chapters" #OpenSearch Index Name 
-aws_profile_name = "aws-samples-genai-newsletter+sandbox-Admin" #AWS CLI Profile Name
+opensearch_index = "" #OpenSearch Index Name 
+aws_profile_name = "" #AWS CLI Profile Name
