@@ -49,14 +49,19 @@ The first step of utilizing this repo is performing a git clone of the repositor
 git clone https://gitlab.aws.dev/rajacgho/bedrock-model-customization
 ```
 
-After cloning the repo open it in your editor. The file structure of this repo is as follows:
+After cloning the repo open it in your editor. 
+The file structure of this repo is as follows:
+
+'''
     1.  Data file (complaints-2024-04-08_12_34.csv)  
         Data Size: 63,284 rows 
     {
     Data Feature:
      features: ['Date received', 'Product', 'Sub-product', 'Issue', 'Sub-issue', 'Consumer complaint narrative', 'Company public response', 'Company', 'State', 'ZIP code', 'Tags', 'Consumer consent provided?', 'Submitted via', 'Date sent to company', 'Company response to consumer', 'Timely response?', 'Consumer disputed?', 'Complaint ID'
     }
+'''
 
+'''
     2. Notebooks for pre-training
     - [x] Run the notebook in below order:
     - [] continued-pre-train_setup.ipynb
@@ -66,6 +71,7 @@ After cloning the repo open it in your editor. The file structure of this repo i
     - [x] Run the notebook in below order:
     - [] fine-tune_titan_express_setup.ipyn
     - [] fine-tune_titan_express_bedrock.ipynb
+'''
 
 ## Step 2:
 
@@ -91,12 +97,12 @@ In your editor choose the virtual env which is activated.
 Once the setup is complete and training or fine tuning is initiated  via the notebooks, they can be monitored for success or failure via api as shown in the notebooks 
 or via console in Bedrock -> Foundation models -> Custom models -> Training Jobs
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 
 Once training is successfully completed the models will show up under Bedrock -> Foundation models -> Custom models -> models
 
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 
 
 The Notebook also has sample of using the fine-tuned and pre-trained provisioned models on sample prompt.
