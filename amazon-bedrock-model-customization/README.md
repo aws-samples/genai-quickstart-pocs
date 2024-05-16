@@ -116,14 +116,18 @@ The Notebook also has sample of using the fine-tuned and pre-trained provisioned
 ## Cost of model customization for Titan Text Express
 
 For customization of a text-generation model, charges are based on model training based on the total number of tokens processed by the model (number of tokens in the training data corpus x the number of epochs) and for model storage charged per month per model. 
+
 An epoch refers to one full pass through your training dataset during fine-tuning or continued pretraining.
 
 For example, below is the sample calculation 
 
 '''
 1,000,000 tokens x 2 epochs = 2,000,000.00 Total number of tokens seen during training
+
 2,000,000.00 tokens / 1000 = 2,000.00 K tokens
+
 2,000.00 K tokens x 0.008 USD per month = 16.00 Total training cost
+
 Total Model Customization Cost for Titan Express (monthly): 16.00 USD
 '''
 
@@ -132,21 +136,26 @@ Each custom model stored in an account is charged at 1.95 USD per month
 
 '''
 2 models x 1.95 USD per month = 3.90 Total storage cost
+
 Total Customization Storage Cost for Titan Express (monthly): 3.90 USD
 '''
 
 ## Cost of Inference
-For inference using cistom model, you have to purchase provisioned throughput and choose between 1-month and 6-month commit. 
+For inference using custom model, you have to purchase provisioned throughput and choose between 
+
+1-month and 6-month commit. 
 
 
 '''
 1 month commit for 2 models
 2 models purchased x 18.40 USD per hour x 730 hours in a month = 26,864.00 USD per Month for 1 month commit
+
 Total Provisioned thorughput cost for Titan Express (monthly): 26,864.00 USD
 
 
 6 month commit for 2 models
 2 models purchased x 14.80 USD per hour x 730 hours in a month = 21,608.00 USD per Month for 6 month commit
+
 Total Provisioned thorughput cost for Titan Express (monthly): 21,608.00 USD
 '''
 ## Roadmap
