@@ -165,12 +165,11 @@ The sections should be able to be understood by a human without the need to view
 You can have as little as one section, if necessary, to ensure sections have enough relevant content.
 This should include introduction and conclusion sections, if relevant sections are found in the transcription.
 The sections should be in order and capture all the contents of the video.
-For every section identified, create a short Section Title and a detailed 
-section summary that summarizes the ENTIRE context of the section and is clear what the subject of the video chapter is.
+For every section identified, create a short Section Title and a detailed section summary that summarizes the ENTIRE context of the section and is clear what the subject of the video chapter is.
 Provide the first sentence from the video_transcription that begins the section.
 This sentence should mark the start of the section you have identified and should mark the transition into the section
 Return the Section Titles,  Summaries, and beginning sentence in a valid JSON array.
-Text that contains quotation marks (") should use string escapes (\\").
+Replace any instance of a quotation mark (") with an escaped quotation (\\")
 The JSON will be read by python code.
 
 Video Title:
@@ -234,6 +233,7 @@ Please return the JSON formatted response for each identified section response i
     result = parse_xml(response_text, "response")
 
     # make sure the json objects parsed are in an array
+    print("create_topic result = ",result)
     return json.loads(result)
 
 
@@ -763,10 +763,7 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
     Returns:
         list: A list of starting times for each topic.
     """
-    if "df" not in st.session_state:
-        df = pd.DataFrame(columns=["Title", "Summary", "Start Time", "Video Link"])
-    else:
-        df = st.session_state.df
+    df = pd.DataFrame(columns=["Title", "Summary", "Start Time", "Video Link"])
     num_sections = 1
     previous_timestamp = ""
     cf_name = get_cloudfront_name(
@@ -839,6 +836,7 @@ def invoke_llm_with_user_query(user_query, summary):
     </video_summary>
 
     ouput the response inside a <response> tag.
+    If there is no relevency out <nodata> with an error message.
     """
 
     # Build the request body

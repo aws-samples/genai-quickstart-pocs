@@ -112,7 +112,7 @@ with st.container():
             # Allow the user to enter the S3 object keys for the video and SRT files
             video_key = st.text_input("Enter the S3 Object Key of the video file")
             srt_key = st.text_input("Enter the S3 Object Key of the srt file")
-
+            object_name = video_key.split("/")[-1]
             # Add a button to start the video ingestion process
             result = st.button("Start Processing")
 
@@ -129,7 +129,7 @@ with st.container():
                     cf_name = get_cloudfront_url_for_s3_key(video_key)
 
                     # Validate that the video file is accessible
-                    st.write(
+                    status.update(
                         label="Confirming access to video... ",
                         state="running",
                         expanded=False,
@@ -182,7 +182,7 @@ with st.container():
 
                 # Calculate the total time taken for the process
                 final_time = start_time_end - upload_start
-                status.write(
+                status.update(
                     label=":heavy_check_mark: Request Complete: Total Time: "
                     + str(final_time),
                     state="complete",
@@ -196,6 +196,7 @@ with st.container():
         if save_results:
                 st.balloons()
                 save_doc()
+                st.session_state.df = None
                 st.session_state.process_status = "NEW"
 
     # Search Tab
