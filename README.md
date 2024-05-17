@@ -66,6 +66,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 20. **Amazon-Bedrock-Guardrails-POC**
     This sample implements Amazon Bedrock Guardrails to demonstrate how you can leverage guardrails to prevent malicious prompts and repsonse from your generative AI applications built with Amazon Bedrock.
     ![Alt text](amazon-bedrock-guardrails-poc/images/demo.gif)
+21. **Amazon-Bedrock-Video-Chapter-Search-POC:**
+    This is sample code demonstrating the use of Amazon Transcribe, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample.
+    ![Amazon Bedrock Video Chapter Creator POC Demo](amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
 
 21. **Amazon-Bedrock-Model-Customiztion-POC**
     The sample notebooks provide guidance on fine-tuning and pre-training models in Bedrock.
