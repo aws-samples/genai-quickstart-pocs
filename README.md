@@ -70,7 +70,7 @@ This repository contains sample code demonstrating various use cases leveraging 
     This is sample code demonstrating the use of Amazon Transcribe, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample.
     ![Amazon Bedrock Video Chapter Creator POC Demo](amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
 
-21. **Amazon-Bedrock-Model-Customiztion-POC**
+21. **Amazon-Bedrock-Model-Customization-POC**
     The sample notebooks provide guidance on fine-tuning and pre-training models in Bedrock.
     The sample data used in the notebooks can be replaced with any data in csv files to create  fine-tuned and pre-trained models using Amazon Titan Express as the base model.
     
