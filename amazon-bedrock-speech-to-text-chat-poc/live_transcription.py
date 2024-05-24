@@ -130,7 +130,7 @@ def main(language_code):
     # start transcription in a separate thread
     transcribe_thread = Thread(target=start_transcribe, args=(language_code,))
     transcribe_thread.start()
-    # Ssart monitoring transcription progress in a separate thread
+    # Start monitoring transcription progress in a separate thread
     monitor_thread = Thread(target=monitor_transcription)
     monitor_thread.start()
     # inform user about transcription start
