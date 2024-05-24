@@ -44,7 +44,7 @@ with st.sidebar:
         with st.spinner(':ear: Bedrock is listening...'):
             global transcript
             transcript = main("en-US")
-        return "Transcription Ended!"
+        return "Transcription ended!"
     # check if live transcription is running
     if 'run' not in st.session_state:
         st.session_state.run = False
