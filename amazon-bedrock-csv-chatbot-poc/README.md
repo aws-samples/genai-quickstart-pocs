@@ -1,11 +1,11 @@
 # Amazon-Bedrock-CSV-Chatbot-POC
 
-This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a chatbot based on CSV data provided by the user. The application is constructed with a simple streamlit frontend where users can upload large CSV files and get them analyzed or start chatbot interactions.
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a chatbot is able to converse with the user based on CSV data provided by the user. The application is constructed with a simple streamlit frontend where users can upload large CSV files and get them analyzed or start chatbot interactions.
 
 ![Alt text](images/demo.gif)
 # **Goal of this Repo:**
 
-The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create summaries of large PDF files with chunking logic.
+The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to answer questions a user might have on the CSV data provided.
 This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
 
 The architecture and flow of the sample application will be:
@@ -15,8 +15,8 @@ The architecture and flow of the sample application will be:
 When a user interacts with the GenAI app, the flow is as follows:
 
 1. The user uploads a CSV file to the streamlit app. (app.py).
-2. The streamlit app, takes the CSV file and chunks the document (csv_data_insights.py).
-3. Each chunk of the document is passed into Amazon Bedrock, which reads each chunk, and then creates a response to the user's question (csv_data_insights.py).
+2. The streamlit app, takes the CSV file and chunks the document efficient data processing(csv_data_insights.py).
+3. Once the data is passed into Amazon Bedrock and the user asks the chatbot a question, it creates a response to the user's question (csv_data_insights.py).
 4. After the response is generated, it is presented on the streamlit app (app.py).
 
 # How to use this Repo:
@@ -35,8 +35,8 @@ git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 3 key files,
-the app.py file, the doc_summarizer.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
-The doc_summarizer.py file houses the logic of the application, including the document chunking logic and Amazon Bedrock API invocations.
+the app.py file, the csv_data_insights.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
+The csv_data_insights.py file houses the logic of the application and Amazon Bedrock API invocations.
 The requirements.txt file contains all necessary dependencies for this sample application to work.
 
 ## Step 2:
@@ -74,9 +74,9 @@ profile_name=<AWS_CLI_PROFILE_NAME>
 save_folder=<PATH_TO_ROOT_OF_THIS_REPO>
 ```
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
+Please ensure that your AWS CLI Profile has access to Amazon Bedrock.
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 15 in the doc_summarizer.py file to set your region:
+Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 10 in the csv_data_insights.py file to set your region:
 
 ```
 bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
@@ -100,4 +100,4 @@ To start up the application with its basic frontend you simply need to run the f
 streamlit run app.py
 ```
 
-As soon as the application is up and running in your browser of choice you can begin uploading PDF documents and generating summaries.
+As soon as the application is up and running in your browser of choice you can begin uploading CSV documents and asking questions.
