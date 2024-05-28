@@ -67,12 +67,14 @@ This repository contains sample code demonstrating various use cases leveraging 
     This sample implements Amazon Bedrock Guardrails to demonstrate how you can leverage guardrails to prevent malicious prompts and repsonse from your generative AI applications built with Amazon Bedrock.
     ![Alt text](amazon-bedrock-guardrails-poc/images/demo.gif)
 21. **Amazon-Bedrock-Video-Chapter-Search-POC:**
-    This is sample code demonstrating the use of Amazon Transcribe, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample.
+    This is sample code demonstrating the use of Amazon Transcribe, Amazon Bedrock and Generative AI, to implement a video chapter generator and video search sample.
     ![Amazon Bedrock Video Chapter Creator POC Demo](amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
-
-21. **Amazon-Bedrock-Model-Customization-POC**
+22. **Amazon-Bedrock-Model-Customization-POC**
     The sample notebooks provide guidance on fine-tuning and pre-training models in Bedrock.
     The sample data used in the notebooks can be replaced with any data in csv files to create  fine-tuned and pre-trained models using Amazon Titan Express as the base model.
+23. **Amazon-Bedrock-Speech-to-Text-Chat-POC:**
+    This sample provides a ChatGPT alternative using Amazon Transcribe, Amazon Polly, Amazon Bedrock and Generative AI, allowing users to ask zero-shot questions using speech-to-text prompts and listen to responses.
+    ![Amazon Bedrock Speech-to-Text Chat Demo](amazon-bedrock-speech-to-text-chat-poc/images/demo.gif)
     
 ## Prerequisites
 
