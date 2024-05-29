@@ -4,7 +4,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 
 ##### Authors: Brian Maguire, Dom Bavaro, Ryan Doty, Sudeesh Sasidharan, Tarik Makota
 
-## Sample Proof of Concepts
+## Sample Proof of Concepts - Python
 
 1. **Amazon-Bedrock-Summarization-Long-Document-POC:**
    This sample demonstrates using Amazon Bedrock and Generative AI to implement a long document summarization use case. Users can upload large PDF documents, which are chunked and summarized using Amazon Bedrock.
@@ -75,6 +75,16 @@ This repository contains sample code demonstrating various use cases leveraging 
 23. **Amazon-Bedrock-Speech-to-Text-Chat-POC:**
     This sample provides a ChatGPT alternative using Amazon Transcribe, Amazon Polly, Amazon Bedrock and Generative AI, allowing users to ask zero-shot questions using speech-to-text prompts and listen to responses.
     ![Amazon Bedrock Speech-to-Text Chat Demo](amazon-bedrock-speech-to-text-chat-poc/images/demo.gif)
+
+
+## Sample Proof of Concepts - .NET
+
+1. **Amazon-Bedrock-Summarization-Long-Document-POC:**
+   Amazon-Bedrock-Document-Generator: This sample demonstrates using Amazon Bedrock and Generative AI to perform document generation based on a document template and user-provided details.
+   ![Amazon Bedrock Document Generator](genai-quickstart-pocs-dot-net/images/text-generation.png)
+2. **Amazon-Bedrock-Knowledgebases-RAG-POC:**
+   This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases, allowing users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock.
+   ![Amazon Bedrock Knowledgebases RAG](genai-quickstart-pocs-dot-net/images/rag-with-kb.png)
     
 ## Prerequisites
 
