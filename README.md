@@ -86,11 +86,21 @@ This repository contains sample code demonstrating various use cases leveraging 
    This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases, allowing users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock.
    ![Amazon Bedrock Knowledgebases RAG](genai-quickstart-pocs-dot-net/images/rag-with-kb.png)
     
-## Prerequisites
+## Prerequisites - Python
 
 - Amazon Bedrock Access and CLI Credentials
 - Python 3.10 installed on your machine
 - Additional prerequisites specific to each sample (e.g., RDS Database, Amazon Kendra index, etc.)
+
+## Prerequisites - .NET
+
+- Amazon Bedrock Access and CLI Credentials (Please ensure your AWS CLI Profile has access to Amazon Bedrock!)
+- .NET 8.0
+- Visual Studio installed on your machine
+- Additional prerequisites specific to each sample (e.g., RDS Database, Amazon Kendra index, etc.)
+- Configure the necessary environment variables (e.g., AWS credentials, database connections, etc.).
+- Access to Claude 3 haiku model. Please follow this [AWS Documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) to get access to the model.
+- Run Blazor app
 
 ## Getting Started
 
