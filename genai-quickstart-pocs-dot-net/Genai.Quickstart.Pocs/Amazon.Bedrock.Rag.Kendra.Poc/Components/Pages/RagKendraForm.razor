@@ -1,0 +1,186 @@
+﻿@page "/rag-kendra-form"
+
+@using System.Runtime.CompilerServices;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using System.Threading.Channels;
+@using Amazon;
+@using Amazon.Bedrock
+@using Amazon.BedrockAgent
+@using Amazon.BedrockAgent.Model
+@using Amazon.BedrockAgentRuntime
+@using Amazon.BedrockAgentRuntime.Model
+@using Amazon.BedrockRuntime;
+@using Amazon.BedrockRuntime.Model;
+@using Amazon.Kendra;
+@using Amazon.Kendra.Model;
+@using Amazon.Runtime.EventStreams;
+@using Amazon.Util;
+@using MudBlazor;
+@inject IConfiguration Configuration
+@inject AmazonBedrockClient bedrockClient
+@inject AmazonKendraClient  kendraCient
+@inject AmazonBedrockRuntimeClient BedrockRuntimeClient
+
+@rendermode InteractiveServer
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<PageTitle>Amazon Bedrock Kendra RAG POC</PageTitle>
+<MudStack>
+
+    <AntiforgeryToken />
+
+    <EditForm Model="@Model" OnSubmit="Submit">
+        <MudCard>
+            <MudCardContent>                
+                <MudTextField @bind-Value="Model!.Query"  Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" OnAdornmentClick="Submit" />
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudMarkdown Value="@outputText"  />
+            </MudCardContent>
+        </MudCard>
+    </EditForm>
+</MudStack>
+
+
+@code {
+    [SupplyParameterFromForm]
+    public QueryModel? Model { get; set; }
+
+    protected override void OnInitialized() => Model ??= new();
+    private string outputText;
+    
+
+    private async Task<string> KendraSearch()
+    {
+        
+        var queryText = Model?.Query;
+        //Get Kendra Index information from appsettings.json
+        var indexid = Configuration["KendraIndexId"];
+        var queryRequest = new QueryRequest
+        {
+            QueryText = queryText,
+            IndexId = indexid
+        };
+
+        try
+        {
+            // Send the user to Kendra for a semantic search and get the response
+            var response =  await kendraCient.QueryAsync(queryRequest);
+
+            // Process the response
+            if (response.ResultItems != null)
+            {
+                var result = string.Empty;
+                foreach (var resultItem in response.ResultItems)
+                {
+                    //Console.WriteLine($"Title: {resultItem.DocumentTitle}");
+                    //Console.WriteLine($"URI: {resultItem.DocumentUri}");
+                    result += $"Excerpt: {resultItem.DocumentExcerpt?.Text}";
+                }
+                return result;
+            }
+            else
+            {
+                return("No results found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    private async void Submit()
+    {       
+        var query = Model?.Query;
+        string context = "";
+        try
+        {
+            context = await KendraSearch();
+        }
+        catch (AmazonBedrockRuntimeException e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
+        string modelId = Configuration["LLMModel"];
+        
+        if (!string.IsNullOrEmpty(query))
+        {
+            outputText = await InvokeClaudeAsync(query, context, modelId);
+
+        }
+        StateHasChanged();
+    }
+
+    public class QueryModel
+    {
+        public string? Query { get; set; }
+    }
+
+    public  async Task<string> InvokeClaudeAsync(string query, string context, string modelId)
+    {
+        var prompt_data = @"""\n\nHuman:    
+        Answer the following question to the best of your ability based on the context provided.
+        Provide an answer and provide sources and the source link to where the relevant information can be found. Include this at the end of the response
+        Do not include information that is not relevant to the question.
+        Only provide information based on the context provided, and do not make assumptions
+        Only Provide the source if relevant information came from that source in your answer
+        Use the provided examples as reference
+        ###
+        Question:" + query +
+
+        @"Context: " + context + @"
+
+        ###
+
+        \n\nAssistant:";
+        string generatedText = "";
+        var messages = new JsonArray()
+        {
+            new { role = "user", content = new[] { new { type = "text", text =  prompt_data }  } }
+        } ;
+
+        string payload = new JsonObject()
+            {
+                { "anthropic_version" , "bedrock-2023-05-31"},
+                { "messages", messages },
+                { "max_tokens", 1000 },
+                { "temperature", 0.5 }
+            }.ToJsonString();
+
+        try
+        {
+            InvokeModelResponse response = await BedrockRuntimeClient.InvokeModelAsync(new InvokeModelRequest()
+                {
+                    ModelId = modelId,
+                    Body = AWSSDKUtils.GenerateMemoryStreamFromString(payload),
+                    ContentType = "application/json",
+                    Accept = "application/json"
+                });
+
+            if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            {               
+                generatedText = JsonNode.ParseAsync(response.Body).Result?["content"][0]["text"]?.GetValue<string>() ?? "";
+                return generatedText;
+            }
+            else
+            {
+                Console.WriteLine("InvokeModelAsync failed with status code " + response.HttpStatusCode);
+            }
+        }
+        catch (AmazonBedrockRuntimeException e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        return generatedText;
+    }
+
+    
+}
