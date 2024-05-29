@@ -47,8 +47,10 @@ Enhancing Customer Experience: Insights gained from the complaints data can info
 The first step of utilizing this repo is performing a git clone of the repository.
 
 ```
-git clone https://gitlab.aws.dev/rajacgho/bedrock-model-customization
+git clone https://github.com/aws-samples/genai-quickstart-pocs
 ```
+Navigate to the folder genai-quickstart-pocs-python/amazon-bedrock-model-customization
+
 
 The data file used for fine tuning and pre-training is in the data folder.
 If you want to use your own data files, copy your file in the folder and update the path in code
@@ -66,18 +68,6 @@ which loads the data file.
 
 ``` 
 
-
-```
-    2. Notebooks for pre-training
-    - [x] Run the notebook in below order:
-    - [] continued-pre-train_setup.ipynb
-    - [] continued-pre-train_titan_express_bedrock.ipynb
-
-    3. Notebooks for fine-tuning.
-    - [x] Run the notebook in below order:
-    - [] fine-tune_titan_express_setup.ipyn
-    - [] fine-tune_titan_express_bedrock.ipynb
-```
 
 ## Step 2:
 
@@ -98,6 +88,21 @@ source activate
 cd ../../
 ```
 In your editor choose the virtual env which is activated.
+
+
+
+```
+    2. Notebooks for pre-training
+    - [x] Run the notebook in below order:
+    - [] continued-pre-train_setup.ipynb
+    - [] continued-pre-train_titan_express_bedrock.ipynb
+
+    3. Notebooks for fine-tuning.
+    - [x] Run the notebook in below order:
+    - [] fine-tune_titan_express_setup.ipyn
+    - [] fine-tune_titan_express_bedrock.ipynb
+```
+
 
 ## Usage
 Once the setup is complete and training or fine tuning is initiated  via the notebooks, they can be monitored for success or failure via api as shown in the notebooks 
