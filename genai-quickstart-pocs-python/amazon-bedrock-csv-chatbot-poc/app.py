@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 import time
 from dotenv import load_dotenv
-from csv_data_insights import chat_with_csv, csv_to_text, parse_xml
+from csv_data_insights import chat_with_csv, csv_to_text_analysis, parse_xml
 
 
 # load environment variables
@@ -41,7 +41,7 @@ with st.container():
             analyze_button = st.button("Analyze CSV")
             if analyze_button:
                 # Convert CSV data to text format
-                results = csv_to_text(csv_data, csv_subject)
+                results = csv_to_text_analysis(csv_data, csv_subject)
                 # Extract description and insights from the text
                 description = parse_xml(results, "description")
                 insights = parse_xml(results, "insights")
