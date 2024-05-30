@@ -75,6 +75,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 23. **Amazon-Bedrock-Speech-to-Text-Chat-POC:**
     This sample provides a ChatGPT alternative using Amazon Transcribe, Amazon Polly, Amazon Bedrock and Generative AI, allowing users to ask zero-shot questions using speech-to-text prompts and listen to responses.
     ![Amazon Bedrock Speech-to-Text Chat Demo](genai-quickstart-pocs-python/amazon-bedrock-speech-to-text-chat-poc/images/demo.gif)
+24. **Amazon-Bedrock-CSV-Chatbot-POC:**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a chatbot is able to converse with the user based on CSV data provided by the user.
+    ![Amazon Bedrock CSV Chatbot Demo](genai-quickstart-pocs-python/amazon-bedrock-csv-chatbot-poc/images/demo.gif)
 
 
 ## Sample Proof of Concepts - .NET
