@@ -1,6 +1,6 @@
 # Amazon-Bedrock-RAG-Kendra-POC
 
-This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra. The application is constructed with a simple streamlit frontend where users can ask questions against documents stored in Amazon Kendra.
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra.using Amazon Bedrock SDK for .NET. The application is constructed with a simple blazor front-end where users can ask questions against documents stored in Amazon Kendra.
 
 ![Alt text](images/demo.gif)
 
@@ -41,6 +41,8 @@ You will be using "Amazon.Bedrock.Rag.Kendra.Poc.csproj" project for this POC.
 ```
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
+
+The source code path is genai-quickstart-pocs-dot-net->Genai.Quickstart.Pocs->Amazon.Bedrock.Rag.Kendra.Poc
 
 ## Step 2
 Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
