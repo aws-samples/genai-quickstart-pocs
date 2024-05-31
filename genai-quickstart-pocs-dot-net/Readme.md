@@ -14,6 +14,11 @@ This repository contains sample code demonstrating various use cases leveraging 
 
     ![Alt text](images/rag-with-kb.png "RAG with KB")
 
+3. **Amazon-Bedrock-Kendra-RAG-POC:** 
+    This sample implements a RAG-based architecture with Amazon Kendra, allowing users to ask questions against documents stored in a Kendra index and allowing users to do q&a using Amazon Bedrock models.
+
+    ![Alt text](images/rag-with-kendra.png "RAG with Kendra")
+
 
 
 Detailed instructions for each sample are provided in their respective directories.

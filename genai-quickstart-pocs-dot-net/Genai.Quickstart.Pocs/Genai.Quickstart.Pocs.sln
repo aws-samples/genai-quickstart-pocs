@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amazon.Bedrock.Document.Gge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amazon.Bedrock.Knowledgebases.Rag.Poc", "Amazon.Bedrock.Knowledgebases.Rag.Poc\Amazon.Bedrock.Knowledgebases.Rag.Poc.csproj", "{FB5FF8AB-8E1C-46A1-A006-0C98B7A3DE65}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amazon.Bedrock.Rag.Kendra.Poc", "Amazon.Bedrock.Rag.Kendra.Poc\Amazon.Bedrock.Rag.Kendra.Poc.csproj", "{FF68E3E3-572A-4B4F-BEB9-EA163A0A3D62}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{FB5FF8AB-8E1C-46A1-A006-0C98B7A3DE65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB5FF8AB-8E1C-46A1-A006-0C98B7A3DE65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB5FF8AB-8E1C-46A1-A006-0C98B7A3DE65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF68E3E3-572A-4B4F-BEB9-EA163A0A3D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF68E3E3-572A-4B4F-BEB9-EA163A0A3D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF68E3E3-572A-4B4F-BEB9-EA163A0A3D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF68E3E3-572A-4B4F-BEB9-EA163A0A3D62}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
