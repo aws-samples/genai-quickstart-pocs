@@ -88,6 +88,10 @@ This repository contains sample code demonstrating various use cases leveraging 
 2. **Amazon-Bedrock-Knowledgebases-RAG-POC:**
    This sample implements a RAG-based architecture with Amazon Bedrock Knowledge Bases, allowing users to ask questions against documents stored in an Amazon Bedrock Knowledge Base using Amazon Bedrock.
    ![Amazon Bedrock Knowledgebases RAG](genai-quickstart-pocs-dot-net/images/rag-with-kb.png)
+3. **Amazon-Bedrock-Kendra-RAG-POC:** 
+    This sample implements a RAG-based architecture with Amazon Kendra, allowing users to ask questions against documents stored in a Kendra index and allowing users to do q&a using Amazon Bedrock models.
+    ![Amazon-Bedrock-Kendra-RAG](genai-quickstart-pocs-dot-net/images/rag-with-kendra.png "RAG with Kendra")
+
     
 ## Prerequisites - Python
 
