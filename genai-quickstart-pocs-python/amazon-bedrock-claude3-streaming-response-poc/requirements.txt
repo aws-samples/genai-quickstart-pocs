@@ -49,4 +49,4 @@ tzlocal==5.2
 urllib3==1.26.18
 validators==0.22.0
 wheel==0.41.2
-zipp==3.17.0
+zipp==3.19.2
