@@ -61,7 +61,7 @@ overrides==7.4.0
 packaging==23.2
 pandas==2.1.1
 Pillow==10.2.0
-pip==23.3
+pip==24.0
 posthog==3.0.2
 protobuf==4.24.4
 pulsar-client==3.4.0
