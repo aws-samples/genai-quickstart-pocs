@@ -66,7 +66,7 @@ posthog==3.0.2
 protobuf==4.24.4
 psycopg2-binary==2.9.9
 pulsar-client==3.4.0
-pyarrow==14.0.1
+pyarrow==16.1.0
 pydantic==2.4.2
 pydantic_core==2.10.1
 pydeck==0.8.1b0
