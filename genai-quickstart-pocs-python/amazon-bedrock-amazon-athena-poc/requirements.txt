@@ -96,7 +96,7 @@ starlette==0.35.0
 streamlit==1.30.0
 sympy==1.12
 tenacity==8.2.3
-threadpoolctl==3.2.0
+threadpoolctl==3.5.0
 tokenizers==0.15.2
 toml==0.10.2
 toolz==0.12.0
