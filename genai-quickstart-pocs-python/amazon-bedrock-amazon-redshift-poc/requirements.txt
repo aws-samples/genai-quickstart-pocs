@@ -28,7 +28,7 @@ gitdb==4.0.10
 GitPython==3.1.41
 grpcio==1.59.0
 h11==0.14.0
-httptools==0.6.0
+httptools==0.6.1
 huggingface-hub==0.21.4
 humanfriendly==10.0
 idna==3.4
