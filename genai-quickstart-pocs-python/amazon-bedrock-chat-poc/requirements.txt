@@ -82,7 +82,7 @@ regex==2023.10.3
 requests==2.31.0
 rich==13.6.0
 rpds-py==0.10.4
-rsa==4.7.2
+rsa==4.9
 s3transfer==0.7.0
 safetensors==0.4.0
 scikit-learn==1.3.1
