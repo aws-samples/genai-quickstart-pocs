@@ -72,7 +72,7 @@ pydantic_core==2.10.1
 pydeck==0.8.1b0
 Pygments==2.16.1
 PyPika==0.48.9
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 python-dotenv==1.0.0
 pytz==2023.3.post1
 PyYAML==6.0.1
