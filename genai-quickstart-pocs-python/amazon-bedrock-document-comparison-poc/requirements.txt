@@ -115,7 +115,7 @@ typing-inspect==0.9.0
 tzdata==2023.3
 tzlocal==5.1
 urllib3==1.26.18
-uvicorn==0.23.2
+uvicorn==0.30.1
 uvloop==0.17.0
 validators==0.22.0
 watchfiles==0.20.0
