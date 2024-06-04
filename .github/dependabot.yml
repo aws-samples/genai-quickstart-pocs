@@ -41,7 +41,6 @@ updates:
     directory: "/genai-quickstart-pocs-python/amazon-bedrock-csv-chatbot-poc" # Location of package manifests
     schedule:
       interval: "daily"
-      interval: "daily"
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/genai-quickstart-pocs-python/amazon-bedrock-document-comparison-poc" # Location of package manifests
     schedule:
