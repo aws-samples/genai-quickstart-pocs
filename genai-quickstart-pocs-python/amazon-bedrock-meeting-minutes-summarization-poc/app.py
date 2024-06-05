@@ -18,7 +18,7 @@ from transcribe_util import Transcribe
 from s3_util import S3
 from llm import BedrockModelHandler
 
-S3_BUCKET_NAME = "rajeabh-transcribe-test"
+S3_BUCKET_NAME = "<YOUR BUCKET NAME>"
 
 SUPPORTED_MODLES = ['anthropic.claude-3-sonnet','anthropic.claude-v2',]
 SUPPORTED_TASKS = ['Summarize','NotesAction']
