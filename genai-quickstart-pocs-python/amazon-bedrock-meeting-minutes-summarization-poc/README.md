@@ -70,9 +70,11 @@ pip install -r requirements.txt
 
 Now that the requirements have been successfully installed in your virtual environment we can configure S3 Bucket required for temporary uploading the file
 
-Update the S3 Bucket name with your bucket name in line 21 **app.py** :
+Update the S3 Bucket name with your bucket name in **line 21**
+
+**app.py** :
 ```
-S3_BUCKET_NAME = "<Bucket Name>"
+S3_BUCKET_NAME = "<YOUR BUCKET NAME>"
 ```
 
 
