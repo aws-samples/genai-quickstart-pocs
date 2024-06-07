@@ -51,7 +51,7 @@ tenacity==8.2.3
 toml==0.10.2
 toolz==0.12.1
 tornado==6.4
-typing_extensions==4.11.0
+typing_extensions==4.12.2
 tzdata==2024.1
 urllib3==2.2.1
 wheel==0.41.2
