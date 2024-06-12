@@ -24,7 +24,7 @@ pandas==2.1.2
 Pillow==10.2.0
 pip==23.3
 protobuf==4.25.0
-pyarrow==14.0.1
+pyarrow==16.1.0
 pydeck==0.8.1b0
 Pygments==2.16.1
 python-dateutil==2.8.2
