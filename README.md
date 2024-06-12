@@ -78,6 +78,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 24. **Amazon-Bedrock-CSV-Chatbot-POC:**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a chatbot is able to converse with the user based on CSV data provided by the user.
     ![Amazon Bedrock CSV Chatbot Demo](genai-quickstart-pocs-python/amazon-bedrock-csv-chatbot-poc/images/demo.gif)
+25. **Amazon-Bedrock-Translation-POC:**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.
+    ![Amazon Bedrock CSV Chatbot Demo](genai-quickstart-pocs-python/amazon-bedrock-translation-poc/images/demo.gif)
 
 
 ## Sample Proof of Concepts - .NET
