@@ -10,7 +10,7 @@ Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.
 
 import streamlit as st
 import boto3
-from botocore.config import Config
+#from botocore.config import Config
 from io import StringIO
 import re
 from transcribe_util import Transcribe
