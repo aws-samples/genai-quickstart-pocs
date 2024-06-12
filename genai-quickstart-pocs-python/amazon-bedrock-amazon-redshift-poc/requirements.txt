@@ -70,7 +70,7 @@ pyarrow==14.0.1
 pydantic==2.4.2
 pydantic_core==2.10.1
 pydeck==0.8.1b0
-Pygments==2.16.1
+Pygments==2.18.0
 PyPika==0.48.9
 python-dateutil==2.8.2
 python-dotenv==1.0.0
