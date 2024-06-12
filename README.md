@@ -79,7 +79,7 @@ This repository contains sample code demonstrating various use cases leveraging 
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a chatbot is able to converse with the user based on CSV data provided by the user.
     ![Amazon Bedrock CSV Chatbot Demo](genai-quickstart-pocs-python/amazon-bedrock-csv-chatbot-poc/images/demo.gif)
 25 **Amazon-Bedrock-Meeting-Minutes-Summarization-POC:**
-    This code demonstrates using Amazon Bedrock and Amazon Transcribe  to generate summarized meeting minutes and key action items. It accepts meeting recordings in formats like mp4, wav, mp4a and txt as input. It then processes these recordings and outputs a text file summarizing the key discussion points and action items from the meeting. This summary text can be downloaded for review and sharing.
+    This code demonstrates using Amazon Bedrock and Amazon Transcribe  to generate summarized meeting minutes and key action items. It accepts meeting recordings in formats like mp4, wav, mp4a and txt as input. It then processes these recordings and outputs a text summarizing the key discussion points and action items from the meeting. This summary text can be downloaded as .txt file for review and sharing.
     ![Amazon Bedrock CSV Chatbot Demo](genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc/images/demo.gif)
 
 
