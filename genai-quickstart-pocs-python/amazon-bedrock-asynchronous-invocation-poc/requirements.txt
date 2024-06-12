@@ -9,7 +9,7 @@ asyncio==3.4.3
 attrs==23.2.0
 blinker==1.7.0
 boto3==1.34.69
-botocore==1.34.69
+botocore==1.34.125
 cachetools==5.3.3
 certifi==2024.2.2
 charset-normalizer==3.3.2
