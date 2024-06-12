@@ -63,7 +63,7 @@ pandas==2.1.1
 Pillow==10.2.0
 pip==23.3
 posthog==3.0.2
-protobuf==4.24.4
+protobuf==5.27.1
 psycopg2-binary==2.9.9
 pulsar-client==3.4.0
 pyarrow==14.0.1
