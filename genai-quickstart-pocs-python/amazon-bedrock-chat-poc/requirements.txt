@@ -118,5 +118,5 @@ validators==0.22.0
 watchfiles==0.20.0
 websockets==11.0.3
 wheel==0.38.4
-yarl==1.9.2
+yarl==1.9.4
 zipp==3.17.0
