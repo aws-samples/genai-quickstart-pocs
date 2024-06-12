@@ -13,7 +13,7 @@ idna==3.6
 importlib-metadata==7.0.1
 Jinja2==3.1.4
 jmespath==1.0.1
-jsonschema==4.21.1
+jsonschema==4.22.0
 jsonschema-specifications==2023.12.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
