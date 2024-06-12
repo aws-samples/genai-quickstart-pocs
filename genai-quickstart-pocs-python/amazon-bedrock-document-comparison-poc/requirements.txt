@@ -15,7 +15,7 @@ cachetools==5.3.1
 certifi==2023.7.22
 charset-normalizer==3.3.0
 chroma-hnswlib==0.7.3
-chromadb==0.4.13
+chromadb==0.5.0
 click==8.1.7
 colorama==0.4.4
 coloredlogs==15.0.1
