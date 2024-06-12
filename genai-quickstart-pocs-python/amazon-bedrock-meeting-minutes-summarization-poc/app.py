@@ -5,7 +5,6 @@ This sample, non-production-ready code is used as sample genai assistant.
 This AWS Content is provided subject to the terms of the AWS Customer Agreement available at  
 http://aws.amazon.com/agreement or other written agreement between Customer and either
 Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.
-@Author : Abhijit Rajeshirke
 '''
 
 
@@ -17,12 +16,15 @@ import re
 from transcribe_util import Transcribe
 from s3_util import S3
 from llm import BedrockModelHandler
-
+#Configure bucket where temporary transcriptions are uploaded
 S3_BUCKET_NAME = "<YOUR BUCKET NAME>"
-
+#Supported LLMs
 SUPPORTED_MODLES = ['anthropic.claude-3-sonnet','anthropic.claude-v2',]
+#Supported Actions
 SUPPORTED_TASKS = ['Summarize','NotesAction']
+#Supported Audio/Video format extensions
 AUDIO_EXTENSIONS = ["wav","m4a","mp4"]
+#Supported text extensions
 TEXT_EXTENSIONS = ["txt"]
 
 
@@ -58,7 +60,7 @@ def process_file():
                     # if transcription is not present upload file on S3 bucket and get the URI
                     bytes_data = st.session_state.file_input.getvalue()
                     s3 = S3(__session, S3_BUCKET_NAME)
-                    # Temporarily upload file on S3 bucket
+                    # Temporarily upload file on S3 bucket for transcription
                     file_uri = s3.upload_media_file_on_s3(bytes_data, job_name, file_extension)
                     if file_uri is not None:
                         transcribe.transcribe_file(job_name, file_uri, file_extension)
@@ -66,27 +68,31 @@ def process_file():
                         if transcript_text is not None : 
                             if transcript_text !="":
                                 result = BedrockModelHandler(__session, selected_model, str(transcript_text), option).get_response()   
+                                # Delete uploaded file on S3 bucket
                                 s3.delete_media_file_from_s3(job_name, file_extension)
                             else:
                                 result ="ERROR : Meeting audio/video file does not produce any transcript. Please verify file "
+                        # If transcirption is not succesful there is an error
                         else:
                             result = "ERROR : in Transcription job "   
 
-                            # Delete uploaded file on S3 bucket
                             
+            # check if extensions are part of auido extensions                 
             elif file_extension.lower() in TEXT_EXTENSIONS:
                 stringio = StringIO(st.session_state.file_input.getvalue().decode("utf-8"))
                 string_data = stringio.read()
                 result = BedrockModelHandler(__session, selected_model, str(string_data), option).get_response()      
             else:
                 result = "Error : Invalid file format {}".format(file_extension)
-
+    # update summary in textarea result
     st.session_state["result"] = result
 
 # STREAMLIT APP ==============================================================================
 
 st.set_page_config(layout="wide")
+# set Streamlit app page title
 st.title(f""":rainbow[Amazon Bedrock Meeting Minutes Summarization]""")
+# set modle selection box
 selected_model = st.selectbox('Select Model', SUPPORTED_MODLES)
 option = st.selectbox('Select Task',SUPPORTED_TASKS)
 uploaded_file = st.file_uploader("Upload Meeting Recording", key='file_input' ,on_change=process_file)
@@ -116,9 +122,11 @@ def get_file_extention(file_name):
     new_file_name = None
     file_extension = None
     try:
+        # get file extension
         extension_index = file_name.rindex('.')
         file_extension = file_name[extension_index+1:len(file_name)]
         new_file_name = file_name[0:extension_index]
+        # using reg expression remove special characters from filename
         new_file_name = re.sub('[^A-Za-z0-9]+', '_', new_file_name)
     except ValueError:
         pass
