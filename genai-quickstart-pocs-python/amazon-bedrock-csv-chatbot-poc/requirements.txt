@@ -79,5 +79,5 @@ tzlocal==5.0.1
 urllib3==1.26.18
 validators==0.22.0
 wheel==0.38.4
-yarl==1.9.2
+yarl==1.9.4
 zipp==3.17.0
