@@ -84,7 +84,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 26. **Amazon-Bedrock-Meeting-Minutes-Summarization-POC:**
     This code demonstrates using Amazon Bedrock and Amazon Transcribe  to generate summarized meeting minutes and key action items. It accepts meeting recordings in formats like mp4, wav, mp4a and txt as input. It then processes these recordings and outputs a text summarizing the key discussion points and action items from the meeting. This summary text can be downloaded as .txt file for review and sharing.
     ![Amazon-Bedrock-Meeting-Minutes-Summarization Demo](genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc/images/demo.gif)
-
+27. **Amazon-Bedrock-Converse-API-POC:**
+    This sample poc demonstrates how to use the Amazon Bedrock converse API to facilitate conversational GenAI use cases. The key feature it demonstrates is how the Amazon Bedrock Converse API is able to retain chat history to provide context aware responses to end users.
+    ![Amazon-Bedrock-Converse-API-POC](genai-quickstart-pocs-python/amazon-bedrock-converse-api-poc/images/demo.gif)
 
 
 ## Sample Proof of Concepts - .NET
