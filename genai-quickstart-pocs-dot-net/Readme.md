@@ -19,6 +19,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 
     ![Alt text](images/rag-with-kendra.png "RAG with Kendra")
 
+4. **Amazon-Bedrock-Converse-API-POC:**   
+   This is sample code demonstrating the use of the Amazon Bedrock Converse API to create conversational applications that send and receive messages to and from an Amazon Bedrock mod  l  
+   ![Amazon-Bedrock-Converse-API](images/Bedrock-Converse-dot-net.gif "Converse API")
 
 
 Detailed instructions for each sample are provided in their respective directories.
