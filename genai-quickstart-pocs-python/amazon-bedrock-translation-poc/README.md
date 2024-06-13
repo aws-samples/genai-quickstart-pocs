@@ -46,7 +46,7 @@ git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
 After cloning the repo onto your local machine, open it up in your favorite code editor.The file structure of this repo is broken into 5 key files,
-the Text.py file, the amazon_bedrock_trnaslation.py file, the Chat.py file, the File.py file and the requirements.txt. The Text.py, Chat.py, and File.py files house the frontend application (streamlit app) for their corresponding interface.
+the Text.py file, the amazon_bedrock_trnaslation.py file, the Chat.py file, the File.py file, and the requirements.txt file. The Text.py, Chat.py, and File.py files house the frontend application (streamlit app) for their corresponding interface.
 The amazon_bedrock_translation.py file contains methods which govern the interaction with Amazon Bedrock.
 Last, the requirements.txt
 file has all the requirements needed to get the sample application up and running.
