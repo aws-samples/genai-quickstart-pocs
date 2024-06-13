@@ -81,6 +81,10 @@ This repository contains sample code demonstrating various use cases leveraging 
 25. **Amazon-Bedrock-Translation-POC:**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.
     ![Amazon Bedrock Translation Demo](genai-quickstart-pocs-python/amazon-bedrock-translation-poc/images/demo.gif)
+26. **Amazon-Bedrock-Meeting-Minutes-Summarization-POC:**
+    This code demonstrates using Amazon Bedrock and Amazon Transcribe  to generate summarized meeting minutes and key action items. It accepts meeting recordings in formats like mp4, wav, mp4a and txt as input. It then processes these recordings and outputs a text summarizing the key discussion points and action items from the meeting. This summary text can be downloaded as .txt file for review and sharing.
+    ![Amazon-Bedrock-Meeting-Minutes-Summarization Demo](genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc/images/demo.gif)
+
 
 
 ## Sample Proof of Concepts - .NET
