@@ -91,8 +91,10 @@ This repository contains sample code demonstrating various use cases leveraging 
 3. **Amazon-Bedrock-Kendra-RAG-POC:** 
     This sample implements a RAG-based architecture with Amazon Kendra, allowing users to ask questions against documents stored in a Kendra index and allowing users to do q&a using Amazon Bedrock models.
     ![Amazon-Bedrock-Kendra-RAG](genai-quickstart-pocs-dot-net/images/rag-with-kendra.png "RAG with Kendra")
+4. **Amazon-Bedrock-Converse-API-POC:**   
+   This is sample code demonstrating the use of the Amazon Bedrock Converse API to create conversational applications that send and receive messages to and from an Amazon Bedrock mod  l  
+   ![Amazon-Bedrock-Converse-API](genai-quickstart-pocs-dot-net/images/Bedrock-Converse-dot-net.gif "Converse API")	    
 
-    
 ## Prerequisites - Python
 
 - Amazon Bedrock Access and CLI Credentials
