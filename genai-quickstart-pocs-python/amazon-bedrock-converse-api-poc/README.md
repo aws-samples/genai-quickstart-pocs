@@ -1,4 +1,4 @@
-# Amazon-Bedrock-Guardrails-POC
+# Amazon-Bedrock-Converse-API-POC
 
 This is sample code demonstrating the use of the Amazon Bedrock Converse API to help with conversation oriented use cases that require context preservation. The application is constructed with a simple streamlit frontend where users can input zero shot requests to Claude 3, with the Amazon Bedrock Converse API in place to allow users to ask context aware questions.
 
