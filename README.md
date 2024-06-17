@@ -87,6 +87,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 27. **Amazon-Bedrock-Converse-API-POC:**
     This sample poc demonstrates how to use the Amazon Bedrock converse API to facilitate conversational GenAI use cases. The key feature it demonstrates is how the Amazon Bedrock Converse API is able to retain chat history to provide context aware responses to end users.
     ![Amazon-Bedrock-Converse-API-POC](genai-quickstart-pocs-python/amazon-bedrock-converse-api-poc/images/demo.gif)
+28. **Amazon-Bedrock-Converse-Stream-API-POC:**
+    This sample poc demonstrates how to use the Amazon Bedrock ConverseStream API to facilitate conversational GenAI use cases. The key feature it demonstrates is how the Amazon Bedrock ConverseStream API provides streaming capabilities to improve end users experience. ConverseStream API is able to retain chat history to provide context aware responses to end users.
+    ![Amazon-Bedrock-Converse-Stream-API-POC](genai-quickstart-pocs-python/amazon-bedrock-converse-stream-api-poc/images/demo.gif)
 
 
 ## Sample Proof of Concepts - .NET
