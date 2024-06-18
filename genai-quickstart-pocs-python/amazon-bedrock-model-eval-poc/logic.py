@@ -3,22 +3,83 @@ import json
 import warnings
 import string
 from bs4 import MarkupResemblesLocatorWarning, BeautifulSoup
+import pandas as pd
 
 # Ignore MarkupResemblesLocatorWarning that is printed due to short size and shape of possible HTML
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
+evaluation_type = {
+    "QAndA": "Q&A",
+    "TextSummarization": "Text Summarization",
+    "TextGeneration": "General Text Generation",
+    "Classification": "Classification",
+}
 
-def get_alphabet_letter(number):
+evaluation_type_value = {
+    "Q&A": "QAndA",
+    "Text Summarization": "TextSummarization",
+    "General Text Generation": "TextGeneration",
+    "Classification": "Classification",
+}
+
+
+def select_columns(df: pd.DataFrame, columns: list):
     """
-    Returns the alphabet letter corresponding to the given number.
+    Create a new DataFrame with only the specified columns.
 
     Args:
-        number (int): The number to convert to an alphabet letter.
-    """
-    if number < 1 or number > 26:
-        raise ValueError("Invalid number. Please enter a number between 1 and 26.")
+        df (pandas.DataFrame): The input DataFrame.
+        columns (list): A list of column names or column indices.
 
-    return string.ascii_uppercase[number - 1] + ". "
+    Returns:
+        pandas.DataFrame: A new DataFrame with only the specified columns.
+    """
+    if all(isinstance(col, str) for col in columns):
+        # Columns are specified by name
+        return df[columns]
+    elif all(isinstance(col, int) for col in columns):
+        # Columns are specified by index
+        return df.iloc[:, columns]
+    else:
+        raise ValueError(
+            "The 'columns' argument must be a list of all strings or all integers."
+        )
+
+
+def aggregate_q_and_a_records(df: pd.DataFrame):
+    """
+    Transform a Pandas DataFrame to have columns with the same question_id aggregated.
+    The row's answer and is_correct values are transformed into a JSON object,
+    and all the rows with the same question ID are merged into a single row with
+    an array of answers in one column. The first row of each aggregate is also
+    included in the output DataFrame.
+
+    Args:
+        df (pandas.DataFrame): The input DataFrame.
+
+    Returns:
+        pandas.DataFrame: The transformed DataFrame.
+    """
+    # Create a dictionary of answer information for each question_id
+    data = {}
+    for _, row in df.iterrows():
+        question_id = row["question_id"]
+        if question_id not in data:
+            data[question_id] = {"question": row["question"], "answers": []}
+            # Add any other columns to the data dictionary
+            for col in df.columns:
+                if col not in ["question", "answer", "is_correct"]:
+                    data[question_id][col] = row[col]
+
+        data[question_id]["answers"].append(
+            {"answer": row["answer"], "is_correct": row["is_correct"]}
+        )
+        if row["is_correct"]:
+            data[question_id]["correct_answer"] = row["answer"]
+
+    # Convert the dictionary to a DataFrame
+    output_df = pd.DataFrame.from_dict(data, orient="index")
+    return output_df
 
 
 def get_column_headers(csv_file):
@@ -28,7 +89,7 @@ def get_column_headers(csv_file):
     Args:
         csv_file (str): The path to the CSV file.
     """
-    with open(csv_file, "r") as file:
+    with open(csv_file, "r", encoding="utf-8-sig") as file:
         reader = csv.reader(file)
         headers_output = next(reader)
         x = 0
@@ -37,271 +98,158 @@ def get_column_headers(csv_file):
             if not i:
                 headers.append({"id": x, "name": "Column " + str(x + 1)})
             else:
-                headers.append({"id": x, "name": i})
+                headers.append({"id": x, "name": strip_html(i)})
             x += 1
 
     return headers
 
 
-def generate_bedrock_prompts(
-    csv_file,
-    output_file,
-    eval_type: str = "Q&A",
-    answer_choices_format="original",
-    column_mapping=None,
-    final_instructions=None,
-    include_column_names=False,
-    tags=None,
-    expected_response=None,
+def strip_html(html):
+    """
+    Strips HTML tags from the input string.
+
+    Args:
+        html (str): The input string.
+
+    Returns:
+        str: The string with HTML tags removed.
+    """
+    if type(html) in [dict, object]:
+        for key in html.keys():
+            html[key] = strip_html(html[key])
+        return html
+    elif type(html) == list:
+        for idx, item in enumerate(html):
+            html[idx] = strip_html(item)
+        return html
+    elif type(html) != str:
+        return html
+    else:
+        soup = BeautifulSoup(html, "html.parser")
+        return soup.get_text()
+
+
+def format_answer_value(
+    answer: str, answer_format: str, idx: int, exclude_wrapper_tag=False
+) -> str:
+    """
+    Formats the answer data based on the provided answer output type
+
+    Args:
+        answer (str): The answer value.
+        answer_format (str): The format of the answer.
+        idx (int): The index of the answer.
+
+    Returns:
+        str: The formatted answer.
+    """
+    answer_val = ""
+    if answer_format == "letter":
+        answer_val += get_alphabet_letter(idx) + ". "
+    elif answer_format == "number":
+        answer_val += f"{idx}. "
+
+    answer_val += strip_html(answer)
+    if exclude_wrapper_tag:
+        return answer_val
+    else:
+        return f"<answer>{answer_val}</answer>"
+
+
+def get_alphabet_letter(idx: int) -> str:
+    """
+    Returns the alphabet letter for the given index.
+
+    Args:
+        idx (int): The index.
+
+    Returns:
+        str: The alphabet letter.
+    """
+    return chr(idx + 65)
+
+
+def format_correct_answer_value(answer: str, answer_format: str, answers: list):
+    """
+    Formats the correct answer data based on the provided answer output type
+
+    Args:
+        answer (str): The answer value.
+        answer_format (str): The format of the answer.
+        answers (dict): The dictionary of answers.
+
+    Returns:
+        str: The formatted correct answer.
+    """
+    idx = -1
+    for answer_val in answers:
+        idx += 1
+        if answer_val["answer"] == answer:
+            break
+    return format_answer_value(answer, answer_format, idx, True)
+
+
+def generate_bedrock_prompts_q_and_a(
+    data: pd.DataFrame, answer_choices_format: str
+) -> list[dict]:
+    """
+    Generates prompt data for each row in the DataFrame.
+
+    Args:
+        data (pd.DataFrame): The DataFrame containing the Q&A data.
+
+    Returns:
+        list[dict]: The generated prompts.
+    """
+    prompts = []
+    for _, row in data.iterrows():
+        prompt = {
+            "prompt": f"<question>{strip_html(row['question'])}</question>\n"
+            + "\n".join(
+                format_answer_value(answer_data["answer"], answer_choices_format, idx)
+                for idx, answer_data in enumerate(row["answers"])
+            ),
+            "referenceResponse": format_correct_answer_value(
+                row["correct_answer"], answer_choices_format, row["answers"]
+            ),
+            "category": row["category"],
+        }
+        prompts.append(prompt)
+    return pd.DataFrame.from_records(prompts)
+
+
+def generate_bedrock_prompts_text_summarization(
+    data: pd.DataFrame, included_columns, expected_response, category
 ):
     """
-    Generates Bedrock prompts from a CSV file.
+    Generates prompt data for each row in the DataFrame.
 
     Args:
-        csv_file (str): The path to the CSV file.
-        output_file (str): The path to the output file.
-        eval_type (str): The evaluation type. Defaults to "Q&A".
-        answer_choices_format (str): The format of the answer choices. Defaults to "original".
-        column_mapping (dict): A dictionary mapping column names to column indices. Defaults to None.
-        final_instructions (str): The final instructions. Defaults to None.
-        include_column_names (bool): Whether to include column names in the prompts. Defaults to False.
-        tags (list): A list of tags. Defaults to None.
-        expected_response (str): The expected response. Defaults to None.
-    """
-    """
-    Generates Bedrock prompts from a CSV file.
+        data (pd.DataFrame): The DataFrame containing the text data.
 
-    Args:
-        csv_file (str): The path to the CSV file.
-        output_file (str): The path to the output file.
-        eval_type (str): The evaluation type. Defaults to "Q&A"."""
-    prompts = {}
-    data = {}
-    try:
-        if eval_type == "Q&A":
-            generate_bedrock_prompts_q_and_a(csv_file, data, column_mapping)
-        elif eval_type == "Text Summarization":
-            generate_bedrock_prompts_basic_text(
-                csv_file,
-                data,
-                column_mapping,
-                include_column_names,
-            )
-        elif eval_type == "General Text Generation":
-            generate_bedrock_prompts_text_generation(
-                csv_file,
-                data,
-                column_mapping,
-                expected_response=expected_response,
-            )
-        elif eval_type == "Classification":
-            generate_bedrock_prompts_classification(
-                csv_file,
-                data,
-                column_mapping,
-                tags,
-                include_column_names,
-                expected_response=expected_response,
-            )
-
-    except FileNotFoundError:
-        print(f"Error: File '{csv_file}' not found.")
-        return
-    except Exception as e:
-        print(f"Error: {e}")
-        return
-    try:
-        prompts = generate_json_data(
-            eval_type, data, answer_choices_format, final_instructions=final_instructions
+    Returns:
+        pd.DataFrame: The generated prompts.
+    """
+    if expected_response:
+        included_columns = [col for col in included_columns if col not in [expected_response,category]]
+        data.rename(columns={expected_response: "referenceResponse"}, inplace=True)
+    if category:
+        data.rename(columns={category: "category"}, inplace=True)
+    data.insert(
+        0,
+        "prompt",
+        data[included_columns]
+        .astype(str)
+        .apply(
+            lambda row: strip_html(row),
+            axis=1,
         )
-        return write_output(output_file, prompts)
-    except Exception as e:
-        print(f"Error: {e}")
-        return
-
-
-def generate_bedrock_prompts_q_and_a(csv_file, data, column_mapping):
-    """
-    Generates prompt data for each row in the CSV and the provided tags
-
-    Args:
-        csv_file (str): Path to the input CSV file.
-        data (dict): Dictionary to store the generated prompts.
-        column_mapping (dict): Dictionary mapping column names to column indices.
-
-    Returns:
-        dict: The generated prompts.
-    """
-    with open(csv_file, "r") as file:
-        reader = csv.reader(file)
-        has_header = None
-        skip_row = False
-        for row in reader:
-            if has_header is None:
-                skip_row = True
-                has_header = isinstance(row[0], str) and not row[0].isdigit()
-                if has_header and column_mapping is None:
-                    print("Using auto column name mapping")
-                    column_mapping = {col: idx for idx, col in enumerate(row)}
-                    continue
-            if not skip_row:
-                row = process_q_and_a_row(row, column_mapping)
-
-                if not row.get("question_id", 0):
-                    print("Skipping row with empty question ID")
-                    continue
-
-                if row.get("question_id", 0) not in data:
-                    data[row.get("question_id", 0)] = {
-                        "question_text": row.get("question", 1),
-                        "answers": [],
-                        "category": row.get("category", 4),
-                    }
-
-                is_correct = process_is_correct(row.get("is_correct", 3))
-
-                data[row.get("question_id", 0)]["answers"].append(
-                    {
-                        "answer_text": BeautifulSoup(
-                            row.get("answer", 2), features="html.parser"
-                        ).get_text(),
-                        "is_correct": is_correct,
-                    }
-                )
-            else:
-                skip_row = False
-    return data
-
-
-def generate_bedrock_prompts_classification(
-    csv_file,
-    data,
-    column_mapping,
-    tags,
-    include_column_names=False,
-    expected_response=None,
-):
-    """
-    Generates prompt data for each row in the CSV and the provided tags
-
-    Args:
-        csv_file (str): Path to the input CSV file.
-        data (dict): Dictionary to store the generated prompts.
-        column_mapping (dict): Dictionary mapping column names to column indices.
-        tags (list): List of tags to add to the prompts.
-        include_column_names (bool): Whether to include column names in the prompts.
-        expected_response (str): The expected response.
-    Returns:
-        dict: The generated prompts.
-    """
-    data = generate_bedrock_prompts_basic_text(
-        csv_file,
-        data,
-        column_mapping,
-        include_column_names,
-        expected_response=expected_response,
+        .apply("\n".join, axis=1),
     )
-    for idx, row in enumerate(data):
-        data[idx]["tags"] = tags
-    return data
+    return pd.DataFrame(data[["prompt", "referenceResponse", "category"]].to_dict("records"))
 
 
-def generate_bedrock_prompts_basic_text(
-    csv_file, data, column_mapping, include_column_names=False, expected_response=None
-):
-    """
-    Generates prompt data for each row in the CSV
-    Args:
-        csv_file (str): Path to the input CSV file.
-        data (dict): Dictionary to store the generated prompts.
-        column_mapping (dict): Dictionary mapping column names to column indices.
-        include_column_names (bool): Whether to include column names in the prompts.
-        expected_response (str): The expected response.
-    Returns:
-        dict: The generated prompts.
-    """
-    with open(csv_file, "r") as file:
-        reader = csv.reader(file)
-        has_header = None
-        skip_row = False
-        x = 0
-        for row in reader:
-            if has_header is None:
-                skip_row = True
-                has_header = isinstance(row[0], str) and not row[0].isdigit()
-                if has_header and column_mapping is None:
-                    print("Using auto column name mapping")
-                    column_mapping = {col: idx for idx, col in enumerate(row)}
-                    continue
-            if not skip_row:
-                text_to_summarize = process_text_columns(
-                    row, column_mapping, include_column_names
-                )
-                data[x] = {"text": text_to_summarize}
-                if expected_response:
-                    data[x]["expected_response"] = row[expected_response]
-                x += 1
-            else:
-                skip_row = False
-    return data
-
-
-def generate_bedrock_prompts_text_generation(
-    csv_file, data, column_mapping, expected_response=None
-):
-    """
-    Generates prompt data for each row in the
-
-    Args:
-        csv_file (str): Path to the input CSV file.
-        data (dict): Dictionary to store the generated prompts.
-        column_mapping (dict): Dictionary mapping column names to column indices.
-        expected_response (str): The expected response.
-
-    Returns:
-        dict: The generated prompts.
-    """
-    with open(csv_file, "r") as file:
-        reader = csv.reader(file)
-        has_header = None
-        skip_row = False
-        x = 0
-        for row in reader:
-            if has_header is None:
-                skip_row = True
-                has_header = isinstance(row[0], str) and not row[0].isdigit()
-                if has_header and column_mapping is None:
-                    print("Using auto column name mapping")
-                    column_mapping = {col: idx for idx, col in enumerate(row)}
-                    continue
-            if not skip_row:
-                text_to_summarize = process_text_generation_row(row, column_mapping)
-                data[x]["text"] = text_to_summarize
-                if expected_response:
-                    data[x]["expected_response"]
-                x += 1
-            else:
-                skip_row = False
-    return data
-
-
-def process_text_generation_row(row, column_mapping):
-    """
-    Processes a row from the CSV file and returns the text to summarize
-
-    Args:
-        row (list): A row from the CSV file.
-        column_name_mapping (dict): A mapping of column names to field names.
-        column_number_mapping (dict): A mapping of column numbers to field names.
-
-    Returns:
-        str: The text to summarize.
-    """
-    row_out = ""
-
-    for text in column_mapping.values():
-        row_out += row[text] + " "
-    return row_out
+"""Utility functions"""
 
 
 def process_text_columns(row, column_mapping, include_column_names=False):
@@ -324,172 +272,9 @@ def process_text_columns(row, column_mapping, include_column_names=False):
     return row_out
 
 
-def process_q_and_a_row(row, column_mapping):
+def get_download_data(dataframe: pd.DataFrame):
     """
-    Processes a row from the CSV file and returns the question and answer data
+    Returns the dataframe data for downloading
 
-    Args:
-        row (list): A row from the CSV file.
-        column_name_mapping (dict): A mapping of column names to field names.
-        column_number_mapping (dict): A mapping of column numbers to field names.
-
-    Returns:
-        dict: The question and answer data.
     """
-    row_out = {}
-
-    row_out["question_id"] = row[column_mapping.get("question_id", 0)]
-    row_out["question"] = row[column_mapping.get("question", 1)]
-    row_out["answer"] = row[column_mapping.get("answer", 2)]
-    row_out["is_correct"] = row[column_mapping.get("is_correct", 3)]
-    row_out["category"] = row[column_mapping.get("category", 4)]
-
-    return row_out
-
-
-def process_is_correct(is_correct):
-    """
-    Processes the is_correct field and returns the boolean value
-    Args:
-        is_correct (str or int): The is_correct field value
-    Returns:
-        bool: The boolean value
-    """
-    if isinstance(is_correct, str):
-        is_correct = is_correct.lower() == "true"
-    else:
-        is_correct = bool(int(is_correct))
-
-    return is_correct
-
-
-
-def generate_json_data(
-    eval_type, data, answer_output_type=None, final_instructions=None
-):
-    """
-    Generates JSON data for the provided data
-    
-    Args:
-        eval_type (str): The evaluation type.
-        data (dict): The data to generate JSON data for.
-        answer_output_type (str): The type of answer output.
-        final_instructions (str): The final instructions.
-
-    Returns:
-        list: The generated JSON data.
-    """
-    structured_return = []
-    for entry in data.values():
-        prompt = ""
-        if eval_type == "Q&A":
-            referenceResponse = ""
-            category = entry["category"]
-            prompt = f"<question>{BeautifulSoup(entry['question_text'], features='html.parser').get_text()}</question>"
-
-            for idx, answer in enumerate(entry["answers"], start=1):
-                prompt += "<answer>"
-                answer_val = format_answer(answer, answer_output_type, idx)
-                prompt += answer_val + "</answer>"
-
-                if answer["is_correct"]:
-                    referenceResponse = answer_val
-                if final_instructions:
-                    prompt += f"<instruction>{final_instructions}</instruction>"
-            structured_return.append(
-                {
-                    "prompt": prompt,
-                    "referenceResponse": referenceResponse,
-                    "category": category,
-                }
-            )
-        elif eval_type == "Text Summarization":
-            prompt = f"<text>{entry['text']}</text>"
-            if final_instructions is not None:
-                prompt += "".join(
-                    ["<instruction>", final_instructions, "</instruction>"]
-                )
-            structured_return.append(
-                {
-                    "prompt": prompt,
-                    "referenceResponse": (
-                        entry["expected_response"]
-                        if "expected_response" in entry
-                        else None
-                    ),
-                }
-            )
-        elif eval_type == "General Text Generation":
-            prompt = f"<text>{entry['text']}</text>"
-            if final_instructions is not None:
-                prompt += f"<instruction>{final_instructions}</instruction>"
-            structured_return.append(
-                {
-                    "prompt": prompt,
-                    "referenceResponse": (
-                        entry["expected_response"]
-                        if "expected_response" in entry
-                        else None
-                    ),
-                }
-            )
-        elif eval_type == "Classification":
-            prompt = f"<text>{entry['text']}</text>"
-            prompt += f"<classifications>{','.join(entry['tags'])}</classifications>"
-            if final_instructions is not None:
-                prompt += f"<instruction>{final_instructions}</instruction>"
-            structured_return.append(
-                {
-                    "prompt": prompt,
-                    "referenceResponse": (
-                        entry["expected_response"]
-                        if "expected_response" in entry
-                        else None
-                    ),
-                }
-            )
-    return structured_return
-
-
-def format_answer(answer, answer_output_type, idx):
-    """
-    Formats the answer data based on the provided answer output type
-
-    Args:
-        answer (dict): The answer data.
-        answer_output_type (str): The type of answer output.
-        idx (int): The index of the answer.
-
-    Returns:
-        str: The formatted answer.
-    """
-    answer_val = ""
-    if answer_output_type == "letter":
-        answer_val += answer.get("answer_letter", get_alphabet_letter(idx))
-    elif answer_output_type == "number":
-        answer_val += str(idx) + ". "
-
-    answer_val += BeautifulSoup(
-        answer["answer_text"], features="html.parser"
-    ).get_text()
-
-    return answer_val
-
-
-def write_output(output_file, prompts):
-    """
-    Writes the generated prompts to a JSON file
-
-    Args:
-        output_file (str): The path to the output file.
-        prompts (list): The generated prompts.
-    """
-    try:
-        with open(output_file, "w") as file:
-            for prompt in prompts:
-                json.dump(prompt, file, indent=None)
-                file.write("\n")
-    except Exception as e:
-        print(f"Error writing output file: {e}")
-        return False
-    return True
+    return dataframe.to_json(orient="records", lines=True)
