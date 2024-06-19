@@ -1,7 +1,5 @@
 import csv
-import json
 import warnings
-import string
 from bs4 import MarkupResemblesLocatorWarning, BeautifulSoup
 import pandas as pd
 
