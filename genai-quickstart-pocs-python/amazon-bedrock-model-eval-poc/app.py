@@ -5,7 +5,7 @@ from logic import (
     select_columns,
     aggregate_q_and_a_records,
     generate_bedrock_prompts_q_and_a,
-    generate_bedrock_prompts_text_summarization,
+    generate_bedrock_prompts,
     get_download_data,
 )
 import streamlit as st
@@ -76,7 +76,11 @@ def get_base_configuration_form():
     has_header_row = base_config_form.checkbox(
         "CSV Data has Header Row",
         value=True,
+        disabled=True,
         help="If the first row of the CSV are the column names, check this box. If there isn't a header row, uncheck this box.",
+    )
+    base_config_form.write(
+        ":warning: Currently, only CSVs with column headers is supported. If your CSV doesn't have headers, please add them and try again."
     )
     prompt_type_value = base_config_form.selectbox(
         "Prompt Type",
@@ -88,11 +92,11 @@ def get_base_configuration_form():
     if prompt_type_value == "Q&A":
         answer_choices_format = base_config_form.radio(
             "How should answers be formatted?",
-            options=["original", "letter", "numbers"],
+            options=["original", "letter", "number"],
             format_func=lambda x: {
                 "original": "Don't modify questions",
                 "letter": "Map questions to letters (a, b, c, etc)",
-                "numbers": "Map questions to numbers (1, 2, 3, etc)",
+                "number": "Map questions to numbers (1, 2, 3, etc)",
             }[x],
             index=None,
             help="How should the answer choices be formatted?",
@@ -113,6 +117,10 @@ def get_q_and_a_form_data(headers, csv_data, answer_choices_format):
     """
     details_form = st.status("Provide Q&A details", expanded=True)
     details_form.subheader("Q&A Details")
+    details_form.write("Please map the fields below to their CSV columns.")
+    details_form.info(
+        ":warning: Currently, only Q & A data is supported if the answers each have an individual row value associated with the same question ID. At this time, having answers in one row is not supported."
+    )
     form_fields = {
         "question_id": details_form.selectbox(
             "Question ID Column",
@@ -165,83 +173,144 @@ def get_q_and_a_form_data(headers, csv_data, answer_choices_format):
         return data
 
 
-def get_text_summarization_form_data(headers, csv_data):
+def get_form_data_with_checkboxes(
+    headers,
+    csv_data,
+    prompt_type: str,
+    header_text: str,
+    subheader_text: str,
+    include_categories_input=False,
+):
     """
-    Gets the form data for Text Summarization Prompt Type
-
+    Gets the form data with checkboxes
     Args:
         headers (list): The column headers
         csv_data (pd.DataFrame): The CSV data
+        header_text (str): The header text
+        subheader_text (str): The subheader text
 
     Returns:
         dict: The form data
     """
-    details_form = st.status("Provide Text Summarization details", expanded=True)
-    details_form.subheader("Text Summarization Details")
-    details_form.write(
-        "Check the boxes of the columns you'd like included for text summarization"
-    )
+    details_form = st.status("Awaiting user input", expanded=True)
+    details_form.subheader(header_text)
+    details_form.write(subheader_text)
     form_fields = {}
-    expected_response = details_form.selectbox(
-        "Select the column that contains the expected answer",
-        options=[option.get("name") for option in headers],
-        index=None,
-    )
-    if expected_response:
-        form_fields[expected_response] = True
+    expected_response = ""
+    if prompt_type != "Classification":
+        expected_response = details_form.selectbox(
+            "Select the column that contains the expected answer",
+            options=[option.get("name") for option in headers],
+            index=None,
+        )
+        if expected_response:
+            form_fields[expected_response] = True
     category = details_form.selectbox(
         "Select the column that contains the category",
+        help="This column should contain the value used to categorize questions.",
         options=[option.get("name") for option in headers],
         index=None,
     )
+    categories_input = None
+    if include_categories_input:
+        categories_input = details_form.text_input(
+            "Enter the classification categories separated by a comma (,)",
+            help="Please provide all potential classification categories that should be used as potential classification categories during Model Evaluation.",
+        )
+        if categories_input:
+            tags = [tag.strip() for tag in categories_input.split(",")]
+            for tag in tags:
+                if tag:
+                    details_form.markdown(
+                        f"<div style='display:inline-block;background-color:#e6e6e6;color:#000;padding:4px 8px;border-radius:16px;margin:2px'>{tag}</div>",
+                        unsafe_allow_html=True,
+                    )
+
     if category:
         form_fields[category] = True
+    details_form.write("Select which columns you'd like to include in the prompts.")
     for header in headers:
         form_fields[header.get("name")] = details_form.checkbox(
             header.get("name"),
             value=False,
-            disabled=(
-                header.get("name") in [expected_response, category]
-                if not None
-                else False
-            ),
+            disabled=(header.get("name") in [expected_response, category]),
             help=(
-                "You cannot select this field for summary as it is currently selected as the field containing the expected answer from the LLM."
-                if header.get("name") == expected_response
+                "You cannot select this field to be included in the input text as it is being used already within the prompt."
+                if header.get("name") in [expected_response, category]
                 else None
             ),
         )
-    if details_form.button("Proceed"):
-        form_fields[expected_response] = True
-        if category:
-            form_fields[category] = True
-        data = select_columns(csv_data, [k for k, v in form_fields.items() if v])
-
-        if is_form_complete(
-            form_fields, must_complete_all_fields=False
-        ) and is_form_complete(
-            {"expected_response": expected_response, "category": category}
-        ):
-
-            data = generate_bedrock_prompts_text_summarization(
-                data,
-                [k for k, v in form_fields.items() if v],
-                expected_response,
-                category,
+    if details_form.button("Proceed") or st.session_state["data_processed"]:
+        st.session_state["data_processed"] = True
+        if (
+            is_form_complete(form_fields, must_complete_all_fields=False)
+            and (
+                is_form_complete(
+                    {"expected_response": expected_response, "category": category}
+                )
+                and not include_categories_input
             )
+            or (
+                (
+                    include_categories_input
+                    and is_form_complete(
+                        {"categories_input": categories_input, "category": category},
+                        must_complete_all_fields=True,
+                    )
+                )
+                or not include_categories_input
+            )
+        ):
+            if prompt_type != "Classification":
+                form_fields[expected_response] = True
+            if category:
+                form_fields[category] = True
+            data = select_columns(csv_data, [k for k, v in form_fields.items() if v])
+            print(f"data from selected columns {data}")
+            if prompt_type == "TextSummarization":
+                data = generate_bedrock_prompts(
+                    data,
+                    [k for k, v in form_fields.items() if v],
+                    expected_response,
+                    category,
+                    "Summarize the text provided in the <text> tag",
+                )
+            elif prompt_type == "TextGeneration":
+                data = generate_bedrock_prompts(
+                    data,
+                    [k for k, v in form_fields.items() if v],
+                    expected_response,
+                    category,
+                    "Generate a text response using the text provided in the <text> tag",
+                )
+            elif prompt_type == "Classification":
+                data = generate_bedrock_prompts(
+                    data,
+                    [k for k, v in form_fields.items() if v],
+                    category,
+                    category,
+                    "Classify the text within <text> tag using the categories in the <categories> tag.",
+                    categories_input=categories_input,
+                )
             details_form.update(
                 label="Text Summarization Mapping Complete",
                 expanded=False,
                 state="complete",
             )
             return data
+        else:
+            details_form.warning(
+                "Please complete all required fields before proceeding."
+            )
     return None
 
 
 def main():
+    if "data_processed" not in st.session_state:
+        st.session_state["data_processed"] = False
     if "xkey" not in st.session_state:
         st.session_state.xkey = 0
-    st.title("Amazon Bedrock Model Evaluator Data Prep")
+    st.title(":rainbow[Amazon Bedrock Model Evaluator Data Prep]")
     st.subheader(
         "Quickly convert your existing dataset into a Bedrock Model Evaluator promptset"
     )
@@ -266,26 +335,45 @@ def main():
             csv_data = pd.read_csv(
                 csv_file, skip_blank_lines=True, header=0 if has_header_row else None
             )
+            base_config_form.update(
+                label="Base Configuration Complete",
+                expanded=False,
+                state="complete",
+            )
             csv_data.dropna(how="all", inplace=True)
             match prompt_type:
                 case "QAndA":
-                    base_config_form.update(
-                        label="Base Configuration Complete",
-                        expanded=False,
-                        state="complete",
-                    )
                     data = get_q_and_a_form_data(
                         headers, csv_data, answer_choices_format
                     )
                     pass
                 case "TextSummarization":
-                    data = get_text_summarization_form_data(headers, csv_data)
-
+                    data = get_form_data_with_checkboxes(
+                        headers,
+                        csv_data,
+                        prompt_type,
+                        "Text Summarization",
+                        "Complete the form to map CSV data to Text Summarization prompts.",
+                    )
                     pass
                 case "TextGeneration":
+                    data = get_form_data_with_checkboxes(
+                        headers,
+                        csv_data,
+                        prompt_type,
+                        "Text Generation",
+                        "Complete the form to map CSV data to Text Generation prompts.",
+                    )
                     pass
                 case "Classification":
-                    pass
+                    data = get_form_data_with_checkboxes(
+                        headers,
+                        csv_data,
+                        prompt_type,
+                        "Classification",
+                        "Complete the form to map CSV data to Classification prompts.",
+                        include_categories_input=True,
+                    )
     if data is not None:
         with st.status("Data Mapping Complete. Create files.", expanded=True):
             st.subheader("Data Mapping Complete")
@@ -294,6 +382,9 @@ def main():
             st.write(f"Prompts Generated: {total_records}")
             st.write(
                 f"Download the prompt dataset {'file' if total_records <= batch_size else 'files'} to use within Amazon Bedrock Model Evaluator."
+            )
+            st.write(
+                "For more information on how to use Model Evaluator, please see the [documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/model-evaluation.html)."
             )
             st.balloons()
             if len(data) > batch_size:
@@ -320,6 +411,7 @@ def main():
                 )
         if st.button("Rerun Tool"):
             st.session_state["xkey"] += 1
+            st.session_state["data_processed"] = False
             st.rerun()
 
 
@@ -335,13 +427,16 @@ def is_form_complete(form_fields: dict, must_complete_all_fields=True):
     """
     if must_complete_all_fields:
         for field_value in form_fields.values():
-            if field_value is None:
+            print(f"field value is {field_value}")
+            if not field_value:
                 return False
         return True
     else:
-        for field_value in form_fields.values():
-            if field_value is not None:
+        for field_key, field_value in form_fields.items():
+            if field_value:
+                print(f"field {field_key} is not none")
                 return True
+        return False
 
 
 if __name__ == "__main__":

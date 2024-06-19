@@ -63,7 +63,7 @@ def aggregate_q_and_a_records(df: pd.DataFrame):
     # Create a dictionary of answer information for each question_id
     data = {}
     for _, row in df.iterrows():
-        question_id = row["question_id"]
+        question_id = row.get("question_id", None)
         if question_id not in data:
             data[question_id] = {"question": row["question"], "answers": []}
             # Add any other columns to the data dictionary
@@ -118,15 +118,15 @@ def strip_html(html):
         for key in html.keys():
             html[key] = strip_html(html[key])
         return html
-    elif type(html) == list:
+    elif type(html) in [list, pd.Series]:
         for idx, item in enumerate(html):
             html[idx] = strip_html(item)
         return html
     elif type(html) != str:
         return html
     else:
-        soup = BeautifulSoup(html, "html.parser")
-        return soup.get_text()
+        soup = BeautifulSoup(html, "html.parser").decode('utf-8')
+        return str(soup.replace('\n', ' ').replace('\r', '').strip())
 
 
 def format_answer_value(
@@ -149,7 +149,7 @@ def format_answer_value(
     elif answer_format == "number":
         answer_val += f"{idx}. "
 
-    answer_val += strip_html(answer)
+    answer_val += str(strip_html(answer))
     if exclude_wrapper_tag:
         return answer_val
     else:
@@ -204,10 +204,21 @@ def generate_bedrock_prompts_q_and_a(
     prompts = []
     for _, row in data.iterrows():
         prompt = {
-            "prompt": f"<question>{strip_html(row['question'])}</question>\n"
-            + "\n".join(
-                format_answer_value(answer_data["answer"], answer_choices_format, idx)
-                for idx, answer_data in enumerate(row["answers"])
+            "prompt": (
+                f"<question>{strip_html(row['question'])}</question>\n"
+                + "\n".join(
+                    format_answer_value(
+                        answer_data["answer"], answer_choices_format, idx
+                    )
+                    for idx, answer_data in enumerate(row["answers"])
+                )
+                + "<instructions>"
+                + (
+                    f"\nPlease response with the correct {answer_choices_format} and answer value"
+                    if answer_choices_format
+                    else "\nPlease respond with the correct answer choice value."
+                )
+                + "</instructions>"
             ),
             "referenceResponse": format_correct_answer_value(
                 row["correct_answer"], answer_choices_format, row["answers"]
@@ -218,8 +229,13 @@ def generate_bedrock_prompts_q_and_a(
     return pd.DataFrame.from_records(prompts)
 
 
-def generate_bedrock_prompts_text_summarization(
-    data: pd.DataFrame, included_columns, expected_response, category
+def generate_bedrock_prompts(
+    data: pd.DataFrame,
+    included_columns,
+    expected_response,
+    category,
+    instruction,
+    categories_input=None,
 ):
     """
     Generates prompt data for each row in the DataFrame.
@@ -230,46 +246,38 @@ def generate_bedrock_prompts_text_summarization(
     Returns:
         pd.DataFrame: The generated prompts.
     """
+    print(f"generate_bedrock_prompts data = {data}")
     if expected_response:
-        included_columns = [col for col in included_columns if col not in [expected_response,category]]
-        data.rename(columns={expected_response: "referenceResponse"}, inplace=True)
-    if category:
-        data.rename(columns={category: "category"}, inplace=True)
+        included_columns = [
+            col for col in included_columns if col not in [expected_response, category]
+        ]
+        data = data.rename(columns={expected_response: "referenceResponse"})
+    if category and not categories_input:
+        data = data.rename(columns={category: "category"})
+    elif category and categories_input:
+        data.insert(0, "category", data["referenceResponse"])
     data.insert(
         0,
         "prompt",
         data[included_columns]
         .astype(str)
         .apply(
-            lambda row: strip_html(row),
+            lambda x: strip_html(x),
             axis=1,
         )
         .apply("\n".join, axis=1),
     )
-    return pd.DataFrame(data[["prompt", "referenceResponse", "category"]].to_dict("records"))
-
-
-"""Utility functions"""
-
-
-def process_text_columns(row, column_mapping, include_column_names=False):
-    """
-    Processes a row from the CSV file and returns the text to summarize
-
-    Args:
-        row (list): A row from the CSV file.
-        column_name_mapping (dict): A mapping of column names to field names.
-        column_number_mapping (dict): A mapping of column numbers to field names.
-
-    Returns:
-        str: The text to summarize.
-    """
-    row_out = ""
-    for key, value in column_mapping.items():
-        if include_column_names:
-            row_out += f"{key}: "
-        row_out += row[value] + "\n"
-    return row_out
+    data["prompt"] = (
+        "<text>"
+        + data["prompt"].astype(str)
+        + "</text>"
+        + (f"<categories>{categories_input}</categories>" if categories_input else "")
+        + f"<instruction>{instruction}</instruction>"
+    )
+    print(data["prompt"])
+    return pd.DataFrame(
+        data[["prompt", "referenceResponse", "category"]].to_dict("records")
+    )
 
 
 def get_download_data(dataframe: pd.DataFrame):
