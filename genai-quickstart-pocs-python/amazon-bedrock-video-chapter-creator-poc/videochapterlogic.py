@@ -112,12 +112,8 @@ def transcribe_file(object_name):
         job_status = job["TranscriptionJob"]["TranscriptionJobStatus"]
         if job_status in ["COMPLETED", "FAILED"]:
             # Print the current status of the job to the console
-            print(f"Job {job_name} is {job_status}.")
             if job_status == "COMPLETED":
-                print(
-                    f"Download the transcript from\n"
-                    f"\t{job['TranscriptionJob']['Transcript']['TranscriptFileUri']}."
-                )
+                
 
                 # Get the results of the transcribe job
                 job_result = requests.get(
@@ -133,14 +129,6 @@ def transcribe_file(object_name):
                 transcript_response = requests.get(sub_url)
                 # decode the subtitles from bytes to string
                 full_subtitles = transcript_response.content.decode()
-
-                print("----Full Transcript ----")
-                print(full_transcript)
-                print("----Full Transcript ----")
-
-                print("----Full Subtitles ----")
-                print(full_subtitles)
-                print("----End Subtitles ----")
 
                 return full_transcript, full_subtitles
             break
@@ -232,8 +220,6 @@ Please return the JSON formatted response for each identified section response i
     # This helps us easily extract it by parsing the <response> xml tag
     result = parse_xml(response_text, "response")
 
-    # make sure the json objects parsed are in an array
-    print("create_topic result = ",result)
     return json.loads(result)
 
 
@@ -241,7 +227,6 @@ Please return the JSON formatted response for each identified section response i
 def split_transcript(subtitles):
     """
     Split the provided subtitles into chunks
-    :param subtitles: The subtitles to split.
     :return: The split subtitles chunks
     """
 
@@ -425,7 +410,6 @@ def fuzzy_search(
             if x > partial_ratio_score:
                 partial_ratio_score = x
                 partial_ratio_item = item.page_content
-                print("new x! with score of " + str(partial_ratio_score))
 
         return partial_ratio_item
 
@@ -448,13 +432,10 @@ def fuzzy_search(
 
         for item in segments:
             x = fuzz.partial_ratio(topic_sentence, item.page_content)
-            print(x)
             if x >= partial_ratio_score:
                 partial_ratio_score = x
                 partial_ratio_item = item.page_content
-                print("new x! with score of " + str(partial_ratio_score))
 
-        print(partial_ratio_item)
         return partial_ratio_item
 
     # Anywhere else, remove the first and last parts
@@ -560,7 +541,7 @@ def persist_doc(doc):
         start_time_temp = row[1]["Start Time"]
         video_source = row[1]["Video Link"]
         # convert the time from seconds
-        start_time = time_math_seconds(start_time_temp.strip())
+        start_time = row[1]["Start Time in Seconds"]
 
         # Get Embeddings - returns vectorized value of input string
         vectors = get_embedding(summary)
@@ -568,8 +549,6 @@ def persist_doc(doc):
         response = index_doc(
             oss_client, vectors, title, summary, video_source, start_time
         )
-
-        print(response)
 
         st.write("saved")
 
@@ -742,7 +721,6 @@ def submit_user_query(userQuery):
 
     # Answer Question
     response = invoke_llm_with_user_query(userQuery, summary)
-    print(response)
     st.write(response)
 
     # play video
@@ -763,7 +741,7 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
     Returns:
         list: A list of starting times for each topic.
     """
-    df = pd.DataFrame(columns=["Title", "Summary", "Start Time", "Video Link"])
+    df = pd.DataFrame(columns=["Title", "Summary", "Start Time", "Video Link", "Start Time in Seconds"])
     num_sections = 1
     previous_timestamp = ""
     cf_name = get_cloudfront_name(
@@ -792,20 +770,13 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
             "Title": title,
             "Summary": description,
             "Start Time": start_time_fuzzy,
+            "Start Time in Seconds": video_time,
             "Video Link": cf_name,
         }
         df = add_row(df, new_row_data)
-
-        # play video at timestamp
-
-        st.write(title + ": ")
-        st.video(cf_name, format="video/mp4", start_time=video_time)
-
         num_sections += 1
-
-        # End of Loop
-        st.write(df)
         st.session_state.df = df
+    print(st.session_state.df.columns)
 
 
 def invoke_llm_with_user_query(user_query, summary):

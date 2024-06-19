@@ -1,3 +1,4 @@
+from functools import partial
 import streamlit as st
 from datetime import datetime
 from videochapterlogic import (
@@ -21,8 +22,18 @@ st.set_page_config(
     page_title="Video Chapter Creator", page_icon=":ledger", layout="centered"
 )
 
+
+def jump_to_chapter(timestamp):
+    print(f"Jumping to {timestamp}")
+    st.session_state.video_timestamp = int(timestamp)
+    print(st.session_state.video_timestamp)
+    st.rerun()
+
+
 # Creating the main UI
 with st.container():
+    if "process_started" not in st.session_state:
+        st.session_state.process_started = False
     # Add a title to the web app
     st.title(f""":rainbow[Amazon Bedrock Generative AI Video Chapter Creator]""")
     # Create two tabs: "Add Videos & Generate Chapters" and "Ask questions, get relevant videos"
@@ -117,7 +128,8 @@ with st.container():
             result = st.button("Start Processing")
 
             # If the button is clicked, execute the following code
-            if result:
+            if result or st.session_state['process_started']:
+                st.session_state['process_started'] = True
                 # Start the timer for the ingestion process
                 upload_start = datetime.now()
 
@@ -156,37 +168,50 @@ with st.container():
             with st.status(
                 "Processing Request", expanded=False, state="running"
             ) as status:
-                # Split the transcript into smaller chunks for fuzzy search
-                subtitle_doc = split_transcript(subtitles)
+                if not "df" in st.session_state or st.session_state.df is None:
+                    # Split the transcript into smaller chunks for fuzzy search
+                    subtitle_doc = split_transcript(subtitles)
 
-                # Identify the topics in the video
-                status.update(
-                    label="Identifying Video Topics", state="running", expanded=False
-                )
-                topic_start = datetime.now()
-                topics = create_topics(transcript, object_name)
-                topic_end = datetime.now()
-                topic_time = topic_end - topic_start
+                    # Identify the topics in the video
+                    status.write("Identifying video topics")
+                    topic_start = datetime.now()
+                    topics = create_topics(transcript, object_name)
+                    topic_end = datetime.now()
+                    topic_time = topic_end - topic_start
 
-                # Find the start times for the identified topics
-                start_time_start = datetime.now()
-                status.update(
-                    label="Finding Start Times", state="running", expanded=False
-                )
-                find_video_start_times(topics, subtitle_doc, object_name)
-                start_time_end = datetime.now()
-                start_time_full = start_time_end - start_time_start
-                st.write(
-                    ":heavy_check_mark: Start Times Found :" + str(start_time_full)
+                    # Find the start times for the identified topics
+                    start_time_start = datetime.now()
+                    status.write(
+                        ":heavy_check_mark: Topics Identified: " + str(topic_time)
+                    )
+                    status.write("Finding start times for topics")
+                    find_video_start_times(topics, subtitle_doc, object_name)
+                    start_time_end = datetime.now()
+                    start_time_full = start_time_end - start_time_start
+                    st.write(
+                        ":heavy_check_mark: Start Times Found :" + str(start_time_full)
+                    )
+                    buttons = []
+                st.dataframe(st.session_state.df)
+                for i, row in st.session_state.df.iterrows():
+                    st.button(
+                        f"Jump to Chapter: {row['Title']} ({row['Start Time']})",
+                        key=f"video_jump_{i})",
+                        on_click=partial(jump_to_chapter, row['Start Time in Seconds'])
+                    )
+                if not "video_timestamp" in st.session_state:
+                    st.session_state['video_timestamp'] = "0"
+                video_player = st.video(
+                    cf_name,
+                    format="video/mp4",
+                    start_time=int(st.session_state['video_timestamp']),
+                    subtitles={"Englist SRT": subtitles, },
                 )
 
-                # Calculate the total time taken for the process
-                final_time = start_time_end - upload_start
                 status.update(
-                    label=":heavy_check_mark: Request Complete: Total Time: "
-                    + str(final_time),
+                    label=":heavy_check_mark: Request Complete",
                     state="complete",
-                    expanded=False,
+                    expanded=True,
                 )
 
         # Save the results
@@ -194,10 +219,10 @@ with st.container():
             "Save", disabled=(st.session_state["process_status"] != "READY")
         )
         if save_results:
-                st.balloons()
-                save_doc()
-                st.session_state.df = None
-                st.session_state.process_status = "NEW"
+            st.balloons()
+            save_doc()
+            st.session_state.df = None
+            st.session_state.process_status = "NEW"
 
     # Search Tab
     with search_tab:
