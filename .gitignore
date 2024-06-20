@@ -204,4 +204,8 @@ FakesAssemblies/
 # FAKE - F# Make
 .fake/
 
+# folder for random files during dev/testing
+misc/
 
+# ignore mac generated file:
+.DS_Store
