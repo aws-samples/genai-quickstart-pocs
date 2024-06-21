@@ -4,5 +4,5 @@ langchain==0.1.11
 opensearch-py==2.4.2
 pandas==2.2.0
 requests==2.31.0
-streamlit==1.31.1
+streamlit==1.35.0
 thefuzz==0.22.1
