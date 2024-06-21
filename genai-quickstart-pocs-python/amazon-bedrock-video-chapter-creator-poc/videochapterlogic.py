@@ -1,3 +1,4 @@
+import re
 import tomllib
 import botocore
 import boto3
@@ -113,7 +114,6 @@ def transcribe_file(object_name):
         if job_status in ["COMPLETED", "FAILED"]:
             # Print the current status of the job to the console
             if job_status == "COMPLETED":
-                
 
                 # Get the results of the transcribe job
                 job_result = requests.get(
@@ -129,13 +129,33 @@ def transcribe_file(object_name):
                 transcript_response = requests.get(sub_url)
                 # decode the subtitles from bytes to string
                 full_subtitles = transcript_response.content.decode()
-
+                save_subtitles_to_s3(full_subtitles, object_name)
                 return full_transcript, full_subtitles
             break
         else:
             print(f"Waiting for {job_name}. Current status is {job_status}.")
         time.sleep(10)
 
+def save_subtitles_to_s3(subtitles, object_name):
+    """
+    Save subtitles to an S3 object.
+    :param subtitles: The subtitles to save.
+    :param object_name: The name of the S3 object.
+    """
+    bucket = env_config["s3_bucket"]
+    object_key = f"{object_name}.srt"
+    s3.put_object(Body=subtitles, Bucket=bucket, Key=object_key)
+
+
+class CustomJSONDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+        for key, value in obj.items():
+            if isinstance(value, str):
+                obj[key] = re.sub(r'(?<!\\)"', r'\\"', value)
+        return obj
 
 # Invoke Bedrock LLM - Returns JSON Array of Topics, Summaries, and Starting Sentences
 def create_topics(transcription, title):
@@ -157,7 +177,6 @@ For every section identified, create a short Section Title and a detailed sectio
 Provide the first sentence from the video_transcription that begins the section.
 This sentence should mark the start of the section you have identified and should mark the transition into the section
 Return the Section Titles,  Summaries, and beginning sentence in a valid JSON array.
-Replace any instance of a quotation mark (") with an escaped quotation (\\")
 The JSON will be read by python code.
 
 Video Title:
@@ -219,8 +238,8 @@ Please return the JSON formatted response for each identified section response i
     # We asked the LLM to put the response in an xml <response> tag
     # This helps us easily extract it by parsing the <response> xml tag
     result = parse_xml(response_text, "response")
-
-    return json.loads(result)
+    print(result)
+    return json.loads(result, cls=CustomJSONDecoder)
 
 
 # Manipulate context
@@ -484,17 +503,11 @@ def save_doc():
     Returns:
 
     """
+
     if "df" not in st.session_state:
         st.write("No Data To Save")
     else:
-        with st.status("Processing Request", expanded=False, state="running") as status:
-            status.write("Saving video chapters...")
-            persist_doc(st.session_state.df)
-        st.status("Video Chapters saved!", expanded=False, state="complete")
-        st.warning(
-            "Video chapters may take up to 30 seconds before user inquiries will be able to locate the video chapters.",
-            icon="⚠️",
-        )
+        persist_doc(st.session_state.df)
 
 
 def persist_doc(doc):
@@ -533,12 +546,9 @@ def persist_doc(doc):
 
     for row in tempdf.iterrows():
 
-        # Write the data frame information to UI
-        st.write(row[1])
         # Set the details to variable
         title = row[1]["Title"]
         summary = row[1]["Summary"]
-        start_time_temp = row[1]["Start Time"]
         video_source = row[1]["Video Link"]
         # convert the time from seconds
         start_time = row[1]["Start Time in Seconds"]
@@ -549,8 +559,6 @@ def persist_doc(doc):
         response = index_doc(
             oss_client, vectors, title, summary, video_source, start_time
         )
-
-        st.write("saved")
 
     return "Done"
 
@@ -721,12 +729,13 @@ def submit_user_query(userQuery):
 
     # Answer Question
     response = invoke_llm_with_user_query(userQuery, summary)
-    st.write(response)
-
-    # play video
-    st.video(videolink, format="video/mp4", start_time=int(timestamp))
-    st.balloons()
-    return response
+    
+    return {
+        "llm_response": response,
+        "video_link": videolink,
+        "start_time": timestamp,
+        "subtitles": f"{videolink}.srt"
+    }
 
 
 def find_video_start_times(topics, subtitle_doc, video_object_name):
@@ -741,7 +750,15 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
     Returns:
         list: A list of starting times for each topic.
     """
-    df = pd.DataFrame(columns=["Title", "Summary", "Start Time", "Video Link", "Start Time in Seconds"])
+    df = pd.DataFrame(
+        columns=[
+            "Title",
+            "Summary",
+            "Start Time",
+            "Video Link",
+            "Start Time in Seconds",
+        ]
+    )
     num_sections = 1
     previous_timestamp = ""
     cf_name = get_cloudfront_name(
@@ -776,7 +793,6 @@ def find_video_start_times(topics, subtitle_doc, video_object_name):
         df = add_row(df, new_row_data)
         num_sections += 1
         st.session_state.df = df
-    print(st.session_state.df.columns)
 
 
 def invoke_llm_with_user_query(user_query, summary):
