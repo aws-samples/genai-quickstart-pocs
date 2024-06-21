@@ -34,7 +34,7 @@ On the search side:
 1. Ensure Python 3.11 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
 2. An OpenSearch Serverless Collection. You can learn how to create one [here](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-vector-search.html).
 *The Easy Create instructions on the document are suitable for this*
-Within the Collection, a Vector Index is needed, with a Vector Field called `vectorfield` with an Engine value of `mmslib`, Dimensions of `1536`. The remaining options can be left with their default values.
+Within the Collection, a Vector Index is needed, with a Vector Field called `vectors` with an Engine value of `mmslib`, Dimensions of `1536`. The remaining options can be left with their default values.
 
     Note the endpoint for the collection and the name of the index as you will need to use this later. 
 3. An Amazon S3-Backed CloudFront Distribution. Videos will be uploaded to this S3 bucket and users will access videos through the CloudFront distribution. You can learn how to deploy the CloudFront an S3 bucket configuration [here](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.SimpleDistribution.html). 
