@@ -1,0 +1,77 @@
+﻿@page "/bedrock-guardrail-form"
+@using System.Runtime.CompilerServices;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using System.Threading.Channels;
+@using Amazon;
+@using Amazon.BedrockRuntime;
+@using Amazon.BedrockRuntime.Model;
+@using Amazon.Runtime.EventStreams;
+@using Amazon.Util;
+@using LangChain.Providers.Amazon.Bedrock
+@using MudBlazor
+
+
+@inject ILogger<BedrockGuardrail> Logger
+@inject AmazonBedrockRuntimeClient BedrockRuntimeClient
+@inject IConfiguration Configuration;
+@rendermode InteractiveServer
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<PageTitle>Amazon Bedrock Guardrail</PageTitle>
+<MudStack>
+    
+    <AntiforgeryToken />
+@*     <EditForm Model="@Model" OnSubmit="Submit">
+        <MudCard>
+            <MudCardContent>
+               
+                <h1>Amazon Bedrock with Guardrail</h1>
+                <h2>Enter your prompt: </h2>                
+                <MudTextField @bind-Value="Model!.Request" Label="Document Details" Variant="Variant.Outlined" Lines="3"></MudTextField>
+
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" >Submit</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm> *@
+        <MudItem xs="12" Class="rounded">
+            <MudGrid>
+
+                <MudItem xs="12" lg="10">
+                    <MudTextField @bind-Value="Model!.Request" Label="Enter Search prompt"
+                                  Variant="Variant.Outlined" IconSize="Size.Large"
+                                  Adornment="Adornment.End" MaxLength="1000" Lines="3"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  HelperText="Use Shift + Enter for new lines." />
+                </MudItem>
+                <MudItem xs="0" lg="2" Class="d-flex align-self-center">
+                    <MudGrid Justify="Justify.Center">
+                        <MudItem xs="9" Class="pa-2">
+                            <MudFab Color="Color.Secondary" Size="Size.Large"
+                                    StartIcon=@Icons.Material.Filled.Send Class="full-width"
+                                    Label="Ask Me" aria-label="Ask question button."
+                                    OnClick="@OnAskClickedAsync"
+                                    />
+                        </MudItem>
+                        
+                    </MudGrid>
+                </MudItem>
+
+            </MudGrid>
+        </MudItem>
+
+        <MudCard>
+            <MudCardContent>              
+                <MudMarkdown Value="@outputText" />
+            </MudCardContent>        
+        </MudCard>
+    </MudStack>
+    
+
+
+
