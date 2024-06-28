@@ -1,6 +1,7 @@
 # Amazon-Bedrock-Text-Extraction-POC
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to extract text from a document. The application is constructed with a simple streamlit frontend where users leverage Bedrock Agents to extract and summarize key information from a document like a financial earnings report. 
 
+Authored by: Al Destefano and Dom Bavaro
 <!-- Need updated gif here -->
 ![Alt text](images/demo.gif)
 # **Goal of this Repo:**
