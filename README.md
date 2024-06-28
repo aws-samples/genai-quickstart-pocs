@@ -90,9 +90,11 @@ This repository contains sample code demonstrating various use cases leveraging 
 28. **Amazon-Bedrock-Converse-Stream-API-POC:**
     This sample poc demonstrates how to use the Amazon Bedrock ConverseStream API to facilitate conversational GenAI use cases. The key feature it demonstrates is how the Amazon Bedrock ConverseStream API provides streaming capabilities to improve end users experience. ConverseStream API is able to retain chat history to provide context aware responses to end users.
     ![Amazon-Bedrock-Converse-Stream-API-POC](genai-quickstart-pocs-python/amazon-bedrock-converse-stream-api-poc/images/demo.gif)
-25. **Amazon-Bedrock-Model-Eval-POC:**
+29. **Amazon-Bedrock-Model-Eval-POC:**
     This is sample code aimed to accelerate customers aiming to leverage [Amazon Bedrock Model Evaluator](https://docs.aws.amazon.com/bedrock/latest/userguide/model-evaluation.html) with custom prompt data. This Proof-of-Concept (POC) enables users to provide a CSV containing data that should be used with Amazon Bedrock Model Evaluator.
     ![Amazon Bedrock Model Evalutor Data Creator POC](genai-quickstart-pocs-python/amazon-bedrock-model-eval-poc/images/demo.gif)
+30. **Amazon-Bedrock-Text-Extraction-POC:**
+    This is a sample proof of concept demonstrating how customers can leverage large language models to perform text extraction use cases.
 
 
 ## Sample Proof of Concepts - .NET

@@ -24,8 +24,8 @@ When a user interacts with the GenAI app, the flow is as follows:
 
 1. Amazon Bedrock Access and CLI Credentials.
 2. Create an Amazon Bedrock Guardrail, information on how to do that can be found [here](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-create.html) 
-2. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3100/).
-
+3. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3100/).
+so
 ## Step 1:
 
 The first step of utilizing this repo is performing a git clone of the repository.
