@@ -93,7 +93,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Amazon-Bedrock-Kendra-RAG](genai-quickstart-pocs-dot-net/images/rag-with-kendra.png "RAG with Kendra")
 4. **Amazon-Bedrock-Converse-API-POC:**   
    This is sample code demonstrating the use of the Amazon Bedrock Converse API to create conversational applications that send and receive messages to and from an Amazon Bedrock mod  l  
-   ![Amazon-Bedrock-Converse-API](genai-quickstart-pocs-dot-net/images/Bedrock-Converse-dot-net.gif "Converse API")	    
+   ![Amazon-Bedrock-Converse-API](genai-quickstart-pocs-dot-net/images/Bedrock-Converse-dot-net.gif "Converse API")	
+5. **Amazon-Bedrock-Guardrails-POC:**
+    This is sample code demonstrating the use of Amazon Bedrock Guardrails to help prevent prompt-injection attacks and prevent unintended responses from the LLM. The application is constructed with a simple ASP.NET         Blazor frontend where users can input zero shot requests to Claude 3, with Amazon Bedrock Guardrails in place to prevent malicious prompts and responses.
+   ![Amazon-Bedrock-Guardrails-POC](genai-quickstart-pocs-dot-net/images/bedrock-guardrail-poc.gif)    
 
 ## Prerequisites - Python
 
