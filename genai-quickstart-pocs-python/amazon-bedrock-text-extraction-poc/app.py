@@ -3,8 +3,7 @@ from extract_pdf_to_json import pdf_processing  # Import the pdf_processing func
 
 # Setup Streamlit
 st.set_page_config(page_title="Extraction", page_icon=":tada", layout="wide")  # Set the page configuration for the Streamlit app
-st.title(f"""[:rainbow:Extract Financial KPI's from Earnings Report]""")  # Display the title of the app
-
+st.title(f":rainbow[Extract Financial KPI's from Earnings Report]")  # Display the title of the app
 # Create a container for the file uploader and button
 with st.container():
     st.write("---")  # Add a horizontal line separator
