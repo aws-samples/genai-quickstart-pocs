@@ -1,0 +1,4 @@
+boto3==1.34.94
+botocore==1.34.94
+python-dotenv==1.0.1
+streamlit==1.30.0
