@@ -95,7 +95,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Amazon Bedrock Model Evalutor Data Creator POC](genai-quickstart-pocs-python/amazon-bedrock-model-eval-poc/images/demo.gif)
 30. **Amazon-Bedrock-Text-Extraction-POC:**
     This is a sample proof of concept demonstrating how customers can leverage large language models to perform text extraction use cases.
-
+    ![Amazon Bedrock Claude3 Long Form Output POC](genai-quickstart-pocs-python/amazon-bedrock-text-extraction-poc/images/demo.gif)
+31. **Amazon-Bedrock-Claude3-Long-Form-Output-POC:**
+    This is sample code aimed to accelerate customers aiming to handle long form output using Claude3.
+    ![Amazon Bedrock Claude3 Long Form Output POC](genai-quickstart-pocs-python/amazon-bedrock-claude3-long-form-output-poc/images/demo.gif)
 
 ## Sample Proof of Concepts - .NET
 
