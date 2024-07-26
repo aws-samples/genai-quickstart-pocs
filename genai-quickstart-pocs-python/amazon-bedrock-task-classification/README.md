@@ -1,6 +1,6 @@
 # Amazon-Bedrock-CSV-Task-Classification-POC
 
-This smaple code demonstrating the use of Amazon Bedrock and Generation AI to implement a task classification bot. The application is constructed with a simple streamlit frontend where users can input a task and get the correct classification which then trigger appropriate downstream workflows to process the task inputted. 
+This sample code demonstrates how to use Amazon Bedrock and Generative AI to implement a task classification bot. The application is constructed with a simple streamlit frontend where users can input a task and get the correct classification which then trigger appropriate downstream workflows to process the task inputted. 
 
 ![Alt text](public/demo.gif)
 
@@ -26,12 +26,12 @@ When a user interacts with the app, the flow is as follow: <br />
 
 ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided  in the Amazon Bedrock console (Claude Haiku in this demo).
+1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console (Claude Haiku in this demo).
 2. Ensure Python3.10 is installed in your machine, it's the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
 
 ## Step 1:
 
-The first step of utilizing this repo is performing a git clone of the repository:
+The first step to utilize this repo is performing a git clone of the repository:
 
 ```
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
@@ -44,7 +44,7 @@ After cloning the repo onto your local machine, open it up in your favourite cod
 
 ## Step 2:
 
-Set up a pythong virtual environment in the root directory of the repository and ensure that you are using Python 3.10. This can be done my running the following commands:
+Set up a python virtual environment in the root directory of the repository and ensure that you are using Python 3.10. This can be done by running the following commands:
 
 ```
 pip install virtualenv
