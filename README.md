@@ -99,6 +99,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 31. **Amazon-Bedrock-Claude3-Long-Form-Output-POC:**
     This is sample code aimed to accelerate customers aiming to handle long form output using Claude3.
     ![Amazon Bedrock Claude3 Long Form Output POC](genai-quickstart-pocs-python/amazon-bedrock-claude3-long-form-output-poc/images/demo.gif)
+32. **Amazon-Bedrock-Task-Classification:**
+   This sample code demonstrates how to use Amazon Bedrock and Generative AI to implement a task classification bot. The application allows a user to input a task and get the correct classification which then trigger appropriate downstream    workflows to process the task inputted.
+   ![Amazon-Bedrock-Task-Classification](genai-quickstart-pocs-python/amazon-bedrock-task-classification/public/demo.gif)
 
 ## Sample Proof of Concepts - .NET
 
