@@ -1,6 +1,7 @@
 .idea/
 __pycache__
 venv/
+.venv/
 .env
 chat_history.txt
 .vsidx
@@ -209,3 +210,4 @@ misc/
 
 # ignore mac generated file:
 .DS_Store
+genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/

@@ -14,54 +14,54 @@ At a high-level, the POC workflow is:
 1. Upload the generated `.jsonl` files to an Amazon S3 bucket that Amazon Bedrock Model Evalutor can access
 1. Execute Model Evaluation using custom prompts pointing to the newly uploaded prompt dataset. If you have more than 1,000 prompts, multiple files will have been generated. You can only execute model evaluation on a maximum of 1,000 records. 
 
-# How to use this Repo:
+    # How to use this Repo:
 
-## Prerequisites:
+    ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials. Ensure the AWS credentials have access to execute Amazon Bedrock Model Evaluation. 
-2. Ensure Python 3.11 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
-3. Ensure you have access to an Amazon S3 bucket where you can upload generated data. Amazon Bedrock Model Evaluator will also need access to read and write to this bucket during Model Evaluation. 
+    1. Amazon Bedrock Access and CLI Credentials. Ensure the AWS credentials have access to execute Amazon Bedrock Model Evaluation. 
+    2. Ensure Python 3.11 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+    3. Ensure you have access to an Amazon S3 bucket where you can upload generated data. Amazon Bedrock Model Evaluator will also need access to read and write to this bucket during Model Evaluation. 
 
-## Step 1:
+    ## Step 1:
 
-The first step of utilizing this repo is performing a git clone of the repository.
+    The first step of utilizing this repo is performing a git clone of the repository.
 
-```
-git clone https://github.com/aws-samples/genai-quickstart-pocs.git
-```
-After cloning the repo onto your local machine, open the repo in your favorite code editor. Navigate to this POC folder within the repo. 
+    ```
+    git clone https://github.com/aws-samples/genai-quickstart-pocs.git
+    ```
+    After cloning the repo onto your local machine, open the repo in your favorite code editor. Navigate to this POC folder within the repo. 
 
-The POC consists of two files: 
-* `app.py` is the frontend application that is run using streamlit
-* `logic.py` is the logic that processes the data from the front-end
+    The POC consists of two files: 
+    * `app.py` is the frontend application that is run using streamlit
+    * `logic.py` is the logic that processes the data from the front-end
 
-## Step 2:
+    ## Step 2:
 
-Set up a python virtual environment in the directory of the POC and ensure that you are using Python 3.11. This can be done by running the following commands: (make sure you've set your working directory in terminal to the POC directory)
+    Set up a python virtual environment in the directory of the POC and ensure that you are using Python 3.11. This can be done by running the following commands: (make sure you've set your working directory in terminal to the POC directory)
 
-```zsh
-pip install virtualenv
-python3.11 -m venv venv
-```
-The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
-After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
-```zsh
-source venv/bin/activate
-```
+    ```zsh
+    pip install virtualenv
+    python3.11 -m venv venv
+    ```
+    The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
+    After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
+    ```zsh
+    source venv/bin/activate
+    ```
 
-After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this repos directory in your terminal:
+    After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this repos directory in your terminal:
 
-```zsh
-pip install -r requirements.txt
-```
+    ```zsh
+    pip install -r requirements.txt
+    ```
 
-## Step 4:
-Your machine should now be configured to run the POC. To start the POC, execute the following from the command line (from the POC directory, with the virtual environment activated):
+    ## Step 4:
+    Your machine should now be configured to run the POC. To start the POC, execute the following from the command line (from the POC directory, with the virtual environment activated):
 
-```zsh
-streamlit run app.py
-```
-This should start the POC and open a browser window to the application. Follow the instructions in the application to generate prompt data.
+    ```zsh
+    streamlit run app.py
+    ```
+    This should start the POC and open a browser window to the application. Follow the instructions in the application to generate prompt data.
 
 # Using the Model Evaluator Data Prep tool
 Once the streamlit app is up and running in your browser, it's time to complete the form in the tool with the correct details from your data. 
