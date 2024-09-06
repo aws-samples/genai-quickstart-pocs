@@ -105,6 +105,13 @@ This repository contains sample code demonstrating various use cases leveraging 
 33. **Amazon-Bedrock-Alt-Text-Generator:**
     This sample code demonstrates how to use Amazon Bedrock and Generative AI to create Alt text for all images within a PDF, helping improve accessibility at scale.
     ![Amazon-Bedrock-Alt-Text-Generator](genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/images/demo.gif)
+34. **Amazon-Bedrock-Semantic-Cache:**
+    This sample code demonstrates a Retrieval-Augmented Generation (RAG) system using Amazon Bedrock for knowledge retrieval and OpenSearch for semantic caching. 
+    ![Amazon-Bedrock-Semantic-Cache](genai-quickstart-pocs-python/amazon-bedrock-semantic-cache-poc-main/image/SemanticCache.gif)
+
+
+
+
 
 ## Sample Proof of Concepts - .NET
 
