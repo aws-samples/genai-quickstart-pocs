@@ -1,0 +1,34 @@
+Metadata-Version: 2.1
+Name: PyMuPDFb
+Version: 1.24.9
+Summary: MuPDF shared libraries for PyMuPDF.
+Description-Content-Type: text/markdown
+Author: Artifex
+Author-email: support@artifex.com
+License: GNU AFFERO GPL 3.0
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: C
+Classifier: Programming Language :: C++
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: Utilities
+Classifier: Topic :: Multimedia :: Graphics
+Classifier: Topic :: Software Development :: Libraries
+Requires-Python: >=3.8
+Project-URL: Documentation, https://pymupdf.readthedocs.io/
+Project-URL: Source, https://github.com/pymupdf/pymupdf
+Project-URL: Tracker, https://github.com/pymupdf/PyMuPDF/issues
+Project-URL: Changelog, https://pymupdf.readthedocs.io/en/latest/changes.html
+
+# PyMuPDFb
+
+This wheel contains [MuPDF](https://mupdf.readthedocs.io/) shared libraries for
+use by [PyMuPDF](https://pymupdf.readthedocs.io/).
+
+This wheel is shared by PyMuPDF wheels that are specific to different Python
+versions, significantly reducing the total size of a release.
