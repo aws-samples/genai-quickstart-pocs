@@ -1,3 +1,0 @@
-
-[console_scripts]
-pymupdf = pymupdf.__main__:main
