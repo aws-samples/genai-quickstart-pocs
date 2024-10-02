@@ -6,7 +6,7 @@ import { PythonProject } from 'projen/lib/python';
 
 interface StreamlitQuickStartPOCProps {
   pocName: string;
-  pocRootDir: string;
+  pocPackageName: string;
   pocDescription?: string;
   additionalDeps?: string[];
   readme?: {
@@ -17,9 +17,9 @@ interface StreamlitQuickStartPOCProps {
 export class StreamlitQuickStartPOC extends PythonProject {
   constructor(props: StreamlitQuickStartPOCProps) {
     super({
-      outdir: props.pocRootDir,
+      outdir: path.join(__dirname, '../../', 'genai-quickstart-pocs-python', props.pocPackageName),
       projenrcPython: true,
-      name: props.pocName,
+      name: props.pocPackageName,
       description: props.pocDescription,
       deps: [
         'streamlit',
@@ -31,7 +31,7 @@ export class StreamlitQuickStartPOC extends PythonProject {
       authorEmail: '',
       authorName: 'AWS',
       license: 'MIT-0',
-      moduleName: props.pocName,
+      moduleName: props.pocPackageName,
       version: '0.0.1',
       github: false,
     });
