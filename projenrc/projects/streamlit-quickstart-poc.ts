@@ -22,11 +22,11 @@ export class StreamlitQuickStartPOC extends PythonProject {
       name: props.pocPackageName,
       description: props.pocDescription,
       deps: [
-        'python@^3.12',
         'streamlit',
         'boto3',
       ],
-      poetry: true,
+      pip: true,
+      venv: true,
       sample: false,
       authorEmail: 'no-email@aws.amazon.com',
       authorName: 'AWS',

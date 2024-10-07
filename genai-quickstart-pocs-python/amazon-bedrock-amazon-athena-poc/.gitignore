@@ -4,8 +4,9 @@ node_modules/
 !/.projen/tasks.json
 !/.projen/deps.json
 !/.projen/files.json
-!/pyproject.toml
-/poetry.toml
+/.env
+!/requirements.txt
+!/requirements-dev.txt
 __pycache__/
 *.py[cod]
 *$py.class

@@ -27,11 +27,6 @@
       "type": "runtime"
     },
     {
-      "name": "python",
-      "version": "^3.12",
-      "type": "runtime"
-    },
-    {
       "name": "streamlit",
       "type": "runtime"
     },
