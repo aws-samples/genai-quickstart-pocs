@@ -7,5 +7,4 @@
 /.projen/deps.json linguist-generated
 /.projen/files.json linguist-generated
 /.projen/tasks.json linguist-generated
-/requirements-dev.txt linguist-generated
-/requirements.txt linguist-generated
+/pyproject.toml linguist-generated
