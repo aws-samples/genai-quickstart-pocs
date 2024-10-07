@@ -13,8 +13,6 @@
 
 1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
-1. [Node](https://nodejs.org/en/download/package-manager) v20 or greater. Node is used to manage the repository and execute commands including starting the python POC. 
-
 1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
 
 {{ additionalPrereqs }}

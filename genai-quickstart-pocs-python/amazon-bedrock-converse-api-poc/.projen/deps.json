@@ -10,6 +10,14 @@
       "type": "runtime"
     },
     {
+      "name": "botocore",
+      "type": "runtime"
+    },
+    {
+      "name": "python-dotenv",
+      "type": "runtime"
+    },
+    {
       "name": "streamlit",
       "type": "runtime"
     },

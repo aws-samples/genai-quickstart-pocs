@@ -10,6 +10,10 @@
       "type": "runtime"
     },
     {
+      "name": "botocore",
+      "type": "runtime"
+    },
+    {
       "name": "langchain-aws",
       "type": "runtime"
     },
@@ -33,6 +37,10 @@
     },
     {
       "name": "pypdf",
+      "type": "runtime"
+    },
+    {
+      "name": "python-dotenv",
       "type": "runtime"
     },
     {

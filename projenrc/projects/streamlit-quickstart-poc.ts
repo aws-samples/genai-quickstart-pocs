@@ -12,6 +12,7 @@ interface StreamlitQuickStartPOCProps {
   readme?: {
     additionalPrerequisits?: string;
   };
+  skipApp?: boolean;
 }
 
 export class StreamlitQuickStartPOC extends PythonProject {
@@ -24,6 +25,8 @@ export class StreamlitQuickStartPOC extends PythonProject {
       deps: [
         'streamlit',
         'boto3',
+        'botocore',
+        'python-dotenv',
       ],
       pip: true,
       venv: true,
@@ -84,7 +87,7 @@ class POCProjectFiles extends Component {
    * Synthesize the sample code
    */
   private synthesizeSampleCode(): void {
-    if (!fs.existsSync(path.join(this.project.outdir, 'app.py'))) {
+    if (!fs.existsSync(path.join(this.project.outdir, 'app.py')) && !(this.pocProps.skipApp !== undefined ? this.pocProps.skipApp : false)) {
       console.log('Generating app.py');
       const appTemplate = fs.readFileSync(this.sampleCodeTemplatePath, 'utf-8');
       const appContent = nunjucks.renderString(appTemplate, {
