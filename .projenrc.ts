@@ -32,6 +32,43 @@ new StreamlitQuickStartPOC({
 new StreamlitQuickStartPOC({
   pocName: 'Amazon Bedrock Amazon Athena POC',
   pocPackageName: 'amazon-bedrock-amazon-athena-poc',
+  readme: {
+    additionalPrerequisits: ['Access to Amazon Athena and the ability to create an Amazon Athena database and tables.'],
+    pocGoal: {
+      overview: 'The goal of this POC is to provide users with the abilitity to use Amazon Bedrock and generative AI to take natural language questions and transform them into relational database querties against Amazon Athena.\n' +
+        'The POC comes with a basic frontend to help users stand up a proof-of-concept in just a few minutes.',
+      architectureImage: true,
+      flowSteps: [
+        'The user makes a request, asking a natural language question based on the database available in Amazon Athena to the GenAI app (app.py).',
+        'This natural language question is passed into Amazon Bedrock, which takes the natural language question and creates a SQL query (amazon_athena_bedrock_query.py).',
+        'The created SQL query is then executed against your Amazon Athena database to begin retrieving the data (amazon_athena_bedrock_query.py).',
+        'The data is retrieved from your Amazon Athena Database and is passed back into Amazon Bedrock, to generate a natural language answer based on the retrieved data (amazon_athena_bedrock_query.py).',
+        'The LLM returns a natural language response to the user through the streamlit frontend based on the retrieved data (app.py).',
+      ],
+    },
+    fileWalkthrough: {
+      files: [
+        { name: 'amazon_athena_bedrock_query.py', description: 'contains connectors into your Amazon Athena database and the interaction' },
+        { name: 'moma_examples.yaml', description: 'contains several samples prompts that will be used to implement a few-shot prompting technique.' },
+      ],
+    },
+    extraSteps: [
+      {
+        instructions: 'Create a .env file in the root folder of this POC. Within the .env file you just created you will need to configure the .env to contain:',
+        command: `profile_name=<AWS_CLI_PROFILE_NAME>
+  \taws_access_key_id=<AWS_ACCESS_KEY_ID>
+  \taws_secret_access_key=<AWS_SECRET_ACCESS_KEY>
+  \tregion_name=<AWS_REGION>
+  \tdatabase_name=<ATHENA_DATABASE_NAME>
+  \ts3_staging_dir=<S3_STAGING_DIRECTORY_BUCKET_PATH>  example -> s3://sample-bucket/`,
+      },
+      {
+        instructions: `If you would like to use this repo with the sample data, you will need to upload the two sample data files found in the sample data directory as two individual tables to your Amazon Athena Database.
+
+If you preferred to use your own database/tables in your Amazon Athena database, I would highly recommend reviewing the moma_examples.yaml file in the SampleData directory to see how prompts are constructed for this sample application and spend the time creating 5 - 10 prompts that resemble your dataset more closely.`,
+      },
+    ],
+  },
   additionalDeps: ['python-dotenv', 'langchain@^0.1', 'langchain-community', 'langchain-experimental'],
   pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon Athena. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.',
 }).synth();
@@ -41,6 +78,47 @@ new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-amazon-rds-poc',
   additionalDeps: ['langchain@^0.1', 'langchain-community', 'langchain-experimental'],
   pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon RDS. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.',
+  readme: {
+    pocGoal: {
+      overview: 'The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions, and transform them into relational database queries against Amazon RDS Databases. This repo is designed to work with\n' +
+        'Amazon RDS Postgres, but can be configured to work with other database engine types.\n' +
+        'This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
+      architectureImage: true,
+      flowSteps: [
+        'The user makes a request, asking a natural language question based on the data in Amazon RDS to the GenAI app (app.py).',
+        'This natural language question is passed into Amazon Bedrock, which takes the natural language question and creates a SQL query (amazonRDS_bedrock_query.py).',
+        'The created SQL query is then executed against your Amazon RDS database to begin retrieving the data (amazonRDS_bedrock_query.py).',
+        'The data is retrieved from your Amazon RDS Database and is passed back into Amazon Bedrock, to generate a natural language answer based on the retrieved data (amazonRDS_bedrock_query.py).',
+        'The LLM returns a natural language response to the user through the streamlit frontend based on the retrieved data (app.py).',
+      ],
+    },
+    additionalPrerequisits: [
+      'Access to Amazon RDS and the ability to create an Amazon RDS database and tables.',
+      'Please note that this project leverages the [langchain-experimental](https://pypi.org/project/langchain-experimental/) package which has known vulnerabilities.',
+    ],
+    fileWalkthrough: {
+      files: [
+        { name: 'amazonRDS_bedrock_query.py', description: 'contains connectors into your Amazon RDS database and the interaction' },
+        { name: 'moma_examples.yaml', description: 'contains several samples prompts that will be used to implement a few-shot prompting technique.' },
+      ],
+    },
+    extraSteps: [
+      {
+        instructions: 'Create a .env file in the root folder of this POC. Within the .env file you just created you will need to configure the .env to contain:',
+        command: 'profile_name=<aws_cli_profile_name>' +
+          '\trds_username=<rds_database_username>' +
+          '\trds_password=<rds_database_password>' +
+          '\trds_endpoint=<rds_database_endpoint>' +
+          '\trds_port=<rds_port>\n' +
+          '\trds_db_name=<rds_database_name>\n',
+      },
+      {
+        instructions: `If you would like to use this repo with the sample data, you will need to upload the two sample data files found in the sample data directory as two individual tables to your Amazon RDS Postgres Database.
+
+If you preferred to use your own database/tables in your Amazon RDS instance, I would highly recommend reviewing the moma_examples.yaml file in the SampleData directory to see how prompts are constructed for this sample application and spend the time creating 5 - 10 prompts that resemble your dataset more closely.`,
+      },
+    ],
+  },
 }).synth();
 
 new StreamlitQuickStartPOC({

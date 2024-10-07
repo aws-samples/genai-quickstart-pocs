@@ -9,6 +9,7 @@ The sample also includes a second UI that allows the user to ask about a topic. 
 ![A gif of a screen recording show casing the Amazon Bedrock Video Chapter Creator POC functionality](images/demo.gif)
 
 
+
 # How to use this Repo:
 
 ## Prerequisites:
@@ -25,18 +26,20 @@ The sample also includes a second UI that allows the user to ask about a topic. 
     ```
     git clone https://github.com/aws-samples/genai-quickstart-pocs.git
     ```
+    
 
-1. Navigate to this POC's folder in your terminal
+1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
     ```zsh
-    cd 
+    cd /Users/awsrudy/Documents/Projects/genai-quickstart-pocs/genai-quickstart-pocs-python/amazon-bedrock-video-chapter-creator-poc
     ```
 
-1. Configure the python virtual environment, activate it & install project dependencies
+1. Configure the python virtual environment, activate it & install project dependencies. *Note: each POC has it's own dependencies & dependency management.*
     ```zsh
     python -m venv .env
     source .env/bin/activate
     pip install -r requirements.txt
     ```
+
 1. Start the POC from your terminal
     ```zsh
     streamlit run app.py

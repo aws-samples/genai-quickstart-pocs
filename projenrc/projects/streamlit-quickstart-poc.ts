@@ -10,7 +10,27 @@ interface StreamlitQuickStartPOCProps {
   pocDescription?: string;
   additionalDeps?: string[];
   readme?: {
-    additionalPrerequisits?: string;
+    additionalPrerequisits?: string[];
+    pocGoal?: {
+      overview: string;
+      architectureImage: boolean;
+      flowSteps: string[];
+    };
+    /**
+     * File walkthrough for the project
+     * Note: by default app.py, requirements.txt are already included.
+     */
+    fileWalkthrough?: {
+      includeDefaults?: boolean;
+      files: Array<{
+        name: string;
+        description: string;
+      }>;
+    };
+    extraSteps?: Array<{
+      instructions: string;
+      command?: string;
+    }>;
   };
   skipApp?: boolean;
 }
@@ -75,7 +95,11 @@ class POCProjectFiles extends Component {
       const readmeContent = nunjucks.renderString(readmeTemplate, {
         pocTitle: this.pocProps.pocName,
         pocOverview: this.pocProps.pocDescription,
+        pocPath: `genai-quickstart-pocs-python/${this.pocProps.pocPackageName}`,
         additionalPrerequisits: this.pocProps.readme?.additionalPrerequisits,
+        pocGoal: this.pocProps.readme?.pocGoal,
+        fileWalkthrough: this.pocProps.readme?.fileWalkthrough,
+        extraSteps: this.pocProps.readme?.extraSteps,
       });
       fs.writeFileSync(path.join(this.project.outdir, 'README.md'), readmeContent);
       console.log('Generating HOWTO.md');
