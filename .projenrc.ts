@@ -23,6 +23,13 @@ project.synth();
  */
 
 new StreamlitQuickStartPOC({
+  pocName: 'Amazon Bedrock PowerPoint Generator POC',
+  pocPackageName: 'amazon-bedrock-powerpoint-generator-poc',
+  additionalDeps: ['langchain@^0.3', 'langchain-community', 'langchain-aws', 'python-pptx'],
+  pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic.',
+}).synth();
+
+new StreamlitQuickStartPOC({
   pocName: 'Amazon Bedrock Alt Text Generator',
   pocPackageName: 'amazon-bedrock-alt-text-generator',
   additionalDeps: ['langchain@^0.2', 'langchain-community@^0.2', 'langchain-aws', 'pypdf', 'pillow', 'pymupdf', 'reportlab'],

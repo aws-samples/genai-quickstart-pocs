@@ -115,7 +115,7 @@ class POCProjectFiles extends Component {
       console.log('Generating app.py');
       const appTemplate = fs.readFileSync(this.sampleCodeTemplatePath, 'utf-8');
       const appContent = nunjucks.renderString(appTemplate, {
-        outDir: this.project.outdir,
+        outDir: this.project.outdir.substring(this.project.outdir.indexOf('genai-quickstart-pocs-python')),
       });
       fs.writeFileSync(path.join(this.project.outdir, 'app.py'), appContent);
     }
