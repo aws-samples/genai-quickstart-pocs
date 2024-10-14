@@ -7,7 +7,7 @@ def reset():
     st.session_state.fields_disabled = False
     st.session_state.topic = ""
     st.session_state.additional_info = ""
-    st.session_state.background_files = None
+    st.session_state.background_files = []
     st.session_state.research_wikipedia = True
 
 
