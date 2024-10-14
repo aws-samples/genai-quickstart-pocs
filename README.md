@@ -108,6 +108,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 34. **Amazon-Bedrock-Semantic-Cache:**
     This sample code demonstrates a Retrieval-Augmented Generation (RAG) system using Amazon Bedrock for knowledge retrieval and OpenSearch for semantic caching. 
     ![Amazon-Bedrock-Semantic-Cache](genai-quickstart-pocs-python/amazon-bedrock-semantic-cache-poc-main/image/SemanticCache.gif)
+35. **Amazon-Bedrock-PowerPoint-Generator**
+    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
+    ![Amazon-Bedrock-PowerPoint-Generator](genai-quickstart-pocs-python/amazon-bedrock-powerpoint-generator-poc/images/demo.gif)
 
 
 

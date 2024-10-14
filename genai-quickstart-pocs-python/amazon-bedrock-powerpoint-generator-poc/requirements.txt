@@ -1,0 +1,12 @@
+boto3
+botocore
+langchain-aws
+langchain-community
+langchain>=0.3.0, <0.4.0
+python-dotenv
+python-pptx
+streamlit
+uuid
+wikipedia
+pypdf
+docx2txt
