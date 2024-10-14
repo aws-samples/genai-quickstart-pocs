@@ -35,6 +35,7 @@ def generate_powerpoint(
     callback,
     write_callback,
     background_data: list = None,
+    research_wikipedia: bool = True,
 ) -> str:
     """
     Generate a PowerPoint presentation based on a given topic and additional information.
@@ -49,22 +50,27 @@ def generate_powerpoint(
         background_documents = load_documents(background_data, write_callback)
     else:
         logger.info("No provided data to use with the presentation")
-        callback("No provided data to use with the presentation - will rely on research")
+        callback(
+            "No provided data to use with the presentation - will rely on research"
+        )
     if callback:
         callback("Starting PowerPoint generation process")
         callback("Generating background research query")
-    background_research_query = generate_background_research_query(
-        topic,
-        additional_info,
-        write_callback=write_callback,
-        background_documents=background_documents,
-    )
-    if callback:
-        callback("Researching topic background")
-    background_research = research_topic_background(
-        background_research_query,
-        write_callback=write_callback,
-    )
+    if research_wikipedia:
+        background_research_query = generate_background_research_query(
+            topic,
+            additional_info,
+            write_callback=write_callback,
+            background_documents=background_documents,
+        )
+        if callback:
+            callback("Researching topic background")
+        background_research = research_topic_background(
+            background_research_query,
+            write_callback=write_callback,
+        )
+    else:
+        background_research = []
 
     if callback:
         callback("Generating presentation sections")
@@ -76,10 +82,12 @@ def generate_powerpoint(
         background_documents=background_documents,
     )
 
-    if callback:
+    if callback and research_wikipedia:
         callback("Researching about each section")
     sections_with_research = research_details_for_sections(
-        sections_to_research, write_callback=write_callback
+        sections_to_research,
+        write_callback=write_callback,
+        research_wikipedia=research_wikipedia,
     )
 
     if callback:
@@ -91,10 +99,13 @@ def generate_powerpoint(
         write_callback=write_callback,
         background_documents=background_documents,
     )
-    if callback:
+
+    if callback and research_wikipedia:
         callback("Researching details for every slide in each section")
     sections_with_base_slides_and_research = research_slides_in_sections(
-        sections_with_base_slides, write_callback=write_callback
+        sections_with_base_slides,
+        write_callback=write_callback,
+        research_wikipedia=research_wikipedia,
     )
 
     if callback:

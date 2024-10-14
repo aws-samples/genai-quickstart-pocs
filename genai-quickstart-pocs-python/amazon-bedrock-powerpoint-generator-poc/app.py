@@ -1,8 +1,6 @@
 import streamlit as st
 from powerpoint_generator import generate_powerpoint
 from powerpoint_generator.powerpoint import delete_file
-import logging
-import sys
 
 
 def reset():
@@ -10,6 +8,7 @@ def reset():
     st.session_state.topic = ""
     st.session_state.additional_info = ""
     st.session_state.background_files = None
+    st.session_state.research_wikipedia = True
 
 
 def lock_for_run():
@@ -25,7 +24,7 @@ def process_uploads():
     documents = []
     for file in files:
         documents.append({"file_bytes": file.getvalue(), "file_name": file.name})
-    return documents 
+    return documents
 
 
 st.title("Generative AI powered PowerPoint creator")
@@ -43,6 +42,13 @@ st.text_area(
     key="additional_info",
     help="Additional information can include more details on the topic, who the presentation audience is or any other relevant input.",
     disabled=st.session_state.fields_disabled,
+)
+st.toggle(
+    "Research with Wikipedia",
+    disabled=st.session_state.fields_disabled,
+    help="When enabled, the demo will research background on the topic, background on the sections and background on each slide it will create.",
+    key="research_wikipedia",
+    value=True,
 )
 st.file_uploader(
     "Upload any documents you'd like used as background information.",
@@ -72,6 +78,7 @@ if st.button("Generate PowerPoint", disabled=st.session_state.fields_disabled):
                     status_update_callback,
                     status_write_callback,
                     process_uploads(),
+                    research_wikipedia=st.session_state.research_wikipedia,
                 )
                 status.update(
                     label="PowerPoint Ready!", expanded=True, state="complete"
