@@ -16,8 +16,15 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'genai-quickstart-pocs',
   projenrcTs: true,
   tsconfig: {
+    compilerOptions: {
+      sourceRoot: '.',
+      outDir: '.',
+      rootDir: '.',
+      noEmit: true,
+    },
     include: [
       'genai-quickstart-pocs-python/deployment/*',
+      'projenrc/*',
     ],
   },
   deps: [

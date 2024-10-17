@@ -23,12 +23,17 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "stripInternal": true,
-    "target": "ES2019"
+    "target": "ES2019",
+    "sourceRoot": ".",
+    "outDir": ".",
+    "rootDir": ".",
+    "noEmit": true
   },
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
     "genai-quickstart-pocs-python/deployment/*",
+    "projenrc/*",
     ".projenrc.ts",
     "projenrc/**/*.ts"
   ],
