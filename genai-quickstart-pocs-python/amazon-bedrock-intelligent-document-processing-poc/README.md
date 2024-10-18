@@ -15,11 +15,11 @@ The architecture and flow of the sample application will be:
 When a user interacts with the GenAI app, the flow is as follows:
 
 1. The user selects and uploads a document to the streamlit frontend (Upload_Document_to_S3.py).
-2. The document is uploaded to an Amazon S3 bucket (Upload_Document_to_S3.py)
-3. The raw text and key-value pairs are extracted from the document using Amazon Textract (Analyze_Document_with_Textract.py)
-4. The extracted key-value pairs are grammatically corrected using Amazon Bedrock, where the enriched output is saved to the local directory (Document_Enrichment_with_Amazon_Bedrock.py)
-5. The enriched output is then analyzed by Amazon Comprehend to detect entities such as people, organizations, locations, and more (Extract_Entities_with_Comprehend.py).
-6. The enriched output is then passed to Amazon Bedrock for document classification, summarization, and Q&A tasks. Bedrock’s multimodal capabilities can also be compared at each these stages by analyzing the document as is (Document_Classification_with_Bedrock.py, Document_Summarization_with_Bedrock.py, Document_Q&A_with_Bedrock.py)
+2. The document is uploaded to an Amazon S3 bucket (Upload_Document_to_S3.py, s3_utils.py)
+3. The raw text and key-value pairs are extracted from the document using Amazon Textract (Analyze_Document_with_Textract.py, textract_utils.py)
+4. The extracted key-value pairs are grammatically corrected using Amazon Bedrock, where the enriched output is saved to the local directory (Document_Enrichment_with_Amazon_Bedrock.py, bedrock_utils.py)
+5. The enriched output is then analyzed by Amazon Comprehend to detect entities such as people, organizations, locations, and more (Extract_Entities_with_Comprehend.py, comprehend_utils.py).
+6. The enriched output is then passed to Amazon Bedrock for document classification, summarization, and Q&A tasks. Bedrock’s multimodal capabilities can also be compared at each these stages by analyzing the document as is (Document_Classification_with_Bedrock.py, Document_Summarization_with_Bedrock.py, Document_Q&A_with_Bedrock.py, bedrock_utils.py)
 
 # How to use this Repo:
 
