@@ -27,6 +27,8 @@ When a user interacts with the GenAI app, the flow is as follows:
 
 1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
 2. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+3. An Amazon S3 bucket with permissions to upload and list objects. This is require to upload your document.
+4. Amazon Textract and Comprehend access.
 
 ## Step 1:
 
@@ -36,7 +38,7 @@ The first step of utilizing this repo is performing a git clone of the repositor
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
-After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 9 key files: the Welcome.py file, the Upload_Document_to_S3.py file, the Analyze_Document_with_Textract.py file, the Document_Enrichment_with_Amazon_Bedrock.py file, the Extract_Entities_with_Comprehend.py file, the Document_Classification_with_Bedrock.py file, the Document_Summarization_with_Bedrock.py file, the Document_Q&A_with_Bedrock.py file, and the requirements.txt. The Welcome.py file houses the landing page to kick-off the pipeline (a streamlit app). The Upload_Document_to_S3.py file houses the logic to select and upload a file to an Amazon S3 bucket. The Analyze_Document_with_Textract.py houses the logic required to extract the raw text and key-value pairs from the uploaded document, and save both outputs to local text files. The Document_Enrichment_with_Amazon_Bedrock.py houses the logic required to read the key-value pair text file and perform grammatical corrections for any extractions that were incorrect parsed, which is then saved as an enriched file locally. The Extract_Entities_with_Comprehend.py houses the logic required to perform entity recognition on the contents in the enriched output file. The Document_Classification_with_Bedrock.py file houses the logic required to classify the document based on the contents in the enriched output file from a select category of classes. The Document_Summarization_with_Bedrock.py file houses the logic required to summarize the document based on the contents in the enriched output file. The Document_Q&A_with_Bedrock.py file houses the logic required for a user to be able to ask questions about the uploaded document. The requirements.txt file contains all necessary dependencies for this sample application to work.
+After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 9 key files: app.py file, the Upload_Document_to_S3.py file, the Analyze_Document_with_Textract.py file, the Document_Enrichment_with_Amazon_Bedrock.py file, the Extract_Entities_with_Comprehend.py file, the Document_Classification_with_Bedrock.py file, the Document_Summarization_with_Bedrock.py file, the Document_Q&A_with_Bedrock.py file, and the requirements.txt. The Welcome.py file houses the landing page to kick-off the pipeline (a streamlit app). The Upload_Document_to_S3.py file houses the logic to select and upload a file to an Amazon S3 bucket. The Analyze_Document_with_Textract.py houses the logic required to extract the raw text and key-value pairs from the uploaded document, and save both outputs to local text files. The Document_Enrichment_with_Amazon_Bedrock.py houses the logic required to read the key-value pair text file and perform grammatical corrections for any extractions that were incorrect parsed, which is then saved as an enriched file locally. The Extract_Entities_with_Comprehend.py houses the logic required to perform entity recognition on the contents in the enriched output file. The Document_Classification_with_Bedrock.py file houses the logic required to classify the document based on the contents in the enriched output file from a select category of classes. The Document_Summarization_with_Bedrock.py file houses the logic required to summarize the document based on the contents in the enriched output file. The Document_Q&A_with_Bedrock.py file houses the logic required for a user to be able to ask questions about the uploaded document. The requirements.txt file contains all necessary dependencies for this sample application to work.
 
 ## Step 2:
 
@@ -89,7 +91,7 @@ As soon as you have successfully cloned the repo, created a virtual environment,
 To start up the application with its basic frontend you simply need to run the following command in your terminal while in the root of the repositories' directory:
 
 ```
-streamlit run Welcome.py
+streamlit run app.py
 ```
 
 As soon as the application is up and running in your browser of choice you can begin the IDP pipeline by starting at the first stage and uploading a document to your S3 bucket.

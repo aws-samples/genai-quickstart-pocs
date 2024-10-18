@@ -1,27 +1,10 @@
 import os
 import streamlit as st
-import boto3
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+from idp.comprehend_utils import detect_entities
 
 # Streamlit app title
 st.title(f""":rainbow[Extract Entities with Amazon Comprehend]""")
 st.write("Detect built-in entities from the enriched document output.")
-
-# Initialize Comprehend client
-comprehend_client = boto3.client('comprehend')
-
-# Function to detect entities using Amazon Comprehend
-def detect_entities(text):
-    # Call detect_entities function to detect the default, built-in entities from Comprehend
-    response = comprehend_client.detect_entities(
-        Text=text,
-        # Choose the language code
-        LanguageCode='en'
-    )
-    return response['Entities']
 
 # Check if the new enriched outpt file exists
 if 'enriched_output.txt' not in os.listdir('.'):
