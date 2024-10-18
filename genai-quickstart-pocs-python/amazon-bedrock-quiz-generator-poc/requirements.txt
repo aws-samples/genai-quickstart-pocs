@@ -1,0 +1,14 @@
+boto3
+botocore
+langchain-aws
+langchain-community
+langchain>=0.3.0, <0.4.0
+python-dotenv
+streamlit
+pypdf
+docx2txt
+unstructured[md]
+unstructured[all-docs]
+nltk
+pydantic
+uuid
