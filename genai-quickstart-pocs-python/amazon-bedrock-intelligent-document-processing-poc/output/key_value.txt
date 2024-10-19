@@ -1,0 +1,38 @@
+Key: 1a. INSURED'S I.D. NUMBER, Value: 11-2234-10190, Confidence: 86.44%
+Key: TELEPHONE (Include Area Code), Value: ( 858 ) 555-0100, Confidence: 95.32%
+Key: Spouse, Value: X, Confidence: 94.53%
+Key: SIGNED, Value: Jdoe, Confidence: 89.64%
+Key: NO, Value: X, Confidence: 93.15%
+Key: ZIP CODE, Value: 92127, Confidence: 94.54%
+Key: 11. INSURED'S POLICY GROUP OR FECA NUMBER, Value: G4683A, Confidence: 93.92%
+Key: MEDICARE, Value: X, Confidence: 80.00%
+Key: DATE, Value: 01-15-2021, Confidence: 91.63%
+Key: 1., Value: R11 0, Confidence: 87.96%
+Key: MM, Value: 10, Confidence: 89.72%
+Key: 13. INSURED'S OR AUTHORIZED PERSON'S SIGNATURE I authorize payment of medical benefits to the undersigned physician or supplier for services described below., Value: JaneDoe, Confidence: 93.24%
+Key: SSN, Value: X, Confidence: 89.39%
+Key: YY, Value: 21, Confidence: 89.74%
+Key: TELEPHONE (INCLUDE AREA CODE), Value: 858 ) 555-0100, Confidence: 95.45%
+Key: 32. NAME AND ADDRESS OF FACILITY WHERE SERVICES WERE RENDERED (If other than home or office), Value: Mateo Jackson PhD 9876 Healthcare Ave Any Town, CA 92126, Confidence: 94.21%
+Key: YES, Value: X, Confidence: 92.53%
+Key: DD, Value: 11, Confidence: 89.63%
+Key: NAME OF REFERRING PHYSICIAN OR OTHER SOURCE, Value: Self, Confidence: 94.35%
+Key: 2. PATIENT'S NAME (Last Name, First Name, Middle Initial), Value: Doe, John, Confidence: 92.87%
+Key: 4. INSURED'S NAME (Last Name, First Name, Middle Initial), Value: Doe, Jane, Confidence: 94.60%
+Key: CITY, Value: Any City, Confidence: 94.09%
+Key: 7. INSURED'S ADDRESS (No., Street), Value: 123 Any Street, Confidence: 94.34%
+Key: 2., Value: K59 00, Confidence: 88.60%
+Key: Married, Value: X, Confidence: 95.14%
+Key: PATIENT'S ADDRESS (No., Street), Value: 123 Any Street, Confidence: 89.56%
+Key: STATE, Value: CA, Confidence: 94.08%
+Key: 3., Value: R19 7, Confidence: 89.33%
+Key: 4., Value: K92 1, Confidence: 89.68%
+Key: 28. TOTAL CHARGE, Value: $ 405.00, Confidence: 94.67%
+Key: F, Value: X, Confidence: 89.32%
+Key: C. INSURANCE PLAN NAME OR PROGRAM NAME, Value: Group Insur of Amer., Confidence: 95.23%
+Key: PIN#, Value: 9876 Healthcare Ave Any Town, CA 92126, Confidence: 87.32%
+Key: FORM, Value: RRB-1500,, Confidence: 44.46%
+Key: M, Value: X, Confidence: 74.33%
+Key: 29. AMOUNT PAID, Value: $, Confidence: 74.03%
+Key: 30. BALANCE DUE, Value: $, Confidence: 73.58%
+Key: 24., Value: A, Confidence: 64.65%

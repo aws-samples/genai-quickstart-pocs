@@ -4,20 +4,20 @@ from idp.s3_utils import list_files_in_s3
 
 # Streamlit app title
 st.title(f""":rainbow[Document Classification with Amazon Bedrock]""")
-st.write("Select an option below to classify the document using the enriched text output or with Amazon Bedrock's multimodal capabilities:")
+st.write("Select an option below to classify the document into a pre-defined category (e.g., claim form, driver's license, birth certificate) using the enriched text output or Amazon Bedrock's multimodal capabilities:")
 
 # Provide options to user for classification method
 option = st.radio(
     "Choose classification method:",
-    ('Classify using contents from enriched_output.txt file', 'Classify using multimodal model')
+    ('Classify using contents from output/enriched_output.txt file', 'Classify using multimodal model')
 )
 
 # If user selected text option, then classify from the local file
-if option == 'Classify using contents from enriched_output.txt file':
+if option == 'Classify using contents from output/enriched_output.txt file':
     # Button to trigger reading the local file
-    if st.button("Classify from 'enriched_output.txt'", type='primary'):
+    if st.button("Classify from 'output/enriched_output.txt'", type='primary'):
         try:
-            with open("enriched_output.txt", "r", encoding="utf-8") as file:
+            with open("output/enriched_output.txt", "r", encoding="utf-8") as file:
                 file_text = file.read() 
             with st.spinner("Classifying the document..."):
                 # Invoke text-based classification for Bedrock
@@ -26,7 +26,7 @@ if option == 'Classify using contents from enriched_output.txt file':
             st.write("Based on the provided text and contents, the document is classified as:")
             st.write(classification)
         except FileNotFoundError:
-            st.error("The file 'enriched_output.txt' was not found in the directory.")
+            st.error("The file 'output/enriched_output.txt' was not found in the directory.")
 # If user selected multimodal option, then classify from the S3 bucket
 elif option == 'Classify using multimodal model':
     # List files in S3 and allow user to select one

@@ -1,29 +1,18 @@
 import streamlit as st
 
+# Import pages
+welcome_page = st.Page("pages/welcome.py", title="Welcome", icon="👋")
+upload_page = st.Page("pages/upload_doc_to_s3.py", title="Step 1: Upload Document to S3", icon="🪣")
+textract_page = st.Page("pages/extract_text_with_textract.py", title="Step 2: Analyze Document with Textract", icon="🔎")
+enrichment_page = st.Page("pages/enrich_doc_with_bedrock.py", title="Step 3: Document Enrichment with Bedrock", icon="📝")
+comprehend_page = st.Page("pages/entity_recognition_with_comprehend.py", title="Step 4: Extract Entities with Comprehend", icon="🔤")
+classification_page = st.Page("pages/classify_doc_with_bedrock.py", title="Step 5: Document Classification with Bedrock", icon="📘")
+summarization_page = st.Page("pages/summarize_doc_with_bedrock.py", title="Step 6: Document Summarization with Bedrock", icon="✍️")
+qa_page = st.Page("pages/doc_qa_with_bedrock.py", title="Step 7: Document Q&A with Bedrock", icon="💬")
+
+# Set navigation bar
+pg = st.navigation([welcome_page, upload_page, textract_page, enrichment_page, comprehend_page, classification_page, summarization_page, qa_page])
 # Set page header
-st.set_page_config(
-    page_title="IDP POC"
-)
-
-# Title displayed on the streamlit web app
-st.title(f""":rainbow[Intelligent Document Processing with Amazon Textract, Comprehend, and Bedrock]""")
-
-# Provide IDP options for user to select from in menu
-st.markdown(
-    """
-    This POC is powered by a Streamlit frontend, an open-source app framework built for
-    Machine Learning and Data Science projects, along with various Generative AI functionalities powered by Amazon Bedrock.
-    👈 A typical intelligent document processing (IDP) pipeline consists of the following steps in the menu to the right:
-    - **🪣 Upload your documents to an Amazon S3 bucket for processing.**
-    - **🔎 Extract text content from your documents using Amazon Textract.**
-    - **📝 Perform document enrichment and grammar correction using Amazon Bedrock.**
-    - **🔤 Extract entities and relationships from your documents using Amazon Comprehend.**
-    - **📘 Perform document classification using Amazon Bedrock.**
-    - **✍️ Summarize your document with Amazon Bedrock.**
-    - **💬 Chat with your document with Amazon Bedrock.**
-"""
-)
-
-
-
-
+st.set_page_config(page_title="IDP POC")
+# Run app
+pg.run()

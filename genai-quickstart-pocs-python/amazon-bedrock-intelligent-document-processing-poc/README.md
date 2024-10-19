@@ -14,21 +14,20 @@ The architecture and flow of the sample application will be:
 
 When a user interacts with the GenAI app, the flow is as follows:
 
-1. The user selects and uploads a document to the streamlit frontend (Upload_Document_to_S3.py).
-2. The document is uploaded to an Amazon S3 bucket (Upload_Document_to_S3.py, s3_utils.py)
-3. The raw text and key-value pairs are extracted from the document using Amazon Textract (Analyze_Document_with_Textract.py, textract_utils.py)
-4. The extracted key-value pairs are grammatically corrected using Amazon Bedrock, where the enriched output is saved to the local directory (Document_Enrichment_with_Amazon_Bedrock.py, bedrock_utils.py)
-5. The enriched output is then analyzed by Amazon Comprehend to detect entities such as people, organizations, locations, and more (Extract_Entities_with_Comprehend.py, comprehend_utils.py).
-6. The enriched output is then passed to Amazon Bedrock for document classification, summarization, and Q&A tasks. Bedrock’s multimodal capabilities can also be compared at each these stages by analyzing the document as is (Document_Classification_with_Bedrock.py, Document_Summarization_with_Bedrock.py, Document_Q&A_with_Bedrock.py, bedrock_utils.py)
+1. The user selects and uploads a document to the streamlit frontend (upload_doc_to_s3.py).
+2. The document is uploaded to an Amazon S3 bucket (upload_doc_to_s3.py, s3_utils.py)
+3. The raw text and key-value pairs are extracted from the document using Amazon Textract (extract_text_with_textract.py, textract_utils.py)
+4. The extracted key-value pairs are grammatically corrected using Amazon Bedrock, where the enriched output is saved to the local directory (enrich_doc_with_bedrock.py, bedrock_utils.py)
+5. The enriched output is then analyzed by Amazon Comprehend to detect entities such as people, organizations, locations, and more (entity_recognition_with_comprehend.py, comprehend_utils.py).
+6. The enriched output is then passed to Amazon Bedrock for document classification, summarization, and Q&A tasks. Bedrock’s multimodal capabilities can also be compared at each these stages by analyzing the document as is (classify_doc_with_bedrock.py, summarize_doc_with_bedrock.py, doc_qa_with_bedrock.py, bedrock_utils.py)
 
 # How to use this Repo:
 
 ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
-2. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
-3. An Amazon S3 bucket with permissions to upload and list objects. This is require to upload your document.
-4. Amazon Textract and Comprehend access.
+1. Amazon Bedrock, Amazon Textract, Amazon Comprehend Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
+2. Ensure Python 3.11 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+3. An Amazon S3 bucket with permissions to upload and list objects. This is required to upload your document.
 
 ## Step 1:
 
@@ -38,7 +37,21 @@ The first step of utilizing this repo is performing a git clone of the repositor
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 ```
 
-After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 9 key files: app.py file, the Upload_Document_to_S3.py file, the Analyze_Document_with_Textract.py file, the Document_Enrichment_with_Amazon_Bedrock.py file, the Extract_Entities_with_Comprehend.py file, the Document_Classification_with_Bedrock.py file, the Document_Summarization_with_Bedrock.py file, the Document_Q&A_with_Bedrock.py file, and the requirements.txt. The Welcome.py file houses the landing page to kick-off the pipeline (a streamlit app). The Upload_Document_to_S3.py file houses the logic to select and upload a file to an Amazon S3 bucket. The Analyze_Document_with_Textract.py houses the logic required to extract the raw text and key-value pairs from the uploaded document, and save both outputs to local text files. The Document_Enrichment_with_Amazon_Bedrock.py houses the logic required to read the key-value pair text file and perform grammatical corrections for any extractions that were incorrect parsed, which is then saved as an enriched file locally. The Extract_Entities_with_Comprehend.py houses the logic required to perform entity recognition on the contents in the enriched output file. The Document_Classification_with_Bedrock.py file houses the logic required to classify the document based on the contents in the enriched output file from a select category of classes. The Document_Summarization_with_Bedrock.py file houses the logic required to summarize the document based on the contents in the enriched output file. The Document_Q&A_with_Bedrock.py file houses the logic required for a user to be able to ask questions about the uploaded document. The requirements.txt file contains all necessary dependencies for this sample application to work.
+After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 14 key files: 
+* app.py: The main streamlit app entry point.
+* pages/welcome.py: The welcome page providing an overview of the IDP stages.
+* pages/upload_doc_to_s3.py: The streamlit page that houses the logic to select a document or file to upload.
+* pages/extract_text_with_textract.py: The streamlit page that houses the logic to invoke a new Textract job.
+* pages/enrich_doc_with_bedrock.py: The streamlit page that houses the logic to read the key-value pair text file (output/key_value.txt) and invoke Bedrock to enrich the document by correcting any grammar mistakes or incorrect text extractions from the Textract job. The enriched result is saved as a local text file (output/enriched_output.txt).
+* pages/entity_recognition_with_comprehend.py: The streamlit page that houses the logic to invoke Comprehend to perform entitiy recognition on the contents in the enriched output file (output/enriched_output.txt).
+* pages/classify_doc_with_bedrock.py: The streamlit page that houses the logic to provide the user the option to classify the document from a select category of classes using either Bedrock's text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to classify the document.
+* pages/summarize_doc_with_bedrock.py: The streamlit page that houses the logic to provide the user the option to summarize the document using either Bedrock's text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to summarize the document.
+* pages/doc_qa_with_bedrock.py: The streamlit page that houses the logic to provide the user the option to ask questions about the document using either Bedrock's text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to answer user queries regarding the document's contents.
+* idp/bedrock_utils.py: The file containing the logic for document enrichment, classification, summarization, and question-answering by interacting with Amazon Bedrock. These interactions are performed by sending a structured prompt containing the relevant text or image data to the Bedrock model via API calls. The prompt includes instructions for the model, such as correcting grammar, classifying documents into predefined categories, or summarizing content, and the model's responses are parsed and returned as usable output.
+* idp/comprehend_utils.py: The file containing the logic to invoke Amazon Comprehend, which will perform entity recognition using the default pre-trained model to detect entities such as names, dates, organizations, etc.
+* idp/s3_utils.py: The file containing the logic to upload a file to S3 and list any current documents stored in the selected bucket.
+* idp/textract_utils.py: The file containing the logic to start a Textract job that analyzes the document and extracts the raw text and key-value pairs from the document, saving both as local text files (extracted_text.txt and key_value.txt) to the "output" folder.
+* requirements.txt: The file containing all necessary dependencies for this sample application to work.
 
 ## Step 2:
 
@@ -46,17 +59,14 @@ Set up a python virtual environment in the root directory of the repository and 
 
 ```
 pip install virtualenv
-python3.10 -m venv venv
+python3.11 -m venv venv
 ```
 
 The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
 After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
 
 ```
-cd venv
-cd bin
-source activate
-cd ../../
+source venv/bin/activate
 ```
 
 After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this repos directory in your terminal:

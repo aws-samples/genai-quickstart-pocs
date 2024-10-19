@@ -5,7 +5,7 @@ textract_client = boto3.client('textract')
 
 def process_document(bucket_name, selected_file):
     """
-    This function is used to start a Textract job by analyzing the document and extract the raw and key-value pairs
+    This function is used to start a Textract job by analyzing the document and extract the raw text and key-value pairs
     :param bucket: S3 bucket name
     :param selected_file: S3 file name
     :return: the raw text and key-value pairs extracted from the document
@@ -46,7 +46,7 @@ def process_document(bucket_name, selected_file):
                 raw_text += block['Text'] + "\n"
         
         # Save the raw text to a local .txt file
-        with open("extracted_text.txt", "w", encoding="utf-8") as f:
+        with open("output/extracted_text.txt", "w", encoding="utf-8") as f:
             f.write(raw_text)
 
         # Analyze document for key-value pairs
@@ -114,14 +114,14 @@ def process_document(bucket_name, selected_file):
 
             return key_value_pairs
 
-    # Invoke analysis function
+        # Invoke analysis function
         response = analyze_document_with_textract(selected_file)
 
         # Extract key-value pairs from the Textract response
         key_value_pairs = extract_key_value_pairs(response)
 
         # Save the key-value pairs with confidence to 'key_value.txt'
-        with open("key_value.txt", "w", encoding="utf-8") as kv_file:
+        with open("output/key_value.txt", "w", encoding="utf-8") as kv_file:
             for key, value_info in key_value_pairs.items():
                 kv_file.write(f"Key: {key}, Value: {value_info['Value']}, Confidence: {value_info['Confidence']:.2f}%\n")
                 

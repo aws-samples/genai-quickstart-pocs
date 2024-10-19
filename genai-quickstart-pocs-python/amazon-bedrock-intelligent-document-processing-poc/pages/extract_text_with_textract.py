@@ -12,6 +12,7 @@ bucket_name = os.getenv("save_folder")
 
 # Streamlit app title
 st.title(f""":rainbow[Analyze Document with Amazon Textract]""")
+st.write("Extract raw text and key-value pairs from the selected document using Amazon Textract, where key-value pairs represent structured information (e.g., 'Name' as the key and 'John Doe' as the value) commonly found in forms or documents.")
 
 # Invoke function to list document objects
 files = list_files_in_s3()
@@ -25,8 +26,8 @@ if selected_file:
     if st.button("Extract raw text and key-value pairs", type='primary'):
         with st.spinner("Processing document..."):
             raw_text, key_value_pairs = process_document(bucket_name, selected_file)
-            st.success("Raw text has been saved to 'extracted_text.txt'.")
-            st.success("Key-value pairs have been saved to 'key_value.txt'.")
+            st.success("Raw text has been saved to 'output/extracted_text.txt'.")
+            st.success("Key-value pairs have been saved to 'output/key_value.txt'.")
 
             # Display the results together
             st.subheader("Results:")

@@ -13,7 +13,7 @@ if "messages" not in st.session_state:
 # Provide options to user for Q&A method
 option = st.radio(
     "Choose Q&A method:",
-    ('Ask questions about the document using contents from enriched_output.txt file', 
+    ('Ask questions about the document using contents from output/enriched_output.txt file', 
      'Ask questions about the document using multimodal model')
 )
 
@@ -38,9 +38,9 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # If user selected text option, then answer questions from the local file
-if option == 'Ask questions about the document using contents from enriched_output.txt file':
+if option == 'Ask questions about the document using contents from output/enriched_output.txt file':
     # Read the enriched document text from file
-    with open("enriched_output.txt", "r", encoding="utf-8") as file:
+    with open("output/enriched_output.txt", "r", encoding="utf-8") as file:
         file_text = file.read()
     # Display chat input for user question
     if question := st.chat_input("Ask a question about the document..."):
@@ -52,11 +52,10 @@ if option == 'Ask questions about the document using contents from enriched_outp
         # Generate the response from Bedrock
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
-            with st.status("Determining the best possible answer...", expanded=False) as status:
+            with st.spinner("Determining the best possible answer..."):
                 combined_prompt = f"\nDocument:\n{file_text}\n\nQuestion:\n{question}"
                 answer = chat_with_bedrock(combined_prompt)
                 message_placeholder.markdown(answer)  # Display the response
-                status.update(label="Question Answered...", state="complete", expanded=False)
         # Store the assistant's response in session state
         st.session_state.messages.append({"role": "assistant", "content": answer})
 
@@ -72,10 +71,9 @@ elif option == 'Ask questions about the document using multimodal model':
         # Generate the response from Bedrock
         with st.chat_message("assistant"):
             message_placeholder = st.empty()  # Placeholder for response
-            with st.status("Determining the best possible answer...", expanded=False) as status:
+            with st.spinner("Determining the best possible answer..."):
                 prompt = f"Question:\n{question}"
                 answer = chat_with_multimodal(encoded_image, prompt)
                 message_placeholder.markdown(answer)  # Display the response
-                status.update(label="Question Answered...", state="complete", expanded=False)
         # Store the assistant's response in session state
         st.session_state.messages.append({"role": "assistant", "content": answer})

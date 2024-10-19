@@ -9,15 +9,15 @@ st.write("Select an option below to summarize the document using the enriched te
 # Provide options to user for summarization method
 option = st.radio(
     "Choose summarization method:",
-    ('Summarize using contents from enriched_output.txt file', 'Summarize using multimodal model')
+    ('Summarize using contents from output/enriched_output.txt file', 'Summarize using multimodal model')
 )
 
 # If user selected text option, then summarize from the local file
-if option == 'Summarize using contents from enriched_output.txt file':
+if option == 'Summarize using contents from output/enriched_output.txt file':
     # Button to trigger reading the local file
-    if st.button("Summarize from 'enriched_output.txt'", type='primary'):
+    if st.button("Summarize from 'output/enriched_output.txt'", type='primary'):
         try:
-            with open("enriched_output.txt", "r", encoding="utf-8") as file:
+            with open("output/enriched_output.txt", "r", encoding="utf-8") as file:
                 file_text = file.read()       
             with st.spinner("Summarizing the document..."):
                 # Invoke text-based summarization for Bedrock
@@ -25,7 +25,7 @@ if option == 'Summarize using contents from enriched_output.txt file':
             st.write("### Document Summary:")
             st.write(summary)
         except FileNotFoundError:
-            st.error("The file 'enriched_output.txt' was not found in the directory.")
+            st.error("The file 'output/enriched_output.txt' was not found in the directory.")
 # If user selected multimodal option, then summarize from the S3 bucket
 elif option == 'Summarize using multimodal model':
     # List files in S3 and allow user to select one
