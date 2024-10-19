@@ -4,8 +4,5 @@ genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/
 # Ignore output folder
 genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/
 
-# Ignore config.toml file
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/.streamlit/config.toml
-
 # ignore venv
 genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/venv/
