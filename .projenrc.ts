@@ -392,5 +392,61 @@ new StreamlitQuickStartPOC({
   },
 }).synth();
 
+new StreamlitQuickStartPOC({
+  parentProject: project,
+  pocName: 'Amazon Bedrock Intelligent Document Processing (IDP) POC',
+  pocPackageName: 'amazon-bedrock-intelligent-document-processing-poc',
+  pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&A to satisfy a broad range of use cases.',
+  readme: {
+    pocGoal: {
+      architectureImage: true,
+      overview: 'The goal of this repo is to provide users the ability to use various Amazon AI services utilized in an IDP pipeline combined with Amazon Bedrock to improve performance, complete tasks faster, and limit human review. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
+      flowSteps: [
+        'The user selects and uploads a document to the streamlit frontend (upload_doc_to_s3.py).',
+        'The document is uploaded to an Amazon S3 bucket (upload_doc_to_s3.py, s3_utils.py)',
+        'The raw text and key-value pairs are extracted from the document using Amazon Textract (extract_text_with_textract.py, textract_utils.py)',
+        'The extracted key-value pairs are grammatically corrected using Amazon Bedrock, where the enriched output is saved to the local directory (enrich_doc_with_bedrock.py, bedrock_utils.py)',
+        'The enriched output is then analyzed by Amazon Comprehend to detect entities such as people, organizations, locations, and more (entity_recognition_with_comprehend.py, comprehend_utils.py).',
+        'The enriched output is then passed to Amazon Bedrock for document classification, summarization, and Q&A tasks. Bedrock’s multimodal capabilities can also be compared at each these stages by analyzing the document as is (classify_doc_with_bedrock.py, summarize_doc_with_bedrock.py, doc_qa_with_bedrock.py, bedrock_utils.py',
+      ],
+    },
+    additionalPrerequisits: [
+      'Access to Amazon Textract and Amazon Comprehend via the AWS CLI',
+      'An Amazon S3 bucket with permissions to upload and list objects. This is required to upload your document. Please note the name of the bucket, you will need this.',
+    ],
+    extraSteps: [
+      {
+        instructions: 'Now that the requirements have been successfully installed in your virtual environment we can begin configuring environment variables. You will first need to create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain your AWS profile, along with the name of your S3 bucket for uploaded documents, as shown below:',
+        command: `
+        profile_name=<AWS_CLI_PROFILE_NAME>
+        save_folder=<YOUR_S3_BUCKET_NAME>`,
+      },
+      {
+        instructions: 'Since this repository is configured to leverage Claude 3.5 Sonnet, the prompt payload is structured in a different format compared to previous models and other model providers. If you wanted to leverage other Amazon Bedrock models you can change the Bedrock invocation function in each file, modifying the body parameters using this guide depending on the model ID.\nDepending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure each file that utilizes Bedrock set to the appropriate region. Each of these files are configured as shown below:',
+        command: `
+        client = boto3.client("bedrock-runtime", region_name="us-west-2")
+        model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"`,
+      },
+    ],
+    fileWalkthrough: {
+      includeDefaults: true,
+      files: [
+        { name: 'pages/welcome.py', description: 'The welcome page providing an overview of the Intelligent Document Processing (IDP) stages.' },
+        { name: 'pages/upload_doc_to_s3.py', description: 'The streamlit page that houses the logic to select a document or file to upload.' },
+        { name: 'pages/extract_text_with_textract.py', description: 'The streamlit page that houses the logic to invoke Textract to extract the raw text and key-value pairs from the document.' },
+        { name: 'pages/enrich_doc_with_bedrock.py', description: 'The streamlit page that houses the logic to read the key-value pair text file (output/key_value.txt) and invoke Bedrock to enrich the document by correcting any grammar mistakes or incorrect text extractions from the Textract job. The enriched result is saved as a local text file (output/enriched_output.txt).' },
+        { name: 'pages/entity_recognition_with_comprehend.py', description: 'The streamlit page that houses the logic to invoke Comprehend to perform entitiy recognition on the contents in the enriched output file (output/enriched_output.txt).' },
+        { name: 'pages/classify_doc_with_bedrock.py', description: 'The streamlit page that houses the logic to provide the user the option to classify the document from a select category of classes using either Bedrock\'s text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to classify the document.' },
+        { name: 'pages/summarize_doc_with_bedrock.py', description: 'The streamlit page that houses the logic to provide the user the option to summarize the document using either Bedrock\'s text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to summarize the document.' },
+        { name: 'pages/doc_qa_with_bedrock.py', description: 'The streamlit page that houses the logic to provide the user the option to ask questions about the document using either Bedrock\'s text or multimodal capabilities. A user can choose to have Bedrock read the enriched output file (output/enriched_output.txt) or read the file stored in S3 as an image to answer user queries regarding the document\'s contents.' },
+        { name: 'idp/bedrock_utils.py', description: 'The file containing the logic for document enrichment, classification, summarization, and question-answering by interacting with Amazon Bedrock. These interactions are performed by sending a structured prompt containing the relevant text or image data to the Bedrock model via API calls. The prompt includes instructions for the model, such as correcting grammar, classifying documents into predefined categories, or summarizing content, and the model\'s responses are parsed and returned as usable output.' },
+        { name: 'idp/comprehend_utils.py', description: 'The file containing the logic to invoke Amazon Comprehend, which will perform entity recognition using the default pre-trained model to detect entities such as names, dates, organizations, etc.' },
+        { name: 'idp/s3_utils.py', description: 'The file containing the logic to upload a file to S3 and list any current documents stored in the selected bucket.' },
+        { name: 'idp/textract_utils.py', description: 'The file containing the logic to start a Textract job that analyzes the document and extracts the raw text and key-value pairs from the document, saving both as local text files (extracted_text.txt and key_value.txt) to the "output" folder.' },
+      ],
+    },
+  },
+});
+
 
 project.synth();
