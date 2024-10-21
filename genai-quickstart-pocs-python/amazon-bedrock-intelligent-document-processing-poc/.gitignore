@@ -2,7 +2,7 @@
 genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/.env
 
 # Ignore output folder
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/
+genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output
 
 # ignore venv
 genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/venv/
