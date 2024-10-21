@@ -1,0 +1,22 @@
+# Ignore .env file
+.env
+
+# Ignore output folder
+output/
+
+# Ignore venv folder
+venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore IDE-specific files (optional, but often useful)
+.vscode/
+.idea/
+
+# Ignore OS-specific files (optional)
+.DS_Store
+Thumbs.db
