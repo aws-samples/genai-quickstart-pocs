@@ -1,11 +1,22 @@
 # Ignore .env file
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/.env
+.env
 
 # Ignore output folder
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/enriched_output.txt
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/extracted_text.txt
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/output/key_value.txt
+output/
 
+# Ignore venv folder
+venv/
 
-# ignore venv
-genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/venv/
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore IDE-specific files (optional, but often useful)
+.vscode/
+.idea/
+
+# Ignore OS-specific files (optional)
+.DS_Store
+Thumbs.db
