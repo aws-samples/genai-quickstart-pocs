@@ -33,6 +33,9 @@ jspm_packages/
 **/.DS_Store
 **/__pycache__/
 .env/
+venv
+output/
+temp/
 /test-reports/
 junit.xml
 /coverage/

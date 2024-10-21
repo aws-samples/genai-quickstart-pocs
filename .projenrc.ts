@@ -21,6 +21,9 @@ const project = new typescript.TypeScriptProject({
     '**/.DS_Store',
     '**/__pycache__/',
     '.env/',
+    'venv',
+    'output/',
+    'temp/',
   ],
 });
 
