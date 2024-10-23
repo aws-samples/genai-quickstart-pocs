@@ -2,12 +2,16 @@ from . import QuizGenerationOutput
 from langchain.prompts import PromptTemplate
 from langchain_aws import ChatBedrockConverse
 from langchain.output_parsers import PydanticOutputParser
-import logging
+from langchain_core.output_parsers import StrOutputParser
 
-def generate_quiz_questions(documents: list) -> QuizGenerationOutput:
+
+
+def generate_quiz_questions(
+    documents: list, images: list, num_questions: int = 25
+) -> QuizGenerationOutput:
     """
     Generates quiz questions in batches of 5 questions at a time.
-    
+
     Args:
         documents (list): The list of documents to generate questions from.
 
@@ -16,18 +20,25 @@ def generate_quiz_questions(documents: list) -> QuizGenerationOutput:
     """
     print("Generating quiz questions!")
     quiz_questions = QuizGenerationOutput(questions=[])
-    while len(quiz_questions.questions) < 25:
+    while len(quiz_questions.questions) < num_questions:
         print(f"Generating 5 quiz questions")
-        new_questions = generate_quiz_question_set(documents, quiz_questions)
-        quiz_questions.questions.extend(new_questions.questions)
+        try:
+            new_questions = generate_quiz_question_set(
+                documents, images, quiz_questions
+            )
+            quiz_questions.questions.extend(new_questions.questions)
+        except:
+            new_questions = generate_quiz_question_set(
+                documents, images, quiz_questions
+            )
+            quiz_questions.questions.extend(new_questions.questions)
 
     print("Generating quiz questions complete!")
     return quiz_questions
 
 
-
 def generate_quiz_question_set(
-    documents: list, existing_questions: QuizGenerationOutput
+    documents: list, images: list, existing_questions: QuizGenerationOutput
 ):
     """
     Generates a set of quiz questions from the provided documents.
@@ -99,4 +110,44 @@ def generate_quiz_question_set(
         }
     )
 
+    return response
+
+
+def generate_quiz_title(documents: list, images: list) -> str:
+    """
+    Generates a quiz title based on the provided documents and images.
+
+    Args:
+        documents (list): The list of documents to generate the quiz title from.
+        images (list): The list of images to generate the quiz title from.
+
+    Returns:
+        str: The generated quiz title.
+    """
+    print("Generating quiz title!")
+    prompt = PromptTemplate(
+        template="""
+    You are an intelligent quiz generator.
+    You are tasked with creating a title for a quiz. 
+    You will be provided background material in the form of documents.
+    The title should be clear, concise, and relevant to the content of the material.
+    The title should look like: 
+    Quiz: <title>
+    Where <title> is the actual title of the quiz.
+                            
+    Background documents:
+    <documents>
+    {documents}
+    </documents>
+
+    Generate a quiz title based on the provided documents and images.
+    Do not include any additional information or context. Only output the title.
+    """
+    )
+    llm = ChatBedrockConverse(
+        model="anthropic.claude-3-haiku-20240307-v1:0",
+        disable_streaming=True,
+    )
+    chain = prompt | llm | StrOutputParser()
+    response = chain.invoke({"documents": documents})
     return response

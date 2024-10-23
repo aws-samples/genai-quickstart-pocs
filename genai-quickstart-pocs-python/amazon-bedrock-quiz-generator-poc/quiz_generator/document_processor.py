@@ -1,5 +1,4 @@
 import os
-import logging
 from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -8,30 +7,35 @@ from langchain_community.document_loaders import (
     UnstructuredMarkdownLoader,
     TextLoader,
 )
-from langchain_community.document_loaders.image import UnstructuredImageLoader
-from uuid import uuid4
+from langchain_community.document_loaders import AmazonTextractPDFLoader
 
+from uuid import uuid4
+import base64
 
 
 temp_storage_path = os.path.join(os.path.dirname(__file__), "../temp")
 
-def load_documents_and_images(uploaded_files: list) -> list[Document]:
+
+def load_documents_and_images(uploaded_files: list) -> {list[Document], list[str]}:
     """
     Loads documents and images from the specified file paths.
 
     Returns:
         LoadedDocuments: An instance of LoadedDocuments containing the loaded documents and images.
     """
-    print("Loading documents")
+    print("Loading documents & images")
     documents = []
+    images = []
     for file in uploaded_files:
         print(f"Processing file {file.name}")
         uploaded_file_name = file.name
-        file_path = persist_document_file(file.getvalue())
+        file_path = persist_document_file(file.getvalue(), uploaded_file_name)
         if uploaded_file_name.endswith(".pdf"):
             docs = load_pdf_document(file_path)
             documents.extend(docs)
-        elif uploaded_file_name.endswith(".docx") or uploaded_file_name.endswith(".doc"):
+        elif uploaded_file_name.endswith(".docx") or uploaded_file_name.endswith(
+            ".doc"
+        ):
             docs = load_docx_document(file_path)
             documents.extend(docs)
         elif uploaded_file_name.endswith(".csv"):
@@ -40,23 +44,28 @@ def load_documents_and_images(uploaded_files: list) -> list[Document]:
         elif uploaded_file_name.endswith(".md"):
             docs = load_markdown_document(file_path)
             documents.extend(docs)
-        # elif uploaded_file_name.endswith(".jpg") or uploaded_file_name.endswith(".png"):
-        #     docs = load_image(file_path)
-        #     documents.extend(docs)
-        # elif uploaded_file_name.endswith(".txt"):
-        #     docs = load_text_document(file_path)
-        #     documents.extend(docs)
+        elif (
+            uploaded_file_name.endswith(".jpg")
+            or uploaded_file_name.endswith(".jpeg")
+            or uploaded_file_name.endswith(".png")
+        ):
+            docs = load_image(file_path)
+            documents.extend(docs)
+        elif uploaded_file_name.endswith(".txt"):
+            docs = load_text_document(file_path)
+            documents.extend(docs)
     print(f"Loaded {len(documents)} documents")
-    print(documents)
-    return documents
+    return documents, images
 
 
-def persist_document_file(file_bytes) -> str:
+def persist_document_file(file_bytes, uploaded_file_name) -> str:
     """
     Persists the uploaded file to disk and returns the file path.
     """
     file_name = str(uuid4())
-    file_path = os.path.join(temp_storage_path, file_name)
+    file_path = os.path.join(
+        temp_storage_path, f"{file_name}.{uploaded_file_name.split('.')[-1]}"
+    )
     with open(file_path, "wb") as f:
         f.write(file_bytes)
     return file_path
@@ -75,6 +84,10 @@ def load_pdf_document(file_path: str) -> list[Document]:
     print(f"Loading text from PDF {file_path}")
     loader = PyPDFLoader(file_path)
     docs = loader.load()
+    if len(docs) > 25:
+        raise ValueError(
+            "PDF document contains too many pages to generate a Quiz without advanced chunking techniques. Try a smaller set of text."
+        )
     return docs
 
 
@@ -85,6 +98,10 @@ def load_docx_document(docx_file_path: str):
     print(f"Loading text from DOC/DOCX {docx_file_path}")
     loader = Docx2txtLoader(docx_file_path)
     docs = loader.load()
+    if len(docs) > 25:
+        raise ValueError(
+            "DOC/DOCX document contains too many pages to generate a Quiz without advanced chunking techniques. Try a smaller set of text."
+        )
     return docs
 
 
@@ -117,11 +134,10 @@ def load_text_document(text_file_path: str):
     docs = loader.load()
     return docs
 
-def load_image(image_file_path: str):
+
+def load_image(image_path: str):
     """
-    Loads image data from an image file
+    Loads an image from bytes
     """
-    print(f"Loading image {image_file_path}")
-    loader = UnstructuredImageLoader(image_file_path)
-    docs = loader.load()
-    return docs
+    loader = AmazonTextractPDFLoader(image_path)
+    return loader.load()

@@ -1,14 +1,17 @@
+docx2txt
 boto3
 botocore
-langchain-aws
-langchain-community
 langchain>=0.3.0, <0.4.0
+langchain-community==0.3.3
+langchain-aws
 python-dotenv
 streamlit
 pypdf
-docx2txt
 unstructured[md]
 unstructured[all-docs]
 nltk
 pydantic
 uuid
+jinja2
+amazon-textract-caller
+amazon-textract-textractor
