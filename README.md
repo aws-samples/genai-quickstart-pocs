@@ -111,6 +111,9 @@ This repository contains sample code demonstrating various use cases leveraging 
 35. **Amazon-Bedrock-PowerPoint-Generator**
     This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
     ![Amazon-Bedrock-PowerPoint-Generator](genai-quickstart-pocs-python/amazon-bedrock-powerpoint-generator-poc/images/demo.gif)
+36. **Amazon-Bedrock-Quiz-Generator-POC**
+    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a Quiz Generator. The application is constructed with a simple streamlit frontend where users can upload one or more documents (`.pdf`, `.docx`, `.doc`, `.csv`, `.md`, `.png`, `.jpg`) and generate a quiz with anywhere from 5 to 100 questions (multi-choice / true or false).
+    ![Amazon-Bedrock-Quiz-Generator](genai-quickstart-pocs-python/amazon-bedrock-quiz-generator-poc/images/demo.gif)
 
 
 
