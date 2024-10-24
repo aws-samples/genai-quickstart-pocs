@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Knowledge Quiz</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-number {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .question-type {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px 20px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: left;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+
+        button:hover {
+            background-color: #f8f9fa;
+            border-color: #0066cc;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #ddd;
+        }
+
+        .correct {
+            color: #22c55e;
+        }
+
+        .incorrect {
+            color: #ef4444;
+        }
+
+        .result-item.correct-answer {
+            border-left-color: #22c55e;
+        }
+
+        .result-item.incorrect-answer {
+            border-left-color: #ef4444;
+        }
+
+        .correct-answer-text {
+            color: #22c55e;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .try-again-btn {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 20px auto;
+            padding: 12px 20px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .try-again-btn:hover {
+            background-color: #0052a3;
+        }
+
+        .score-summary {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1 id="quiz-title">{{quiz_title}}</h1>
+        </div>
+        
+        <div id="quiz-content">
+            <div class="question-type" id="question-type"></div>
+            <div class="question-number" id="question-number"></div>
+            <div class="question" id="question-text"></div>
+            <div class="options" id="options"></div>
+        </div>
+
+        <div id="results" class="results">
+            <div class="score-summary">
+                <h2 id="score-text"></h2>
+            </div>
+            <div id="review"></div>
+            <button class="try-again-btn" onclick="resetQuiz()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = {{ questions | safe }}
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = [];
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            const questionType = document.getElementById('question-type');
+            const questionNumber = document.getElementById('question-number');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options');
+
+            // Update question type display
+            questionType.textContent = question.question_type === 'true_false' ? 'True/False Question' : 'Multiple Choice';
+            
+            questionNumber.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+            questionText.textContent = question.question;
+            optionsContainer.innerHTML = '';
+
+            question.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.textContent = answer.answer;
+                button.onclick = () => handleAnswer(index);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const selectedAnswer = question.answers[selectedIndex];
+            const isCorrect = selectedAnswer.is_correct;
+
+            answers.push({
+                question: currentQuestion,
+                selected: selectedIndex,
+                correct: isCorrect
+            });
+
+            if (isCorrect) {
+                score++;
+            }
+
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-content').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('quiz-title').textContent = 'Quiz Results';
+
+            const scoreText = document.getElementById('score-text');
+            const review = document.getElementById('review');
+            const percentage = (score / questions.length) * 100;
+
+            scoreText.innerHTML = `
+                <h2>Quiz Complete!</h2>
+                <p>You scored ${score} out of ${questions.length} (${percentage.toFixed(1)}%)</p>
+            `;
+            
+            review.innerHTML = '';
+
+            answers.forEach((answer, index) => {
+                const question = questions[index];
+                const resultItem = document.createElement('div');
+                resultItem.className = `result-item ${answer.correct ? 'correct-answer' : 'incorrect-answer'}`;
+
+                const icon = answer.correct ? '✓' : '✗';
+                const iconClass = answer.correct ? 'correct' : 'incorrect';
+
+                const selectedAnswer = question.answers[answer.selected].answer;
+                const correctAnswer = question.answers.find(a => a.is_correct).answer;
+
+                resultItem.innerHTML = `
+                    <div>
+                        <span class="${iconClass}">${icon}</span>
+                        <strong>${question.question}</strong>
+                    </div>
+                    <div style="margin-top: 10px;">Your answer: ${selectedAnswer}</div>
+                    ${!answer.correct ? 
+                        `<div class="correct-answer-text">Correct answer: ${correctAnswer}</div>` 
+                        : ''}
+                `;
+
+                review.appendChild(resultItem);
+            });
+        }
+
+        function resetQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answers = [];
+            document.getElementById('quiz-content').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('quiz-title').textContent = 'AWS Knowledge Quiz';
+            showQuestion();
+        }
+
+        // Start the quiz
+        showQuestion();
+    </script>
+</body>
+</html>
