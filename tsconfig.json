@@ -34,5 +34,8 @@
     "genai-quickstart-pocs-python/deployment/*",
     "projenrc/*"
   ],
-  "exclude": []
+  "exclude": [
+    "node_modules",
+    "cdk.out"
+  ]
 }

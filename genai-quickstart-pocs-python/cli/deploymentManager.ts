@@ -10,7 +10,6 @@ export class DeploymentManager {
 
     try {
       const command = `cdk deploy -c POC_NAME="${poc.name}" -c PACKAGE_NAME=${poc.name} -c POC_DESCRIPTION="TBD" -c EXTENSION_ONLY=${deployExtension && poc.hasExtension}`;
-      console.log(`executing command ${command}`);
       execSync(command, {
         stdio: ['inherit', 'inherit', 'inherit'],
         cwd: path.join(__dirname, '..', '..'),

@@ -9,12 +9,20 @@ import { StreamlitQuickStartPOC } from './projenrc/projects/streamlit-quickstart
  * Base project for repo
  */
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: '2.162.1',
   authorName: 'AWS',
+  cdkVersion: '2.162.1',
   packageManager: NodePackageManager.NPM,
   defaultReleaseBranch: 'main',
   name: 'genai-quickstart-pocs',
   projenrcTs: true,
+  typescriptVersion: '5.5.4',
+  prettier: false,
+  eslint: true,
+  bin: {
+    'poc-cli': './genai-quickstart-pocs-python/cli/index.ts',
+  },
+  srcdir: '.',
+  appEntrypoint: './genai-quickstart-pocs-python/poc-deployment/app.ts',
   tsconfig: {
     compilerOptions: {
       sourceRoot: '.',
@@ -981,7 +989,7 @@ If you want to use other Vector DBs that are not supported in Amazon Bedrock Kno
 
 pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
-  pocName: 'Amazon Bedrock Meeting Minutes Summarization POC',
+  pocName: 'Amazonb Bedrock Meeting Minutes Summarization POC',
   pocPackageName: 'amazon-bedrock-meeting-minutes-summarization-poc',
   additionalDeps: ['requests'],
   pocDescription:

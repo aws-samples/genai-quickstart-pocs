@@ -1,11 +1,16 @@
 {
   "dependencies": [
     {
+      "name": "@types/inquirer",
+      "type": "build"
+    },
+    {
       "name": "@types/jest",
       "type": "build"
     },
     {
       "name": "@types/node",
+      "version": "ts5.5",
       "type": "build"
     },
     {
@@ -66,7 +71,12 @@
       "type": "build"
     },
     {
+      "name": "tsx",
+      "type": "build"
+    },
+    {
       "name": "typescript",
+      "version": "5.5.4",
       "type": "build"
     },
     {
@@ -75,12 +85,32 @@
       "type": "runtime"
     },
     {
+      "name": "chalk",
+      "type": "runtime"
+    },
+    {
+      "name": "commander",
+      "type": "runtime"
+    },
+    {
       "name": "constructs",
       "version": "^10.0.5",
       "type": "runtime"
     },
     {
+      "name": "import-sync",
+      "type": "runtime"
+    },
+    {
+      "name": "inquirer",
+      "type": "runtime"
+    },
+    {
       "name": "nunjucks",
+      "type": "runtime"
+    },
+    {
+      "name": "ora",
       "type": "runtime"
     }
   ],
