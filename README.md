@@ -114,6 +114,10 @@ This repository contains sample code demonstrating various use cases leveraging 
 36. **Amazon-Bedrock-Intelligent-Document-Processing:**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&A to satisfy a broad range of use cases.
     ![Amazon-Bedrock-PowerPoint-Generator](genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/images/demo.gif)
+37. **Amazon-Bedrock-Quiz-Generator-POC**
+    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a Quiz Generator. The application is constructed with a simple streamlit frontend where users can upload one or more documents (`.pdf`, `.docx`, `.doc`, `.csv`, `.md`, `.png`, `.jpg`) and generate a quiz with anywhere from 5 to 100 questions (multi-choice / true or false).
+    ![Amazon-Bedrock-Quiz-Generator](genai-quickstart-pocs-python/amazon-bedrock-quiz-generator-poc/images/demo.gif)
+
 
 
 
