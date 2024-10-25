@@ -1,3 +1,4 @@
+import path from 'path';
 import { CfnOutput, Stack } from 'aws-cdk-lib';
 import { FlowLogDestination, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { DockerImageAsset, Platform } from 'aws-cdk-lib/aws-ecr-assets';
@@ -6,7 +7,6 @@ import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patte
 import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import path from 'path';
 
 /**
  * The properties for the POCConstruct construct.
