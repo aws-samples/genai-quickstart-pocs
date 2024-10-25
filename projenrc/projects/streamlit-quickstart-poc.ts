@@ -12,6 +12,7 @@ interface StreamlitQuickStartPOCProps {
   pocDescription?: string;
   additionalDeps?: string[];
   excludeFromReadmeManagement?: boolean;
+  gitIgnore?: string[];
   readme?: {
     additionalPrerequisits?: string[];
     pocGoal?: {
@@ -52,13 +53,11 @@ export class StreamlitQuickStartPOC extends PythonProject {
       projenrcTs: true,
       name: props.pocPackageName,
       description: props.pocDescription,
-      deps: [
-        'streamlit',
-        'boto3',
-        'botocore',
-        'python-dotenv',
-      ],
+      deps: ['streamlit', 'boto3', 'botocore', 'python-dotenv'],
       pip: true,
+      gitIgnoreOptions: {
+        ignorePatterns: ['.env/*', 'venv/*', ...props.gitIgnore ?? []],
+      },
       venv: true,
       sample: false,
       authorEmail: 'no-email@aws.amazon.com',
@@ -72,6 +71,17 @@ export class StreamlitQuickStartPOC extends PythonProject {
     for (const dep of props.additionalDeps ?? []) {
       this.addDependency(dep);
     }
+
+    this.addTask('start', {
+      description: 'Run Streamlit app in virtual environment',
+      exec: [
+        // Create venv if it doesn't exist
+        '[ ! -d ".env" ] && python3 -m venv .env || true',
+
+        // Run everything else in a single bash context to maintain the activated venv
+        'sh -c "source .env/bin/activate && trap deactivate EXIT && streamlit run app.py"',
+      ].join(' && '),
+    });
     new POCProjectFiles(this, props);
   }
 
@@ -87,15 +97,19 @@ export class StreamlitQuickStartPOC extends PythonProject {
   postSynthesize() {
     // Overriding the default postSynth to avoid every POC installing dependencies!
   }
-}
 
+  runPOC() {
+    this.envManager.setupEnvironment();
+  }
+
+
+}
 
 class POCProjectFiles extends Component {
   private pocProps: StreamlitQuickStartPOCProps;
   constructor(project: Project, props: StreamlitQuickStartPOCProps) {
     super(project);
     this.pocProps = props;
-
   }
   /**
    * Synthesize the project files
@@ -107,11 +121,10 @@ class POCProjectFiles extends Component {
     }
     new HOWTO(this.project).synthesize();
     if (!this.pocProps.skipApp) {
-      new AppDotPy(this.project).synthesize();
+      new AppDotPy(this.project);
     }
 
   }
-
 }
 
 class README extends TextFile {
@@ -137,7 +150,11 @@ class README extends TextFile {
 
 class HOWTO extends SampleFile {
   constructor(scope: Project) {
-    const HOWTO_TEMPLATE: string = path.join(__dirname, 'resources', 'streamlit-howto.md');
+    const HOWTO_TEMPLATE: string = path.join(
+      __dirname,
+      'resources',
+      'streamlit-howto.md',
+    );
     const howtoTemplate = fs.readFileSync(HOWTO_TEMPLATE, 'utf-8');
     super(scope, 'HOWTO.md', {
       contents: howtoTemplate,
