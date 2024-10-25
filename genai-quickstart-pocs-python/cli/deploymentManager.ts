@@ -35,6 +35,9 @@ export class DeploymentManager {
             {
               stdio: 'pipe',
               encoding: 'utf-8',
+              env: {
+                ...process.env,
+              },
             },
           );
 

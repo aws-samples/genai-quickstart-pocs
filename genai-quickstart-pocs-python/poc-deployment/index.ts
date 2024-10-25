@@ -21,6 +21,7 @@ export class POCStack extends Stack {
   private pocMainConstruct: Construct;
   constructor(app: Construct, id: string, stackProps: POCStackProps) {
     super(app, id);
+    // console.log(stackProps);
     this.stackProps = stackProps;
     this.stackProps.extensionOnly = stackProps.extensionOnly || false;
     /**

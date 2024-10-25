@@ -6,6 +6,7 @@ import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patte
 import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import path from 'path';
 
 /**
  * The properties for the POCConstruct construct.
@@ -50,7 +51,7 @@ export class POCConstruct extends Construct {
      * The Docker Image Asset used to build and deploy the POC's Docker Image to ECS
      */
     const pocDockerImage = new DockerImageAsset(this, 'POCDockerImage', {
-      directory: __dirname,
+      directory: path.join(__dirname, '..'),
       platform: Platform.LINUX_ARM64,
       buildArgs: {
         POC_PATH: this.pocName,
@@ -84,7 +85,7 @@ export class POCConstruct extends Construct {
       publicLoadBalancer: true,
       desiredCount: 1,
     });
-    pocFargateService.loadBalancer.logAccessLogs(this.accessLogsBucket, 'poc-alb-access-logs');
+    // pocFargateService.loadBalancer.logAccessLogs(this.accessLogsBucket, 'poc-alb-access-logs');
 
     // TODO - add ability to limit model to only necessary ones
     const pocBedrockAccessPolicy = new Policy(this, 'POCBedrockAccessPolicy', {

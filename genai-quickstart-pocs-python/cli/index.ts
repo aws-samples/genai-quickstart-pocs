@@ -100,7 +100,7 @@ async function main() {
           name: 'selectedPoc',
           message: 'Select a POC to deploy:',
           choices: pocs.map(poc => ({
-            name: `${poc.name}${poc.hasExtension ? ' (Has Extension)' : ''}`,
+            name: `${poc.name}${poc.hasExtension ? ' (Requires AWS Resources Deployed)' : ''}`,
             value: poc,
           })),
         },
