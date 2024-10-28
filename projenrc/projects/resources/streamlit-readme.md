@@ -77,3 +77,5 @@ This should start the POC and open a browser window to the application.
 
 ## How-To Guide
 For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
+
+{{ finalText }}

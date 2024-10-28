@@ -32,6 +32,10 @@ interface StreamlitQuickStartPOCProps {
       instructions: string;
       command?: string;
     }>;
+    /**
+     * Any additional text to include at the end.
+     */
+    finalText?: string;
   };
   skipApp?: boolean;
 }
@@ -47,6 +51,7 @@ const generateREADME = (props: StreamlitQuickStartPOCProps): string => {
     pocGoal: props.readme?.pocGoal,
     fileWalkthrough: props.readme?.fileWalkthrough,
     extraSteps: props.readme?.extraSteps,
+    finalText: props.readme?.finalText,
   });
 };
 

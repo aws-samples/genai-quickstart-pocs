@@ -25,6 +25,17 @@ This POC demonstrates how to use the Amazon Bedrock Alt Text Generator to genera
     git clone https://github.com/aws-samples/genai-quickstart-pocs.git
     ```
     
+    The file structure of this POC is broken into these files
+    
+    * `requirements.txt` - all the requirements needed to get the sample application up and running.
+    * `app.py` - The streamlit frontend
+    
+    
+    * `pdf_image_alt_text_generator/generator.py` - The is the logic that extracts the data from PDF and calls the Bedrock Model for inference
+    
+    * `pdf_image_alt_text_generator/download_results.py` - generates a PDF with all images and their alt text results, as well as input/output token usage, calculated in a table.
+    
+    
 
 1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
     ```zsh

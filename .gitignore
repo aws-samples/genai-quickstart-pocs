@@ -36,6 +36,7 @@ jspm_packages/
 venv
 output/
 temp/
+cdk.out
 /test-reports/
 junit.xml
 /coverage/
