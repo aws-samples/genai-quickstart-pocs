@@ -60,7 +60,7 @@ new StreamlitQuickStartPOC({
       ],
     },
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -123,7 +123,7 @@ If you preferred to use your own database/tables in your Amazon Athena database,
   ],
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon Athena. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.',
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -188,7 +188,7 @@ If you preferred to use your own database/tables in your Amazon RDS instance, I 
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -263,7 +263,7 @@ If you preferred to use your own database/tables in your Amazon Redshift instanc
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -321,7 +321,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -409,7 +409,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -462,7 +462,7 @@ model_id = "anthropic.claude-3-sonnet-20240229-v1:0"`,
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -496,7 +496,7 @@ new StreamlitQuickStartPOC({
       { instructions: 'Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 23 in the prompt_finder_and_invoke_llm.py file to set the appropriate region:', command: 'bedrock = boto3.client(\'bedrock-runtime\', \'us-east-1\', endpoint_url=\'https://bedrock-runtime.us-east-1.amazonaws.com\')' },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -530,7 +530,7 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>`,
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -538,7 +538,7 @@ new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-claude3-streaming-response-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement streaming responses. The application is constructed with a simple streamlit frontend where users can input zero shot requests directly against the LLM of their choice, leveraging a streaming response technique.',
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -578,7 +578,7 @@ response = bedrock.invoke_model_with_response_stream(body=json_prompt, modelId="
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -615,7 +615,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -660,7 +660,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -704,7 +704,7 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -736,7 +736,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -783,7 +783,7 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -823,7 +823,7 @@ guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -844,7 +844,7 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       ],
     },
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -852,7 +852,7 @@ new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-knowledgebases-rag-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create vector embeddings for your data sources using Amazon Bedrock Knowledge bases with the ability ask questions against the stored documents. The application is constructed with a RAG based architecture where users can ask questions against the Knowledge bases.',
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -951,7 +951,7 @@ If you want to use other Vector DBs that are not supported in Amazon Bedrock Kno
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1002,7 +1002,7 @@ Update the S3 Bucket name with your bucket name in **line 21**
       }],
     },
   },
-});
+}).synth();
 
 
 // Not actually a streamlit poc, so manually defined README
@@ -1011,7 +1011,7 @@ new StreamlitQuickStartPOC({
   pocName: 'Amazon Bedrock Model Customization',
   pocPackageName: 'amazon-bedrock-model-customization',
   skipApp: true,
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1045,7 +1045,7 @@ new StreamlitQuickStartPOC({
       }],
     },
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1082,7 +1082,7 @@ region_name=us-east-1 (region of choice)`,
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1147,7 +1147,7 @@ on data sources feel free to refer to this [documentation](https://docs.aws.amaz
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1227,7 +1227,7 @@ As soon as you are satisfied with the configuration, you can simply run the file
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1320,7 +1320,7 @@ Please note that only specific models can be used with Amazon Bedrock Knowledge 
 1. Amazon Bedrock Converse API - Supported [models](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html) and model features
 2. Amazon Bedrock Knowledge Bases - Supported [models](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-supported.html) by action`,
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1374,7 +1374,7 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1412,7 +1412,7 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1457,7 +1457,7 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>`,
       },
     ],
   },
-});
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1465,7 +1465,37 @@ new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-task-classification',
   pocDescription:
     'This sample code demonstrates how to use Amazon Bedrock and Generative AI to implement a task classification bot. The application is constructed with a simple streamlit frontend where users can input a task and get the correct classification which then trigger appropriate downstream workflows to process the task inputted. ',
-});
+  readme: {
+    pocGoal: {
+      overview: `The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to classify a task, and thus the ability to auto trigger downstream workflows that are designed to process these tasks.
+This repo comes with a basic front end to help users stand up a proof of concept in just a few minutes.`,
+      architectureImage: true,
+      flowSteps: [
+        'The user input task with relevant details into the streamlit app (app.py).',
+        'The streamlit app, takes the task with description and pass it along to a helper file (task_classification.py).',
+        'This helper file calls the Bedrock API and wraps the user prompt with a system prompt, parsing user\'s input and add further requirements.',
+        `Amazon Bedrock responses to the user's task in 2 items.
+      * What class the task belongs to 
+      * Model's further processing of task details (to then be pass on to appropriate downstream processes)`,
+        'The application parse the two items from the model outputs to perform next steps (task_classification.py).',
+        'A visual confirmation on streamlit app (pop up modal) to ensure the correct class is assigned to the task inputted (app.py). ',
+      ],
+    },
+    fileWalkthrough: {
+      includeDefaults: true,
+      files: [{
+        name: 'task_classification.py',
+        description: 'The logic required to invoke Amazon Bedrock and parse the response',
+      }],
+    },
+    extraSteps: [
+      {
+        instructions: 'Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:',
+        command: 'profile_name=<AWS_CLI_PROFILE_NAME',
+      },
+    ],
+  },
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1474,7 +1504,34 @@ new StreamlitQuickStartPOC({
   additionalDeps: ['pdfplumber'],
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to extract text from a document. The application is constructed with a simple streamlit frontend where users leverage Bedrock Agents to extract and summarize key information from a document like a financial earnings report. ',
-});
+  readme: {
+    pocGoal: {
+      overview: 'The goal of this repo is to provide users with a simple text extraction POC. The example document leveraged is an Amazon Earnings Report and the Agents will extract key information: Report Title, Report Publishing Date, Company Focus, Earnings Per Share (EPS), Net Income, Free Cash Flow, Brief Summary of Report, and a Key Quote from Leadership. This is just one example of text extraction and the prompts can be altered depending on the type of document and information you would like extracted. ',
+      architectureImage: true,
+      flowSteps: [
+        'The user uploads a document to be summarized, in this example we use an earnings report in PDF format into the streamlit app. (app.py).',
+        'The streamlit app, takes the PDF and passes it into Amazon Bedrock. If you upload another document make sure to update your prompts with what you want extracted/summarized! (extract_pdf_to_json.py).',
+        'A Bedrock Agent extracts key information and returns it to the user in valid JSON format. (extract_pdf_to_json.py).',
+      ],
+    },
+    fileWalkthrough: {
+      includeDefaults: true,
+      files: [{
+        name: 'extract_pdf_to_json.py',
+        description: 'The logic required to invoke Amazon Bedrock and parse the response (extract_pdf_to_json.py).',
+      }, {
+        name: 'AMZN-Q1-2024-Earnings-Release.pdf',
+        description: 'contains an example earnings report the user will upload.',
+      }],
+    },
+    extraSteps: [
+      {
+        instructions: 'Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:',
+        command: 'profile_name=<AWS_CLI_PROFILE_NAME>',
+      },
+    ],
+  },
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1482,7 +1539,53 @@ new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-translation-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.',
-});
+  readme: {
+    pocGoal: {
+      overview: 'The goal of this repository is to provide users with the ability to use Amazon Bedrock to perform translations. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
+      architectureImage: true,
+      flowSteps: [
+        `Text:
+            1. The user inputs text and selects the source and target language.
+            2. The application constructs the appropriate prompt for translation and sends it to Amazon Bedrock.
+            3. The appliction recieves and sends the translated text to Amazon Bedrock for analysis of accuracy and fluency.
+            4. The translated text and analysis is displayed on the frontend application.`,
+        `Chat:
+            1. The user inputs text and selects the target language.
+            2. The application constructs the appropriate prompt for translation and sends it to Amazon Bedrock.
+            3. The translated response is displayed on the frontend application.`,
+        `File:
+            1. The user uploads a text file and selects the target language.
+            2. The application constructs the appropriate prompt for translation and sends it to Amazon Bedrock.
+            3. The translated text from the document is displayed on the frontend application.`,
+      ],
+    },
+    fileWalkthrough: {
+      includeDefaults: false,
+      files: [{
+        name: 'Text.py',
+        description: 'Frontend for Text Translate',
+      }, {
+        name: 'Chat.py',
+        description: 'Frontend for Chat Translate',
+      }, {
+        name: 'File.py',
+        description: 'Frontend for File Translate',
+      }, {
+        name: 'amazon_bedrock_translation.py',
+        description: 'Logic required to invoke Amazon Bedrock and parse the response',
+      }, {
+        name: 'requirements.txt',
+        description: 'Python dependencies',
+      }],
+    },
+    extraSteps: [
+      {
+        instructions: 'Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:',
+        command: 'profile_name=<AWS_CLI_PROFILE_NAME>',
+      },
+    ],
+  },
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1491,7 +1594,55 @@ new StreamlitQuickStartPOC({
   additionalDeps: ['langchain@^0.1', 'pandas', 'opensearch-py', 'thefuzz'],
   pocDescription:
     "This is sample code demonstrating the use of Amazon Transcribe, Amazon OpenSearch Serverless, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample. The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in `.srt` format, you can skip transcribing and jump straight into generating chapters.\n\nThe sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.",
-});
+  readme: {
+    pocGoal: {
+      overview: `The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create video chapters and searching those chapters. 
+This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
+ The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in \`.srt\` format, you can skip transcribing and jump straight into generating chapters.
+
+The sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.
+`,
+      architectureImage: true,
+      flowSteps: [
+        `   1. The user uploads a video file or provides an uploaded file s3 oject to the streamlit app. 
+            2. The streamlit app, takes the video, transcribes it and uses the transcription to determine spots that make sense as chapters.
+            3. Each chapter is then sent to the LLM to locate a good spot to start the chapter that gives some context as to the content amd doesn't drop the user into the middle of the content.
+            4. The chapters are then returned to the user, who can then save the chapters to the OpenSearch Collection. `,
+
+        `On the search side:
+            1. The user asks an inquiry via the streamlit app.
+            2. The query is passed the the LLM with the OpenSearch collection as a source.
+            3. The OpenSearch collection provides the chapter, which is then returned with the video to set the user to the correct spot in the video. `,
+      ],
+    },
+    additionalPrerequisits: [
+      `An OpenSearch Serverless Collection. You can learn how to create one [here](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-vector-search.html).
+*The Easy Create instructions on the document are suitable for this*
+Within the Collection, a Vector Index is needed, with a Vector Field called \`vectors\` with an Engine value of \`mmslib\`, Dimensions of \`1536\`. The remaining options can be left with their default values.`,
+      'An Amazon S3-Backed CloudFront Distribution. Videos will be uploaded to this S3 bucket and users will access videos through the CloudFront distribution. You can learn how to deploy the CloudFront an S3 bucket configuration [here](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.SimpleDistribution.html). ',
+    ],
+    fileWalkthrough: {
+      includeDefaults: true,
+      files: [{
+        name: 'videochapterlogic.py',
+        description: 'This is the logic that the UI connects to. The functions perform the logic and API calls to the AWS service endpoints like Amazon Transcribe, Amazon Bedrock, etc. `app.py` imports `videochapterlogic` functions.',
+      }, {
+        name: 'environment.toml',
+        description: 'This is the file that contains the configurations specific to your AWS environment like the S3 Bucket or OpenSearch Collection endpoint. The values in this file are required in order for the application to function.',
+      }, {
+        name: '.streamlit/config.toml',
+        description: 'The streamlit configuration file with paremters set to override the default configuration. Generally you won\'t need to adjust this unless you want to further customize the streamlit app. ',
+      }],
+    },
+    extraSteps: [
+      {
+        instructions: `Now that the requirements have been successfully installed in your virtual environment we can begin configuring environment variables.
+
+Open the \`environment.toml\` file and fill in the properties with your resources`,
+      },
+    ],
+  },
+}).synth();
 
 new StreamlitQuickStartPOC({
   parentProject: project,
@@ -1514,12 +1665,6 @@ new StreamlitQuickStartPOC({
       architectureImage: false,
       overview:
         'The goal of this POC is to showcase leveraging Generative AI for to create both the content for a presentation and also the background research queries to support the content generation.',
-    },
-    additionalPrerequisits: ['SMILE'],
-    extraSteps: [{ instructions: 'SMILE', command: "don't frown" }],
-    fileWalkthrough: {
-      files: [{ description: 'smile', name: 'smile' }],
-      includeDefaults: true,
     },
   },
 }).synth();
@@ -1630,6 +1775,6 @@ new StreamlitQuickStartPOC({
       ],
     },
   },
-});
+}).synth();
 
 project.synth();
