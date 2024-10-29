@@ -1019,6 +1019,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocName: 'Amazon Bedrock Model Customization',
   pocPackageName: 'amazon-bedrock-model-customization',
   pocDescription: 'This sample leverages Jupyter Notebooks to demonstrate how to customize bedrock models.',
+  excludeFromReadmeManagement: true,
   readme: {
     pocGoal: {
       flowSteps: [],

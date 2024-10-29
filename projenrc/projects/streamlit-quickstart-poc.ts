@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as nunjucks from 'nunjucks';
-import { Component, Project, SampleFile } from 'projen';
+import { Component, Project, SampleFile, TextFile } from 'projen';
 import { PythonProject } from 'projen/lib/python';
 import { POCReadmeDetails } from './resources/types';
 
@@ -11,6 +11,7 @@ interface StreamlitQuickStartPOCProps {
   pocPackageName: string;
   pocDescription?: string;
   additionalDeps?: string[];
+  excludeFromReadmeManagement?: boolean;
   readme?: {
     additionalPrerequisits?: string[];
     pocGoal?: {
@@ -41,20 +42,6 @@ interface StreamlitQuickStartPOCProps {
   skipApp?: boolean;
 }
 
-const generateREADME = (props: StreamlitQuickStartPOCProps): string => {
-  const README_TEMPLATE = path.join(__dirname, 'resources', 'streamlit-readme.md');
-  const readmeTemplate = fs.readFileSync(README_TEMPLATE, 'utf-8');
-  return nunjucks.renderString(readmeTemplate, {
-    pocTitle: props.pocName,
-    pocOverview: props.pocDescription,
-    pocPath: `genai-quickstart-pocs-python/${props.pocPackageName}`,
-    additionalPrerequisits: props.readme?.additionalPrerequisits,
-    pocGoal: props.readme?.pocGoal,
-    fileWalkthrough: props.readme?.fileWalkthrough,
-    extraSteps: props.readme?.extraSteps,
-    finalText: props.readme?.finalText,
-  });
-};
 
 export class StreamlitQuickStartPOC extends PythonProject {
   private pocProps: StreamlitQuickStartPOCProps;
@@ -65,9 +52,6 @@ export class StreamlitQuickStartPOC extends PythonProject {
       projenrcTs: true,
       name: props.pocPackageName,
       description: props.pocDescription,
-      readme: {
-        contents: generateREADME(props),
-      },
       deps: [
         'streamlit',
         'boto3',
@@ -117,6 +101,10 @@ class POCProjectFiles extends Component {
    * Synthesize the project files
    */
   public synthesize(): void {
+    if (!(this.pocProps.excludeFromReadmeManagement ?? false)) {
+      this.project.tryRemoveFile('README.md');
+      new README(this.project, 'README.md', this.pocProps);
+    }
     new HOWTO(this.project).synthesize();
     if (!this.pocProps.skipApp) {
       new AppDotPy(this.project).synthesize();
@@ -125,6 +113,27 @@ class POCProjectFiles extends Component {
   }
 
 }
+
+class README extends TextFile {
+  constructor(scope: Project, id: string, props: StreamlitQuickStartPOCProps) {
+    const README_TEMPLATE = path.join(__dirname, 'resources', 'streamlit-readme.md');
+    const readmeTemplate = fs.readFileSync(README_TEMPLATE, 'utf-8');
+    const content = nunjucks.renderString(readmeTemplate, {
+      pocTitle: props.pocName,
+      pocOverview: props.pocDescription,
+      pocPath: `genai-quickstart-pocs-python/${props.pocPackageName}`,
+      additionalPrerequisits: props.readme?.additionalPrerequisits,
+      pocGoal: props.readme?.pocGoal,
+      fileWalkthrough: props.readme?.fileWalkthrough,
+      extraSteps: props.readme?.extraSteps,
+      finalText: props.readme?.finalText,
+    });
+    super(scope, id, {
+      lines: content.split('\n'),
+    });
+  }
+}
+
 
 class HOWTO extends SampleFile {
   constructor(scope: Project) {
