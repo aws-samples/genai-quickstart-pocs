@@ -28,6 +28,7 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
+    "genai-quickstart-pocs-python/deployment/*",
     ".projenrc.ts",
     "projenrc/**/*.ts"
   ],

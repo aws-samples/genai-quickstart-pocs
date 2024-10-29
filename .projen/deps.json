@@ -23,13 +23,12 @@
       "type": "build"
     },
     {
-      "name": "commit-and-tag-version",
-      "version": "^12",
+      "name": "aws-cdk",
+      "version": "^2.162.1",
       "type": "build"
     },
     {
-      "name": "constructs",
-      "version": "^10.0.0",
+      "name": "esbuild",
       "type": "build"
     },
     {
@@ -69,6 +68,16 @@
     {
       "name": "typescript",
       "type": "build"
+    },
+    {
+      "name": "aws-cdk-lib",
+      "version": "^2.162.1",
+      "type": "runtime"
+    },
+    {
+      "name": "constructs",
+      "version": "^10.0.5",
+      "type": "runtime"
     },
     {
       "name": "nunjucks",

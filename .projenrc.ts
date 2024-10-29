@@ -1,4 +1,4 @@
-import { typescript } from 'projen';
+import { awscdk } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { READMEComponent } from './projenrc/projects/core-readme-component';
 import { DotNetQuickStartPOCs } from './projenrc/projects/dot-net-quickstart-pocs';
@@ -8,14 +8,25 @@ import { StreamlitQuickStartPOC } from './projenrc/projects/streamlit-quickstart
 /**
  * Base project for repo
  */
-const project = new typescript.TypeScriptProject({
+const project = new awscdk.AwsCdkTypeScriptApp({
+  cdkVersion: '2.162.1',
   authorName: 'AWS',
   packageManager: NodePackageManager.NPM,
   defaultReleaseBranch: 'main',
   name: 'genai-quickstart-pocs',
   projenrcTs: true,
-  deps: ['nunjucks'],
-  devDeps: ['@types/nunjucks'],
+  tsconfig: {
+    include: [
+      'genai-quickstart-pocs-python/deployment/*',
+    ],
+  },
+  deps: [
+    'nunjucks',
+    'constructs',
+  ],
+  devDeps: [
+    '@types/nunjucks',
+  ],
   gitignore: [
     '**/.DS_Store',
     '**/__pycache__/',

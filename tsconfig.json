@@ -28,7 +28,8 @@
     "target": "ES2019"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "genai-quickstart-pocs-python/deployment/*"
   ],
   "exclude": []
 }
