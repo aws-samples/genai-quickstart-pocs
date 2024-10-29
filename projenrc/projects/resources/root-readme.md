@@ -22,7 +22,7 @@ This repository contains sample code demonstrating various use cases leveraging 
 {% for dotNetPocs in pocs.dotNetPocs %}
 1. **{{ dotNetPocs.pocName }}**
     {{dotNetPocs.pocDescription}}
-    {% if dotNetPocs.architectImage %}
+    {% if dotNetPocs.architectureImage %}
     ![Screen Recording of {{dotNetPocs.pocName}}]({{dotNetPocs.imagePath}})
     {% endif %}
 {% endfor %}

@@ -38,6 +38,47 @@ To send us a pull request, please:
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
 
+## Development Guidelines for Python & .NET POCs
+The GenAI QuickStart POCs is managed using [Projen](https://projen.io/) to help ensure a consistent user experience and developer experience. By leveraging Projen, POCs are able to be created in a repeatable manner that ensures both functionliaty and documentation maintains consistency. To add a new POC, you will need to follow the guidance below.
+
+### Adding a new Python POC
+1. In the root of your project, run `npm install`
+1. Navigate to `.projenrc.ts` in the root of the repo.
+1. At the end of the Python POC definitons, create a new `StreamlitQuickStartPOC` definition that matches your POC needs.
+    An example of a basic POC definiton:
+    ```typescript
+    dotNetPOCs.addPoc({
+        pocName: 'Amazon Bedrock Document Generator POC',
+        pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create content for documents.',
+        imagePath: 'genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Converse.Api.Poc/images/Bedrock-Converse-dot-net.gif',
+        architectureImage: true,
+     });
+    ```
+1. Define additional README details within the declaration. See [streamlit-quickstart-poc.ts](projenrc/projects/streamlit-quickstart-poc.ts) and review `StreamlitQuickStartPOCProps` for details on all the property values you can provide.
+1. Once you have completed your definiton, in your terminal, run 
+    ```shell
+    npx projen
+    ```
+    This will generate the base POC with the configurations you provided.
+1. Complete your POC development in the generated POC folder, updating `app.py` and adding your custom logic modules.
+1. Ensure the following files are created:
+    * `images/demo.gif` - A gif with a screen recording of the POC.
+    * `images/architecture.png` - a PNG image of the AWS Architecture used for the POC.
+1. If you make any updates to the `.projenrc.ts` file, rerun:
+    ```
+    npx projen
+    ```
+   This will regenerate README files.
+
+### Adding a new .NET POC
+1. .NET POCs are less structured in how their are maintained and contributed to. Create the POC in the  `genai-quickstart-pocs-dot-net/`.
+1. Once the POC is complete, Define .NET POC in the `.projenrc.ts`, which adds the .NET POC definition to the main README doc.
+1. In your terminal, run
+    ```
+    npx projen
+    ```
+    This will regenerate the README and the new POC should be added.
+
 ## Finding contributions to work on
 
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any 'help wanted' issues is a great place to start.
