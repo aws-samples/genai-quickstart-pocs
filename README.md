@@ -218,6 +218,12 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Intelligent Document Processing (IDP) POC](genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/images/demo.gif)
     
 
+1. **Amazon Bedrock Image Generation with Guardrails**
+    This sample code demonstrates using Amazon Bedrock Guardrails to prevent Stability Diffusion LLM from generating harmful, obscene, or violent images. The application features a streamlit frontend where users input zero-shot requests to Claude 3. Amazon Bedrock Guardrails determine whether to proceed with generating images using the Stability Diffusion model.
+    
+    ![Screen Recording of Amazon Bedrock Image Generation with Guardrails](genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/demo.gif)
+    
+
 
 
 ## Sample Proof of Concepts - .NET

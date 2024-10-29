@@ -23,7 +23,7 @@ const project = new typescript.TypeScriptProject({
     'venv',
     'output/',
     'genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/',
-    'genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/',
+    'genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/generated-images/',
     'temp/',
     'cdk.out',
   ],
@@ -1794,6 +1794,42 @@ pythonPocs.push(new StreamlitQuickStartPOC({
         },
       ],
     },
+  },
+}));
+
+pythonPocs.push(new StreamlitQuickStartPOC({
+  parentProject: project,
+  pocName: 'Amazon Bedrock Image Generation with Guardrails',
+  pocPackageName: 'amazon-bedrock-image-guardrails-poc',
+  pocDescription: 'This sample code demonstrates using Amazon Bedrock Guardrails to prevent Stability Diffusion LLM from generating harmful, obscene, or violent images. The application features a streamlit frontend where users input zero-shot requests to Claude 3. Amazon Bedrock Guardrails determine whether to proceed with generating images using the Stability Diffusion model.',
+  readme: {
+    pocGoal: {
+      overview: `The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create images based on text input requests with security guardrails.
+This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.`,
+      architectureImage: true,
+      flowSteps: [
+        'The user inserts a text question into to the streamlit app. (app.py).',
+        'The streamlit app, takes the text inserted by the user and is passed to Claude LLM with Guardrail id to check for prompt which is acceptable. If the prompt is detected as malicious or triggers the guardrail, a response (Blocked Messaging statement on Bedrock Guardrails) will be returned to the end user saying the request is blocked with a message "Inappropriate prompt!!" (image_generation_guardrails.py).',
+        'If the prompt does not trigger the guardrail, it is passedto the model Stability diffusion model to generate images.',
+      ],
+    },
+    additionalPrerequisits: [
+      'Create an Amazon Bedrock Guardrail, information on how to do that can be found [here](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-create.html) ',
+    ],
+    fileWalkthrough: {
+      includeDefaults: true,
+      files: [{
+        name: 'invoke_model_with_guardrails.py',
+        description: 'the logic of the application, including the Amazon Bedrock Guardrail and Amazon Bedrock API invocations.',
+      }],
+    },
+    extraSteps: [{
+      instructions: 'create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:',
+      command: `profile_name=<CLI_profile_name>
+region_name=<REGION>
+guardrail_identifier=<Guardrail_Identifier>
+guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`,
+    }],
   },
 }));
 
