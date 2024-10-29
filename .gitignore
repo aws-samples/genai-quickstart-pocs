@@ -211,3 +211,7 @@ misc/
 # ignore mac generated file:
 .DS_Store
 genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/
+
+# ignore generated image files:
+genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/
+
