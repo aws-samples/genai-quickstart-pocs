@@ -31,13 +31,19 @@ const project = new awscdk.AwsCdkTypeScriptApp({
       noEmit: true,
     },
     include: [
-      'genai-quickstart-pocs-python/deployment/*',
+      'genai-quickstart-pocs-python/poc-deployment/*',
+      'genai-quickstart-pocs-python/**/cdk/*',
+      'genai-quickstart-pocs-python/cli/*',
       'projenrc/*',
     ],
   },
   deps: [
     'nunjucks',
     'constructs',
+    'import-sync',
+    'inquirer',
+    'tsx',
+    'ora',
   ],
   devDeps: [
     '@types/nunjucks',
@@ -51,6 +57,10 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'temp/',
     'cdk.out',
   ],
+});
+project.addTask('start', {
+  description: 'Starts the CLI for POC Running and Deploying',
+  exec: 'tsx genai-quickstart-pocs-python/cli/index.ts',
 });
 
 const pythonPocs: Array<StreamlitQuickStartPOC> = [];

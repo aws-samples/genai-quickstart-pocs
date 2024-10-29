@@ -18,6 +18,7 @@
     "post-compile": "npx projen post-compile",
     "post-upgrade": "npx projen post-upgrade",
     "pre-compile": "npx projen pre-compile",
+    "start": "npx projen start",
     "synth": "npx projen synth",
     "synth:silent": "npx projen synth:silent",
     "test": "npx projen test",
@@ -51,7 +52,11 @@
   "dependencies": {
     "aws-cdk-lib": "^2.162.1",
     "constructs": "^10.0.5",
-    "nunjucks": "^3.2.4"
+    "import-sync": "^2.2.2",
+    "inquirer": "^12.0.1",
+    "nunjucks": "^3.2.4",
+    "ora": "^8.1.0",
+    "tsx": "^4.19.2"
   },
   "license": "Apache-2.0",
   "publishConfig": {

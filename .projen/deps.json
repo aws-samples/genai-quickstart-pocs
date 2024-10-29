@@ -82,7 +82,23 @@
       "type": "runtime"
     },
     {
+      "name": "import-sync",
+      "type": "runtime"
+    },
+    {
+      "name": "inquirer",
+      "type": "runtime"
+    },
+    {
       "name": "nunjucks",
+      "type": "runtime"
+    },
+    {
+      "name": "ora",
+      "type": "runtime"
+    },
+    {
+      "name": "tsx",
       "type": "runtime"
     }
   ],

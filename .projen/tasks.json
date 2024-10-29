@@ -163,6 +163,15 @@
       "name": "pre-compile",
       "description": "Prepare the project for compilation"
     },
+    "start": {
+      "name": "start",
+      "description": "Starts the CLI for POC Running and Deploying",
+      "steps": [
+        {
+          "exec": "tsx genai-quickstart-pocs-python/cli/index.ts"
+        }
+      ]
+    },
     "synth": {
       "name": "synth",
       "description": "Synthesizes your cdk app into cdk.out",
@@ -211,13 +220,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/jest,@types/nunjucks,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,nunjucks"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/jest,@types/nunjucks,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,import-sync,inquirer,nunjucks,ora,tsx"
         },
         {
           "exec": "npm install"
         },
         {
-          "exec": "npm update @types/jest @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript aws-cdk-lib constructs nunjucks"
+          "exec": "npm update @types/jest @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript aws-cdk-lib constructs import-sync inquirer nunjucks ora tsx"
         },
         {
           "exec": "npx projen"
