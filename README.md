@@ -227,21 +227,31 @@ This repository contains sample code demonstrating various use cases leveraging 
 1. **Amazon Bedrock Converse API POC**
     This repository contains sample code demonstrating various use cases leveraging Amazon Bedrock and Generative AI using Amazon Bedrock SDK for .NET. Each sample is a separate page within a Visual Studio Solutions, and includes a basic Blazor frontend to help users quickly set up a proof of concept.
     
+    ![Screen Recording of Amazon Bedrock Converse API POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Converse.Api.Poc/images/Bedrock-Converse-dot-net.gif)
+    
 
 1. **Amazon Bedrock Document Generator POC**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create content for documents.
+    
+    ![Screen Recording of Amazon Bedrock Document Generator POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Converse.Api.Poc/images/Bedrock-Converse-dot-net.gif)
     
 
 1. **Amazon Bedrock Guardrail POC**
     This is sample code demonstrating the use of Amazon Bedrock Guardrails to help prevent prompt-injection attacks and prevent unintended responses from the LLM. The application is constructed with a simple ASP.NET Blazor frontend where users can input zero shot requests to Claude 3, with Amazon Bedrock Guardrails in place to prevent malicious prompts and responses.
     
+    ![Screen Recording of Amazon Bedrock Guardrail POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Guardrail.Poc/images/bedrock-guardrail-poc.gif)
+    
 
 1. **Amazon Bedrock Knowledgebases RAG POC**
     This repository contains sample code demonstrating various use cases leveraging Amazon Bedrock and Generative AI. Each sample is a separate project with its own directory, and includes a basic Streamlit frontend to help users quickly set up a proof of concept.
     
+    ![Screen Recording of Amazon Bedrock Knowledgebases RAG POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Knowledgebases.Rag.Poc/images/02-rag-with-kb.png)
+    
 
 1. **Amazon Bedrock RAG Kendra POC**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra.using Amazon Bedrock SDK for .NET. The application is constructed with a simple blazor front-end where users can ask questions against documents stored in Amazon Kendra.
+    
+    ![Screen Recording of Amazon Bedrock RAG Kendra POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Rag.Kendra.Poc/images/demo.png)
     
 
 
