@@ -32,15 +32,12 @@
   "include": [
     "./**/*.ts",
     "test/**/*.ts",
-    "genai-quickstart-pocs-python/poc-deployment/*",
-    "genai-quickstart-pocs-python/cli/*",
-    "projenrc/**/*",
-    "genai-quickstart-pocs-python/**/cdk/*",
+    "genai-quickstart-pocs-python/deployment/*",
+    "projenrc/*",
     ".projenrc.ts",
     "projenrc/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "cdk.out"
+    "node_modules"
   ]
 }

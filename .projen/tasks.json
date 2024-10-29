@@ -211,13 +211,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/inquirer,@types/jest,@types/nunjucks,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,tsx,chalk,commander,import-sync,inquirer,nunjucks,ora"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/jest,@types/nunjucks,esbuild,eslint-import-resolver-typescript,eslint-plugin-import,jest,projen,ts-jest,ts-node,nunjucks"
         },
         {
           "exec": "npm install"
         },
         {
-          "exec": "npm update @types/inquirer @types/jest @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node tsx typescript aws-cdk-lib chalk commander constructs import-sync inquirer nunjucks ora"
+          "exec": "npm update @types/jest @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk esbuild eslint-import-resolver-typescript eslint-plugin-import eslint jest jest-junit projen ts-jest ts-node typescript aws-cdk-lib constructs nunjucks"
         },
         {
           "exec": "npx projen"

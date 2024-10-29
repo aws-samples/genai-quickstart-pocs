@@ -1,5 +1,8 @@
 {
   "name": "genai-quickstart-pocs",
+  "bin": {
+    "poc-cli": "./genai-quickstart-pocs-python/cli/index.ts"
+  },
   "scripts": {
     "build": "npx projen build",
     "bundle": "npx projen bundle",
@@ -58,8 +61,8 @@
   "jest": {
     "coverageProvider": "v8",
     "testMatch": [
-      "<rootDir>/@(src|test)/**/*(*.)@(spec|test).ts?(x)",
-      "<rootDir>/@(src|test)/**/__tests__/**/*.ts?(x)",
+      "<rootDir>/@(.|test)/**/*(*.)@(spec|test).ts?(x)",
+      "<rootDir>/@(.|test)/**/__tests__/**/*.ts?(x)",
       "<rootDir>/@(projenrc)/**/*(*.)@(spec|test).ts?(x)",
       "<rootDir>/@(projenrc)/**/__tests__/**/*.ts?(x)"
     ],

@@ -1,10 +1,10 @@
-# Amazon Bedrock Meeting Minutes Summarization POC
+# Amazonb Bedrock Meeting Minutes Summarization POC
 
 ## Overview of Solution
 
 This application demonstrates using Amazon Bedrock and Amazon Transcribe to summarize meeting recordings. The streamlit frontend allows users to upload audio, video, or text files of meeting recording. Amazon Transcribe generates a transcript of recording and sent it Amazon Bedrock for summarization of the key discussion points. Users can then download the  generated summarized meeting notes.
 
-![A gif of a screen recording show casing the Amazon Bedrock Meeting Minutes Summarization POC functionality](images/demo.gif)
+![A gif of a screen recording show casing the Amazonb Bedrock Meeting Minutes Summarization POC functionality](images/demo.gif)
 
 
 ## Goal of this POC

@@ -62,6 +62,15 @@
       "name": "pre-compile",
       "description": "Prepare the project for compilation"
     },
+    "start": {
+      "name": "start",
+      "description": "Run Streamlit app in virtual environment",
+      "steps": [
+        {
+          "exec": "[ ! -d \".env\" ] && python3 -m venv .env || true && sh -c \"source .env/bin/activate && trap deactivate EXIT && streamlit run app.py\""
+        }
+      ]
+    },
     "test": {
       "name": "test",
       "description": "Run tests",

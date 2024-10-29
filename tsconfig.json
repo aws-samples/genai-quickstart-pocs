@@ -30,12 +30,9 @@
     "noEmit": true
   },
   "include": [
-    "src/**/*.ts",
+    "./**/*.ts",
     "genai-quickstart-pocs-python/deployment/*",
     "projenrc/*"
   ],
-  "exclude": [
-    "node_modules",
-    "cdk.out"
-  ]
+  "exclude": []
 }

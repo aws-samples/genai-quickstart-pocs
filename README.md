@@ -124,10 +124,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock LangChain RAG POC](genai-quickstart-pocs-python/amazon-bedrock-langchain-rag-poc/images/demo.gif)
     
 
-1. **Amazon Bedrock Meeting Minutes Summarization POC**
+1. **Amazonb Bedrock Meeting Minutes Summarization POC**
     This application demonstrates using Amazon Bedrock and Amazon Transcribe to summarize meeting recordings. The streamlit frontend allows users to upload audio, video, or text files of meeting recording. Amazon Transcribe generates a transcript of recording and sent it Amazon Bedrock for summarization of the key discussion points. Users can then download the  generated summarized meeting notes.
     
-    ![Screen Recording of Amazon Bedrock Meeting Minutes Summarization POC](genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc/images/demo.gif)
+    ![Screen Recording of Amazonb Bedrock Meeting Minutes Summarization POC](genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc/images/demo.gif)
     
 
 1. **Amazon Bedrock Model Customization**
