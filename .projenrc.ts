@@ -15,6 +15,7 @@ const project = new typescript.TypeScriptProject({
   defaultReleaseBranch: 'main',
   name: 'genai-quickstart-pocs',
   projenrcTs: true,
+  github: false,
   deps: ['nunjucks'],
   devDeps: ['@types/nunjucks'],
   gitignore: [

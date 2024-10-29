@@ -3,7 +3,6 @@
 !/.projen/tasks.json
 !/.projen/deps.json
 !/.projen/files.json
-!/.github/workflows/pull-request-lint.yml
 !/package.json
 !/LICENSE
 !/.npmignore
@@ -39,13 +38,8 @@ genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/
 genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/generated-images/
 temp/
 cdk.out
-!/.github/workflows/build.yml
 /dist/changelog.md
 /dist/version.txt
-!/.github/workflows/release.yml
-!/.mergify.yml
-!/.github/workflows/upgrade-main.yml
-!/.github/pull_request_template.md
 !/test/
 !/tsconfig.json
 !/tsconfig.dev.json
