@@ -10,6 +10,7 @@ import { StreamlitQuickStartPOC } from './projenrc/projects/streamlit-quickstart
  */
 const project = new typescript.TypeScriptProject({
   authorName: 'AWS',
+  jest: false,
   packageManager: NodePackageManager.NPM,
   defaultReleaseBranch: 'main',
   name: 'genai-quickstart-pocs',
