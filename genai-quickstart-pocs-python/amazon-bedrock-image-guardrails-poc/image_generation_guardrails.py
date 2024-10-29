@@ -105,7 +105,7 @@ def image_generator(question):
     # saving the generated image locally, and specifying the path to which the generated image was saved
     #img.save('my-image.jpeg')
     ts=time.time()
-    imagename='./images/my-image'+str(ts)+'.jpeg'
+    imagename='./my-image'+str(ts)+'.jpeg'
     img.save(imagename)
     # returning the path of the saved image, so that it can be displayed on the frontend of the streamlit app
     
