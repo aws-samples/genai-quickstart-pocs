@@ -22,6 +22,8 @@ const project = new typescript.TypeScriptProject({
     '.env/',
     'venv',
     'output/',
+    'genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/',
+    'genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/',
     'temp/',
     'cdk.out',
   ],
