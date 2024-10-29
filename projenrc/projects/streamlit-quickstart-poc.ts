@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as nunjucks from 'nunjucks';
 import { Component, Project, SampleFile } from 'projen';
 import { PythonProject } from 'projen/lib/python';
+import { POCReadmeDetails } from './resources/types';
 
 interface StreamlitQuickStartPOCProps {
   parentProject: Project;
@@ -56,6 +57,7 @@ const generateREADME = (props: StreamlitQuickStartPOCProps): string => {
 };
 
 export class StreamlitQuickStartPOC extends PythonProject {
+  private pocProps: StreamlitQuickStartPOCProps;
   constructor(props: StreamlitQuickStartPOCProps) {
     super({
       parent: props.parentProject,
@@ -82,12 +84,21 @@ export class StreamlitQuickStartPOC extends PythonProject {
       version: '0.0.1',
       github: false,
     });
+    this.pocProps = props;
     for (const dep of props.additionalDeps ?? []) {
       this.addDependency(dep);
     }
     new POCProjectFiles(this, props);
   }
 
+  public get readmeDetails(): POCReadmeDetails {
+    return {
+      pocDescription: this.pocProps.pocDescription ?? this.pocProps.pocName,
+      pocName: this.pocProps.pocName,
+      imagePath: `genai-quickstart-pocs-python/${this.pocProps.pocPackageName}/images/demo.gif`,
+      architectureImage: this.pocProps.readme?.pocGoal?.architectureImage ?? false,
+    };
+  }
 
   postSynthesize() {
     // Overriding the default postSynth to avoid every POC installing dependencies!

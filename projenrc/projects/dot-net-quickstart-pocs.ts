@@ -1,22 +1,12 @@
-import { Component, Project } from 'projen';
+import { POCReadmeDetails } from './resources/types';
+export class DotNetQuickStartPOCs {
+  private _dotNetPocs: POCReadmeDetails[] = [];
 
-interface DotNetQuickStartPOCDetails {
-  pocName: string;
-  pocDescription: string;
-  imagePath?: string;
-}
-
-export class DotNetQuickStartPOC extends Component {
-  private _dotNetPocs: DotNetQuickStartPOCDetails[];
-  constructor(scope: Project, id: string) {
-    super(scope, id);
-  }
-
-  public addPoc (pocDetails: DotNetQuickStartPOCDetails): void {
+  public addPoc (pocDetails: POCReadmeDetails): void {
     this._dotNetPocs.push(pocDetails);
   };
 
-  public get dotNetPocs(): DotNetQuickStartPOCDetails[] {
+  public get dotNetPocs(): POCReadmeDetails[] {
     return this._dotNetPocs;
   }
 }

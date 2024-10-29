@@ -1,6 +1,8 @@
 import { typescript } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
-import { DotNetQuickStartPOC } from './projenrc/projects/dot-net-quickstart-pocs';
+import { READMEComponent } from './projenrc/projects/core-readme-component';
+import { DotNetQuickStartPOCs } from './projenrc/projects/dot-net-quickstart-pocs';
+import { POCReadmeDetails } from './projenrc/projects/resources/types';
 import { StreamlitQuickStartPOC } from './projenrc/projects/streamlit-quickstart-poc';
 
 /**
@@ -25,108 +27,113 @@ const project = new typescript.TypeScriptProject({
   ],
 });
 
+const pythonPocs: Array<StreamlitQuickStartPOC> = [];
+
 /**
  * Python POCs
  */
 
-new StreamlitQuickStartPOC({
-  parentProject: project,
-  pocName: 'Amazon Bedrock Alt Text Generator',
-  pocPackageName: 'amazon-bedrock-alt-text-generator',
-  additionalDeps: [
-    'langchain@^0.2',
-    'langchain-community@^0.2',
-    'langchain-aws',
-    'pypdf',
-    'pillow',
-    'pymupdf',
-    'reportlab',
-  ],
-  pocDescription:
-    'This POC demonstrates how to use the Amazon Bedrock Alt Text Generator to generate alt text for images in PDF documents.',
-  readme: {
-    fileWalkthrough: {
-      includeDefaults: true,
-      files: [
-        {
-          name: 'pdf_image_alt_text_generator/generator.py',
-          description:
-            'The is the logic that extracts the data from PDF and calls the Bedrock Model for inference',
-        },
-        {
-          name: 'pdf_image_alt_text_generator/download_results.py',
-          description:
-            'generates a PDF with all images and their alt text results, as well as input/output token usage, calculated in a table.',
-        },
-      ],
-    },
-  },
-}).synth();
-
-new StreamlitQuickStartPOC({
-  parentProject: project,
-  pocName: 'Amazon Bedrock Amazon Athena POC',
-  pocPackageName: 'amazon-bedrock-amazon-athena-poc',
-  readme: {
-    additionalPrerequisits: [
-      'Access to Amazon Athena and the ability to create an Amazon Athena database and tables.',
+pythonPocs.push(
+  new StreamlitQuickStartPOC({
+    parentProject: project,
+    pocName: 'Amazon Bedrock Alt Text Generator',
+    pocPackageName: 'amazon-bedrock-alt-text-generator',
+    additionalDeps: [
+      'langchain@^0.2',
+      'langchain-community@^0.2',
+      'langchain-aws',
+      'pypdf',
+      'pillow',
+      'pymupdf',
+      'reportlab',
     ],
-    pocGoal: {
-      overview:
+    pocDescription:
+    'This POC demonstrates how to use the Amazon Bedrock Alt Text Generator to generate alt text for images in PDF documents.',
+    readme: {
+      fileWalkthrough: {
+        includeDefaults: true,
+        files: [
+          {
+            name: 'pdf_image_alt_text_generator/generator.py',
+            description:
+            'The is the logic that extracts the data from PDF and calls the Bedrock Model for inference',
+          },
+          {
+            name: 'pdf_image_alt_text_generator/download_results.py',
+            description:
+            'generates a PDF with all images and their alt text results, as well as input/output token usage, calculated in a table.',
+          },
+        ],
+      },
+    },
+  }),
+);
+
+pythonPocs.push(
+  new StreamlitQuickStartPOC({
+    parentProject: project,
+    pocName: 'Amazon Bedrock Amazon Athena POC',
+    pocPackageName: 'amazon-bedrock-amazon-athena-poc',
+    readme: {
+      additionalPrerequisits: [
+        'Access to Amazon Athena and the ability to create an Amazon Athena database and tables.',
+      ],
+      pocGoal: {
+        overview:
         'The goal of this POC is to provide users with the abilitity to use Amazon Bedrock and generative AI to take natural language questions and transform them into relational database querties against Amazon Athena.\n' +
         'The POC comes with a basic frontend to help users stand up a proof-of-concept in just a few minutes.',
-      architectureImage: true,
-      flowSteps: [
-        'The user makes a request, asking a natural language question based on the database available in Amazon Athena to the GenAI app (app.py).',
-        'This natural language question is passed into Amazon Bedrock, which takes the natural language question and creates a SQL query (amazon_athena_bedrock_query.py).',
-        'The created SQL query is then executed against your Amazon Athena database to begin retrieving the data (amazon_athena_bedrock_query.py).',
-        'The data is retrieved from your Amazon Athena Database and is passed back into Amazon Bedrock, to generate a natural language answer based on the retrieved data (amazon_athena_bedrock_query.py).',
-        'The LLM returns a natural language response to the user through the streamlit frontend based on the retrieved data (app.py).',
-      ],
-    },
-    fileWalkthrough: {
-      files: [
-        {
-          name: 'amazon_athena_bedrock_query.py',
-          description:
+        architectureImage: true,
+        flowSteps: [
+          'The user makes a request, asking a natural language question based on the database available in Amazon Athena to the GenAI app (app.py).',
+          'This natural language question is passed into Amazon Bedrock, which takes the natural language question and creates a SQL query (amazon_athena_bedrock_query.py).',
+          'The created SQL query is then executed against your Amazon Athena database to begin retrieving the data (amazon_athena_bedrock_query.py).',
+          'The data is retrieved from your Amazon Athena Database and is passed back into Amazon Bedrock, to generate a natural language answer based on the retrieved data (amazon_athena_bedrock_query.py).',
+          'The LLM returns a natural language response to the user through the streamlit frontend based on the retrieved data (app.py).',
+        ],
+      },
+      fileWalkthrough: {
+        files: [
+          {
+            name: 'amazon_athena_bedrock_query.py',
+            description:
             'contains connectors into your Amazon Athena database and the interaction',
-        },
-        {
-          name: 'moma_examples.yaml',
-          description:
+          },
+          {
+            name: 'moma_examples.yaml',
+            description:
             'contains several samples prompts that will be used to implement a few-shot prompting technique.',
-        },
-      ],
-    },
-    extraSteps: [
-      {
-        instructions:
+          },
+        ],
+      },
+      extraSteps: [
+        {
+          instructions:
           'Create a .env file in the root folder of this POC. Within the .env file you just created you will need to configure the .env to contain:',
-        command: `profile_name=<AWS_CLI_PROFILE_NAME>
+          command: `profile_name=<AWS_CLI_PROFILE_NAME>
   \taws_access_key_id=<AWS_ACCESS_KEY_ID>
   \taws_secret_access_key=<AWS_SECRET_ACCESS_KEY>
   \tregion_name=<AWS_REGION>
   \tdatabase_name=<ATHENA_DATABASE_NAME>
   \ts3_staging_dir=<S3_STAGING_DIRECTORY_BUCKET_PATH>  example -> s3://sample-bucket/`,
-      },
-      {
-        instructions: `If you would like to use this repo with the sample data, you will need to upload the two sample data files found in the sample data directory as two individual tables to your Amazon Athena Database.
+        },
+        {
+          instructions: `If you would like to use this repo with the sample data, you will need to upload the two sample data files found in the sample data directory as two individual tables to your Amazon Athena Database.
 
 If you preferred to use your own database/tables in your Amazon Athena database, I would highly recommend reviewing the moma_examples.yaml file in the SampleData directory to see how prompts are constructed for this sample application and spend the time creating 5 - 10 prompts that resemble your dataset more closely.`,
-      },
+        },
+      ],
+    },
+    additionalDeps: [
+      'python-dotenv',
+      'langchain@^0.1',
+      'langchain-community',
+      'langchain-experimental',
     ],
-  },
-  additionalDeps: [
-    'python-dotenv',
-    'langchain@^0.1',
-    'langchain-community',
-    'langchain-experimental',
-  ],
-  pocDescription:
+    pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon Athena. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.',
-}).synth();
+  }));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock & Amazon RDS POC',
   pocPackageName: 'amazon-bedrock-amazon-rds-poc',
@@ -189,9 +196,9 @@ If you preferred to use your own database/tables in your Amazon RDS instance, I 
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock & Amazon Redshift POC',
   pocPackageName: 'amazon-bedrock-amazon-redshift-poc',
@@ -201,7 +208,7 @@ new StreamlitQuickStartPOC({
     'langchain-experimental',
   ],
   pocDescription:
-    "This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon Redshift. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.\n\n **Please Note: If you don't want to build this from scratch, Amazon Redshift now supports GenAI capabilities natively, more information on that can be found [here](https://aws.amazon.com/blogs/aws/amazon-redshift-adds-new-ai-capabilities-to-boost-efficiency-and-productivity/).**",
+    "This is sample code demonstrating the use of Amazon Bedrock and Generative AI to use natural language questions to query relational data stores, specifically Amazon Redshift. This example leverages the MOMA Open Source Database: https://github.com/MuseumofModernArt/collection.\n\n \t**Please Note: If you don't want to build this from scratch, Amazon Redshift now supports GenAI capabilities natively, more information on that can be found [here](https://aws.amazon.com/blogs/aws/amazon-redshift-adds-new-ai-capabilities-to-boost-efficiency-and-productivity/).**",
   readme: {
     pocGoal: {
       architectureImage: true,
@@ -264,9 +271,9 @@ If you preferred to use your own database/tables in your Amazon Redshift instanc
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Asynchronous Invocation POC',
   pocPackageName: 'amazon-bedrock-asynchronous-invocation-poc',
@@ -322,9 +329,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Chat POC',
   pocPackageName: 'amazon-bedrock-chat-poc',
@@ -410,9 +417,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Claude 3 Image Analysis POC',
   pocPackageName: 'amazon-bedrock-claude3-image-analysis-poc',
@@ -463,9 +470,9 @@ model_id = "anthropic.claude-3-sonnet-20240229-v1:0"`,
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Claude 3 Long Form Output POC',
   pocPackageName: 'amazon-bedrock-claude3-long-form-output-poc',
@@ -497,9 +504,9 @@ new StreamlitQuickStartPOC({
       { instructions: 'Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 23 in the prompt_finder_and_invoke_llm.py file to set the appropriate region:', command: 'bedrock = boto3.client(\'bedrock-runtime\', \'us-east-1\', endpoint_url=\'https://bedrock-runtime.us-east-1.amazonaws.com\')' },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Claude 3 Multi-Modal POC',
   pocPackageName: 'amazon-bedrock-claude3-multi-modal-poc',
@@ -531,17 +538,17 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>`,
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Claude 3 Streaming Response POC',
   pocPackageName: 'amazon-bedrock-claude3-streaming-response-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement streaming responses. The application is constructed with a simple streamlit frontend where users can input zero shot requests directly against the LLM of their choice, leveraging a streaming response technique.',
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Converse API POC',
   pocPackageName: 'amazon-bedrock-converse-api-poc',
@@ -579,9 +586,9 @@ response = bedrock.invoke_model_with_response_stream(body=json_prompt, modelId="
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Converse Stream API POC',
   pocPackageName: 'amazon-bedrock-converse-stream-api-poc',
@@ -616,9 +623,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock CSV Chatbot POC',
   pocPackageName: 'amazon-bedrock-csv-chatbot-poc',
@@ -661,9 +668,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Document Comparison POC',
   pocPackageName: 'amazon-bedrock-document-comparison-poc',
@@ -705,9 +712,9 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Aamazon Bedrock Document Generator POC',
   pocPackageName: 'amazon-bedrock-document-generator-poc',
@@ -737,9 +744,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock GenAI Dynamic Prompt Explained POC',
   pocPackageName: 'amazon-bedrock-genai-dynamic-prompting-explained-poc',
@@ -784,9 +791,9 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Guardrails POC',
   pocPackageName: 'amazon-bedrock-guardrails-poc',
@@ -824,9 +831,9 @@ guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Image Generation POC',
   pocPackageName: 'amazon-bedrock-image-generation-poc',
@@ -845,17 +852,17 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       ],
     },
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Knowledgebases RAG POC',
   pocPackageName: 'amazon-bedrock-knowledgebases-rag-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create vector embeddings for your data sources using Amazon Bedrock Knowledge bases with the ability ask questions against the stored documents. The application is constructed with a RAG based architecture where users can ask questions against the Knowledge bases.',
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock LangChain RAG POC',
   pocPackageName: 'amazon-bedrock-langchain-rag-poc',
@@ -952,9 +959,9 @@ If you want to use other Vector DBs that are not supported in Amazon Bedrock Kno
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Meeting Minutes Summarization POC',
   pocPackageName: 'amazon-bedrock-meeting-minutes-summarization-poc',
@@ -1003,18 +1010,26 @@ Update the S3 Bucket name with your bucket name in **line 21**
       }],
     },
   },
-}).synth();
+}));
 
 
 // Not actually a streamlit poc, so manually defined README
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Model Customization',
   pocPackageName: 'amazon-bedrock-model-customization',
+  pocDescription: 'This sample leverages Jupyter Notebooks to demonstrate how to customize bedrock models.',
+  readme: {
+    pocGoal: {
+      flowSteps: [],
+      overview: '',
+      architectureImage: false,
+    },
+  },
   skipApp: true,
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Model Evaluation Data Prep Tool',
   pocPackageName: 'amazon-bedrock-model-eval-poc',
@@ -1046,9 +1061,9 @@ new StreamlitQuickStartPOC({
       }],
     },
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Model Playground POC',
   pocPackageName: 'amazon-bedrock-model-playground-poc',
@@ -1083,9 +1098,9 @@ region_name=us-east-1 (region of choice)`,
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock RAG with Kendra POC',
   pocPackageName: 'amazon-bedrock-rag-kendra-poc',
@@ -1148,9 +1163,9 @@ on data sources feel free to refer to this [documentation](https://docs.aws.amaz
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock RAG with OpenSearch Serverless POC',
   pocPackageName: 'amazon-bedrock-rag-opensearch-serverless-poc',
@@ -1228,9 +1243,9 @@ As soon as you are satisfied with the configuration, you can simply run the file
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Semantic Cache POC',
   pocPackageName: 'amazon-bedrock-semantic-cache-poc-main',
@@ -1321,9 +1336,9 @@ Please note that only specific models can be used with Amazon Bedrock Knowledge 
 1. Amazon Bedrock Converse API - Supported [models](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html) and model features
 2. Amazon Bedrock Knowledge Bases - Supported [models](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-supported.html) by action`,
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Speech to Text POC',
   pocPackageName: 'amazon-bedrock-speech-to-text-chat-poc',
@@ -1375,9 +1390,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Streaming Response POC',
   pocPackageName: 'amazon-bedrock-streaming-response-poc',
@@ -1413,9 +1428,9 @@ This repo comes with a basic frontend to help users stand up a proof of concept 
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Summarization of Long Documents POC',
   pocPackageName: 'amazon-bedrock-summarization-long-document-poc',
@@ -1458,9 +1473,9 @@ save_folder=<PATH_TO_ROOT_OF_THIS_REPO>`,
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Task Classification POC',
   pocPackageName: 'amazon-bedrock-task-classification',
@@ -1496,9 +1511,9 @@ This repo comes with a basic front end to help users stand up a proof of concept
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Text Extraction POC',
   pocPackageName: 'amazon-bedrock-text-extraction-poc',
@@ -1532,9 +1547,9 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Translation POC',
   pocPackageName: 'amazon-bedrock-translation-poc',
@@ -1586,22 +1601,23 @@ new StreamlitQuickStartPOC({
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Video Chapter Creator POC',
   pocPackageName: 'amazon-bedrock-video-chapter-creator-poc',
   additionalDeps: ['langchain@^0.1', 'pandas', 'opensearch-py', 'thefuzz'],
   pocDescription:
-    "This is sample code demonstrating the use of Amazon Transcribe, Amazon OpenSearch Serverless, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample. The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in `.srt` format, you can skip transcribing and jump straight into generating chapters.\n\nThe sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.",
+    `This is sample code demonstrating the use of Amazon Transcribe, Amazon OpenSearch Serverless, Amazon Bedrock and Generative AI, to a implement video chapter generator and video search sample.
+    The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in \`.srt\` format, you can skip transcribing and jump straight into generating chapters.\n\n
+    The sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.`,
   readme: {
     pocGoal: {
       overview: `The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to create video chapters and searching those chapters. 
-This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
- The application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in \`.srt\` format, you can skip transcribing and jump straight into generating chapters.
-
-The sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.
+      \tThis repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
+      \tThe application is constructed with a simple streamlit frontend where users can upload a video that will be stored, transcribed and have searchable chapters generated. Additionally, if you have videos already uploaded to S3 and have subtitles for the video already created in \`.srt\` format, you can skip transcribing and jump straight into generating chapters.
+      \t\tThe sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you've provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.
 `,
       architectureImage: true,
       flowSteps: [
@@ -1643,9 +1659,9 @@ Open the \`environment.toml\` file and fill in the properties with your resource
       },
     ],
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock PowerPoint Generator',
   pocPackageName: 'amazon-bedrock-powerpoint-generator-poc',
@@ -1668,9 +1684,9 @@ new StreamlitQuickStartPOC({
         'The goal of this POC is to showcase leveraging Generative AI for to create both the content for a presentation and also the background research queries to support the content generation.',
     },
   },
-}).synth();
+}));
 
-new StreamlitQuickStartPOC({
+pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
   pocName: 'Amazon Bedrock Intelligent Document Processing (IDP) POC',
   pocPackageName: 'amazon-bedrock-intelligent-document-processing-poc',
@@ -1776,7 +1792,14 @@ new StreamlitQuickStartPOC({
       ],
     },
   },
-}).synth();
+}));
+
+const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];
+for (const poc of pythonPocs) {
+  pythonPocReadmeDetails.push(poc.readmeDetails);
+  poc.synth();
+}
+
 
 /** END OF PYTHON POCS */
 
@@ -1784,7 +1807,7 @@ new StreamlitQuickStartPOC({
  * .NET POCs START
  */
 
-const dotNetPOCs = new DotNetQuickStartPOC(project, 'DotNetPOCs');
+const dotNetPOCs = new DotNetQuickStartPOCs();
 
 dotNetPOCs.addPoc({
   pocName: 'Amazon Bedrock Converse API POC',
@@ -1815,5 +1838,11 @@ dotNetPOCs.addPoc({
   pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra.using Amazon Bedrock SDK for .NET. The application is constructed with a simple blazor front-end where users can ask questions against documents stored in Amazon Kendra.',
   imagePath: 'genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Rag.Kendra.Poc/images/demo.png',
 });
+
+/**
+ * End .NET POCs
+ */
+
+new READMEComponent(project, 'RootREADME', pythonPocReadmeDetails, dotNetPOCs.dotNetPocs).synthesize();
 
 project.synth();
