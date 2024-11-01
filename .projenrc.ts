@@ -29,6 +29,16 @@ const project = new typescript.TypeScriptProject({
     'temp/',
     'cdk.out',
   ],
+  tsconfig: {
+    compilerOptions: {
+      rootDir: '.',
+      sourceRoot: '.',
+    },
+    include: [
+      'genai-quickstart-pocs-python/**/*',
+      'projenrc/**/*',
+    ],
+  },
 });
 
 const pythonPocs: Array<StreamlitQuickStartPOC> = [];
