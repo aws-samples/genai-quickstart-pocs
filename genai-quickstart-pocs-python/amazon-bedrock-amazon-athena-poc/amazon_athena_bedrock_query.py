@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-import yaml
 import boto3
 import json
 import time
@@ -14,11 +13,15 @@ bedrock_client = boto3.client(
     service_name="bedrock-runtime",
     region_name=os.getenv('region_name'),
     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    aws_session_token=os.getenv("AWS_SESSION_TOKEN") # Comment this line if you are not using temporary session token
 )
 
+# Define Bedrock Model
+MODEL_ID = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
 # Executing the SQL database chain with the users question
-def athena_answer(question):
+def get_athena_query(question):
     """
     This function collects all necessary information to generate the SQL Query 
     a natural language question in and returning a generated SQL query.
@@ -141,7 +144,7 @@ def athena_answer(question):
     json_prompt = json.dumps(prompt)    
 
     # invoking Claude 3.5, passing in our prompt
-    response = bedrock_client.invoke_model(body=json_prompt, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0",
+    response = bedrock_client.invoke_model(body=json_prompt, modelId=MODEL_ID,
                                     accept="application/json", contentType="application/json")
     # getting the response from Claude3 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())
@@ -208,7 +211,7 @@ def get_athena_answer(question, query):
     json_prompt = json.dumps(prompt)    
 
     # invoking Claude3, passing in our prompt
-    response = bedrock_client.invoke_model(body=json_prompt, modelId="anthropic.claude-3-5-sonnet-20240620-v1:0",
+    response = bedrock_client.invoke_model(body=json_prompt, modelId=MODEL_ID,
                                     accept="application/json", contentType="application/json")
     # getting the response from Claude3.5 and parsing it to return to the end user
     response_body = json.loads(response.get('body').read())

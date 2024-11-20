@@ -1,5 +1,5 @@
 import streamlit as st
-from amazon_athena_bedrock_query import athena_answer
+from amazon_athena_bedrock_query import get_athena_query
 from amazon_athena_bedrock_query import get_athena_answer
 
 # title of the streamlit app
@@ -29,7 +29,7 @@ if question := st.chat_input("Ask about your stored data that can be accessed by
         # putting a spinning icon to show that the query is in progress
         with st.status("Determining the best possible answer!", expanded=True) as status:
             # passing the question into the athena_answer function, which later invokes the llm
-            query = athena_answer(question)
+            query = get_athena_query(question)
             answer = get_athena_answer(question, query)
             # writing the answer to the front end
             message_placeholder.markdown(f""" Answer:
