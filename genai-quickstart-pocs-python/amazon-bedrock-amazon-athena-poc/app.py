@@ -1,5 +1,6 @@
 import streamlit as st
-from amazon_athena_bedrock_query import athena_answer
+from amazon_athena_bedrock_query import get_athena_query
+from amazon_athena_bedrock_query import get_athena_answer
 
 # title of the streamlit app
 st.title(f""":rainbow[Natural Language Query Against Amazon Athena]""")
@@ -28,15 +29,16 @@ if question := st.chat_input("Ask about your stored data that can be accessed by
         # putting a spinning icon to show that the query is in progress
         with st.status("Determining the best possible answer!", expanded=True) as status:
             # passing the question into the athena_answer function, which later invokes the llm
-            answer = athena_answer(question)
+            query = get_athena_query(question)
+            answer = get_athena_answer(question, query)
             # writing the answer to the front end
             message_placeholder.markdown(f""" Answer:
-                            {answer[1]}
+                            {answer}
                             """)
             # writing the SQL query in code front end style on the sidebar
             with st.sidebar:
                 st.title(f""":green[The SQL command to get this answer was:]""")
-                st.code(answer[0], language="sql")
+                st.code(query, language="sql")
             # showing a completion message to the front end
             status.update(label="Question Answered...", state="complete", expanded=False)
     # appending the results to the session state
