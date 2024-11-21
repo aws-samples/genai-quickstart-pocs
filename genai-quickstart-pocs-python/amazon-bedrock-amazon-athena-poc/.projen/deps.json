@@ -9,19 +9,6 @@
       "type": "runtime"
     },
     {
-      "name": "langchain-community",
-      "type": "runtime"
-    },
-    {
-      "name": "langchain-experimental",
-      "type": "runtime"
-    },
-    {
-      "name": "langchain",
-      "version": "^0.1",
-      "type": "runtime"
-    },
-    {
       "name": "python-dotenv",
       "type": "runtime"
     },
