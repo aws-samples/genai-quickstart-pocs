@@ -1,7 +1,7 @@
-- answer: There are 15086 rows in the artists table.
+- answer: There are 15089 rows in the artists table.
   input: How many rows are in the artists table?
   sql_cmd: SELECT count(*) FROM artists;
-  sql_result: '[(15086,)]'
+  sql_result: '[(15089,)]'
   table_info: |
     CREATE TABLE artists
     (
@@ -24,8 +24,8 @@
 
 - answer: There are 2 artist names starts with 'A'.
   input: How many artist names starts with 'A'?
-  sql_cmd: SELECT * FROM artists WHERE full_name LIKE 'a%';
-  sql_result: '[(2,)]'
+  sql_cmd: SELECT COUNT(artist_id) as count_artists FROM artists WHERE LOWER(full_name) LIKE 'a%';
+  sql_result: '[(1126,)]'
   table_info: |
     CREATE TABLE artists
     (
@@ -49,7 +49,7 @@
 - answer: There are 839 artists whose nationality is French.
   input: How many artists are there where nationality is French?
   sql_cmd: SELECT count(*) FROM artists WHERE nationality = 'French';
-  sql_result: '[(839,)]'
+  sql_result: '[(833,)]'
   table_info: |
     table_info: |
     CREATE TABLE artists
@@ -146,14 +146,14 @@
     103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
     10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
     */
-- answer: There are 1278 artworks by Pablo Picasso.
+- answer: There are 894 artworks by Pablo Picasso.
   input: How many artworks are by the artist 'Pablo Picasso'?
   sql_cmd: |
     SELECT count(*)
     FROM artworks
     JOIN artists ON artists.artist_id = artworks.artist_id
     WHERE artists.full_name = 'Pablo Picasso';
-  sql_result: '[(1278,)]'
+  sql_result: '[(894,)]'
   table_info: |
     table_info: |
     CREATE TABLE artists
@@ -281,10 +281,10 @@
     103321	"Untitled (page from Sump)"	25520	1994	"Page with chromogenic color print and text"	"12 x 9 1/2' (30.5 x 24.1 cm)"	"2006-05-11"	"E.T. Harmax Foundation Fund"	"N"	"Photography"	"Photograph"	"415.2006.12"			"30.4801"		"24.13"
     10	"The Manhattan Transcripts Project, New York, New York, Episode 1: The Park"	7056		"Gelatin silver photograph"	"14 x 18' (35.6 x 45.7 cm)"	"1995-01-17"	"Purchase and partial gift of the architect in honor of Lily Auchincloss"	"Y"	"Architecture & Design"	"Architecture"	"3.1995.11"			"35.6"		"45.7"
     */
-- answer: There are 1588 artworks classified as sculptures.
+- answer: There are 908 artworks classified as sculptures.
   input: How many artworks are classified as sculptures?
   sql_cmd: SELECT count(*) FROM artworks WHERE classification = 'Sculpture';
-  sql_result: '[(1588, )]'
+  sql_result: '[(908, )]'
   table_info: |
     table_info: |
     CREATE TABLE artists
@@ -340,13 +340,13 @@
     */
 - answer: |
     The five most common artwork classifications are:
-    1. Photograph - 26541
-    2. Print - 25426
-    3. Illustrated_Book - 23716
-    4. Not_Assigned - 11034
-    5. Drawing - 10549
+    1. Photograph: 16,177 items
+    2. Print: 15,224 items
+    3. Prints & Illustrated Books: 14,388 items
+    4. Illustrated Book: 9,783 items
+    5. Drawing: 7,076 items
 
-  input: What the five most common artwork classifications?
+  input: What are the five most common artwork classifications?
   sql_cmd: |
     SELECT classification, COUNT(classification)
     FROM artworks
