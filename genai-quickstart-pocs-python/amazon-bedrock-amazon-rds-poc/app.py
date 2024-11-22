@@ -1,5 +1,6 @@
 import streamlit as st
-from amazonRDS_bedrock_query import rds_answer
+from amazonRDS_bedrock_query import get_sql_query
+from amazonRDS_bedrock_query import get_rds_answer
 
 # title of the streamlit app
 st.title(f""":rainbow[Natural Language Query Against Amazon Relational Database Service]""")
@@ -28,15 +29,16 @@ if question := st.chat_input("Ask about your data stored in Amazon Relational Da
         # putting a spinning icon to show that the query is in progress
         with st.status("Determining the best possible answer!", expanded=False) as status:
             # passing the question into the rds_answer function, which later invokes the llm
-            answer = rds_answer(question)
+            query = get_sql_query(question)
+            answer = get_rds_answer(question, query)
             # writing the answer to the front end
             message_placeholder.markdown(f""" Answer:
-                            {answer[1]}
+                            {answer}
                             """)
             # writing the SQL query in code front end style on the sidebar
             with st.sidebar:
                 st.title(f""":green[The SQL command to get this answer was:]""")
-                st.code(answer[0], language="sql")
+                st.code(query, language="sql")
             # showing a completion message to the front end
             status.update(label="Question Answered...", state="complete", expanded=False)
     # appending the results to the session state
