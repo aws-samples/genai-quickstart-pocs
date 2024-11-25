@@ -54,6 +54,7 @@ def load_documents_and_images(uploaded_files: list) -> {list[Document], list[str
         elif uploaded_file_name.endswith(".txt"):
             docs = load_text_document(file_path)
             documents.extend(docs)
+        delete_file(file_path)
     print(f"Loaded {len(documents)} documents")
     return documents, images
 
@@ -141,3 +142,34 @@ def load_image(image_path: str):
     """
     loader = AmazonTextractPDFLoader(image_path)
     return loader.load()
+
+def delete_file(filepath):
+    """
+    Deletes the file and all empty parent directories up to /temp/
+    
+    Args:
+        filepath: Path to file to delete
+        
+    Example:
+        For path 'ABC/temp/dir1/file.pdf':
+        - Deletes file.pdf
+        - Removes dir1 if empty
+        - Stops at temp directory
+    """
+    if not os.path.exists(filepath):
+        return
+        
+    # Delete the file first
+    os.remove(filepath)
+    
+    # Get directory containing the file
+    current_dir = os.path.dirname(filepath)
+    
+    # Keep deleting parent dirs until we hit 'temp' or root
+    while current_dir and os.path.basename(current_dir) != 'temp':
+        try:
+            os.rmdir(current_dir)  # Only removes if empty
+            current_dir = os.path.dirname(current_dir)
+        except OSError:
+            # Directory not empty or other error, stop here
+            break
