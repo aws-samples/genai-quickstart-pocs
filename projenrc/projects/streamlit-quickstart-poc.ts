@@ -121,7 +121,7 @@ class POCProjectFiles extends Component {
     }
     new HOWTO(this.project).synthesize();
     if (!this.pocProps.skipApp) {
-      new AppDotPy(this.project);
+      new AppDotPy(this.project, this.pocProps).synthesize();
     }
 
   }
@@ -163,11 +163,14 @@ class HOWTO extends SampleFile {
 }
 
 class AppDotPy extends SampleFile {
-  constructor(scope: Project) {
+  constructor(scope: Project, props: StreamlitQuickStartPOCProps) {
     const APP_TEMPLATE = path.join(__dirname, 'resources', 'streamlit-app.py');
     const appTemplate = fs.readFileSync(APP_TEMPLATE, 'utf-8');
+    const content = nunjucks.renderString(appTemplate, {
+      outDir: path.join('genai-quickstart-pocs-python', props.pocPackageName, 'app.py'),
+    });
     super(scope, 'app.py', {
-      contents: appTemplate,
+      contents: content,
     });
   }
 }
