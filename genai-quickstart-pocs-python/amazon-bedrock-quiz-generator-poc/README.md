@@ -2,16 +2,22 @@
 
 ## Overview of Solution
 
-This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a Quiz Generator. The application is constructed with a simple streamlit frontend where users can upload one or more documents (`.pdf`, `.docx`, `.doc`, `.csv`, `.md`, `.png`, `.jpg`) and generate a quiz with anywhere from 5 to 100 questions (multi-choice / true or false). 
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement an interactive quiz generator.
 
 ![A gif of a screen recording show casing the Amazon Bedrock Quiz Generator POC functionality](images/demo.gif)
+
+
+## Goal of this POC
+The goal of this POC is to showcase leveraging Generative AI to create a quiz based on a document. The solution will extract the text from the document and generate questions based on the content.
+
+
 
 
 # How to use this Repo:
 
 ## Prerequisites:
 
-1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock & Amazon Textract.
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
 1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
 
@@ -45,3 +51,4 @@ This should start the POC and open a browser window to the application.
 
 ## How-To Guide
 For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
+

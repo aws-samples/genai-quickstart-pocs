@@ -212,6 +212,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
     
 
+1. **Amazon Bedrock Quiz Generator POC**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement an interactive quiz generator.
+    
+
 1. **Amazon Bedrock Intelligent Document Processing (IDP) POC**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&amp;A to satisfy a broad range of use cases.
     

@@ -1730,6 +1730,34 @@ pythonPocs.push(new StreamlitQuickStartPOC({
 
 pythonPocs.push(new StreamlitQuickStartPOC({
   parentProject: project,
+  pocName: 'Amazon Bedrock Quiz Generator POC',
+  pocPackageName: 'amazon-bedrock-quiz-generator-poc',
+  additionalDeps: [
+    'langchain@^0.3',
+    'langchain-aws',
+    'langchain-community',
+    'pypdf',
+    'unstructured[md]',
+    'unstructured[all-docs]',
+    'nltk',
+    'pydantic',
+    'uuid',
+    'jinja2',
+    'amazon-textract-caller',
+    'amazon-textract-textractor',
+  ],
+  pocDescription: 'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement an interactive quiz generator.',
+  readme: {
+    pocGoal: {
+      architectureImage: false,
+      overview:
+        'The goal of this POC is to showcase leveraging Generative AI to create a quiz based on a document. The solution will extract the text from the document and generate questions based on the content.',
+    },
+  },
+}));
+
+pythonPocs.push(new StreamlitQuickStartPOC({
+  parentProject: project,
   pocName: 'Amazon Bedrock Intelligent Document Processing (IDP) POC',
   pocPackageName: 'amazon-bedrock-intelligent-document-processing-poc',
   pocDescription:
