@@ -37,19 +37,20 @@ parser = PydanticOutputParser(pydantic_object=ModelOutput)
 
 def save_pdf_file(file):
     logger.debug(f"Saving PDF file {file}")
-    if not os.path.exists("files"):
-        os.makedirs("files")
-    if os.path.exists(os.path.join("files", file.name.replace(" ", "_"))):
-        os.remove(os.path.join("files", file.name.replace(" ", "_")))
-    with open(os.path.join("files", file.name.replace(" ", "_")), "wb") as f:
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
+    if os.path.exists(os.path.join("temp", file.name.replace(" ", "_"))):
+        os.remove(os.path.join("temp", file.name.replace(" ", "_")))
+    with open(os.path.join("temp", file.name.replace(" ", "_")), "wb") as f:
         f.write(file.getvalue())
 
 
 def load_pdf(file_path):
-    file_path = os.path.join("files", file_path).replace(" ", "_")
+    file_path = os.path.join("temp", file_path).replace(" ", "_")
     loader = PyPDFLoader(file_path)
     data = loader.load()
     image_map = load_pdf_images(file_path)
+    delete_uploaded_file(file_path)
     return data, image_map
 
 
@@ -57,9 +58,6 @@ def load_pdf_images(file_path):
     logger.debug(f"Loading PDF images from {file_path}")
     image_map = []
     pdf_file = fitz.open(file_path)
-    images_path = os.path.join(file_path, "images").replace(".pdf", "_pdf")
-    if not os.path.exists(images_path):
-        os.makedirs(images_path)
 
     for page_index in range(len(pdf_file)):
         page = pdf_file[page_index]
@@ -246,3 +244,11 @@ def strip_text_around_braces(text):
         )
 
     return text[start_index : end_index + 1]
+
+
+def delete_uploaded_file(filepath):
+    """
+    Deletes the uploaded file from the temp directory
+    """
+    if os.path.exists(filepath):
+        os.remove(filepath)

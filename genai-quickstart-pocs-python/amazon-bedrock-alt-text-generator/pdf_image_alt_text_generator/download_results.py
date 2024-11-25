@@ -9,9 +9,10 @@ import base64
 from io import BytesIO
 import os
 from uuid import uuid4
-from pypdf import PdfMerger, PdfReader, PdfWriter
+from pypdf import PdfMerger, PdfReader
 from reportlab.platypus import Table, TableStyle
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,10 @@ logger = logging.getLogger(__name__)
 def generate_pdf(alt_text_results):
     try:
         logger.debug("Starting PDF Generation")
-        if not os.path.exists("files"):
-            os.makedirs("files")
+        if not os.path.exists("temp"):
+            os.makedirs("temp")
         rand = str(uuid4())
-        output_path = os.path.join("files", rand)
+        output_path = os.path.join("temp", rand)
         logger.debug(f"Output path = {output_path}")
         os.makedirs(output_path, exist_ok=True)
         styles = getSampleStyleSheet()
@@ -230,6 +231,38 @@ def create_merged_pdf(input_pdf, alt_text_pdf):
     merger = PdfMerger()
     merger.append(PdfReader(input_pdf))
     merger.append(PdfReader(alt_text_pdf))
-    output_pdf = f"files/{uuid4()}_merged.pdf"
+    output_pdf = f"temp/{uuid4()}_merged.pdf"
     merger.write(output_pdf)
     return output_pdf
+
+
+def delete_generated_file(filepath):
+    """
+    Deletes the file and all empty parent directories up to /temp/
+    
+    Args:
+        filepath: Path to file to delete
+        
+    Example:
+        For path 'ABC/temp/dir1/file.pdf':
+        - Deletes file.pdf
+        - Removes dir1 if empty
+        - Stops at temp directory
+    """
+    if not os.path.exists(filepath):
+        return
+        
+    # Delete the file first
+    os.remove(filepath)
+    
+    # Get directory containing the file
+    current_dir = os.path.dirname(filepath)
+    
+    # Keep deleting parent dirs until we hit 'temp' or root
+    while current_dir and os.path.basename(current_dir) != 'temp':
+        try:
+            os.rmdir(current_dir)  # Only removes if empty
+            current_dir = os.path.dirname(current_dir)
+        except OSError:
+            # Directory not empty or other error, stop here
+            break

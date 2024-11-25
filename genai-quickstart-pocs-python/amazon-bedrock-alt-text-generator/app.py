@@ -127,12 +127,16 @@ if st.session_state["prompt_data"] is not None:
                         with open(
                             st.session_state["alt_text_pdf"], "rb"
                         ) as output_file:
-                            st.download_button(
-                                label="Download PDF with Alt Text & Images",
-                                data=output_file,
-                                file_name="alt-text-ouput.pdf",
-                                mime="application/pdf",
-                            )
+                            pdf_data = output_file.read()
+                        
+                        download_results.delete_generated_file(st.session_state['alt_text_pdf'])
+                        
+                        st.download_button(
+                            label="Download PDF with Alt Text & Images",
+                            data=pdf_data,
+                            file_name="alt-text-ouput.pdf",
+                            mime="application/pdf",
+                        )
 
         except Exception as e:
             st.error(f"Error: {e}")
