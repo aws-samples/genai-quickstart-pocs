@@ -1,11 +1,16 @@
-# Amazon Bedrock PowerPoint Generator POC
+# Amazon Bedrock PowerPoint Generator
 
 ## Overview of Solution
 
 This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
 
-![A gif of a screen recording show casing the Amazon Bedrock PowerPoint Generator POC functionality](images/demo.gif)
-*Note: Screen recording playback speed is faster than how it actually functions.*
+![A gif of a screen recording show casing the Amazon Bedrock PowerPoint Generator functionality](images/demo.gif)
+
+
+## Goal of this POC
+The goal of this POC is to showcase leveraging Generative AI for to create both the content for a presentation and also the background research queries to support the content generation.
+
+
 
 
 # How to use this Repo:
@@ -46,3 +51,4 @@ This should start the POC and open a browser window to the application.
 
 ## How-To Guide
 For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
+

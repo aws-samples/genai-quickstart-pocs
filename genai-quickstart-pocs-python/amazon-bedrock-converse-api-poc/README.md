@@ -1,84 +1,92 @@
-# Amazon-Bedrock-Converse-API-POC
+# Amazon Bedrock Converse API POC
+
+## Overview of Solution
 
 This is sample code demonstrating the use of the Amazon Bedrock Converse API to help with conversation oriented use cases that require context preservation. The application is constructed with a simple streamlit frontend where users can input zero shot requests to Claude 3, with the Amazon Bedrock Converse API in place to allow users to ask context aware questions.
 
-![Alt text](images/demo.gif)
-# **Goal of this Repo:**
+![A gif of a screen recording show casing the Amazon Bedrock Converse API POC functionality](images/demo.gif)
 
-The goal of this repo is to provide users the ability to use the Amazon Bedrock Converse API to demonstrate its ability to facilitate conversational GenAI use cases that require context awareness.
-This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
 
-The architecture and flow of the sample application will be:
+## Goal of this POC
+The goal of this repo is to provide users the ability to use Amazon Bedrock leveraging its streaming response capabilities. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
 
-![Alt text](images/architecture.png "POC Architecture")
+The architecture & flow of the POC is as follows:
+![POC Architecture & Flow](images/architecture.png 'POC Architecture')
 
-When a user interacts with the GenAI app, the flow is as follows:
 
-1. The user inserts a text question into to the streamlit app. (app.py).
-2. The streamlit app, takes the text inserted by the user and is passed into an Amazon Bedrock Model using the Converse API. The users question is answered, and both the question and answer are stored. (invoke_model_conversation_api.py).
-3. The answer to the user's question is returned to the front-end application, and allows users to ask follow up questions as the Converse API help preserve context throughout the users conversation (app.py).
+When a user interacts with the POC, the flow is as follows:
+
+1. The user inserts a text question into to the streamlit app. (`app.py`)
+
+1. The streamlit app, takes the text and passes it into Amazon Bedrock. (`invoke_llm_with_streaming.py`)
+
+1. A natural language response is streamed to the end user, answering a question in general. (`app.py`)
+
+
+
 
 # How to use this Repo:
 
 ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials.
-2. Create an Amazon Bedrock Guardrail, information on how to do that can be found [here](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-create.html) 
-3. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3100/).
-so
-## Step 1:
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
-The first step of utilizing this repo is performing a git clone of the repository.
+1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
 
-```
-git clone https://github.com/aws-samples/genai-quickstart-pocs.git
-```
 
-After cloning the repo onto your local machine, open it up in your favorite code editor. The file structure of this repo is broken into 3 key files,
-the app.py file, the invoke_model_conversation_api.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app). The
-invoke_model_conversation_api.py file houses the logic of the application, including the Amazon Bedrock Converse API invocation.
-The requirements.txt file contains all necessary dependencies for this sample application to work.
 
-## Step 2:
+## Steps
+1. Clone the repository to your local machine.
 
-Set up a python virtual environment in the root of this specific POCs directory and ensure that you are using Python 3.10. This can be done by running the following commands:
+    ```
+    git clone https://github.com/aws-samples/genai-quickstart-pocs.git
+    ```
+    
+    The file structure of this POC is broken into these files
+    
+    * `requirements.txt` - all the requirements needed to get the sample application up and running.
+    * `app.py` - The streamlit frontend
+    
+    
+    * `invoke_llm_with_streaming.py` - Houses the invocation of Amazon Bedrock with a streaming response, and the basic prompt formatting logic.
+    
+    
 
-```
-pip install virtualenv
-python3.10 -m venv venv
-```
+1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
+    ```zsh
+    cd genai-quickstart-pocs-python/amazon-bedrock-converse-api-poc
+    ```
 
-The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
-After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
+1. Configure the python virtual environment, activate it & install project dependencies. *Note: each POC has it's own dependencies & dependency management.*
+    ```zsh
+    python -m venv .env
+    source .env/bin/activate
+    pip install -r requirements.txt
+    ```
 
-```
-source venv/bin/activate
-```
+1. Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:
 
-After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this specific POCs directory in your terminal:
+    ```zsh
+    profile_name=<AWS_CLI_PROFILE_NAME>
+    ```
 
-```
-pip install -r requirements.txt
-```
 
-## Step 3:
+1. Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 15 in the invoke_llm_with_streaming.py file to set the region or line 51 to change to another Claude 3 model such as Haiku:
 
-Now that the requirements have been successfully installed in your virtual environment we can begin configuring environment variables.
-You will first need to create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:
+    ```zsh
+    bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com')
 
-```
-profile_name=<CLI_profile_name>
-```
+response = bedrock.invoke_model_with_response_stream(body=json_prompt, modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                                 accept="application/json", contentType="application/json")
+    ```
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock!
 
-## Step 4:
+1. Start the POC from your terminal
+    ```zsh
+    streamlit run app.py
+    ```
+This should start the POC and open a browser window to the application. 
 
-As soon as you have successfully cloned the repo, created a virtual environment, activated it, installed the requirements.txt, and created a .env file, your application should be ready to go.
-To start up the application with its basic frontend you simply need to run the following command in your terminal while in the root of the repositories' directory:
+## How-To Guide
+For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
 
-```
-streamlit run app.py
-```
-
-As soon as the application is up and running in your browser of choice you can begin asking text questions and generating natural language responses having the Amazon Bedrock Converse API manage conversation history and context awareness.

@@ -1,95 +1,101 @@
-# Amazon-Bedrock-meeting-minutes-summarization
+# Amazon Bedrock Meeting Minutes Summarization POC
+
+## Overview of Solution
 
 This application demonstrates using Amazon Bedrock and Amazon Transcribe to summarize meeting recordings. The streamlit frontend allows users to upload audio, video, or text files of meeting recording. Amazon Transcribe generates a transcript of recording and sent it Amazon Bedrock for summarization of the key discussion points. Users can then download the  generated summarized meeting notes.
 
-![Alt text](images/demo.gif)
+![A gif of a screen recording show casing the Amazon Bedrock Meeting Minutes Summarization POC functionality](images/demo.gif)
 
-# **Goal of this Repo:**
 
+## Goal of this POC
 The goal of this repo is to provide users the ability to use Amazon Bedrock and Amazon Transcribe to create Meeting minutes from audio ,video recordings. If audio 
 It show case the capablitiy to upload Audio, Video of meeting recording and create summary of meeting.
 
-The architecture and flow of the sample application will be:
+The architecture & flow of the POC is as follows:
+![POC Architecture & Flow](images/architecture.png 'POC Architecture')
 
-![Alt text](images/architecture.PNG "POC Architecture")
 
-When a user interacts with the GenAI app, the flow is as follows:
+When a user interacts with the POC, the flow is as follows:
 
 1. The user uploads a meeting recording video or audio or .txt file using Upload File button.
-2. Meeting recording is already present in Amazon Transcribe Job History Transcription text is retrieved from Job History
-3. If Meeting recording is not present in Amazon Transcribe Job history, recording file is temporary upload on S3 and Sent to Amazon Transcribe Job to generate transcription text 
-4. Transcription text is sent to Amazon Bedrock LLM for summarization
-5. Summarization notes are updated in streamlit app
-6. User can download the meeting notes
+
+1. Meeting recording is already present in Amazon Transcribe Job History Transcription text is retrieved from Job History
+
+1. If Meeting recording is not present in Amazon Transcribe Job history, recording file is temporary upload on S3 and Sent to Amazon Transcribe Job to generate transcription text 
+
+1. Transcription text is sent to Amazon Bedrock LLM for summarization
+
+1. Summarization notes are updated in streamlit app
+
+1. User can download the meeting notes
+
+
 
 
 # How to use this Repo:
 
 ## Prerequisites:
 
-1. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
-2. Amazon Transcribe Access
-3. S3 Bucket with permissions to upload/delete objects. This is require to upload the Transcriptions.
-4. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
-## Step 1:
+1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
 
-The first step of utilizing this repo is performing a git clone of the repository.
 
-```
-git clone https://github.com/aws-samples/genai-quickstart-pocs.git
-```
+1. Access to Amazon Transcribe via your CLI Credentials
 
-After cloning the repo onto your local machine, open it up in your favorite code editor. 
-## Step 2:
+1. Access to S3 Bucket with put,get,delete object permissions via your CLI credentials and accessible by Transcribe
 
-Set up a python virtual environment in the root directory of the repository and ensure that you are using Python 3.9. This can be done by running the following commands:
 
-```
-pip install virtualenv
-python3.10 -m venv venv
-```
+## Steps
+1. Clone the repository to your local machine.
 
-The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
-After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
+    ```
+    git clone https://github.com/aws-samples/genai-quickstart-pocs.git
+    ```
+    
+    The file structure of this POC is broken into these files
+    
+    * `requirements.txt` - all the requirements needed to get the sample application up and running.
+    * `app.py` - The streamlit frontend
+    
+    
+    * `llm.py` - This file has the logic to interact with LLM using Amazon Bedrock API. 
+    
+    * `transcribe_util.py` - This is the file that contains the logic to interact with Amazon Transcribe like starting Transcribe Job, getting Transcription job history, getting transcription text.
+    
+    * `s3_util.py` - This is the file that contains the logic to interact with S3 bucket.
+    
+    
 
-```
-cd venv
-cd bin
-source activate
-cd ../../
-```
+1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
+    ```zsh
+    cd genai-quickstart-pocs-python/amazon-bedrock-meeting-minutes-summarization-poc
+    ```
 
-After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this repos directory in your terminal:
+1. Configure the python virtual environment, activate it & install project dependencies. *Note: each POC has it's own dependencies & dependency management.*
+    ```zsh
+    python -m venv .env
+    source .env/bin/activate
+    pip install -r requirements.txt
+    ```
 
-```
-pip install -r requirements.txt
-```
-
-## Step 3:
-
-Now that the requirements have been successfully installed in your virtual environment we can configure S3 Bucket required for temporary uploading the file
+1. Configure S3 Bucket required for temporary uploading the file
 
 Update the S3 Bucket name with your bucket name in **line 21**
 
 **app.py** :
-```
-S3_BUCKET_NAME = "<YOUR BUCKET NAME>"
-```
+
+    ```zsh
+    S3_BUCKET_NAME = "<YOUR BUCKET NAME>"
+    ```
 
 
-## Step 4: **Running the UI**
-```
-streamlit run app.py
-```
+1. Start the POC from your terminal
+    ```zsh
+    streamlit run app.py
+    ```
+This should start the POC and open a browser window to the application. 
 
-# POC Environment
-This section will walk you through the various files that exist in this POC directory.
-
-* `app.py` - This the main application that generates the UI through streamlit.
-* `llm.py` - This file has the logic to interact with LLM using Amazon Bedrock API. 
-* `transcribe_util.py` - This is the file that contains the logic to interact with Amazon Transcribe like starting Transcribe Job, getting Transcription job history, getting transcription text.
-* `s3_util.py` - This is the file that contains the logic to interact with S3 bucket.
-* `requirements.txt` - The python packages required for the app to function. You will reference this during setup
- 
+## How-To Guide
+For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
 

@@ -1,183 +1,120 @@
-# Amazon-Bedrock-RAG-Kendra-POC
+# Amazon Bedrock RAG with Kendra POC
+
+## Overview of Solution
 
 This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a RAG based architecture with Amazon Kendra. The application is constructed with a simple streamlit frontend where users can ask questions against documents stored in Amazon Kendra.
 
-![Alt text](images/demo.gif)
+![A gif of a screen recording show casing the Amazon Bedrock RAG with Kendra POC functionality](images/demo.gif)
 
-# **Goal of this Repo:**
 
+## Goal of this POC
 The goal of this repo is to provide users the ability to use Amazon Bedrock and generative AI to take natural language questions, and answer questions against indexed documents in Amazon Kendra.
 This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.
 
-The architecture and flow of the sample application will be:
+The architecture & flow of the POC is as follows:
+![POC Architecture & Flow](images/architecture.png 'POC Architecture')
 
-![Alt text](images/kendra-rag-architecture.png "POC Architecture")
 
-When a user interacts with the GenAI app, the flow is as follows:
+When a user interacts with the POC, the flow is as follows:
 
-1. The user makes a request to the GenAI app (app.py).
-2. The app issues a search query to the Amazon Kendra index based on the user request. (kendra_bedrock_query.py)
-3. The index returns search results with excerpts of relevant documents from the ingested data. (kendra_bedrock_query.py)
-4. The app sends the user request and along with the data retrieved from the index as context in the LLM prompt. (kendra_bedrock_query.py)
-5. The LLM returns a succinct response to the user request based on the retrieved data. (kendra_bedrock_query.py)
-6. The response from the LLM is sent back to the user. (app.py)
+1. The user makes a request to the GenAI app (`app.py`).
+
+1. The app issues a search query to the Amazon Kendra index based on the user request. (`kendra_bedrock_query.py`)
+
+1. The index returns search results with excerpts of relevant documents from the ingested data. (`kendra_bedrock_query.py`)
+
+1. The app sends the user request and along with the data retrieved from the index as context in the LLM prompt. (`kendra_bedrock_query.py`)
+
+1. The LLM returns a succinct response to the user request based on the retrieved data. (`kendra_bedrock_query.py`)
+
+1. The response from the LLM is sent back to the user. (app.py)
+
+
+
 
 # How to use this Repo:
 
 ## Prerequisites:
 
-1. Amazon Kendra Index has been created (IF NOT ALREADY CREATED it is covered in step 3).
-2. Amazon Kendra Index has a datasource configured and synced (IF NOT ALREADY CREATED it is covered in step 4).
-3. Amazon Bedrock Access and CLI Credentials. Ensure that the proper FM model access is provided in the Amazon Bedrock console
-4. Appropriate permissions to configure Amazon Kendra Index and Amazon Kendra Data Sources.
-5. Ensure Python 3.10 installed on your machine, it is the most stable version of Python for the packages we will be using, it can be downloaded [here](https://www.python.org/downloads/release/python-3911/).
+1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
-## Step 1:
+1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
 
-The first step of utilizing this repo is performing a git clone of the repository.
 
-```
-git clone https://github.com/aws-samples/genai-quickstart-pocs.git
-```
+1. Access to create and configure Amazon Kendra Indexes
 
-After cloning the repo onto your local machine, open it up in your favorite code editor.The file structure of this repo is broken into 3 key files,
-the app.py file, the kendra_bedrock_query.py file, and the requirements.txt. The app.py file houses the frontend application (a streamlit app).
-The kendra_bedrock_query.py file houses the logic of the application, including the Kendra Retrieve API calls and Amazon Bedrock API invocations.
-The requirements.txt file contains all necessary dependencies for this sample application to work.
 
-## Step 2:
+## Steps
+1. Clone the repository to your local machine.
 
-Set up a python virtual environment in the root directory of the repository and ensure that you are using Python 3.9. This can be done by running the following commands:
+    ```
+    git clone https://github.com/aws-samples/genai-quickstart-pocs.git
+    ```
+    
+    The file structure of this POC is broken into these files
+    
+    * `requirements.txt` - all the requirements needed to get the sample application up and running.
+    * `app.py` - The streamlit frontend
+    
+    
+    * `kendra_bedrock_query` - The logic of the application, including the Kendra Retrieve API calls and Amazon Bedrock API invocations.
+    
+    
 
-```
-pip install virtualenv
-python3.10 -m venv venv
-```
+1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
+    ```zsh
+    cd genai-quickstart-pocs-python/amazon-bedrock-rag-kendra-poc
+    ```
 
-The virtual environment will be extremely useful when you begin installing the requirements. If you need more clarification on the creation of the virtual environment please refer to this [blog](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/).
-After the virtual environment is created, ensure that it is activated, following the activation steps of the virtual environment tool you are using. Likely:
+1. Configure the python virtual environment, activate it & install project dependencies. *Note: each POC has it's own dependencies & dependency management.*
+    ```zsh
+    python -m venv .env
+    source .env/bin/activate
+    pip install -r requirements.txt
+    ```
 
-```
-cd venv
-cd bin
-source activate
-cd ../../
-```
+1. **Create your Amazon Kendra Index (if you don&#39;t already have one)**
+        		1. Go to Amazon Kendra in your AWS Console and click on &quot;Create an Index&quot; ![Alt text](images/Amazon_kendra_homepage.png &quot;Kendra Homepage&quot;)
+        		2. Fill out the &quot;Specify Index details&quot; page, and provide Kendra a role that can access CloudWatch Logs. ![Alt text](images/kendra_specify_index_details.png &quot;Kendra Specify Details Page&quot;)
+        		3. Fill out the &quot;Configure Access Control&quot; page ![Alt text](images/kendra_access_control.png &quot;Kendra Access Control&quot;)
+        		4. Select the appropriate provisioning editions and create ![Alt text](images/specify_provisioning_kendra.png &quot;Kendra Edition Selection&quot;)
+        		5. You can find your Kendra Index ID in the console as seen in the screenshot: ![Alt text](images/kendra_screen_shot.png &quot;Kendra Index&quot;)
 
-After your virtual environment has been created and activated, you can install all the requirements found in the requirements.txt file by running this command in the root of this repos directory in your terminal:
 
-```
-pip install -r requirements.txt
-```
+1. Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:
 
-## Step 3:
-
-Now that the requirements have been successfully installed in your virtual environment we can begin configuring environment variables.
-You will first need to create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:
-
-```
-profile_name=<aws_cli_profile_name>
+    ```zsh
+    profile_name=<aws_cli_profile_name>
 kendra_index=<kendra_index_ID>
-```
+    ```
 
-Please ensure that your AWS CLI Profile has access to Amazon Bedrock, and your Amazon Kendra Index has been created within your AWS account!
 
-**_If you don't have your Amazon Kendra Index created yet, please follow the steps below:_**
+1. Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 11 in the kendra_bedrock_query.py file to change the region:
 
-1. Go to Amazon Kendra in your AWS Console and click on "Create an Index" ![Alt text](images/Amazon_kendra_homepage.png "Kendra Homepage")
-2. Fill out the "Specify Index details" page, and provide Kendra a role that can access CloudWatch Logs. ![Alt text](images/kendra_specify_index_details.png "Kendra Specify Details Page")
-3. Fill out the "Configure Access Control" page ![Alt text](images/kendra_access_control.png "Kendra Access Control")
-4. Select the appropriate provisioning editions and create ![Alt text](images/specify_provisioning_kendra.png "Kendra Edition Selection")
-5. You can find your Kendra Index ID in the console as seen in the screenshot: ![Alt text](images/kendra_screen_shot.png "Kendra Index")
+    ```zsh
+    bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
+    ```
 
-Depending on the region and model that you are planning to use Amazon Bedrock in, you may need to reconfigure line 11 in the kendra_bedrock_query.py file to change the region:
 
-```
-bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock.us-east-1.amazonaws.com')
-```
-
-Since this repository is configured to leverage Claude 3, the prompt payload is structured in a different format. If you wanted to leverage other Amazon Bedrock models you can replace the invokeLLM() function in the kendra_bedrock_query.py to look like:
-
-```python
-def invokeLLM(question, kendra_response):
-    """
-    This function takes in the question from the user, along with the Kendra responses as context to generate an answer
-    for the user on the frontend.
-    :param question: The question the user is asking that was asked via the frontend input text box.
-    :param kendra_response: The response from the Kendra document retrieve query, used as context to generate a better
-    answer.
-    :return: Returns the final answer that will be provided to the end-user of the application who asked the original
-    question.
-    """
-    # Setup Bedrock client
-    bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com')
-    # configure model specifics such as specific model
-    modelId = 'anthropic.claude-v2'
-    accept = 'application/json'
-    contentType = 'application/json'
-    # prompt that is passed into the LLM with the Kendra Retrieval context and question
-    # TODO: FEEL FREE TO EDIT THIS PROMPT TO CATER TO YOUR USE CASE
-    prompt_data = f"""\n\nHuman:    
-Answer the following question to the best of your ability based on the context provided.
-Provide an answer and provide sources and the source link to where the relevant information can be found. Include this at the end of the response
-Do not include information that is not relevant to the question.
-Only provide information based on the context provided, and do not make assumptions
-Only Provide the source if relevant information came from that source in your answer
-Use the provided examples as reference
-###
-Question: {question}
-
-Context: {kendra_response}
-
-###
-
-\n\nAssistant:
-
-"""
-    # body of data with parameters that is passed into the bedrock invoke model request
-    # TODO: TUNE THESE PARAMETERS AS YOU SEE FIT
-    body = json.dumps({"prompt": prompt_data,
-                       "max_tokens_to_sample": 8191,
-                       "temperature": 0,
-                       "top_k": 250,
-                       "top_p": 0.5,
-                       "stop_sequences": []
-                       })
-    # Invoking the bedrock model with your specifications
-    response = bedrock.invoke_model(body=body,
-                                    modelId=modelId,
-                                    accept=accept,
-                                    contentType=contentType)
-    # the body of the response that was generated
-    response_body = json.loads(response.get('body').read())
-    # retrieving the specific completion field, where you answer will be
-    answer = response_body.get('completion')
-    # returning the answer as a final result, which ultimately gets returned to the end user
-    return answer
-```
-
-You can then change the modelId variable to the model of your choice.
-
-## Step 4:
-
-Now that you have cloned the repo, created a virtual environment, set the environment variables, and provisioned your Kendra index, it is now time
-to sync a data source within Kendra. As seen in the screenshot below, you can configure the specific datasource that you would like to sync. For more information
+1. Time to sync a data source within Kendra. As seen in the screenshot below, you can configure the specific datasource that you would like to sync. For more information
 on data sources feel free to refer to this [documentation](https://docs.aws.amazon.com/kendra/latest/dg/hiw-data-source.html).
 
-![Alt text](images/kendra_data_source.png "Kendra Data Source")
+![Alt text](images/kendra_data_source.png &quot;Kendra Data Source&quot;)
 
-**_If you don't have your own sample data, or sample data source you can leverage the sample datasource within Amazon Kendra data sources as shown below:_**
+**_If you don&#39;t have your own sample data, or sample data source you can leverage the sample datasource within Amazon Kendra data sources as shown below:_**
 
-1. On the data sources tab, click on the add dataset option as seen in the image: ![Alt text](images/sample_data_sources.png "Kendra Sample Data Source")
-2. Then define the data sources attributes such as the data source name and click add data source: ![Alt text](images/sample_data_source_configuration.png "Kendra Sample Data Source Config")
-3. This will automatically create the data source and triggers a sync. You will now be able to ask questions against Sample AWS Documentation that covers Kendra, EC2, S3 and Lambda in your front end application.
+    		1. On the data sources tab, click on the add dataset option as seen in the image: ![Alt text](images/sample_data_sources.png &quot;Kendra Sample Data Source&quot;)
+    		2. Then define the data sources attributes such as the data source name and click add data source: ![Alt text](images/sample_data_source_configuration.png &quot;Kendra Sample Data Source Config&quot;)
+    		3. This will automatically create the data source and triggers a sync. You will now be able to ask questions against Sample AWS Documentation that covers Kendra, EC2, S3 and Lambda in your front end application.
 
-## Step 5:
 
-As soon as you have successfully synced your data source with your Kendra Index, your application should be ready to go. To start up the application with its basic frontend you simply need to run the following command in your terminal while in the root of the repositories' directory:
 
-```
-streamlit run app.py
-```
+1. Start the POC from your terminal
+    ```zsh
+    streamlit run app.py
+    ```
+This should start the POC and open a browser window to the application. 
 
-As soon as the application is up and running in your browser of choice you can begin asking natural language questions against the documents stored within your Amazon Kendra index.
+## How-To Guide
+For a details how-to guide for using this poc, visit [HOWTO.md](HOWTO.md)
+
