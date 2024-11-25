@@ -3,6 +3,7 @@ amazon-textract-caller
 amazon-textract-textractor
 boto3
 botocore
+docx2txt
 jinja2
 langchain-aws
 langchain-community

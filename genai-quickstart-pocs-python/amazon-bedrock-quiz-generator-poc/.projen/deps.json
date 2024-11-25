@@ -17,6 +17,10 @@
       "type": "runtime"
     },
     {
+      "name": "docx2txt",
+      "type": "runtime"
+    },
+    {
       "name": "jinja2",
       "type": "runtime"
     },

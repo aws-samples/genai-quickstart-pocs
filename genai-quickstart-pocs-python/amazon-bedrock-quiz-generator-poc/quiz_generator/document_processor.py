@@ -14,6 +14,8 @@ import base64
 
 
 temp_storage_path = os.path.join(os.path.dirname(__file__), "../temp")
+if not os.path.exists(temp_storage_path):
+    os.makedirs(temp_storage_path)
 
 
 def load_documents_and_images(uploaded_files: list) -> {list[Document], list[str]}:

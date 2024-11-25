@@ -1743,6 +1743,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
     'pydantic',
     'uuid',
     'jinja2',
+    'docx2txt',
     'amazon-textract-caller',
     'amazon-textract-textractor',
   ],
