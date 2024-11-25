@@ -6,6 +6,9 @@ RUN useradd --user-group --system --no-log-init pocuser
 
 WORKDIR /app
 
+RUN mkdir -p /app/temp && \
+    chown pocuser:pocuser /app/temp
+
 COPY ${POC_PATH} .
 
 RUN pip install -r requirements.txt

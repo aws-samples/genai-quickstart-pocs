@@ -61,6 +61,7 @@ export class POCConstruct extends Construct {
     const taskDefinition = new FargateTaskDefinition(this, 'POCTaskDefinition', {
       memoryLimitMiB: 2048,
       cpu: 1024,
+      ephemeralStorageGiB: 50,
       runtimePlatform: {
         cpuArchitecture: CpuArchitecture.ARM64,
       },
