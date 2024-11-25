@@ -96,6 +96,20 @@ export class POCManager {
       process.exit(1);
     }
 
+    // Create a virtual environment if it doesn't exist
+    const venvPath = path.join(pocPath, '.env');
+    if (!fs.existsSync(venvPath)) {
+      console.log(chalk.blue('Creating virtual environment...'));
+      execSync('python3 -m venv venv', { cwd: pocPath, stdio: 'inherit' });
+    }
+
+    // Activate the virtual environment and install requirements
+    console.log(chalk.blue('Installing requirements...'));
+    execSync(`${path.join(venvPath, 'bin', 'pip')} install -r requirements.txt`, {
+      cwd: pocPath,
+      stdio: 'inherit',
+    });
+
     // Execute projen start
     console.log(chalk.blue('\nStarting POC...\n'));
 
@@ -103,7 +117,7 @@ export class POCManager {
       cwd: pocPath,
       stdio: 'inherit',
       shell: true,
-      env: { ...process.env },
+      env: { ...process.env, VIRTUAL_ENV: venvPath, PATH: `${path.join(venvPath, 'bin')}:${process.env.PATH}` },
     });
 
     projenProcess.on('error', (error) => {
