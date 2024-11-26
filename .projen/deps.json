@@ -1,6 +1,11 @@
 {
   "dependencies": [
     {
+      "name": "@stylistic/eslint-plugin",
+      "version": "^2",
+      "type": "build"
+    },
+    {
       "name": "@types/node",
       "version": "ts5.5",
       "type": "build"
@@ -11,12 +16,12 @@
     },
     {
       "name": "@typescript-eslint/eslint-plugin",
-      "version": "^7",
+      "version": "^8",
       "type": "build"
     },
     {
       "name": "@typescript-eslint/parser",
-      "version": "^7",
+      "version": "^8",
       "type": "build"
     },
     {
@@ -38,7 +43,7 @@
     },
     {
       "name": "eslint",
-      "version": "^8",
+      "version": "^9",
       "type": "build"
     },
     {
@@ -57,6 +62,10 @@
     {
       "name": "aws-cdk-lib",
       "version": "^2.162.1",
+      "type": "runtime"
+    },
+    {
+      "name": "chalk",
       "type": "runtime"
     },
     {

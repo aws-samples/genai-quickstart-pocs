@@ -46,6 +46,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'inquirer',
     'tsx',
     'ora',
+    'chalk'
   ],
   devDeps: [
     '@types/nunjucks',
