@@ -81,7 +81,8 @@ export class DeploymentManager {
 
   public async configureLocalEnv(poc: POC): Promise<void> {
     try {
-      const envPath = `${poc.path}/.env`;
+      const envPath = `${poc.path}/venv`;
+      // check if python venv exists
       const extensionStackName = `${poc.stackName}`;
       const outputs = execSync(
         `aws cloudformation describe-stacks --stack-name ${extensionStackName}`,

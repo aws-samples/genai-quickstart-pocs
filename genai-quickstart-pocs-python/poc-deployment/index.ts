@@ -2,7 +2,7 @@ import { CfnOutput, Stack } from 'aws-cdk-lib';
 import { Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { POCConstruct } from './poc-construct';
-import { loadPOCExtension, pocIsExtended } from './poc-extender';
+import { loadPOCExtension, POCExtender, pocIsExtended } from './poc-extender';
 
 export { POCExtensionConstruct, POCExtender, POCExtenderProps } from './poc-extender';
 
@@ -19,6 +19,7 @@ interface POCStackProps {
 export class POCStack extends Stack {
   private readonly stackProps: POCStackProps;
   private pocMainConstruct: Construct;
+  public pocExtension?: POCExtender;
   constructor(app: Construct, id: string, stackProps: POCStackProps) {
     super(app, id);
     // console.log(stackProps);
@@ -57,9 +58,8 @@ export class POCStack extends Stack {
 
     // Here we check if the specific POC has additional infrastructure defined to support POC functionality
     if (pocIsExtended(this.stackProps.pocPackageName)) {
-      console.log('POC has extended infrastructure. Loading extension');
       //Now we load the extension in
-      const pocExtension = loadPOCExtension(this.stackProps.pocPackageName, this, {
+      this.pocExtension = loadPOCExtension(this.stackProps.pocPackageName, this, {
         logsBucket: accessLogsBucket,
         pocName: this.stackProps.pocName,
         pocPackageName: this.stackProps.pocPackageName,
@@ -67,12 +67,8 @@ export class POCStack extends Stack {
         vpc: this.pocMainConstruct instanceof(POCConstruct) ? this.pocMainConstruct.vpc : undefined,
         pocDescription: this.stackProps.pocDescription ?? '',
       });
-      console.log('Extension loaded. Extending POC Stack.');
-      // Finally, we extend the POC Infrastructure, which adds any additional CDK Constructs.
-      // If there are any permissions needed for the POC to work with resources, it will be defined in the extension.
-      // If there are any environment variables to add to the POC, it will also be defined in the extension.
-      pocExtension.extendPOCInfrastructure(this.pocMainConstruct);
-      console.log('POC Stack Extension Synthesized');
+      console.log('POC Extended')
+
     } else {
       console.log('POC does not have extended infrastructure');
     }

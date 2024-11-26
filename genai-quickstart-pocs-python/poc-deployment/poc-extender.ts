@@ -4,7 +4,6 @@ import { TaskDefinition } from 'aws-cdk-lib/aws-ecs';
 import { Policy } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import importSync from 'import-sync';
 
 
 export interface POCExtenderProps {
@@ -18,19 +17,32 @@ export interface POCExtenderProps {
 }
 
 export abstract class POCExtender extends Construct {
+  /**
+   * The extended POC construct
+   */
   private extendedPOCConstruct: POCExtensionConstruct | undefined;
-  abstract extendPOCInfrastructure(scope: Construct): void
+  /**
+   * Whether the extension is only for deployment purposes or is needed for run-local mode too
+   */
+  public abstract extensionForDeploymentOnly: boolean;
+  constructor(scope: Construct, id: string, props: POCExtenderProps) {
+    super(scope, id);
+    this.extendedPOCConstruct = new POCExtensionConstruct(scope, `${props.pocName}-ext`, props);
+  }
 
-  public get extendedInfrastructure() {
+  /**
+   * Getter for the extended POC construct
+   */
+  public get pocExtendedConstruct(): POCExtensionConstruct {
     if (!this.extendedPOCConstruct) {
-      throw new Error('Extended POC Infrastructure could not be returned!');
+      throw new Error('POCExtensionConstruct not initialized');
     }
-    return this.extendPOCInfrastructure;
+    return this.extendedPOCConstruct;
   }
 }
 
 // Type guard to ensure the imported module has the correct class
-function isPOCExtensionConstructor(obj: any): obj is { new(): POCExtender } {
+export function isPOCExtensionConstructor(obj: any): obj is { new(): POCExtender } {
   if (!obj || typeof obj !== 'function') {
     return false;
   }
@@ -40,8 +52,7 @@ function isPOCExtensionConstructor(obj: any): obj is { new(): POCExtender } {
     const instance = new obj();
     // Check if the instance has the required abstract method
     return (
-      instance instanceof POCExtender &&
-      typeof instance.extendPOCInfrastructure === 'function'
+      instance instanceof POCExtender
     );
   } catch (error) {
     console.error('Error creating instance:', error);
@@ -53,25 +64,25 @@ function isPOCExtensionConstructor(obj: any): obj is { new(): POCExtender } {
 export function pocIsExtended(packageName: string): boolean {
   try {
     const filePath = path.join(__dirname, '..', packageName, 'cdk', 'poc-extension.ts');
-    console.log(`Checking for extension at path: ${filePath}`);
+    // console.log(`Checking for extension at path: ${filePath}`);
 
     // Import the module
-    const module = importSync(filePath);
+    const module = require(filePath);
 
     if (!module) {
       console.log(`No module exported from ${filePath}`);
       return false;
     }
 
-    if (!module.POCExtension) {
-      console.log('No POCExtension export found in module');
-      return false;
-    }
+    // if (!module.POCExtension) {
+    //   console.log('No POCExtension export found in module');
+    //   return false;
+    // }
 
-    const isValid = isPOCExtensionConstructor(module.POCExtension);
-    console.log(`Extension validation result: ${isValid}`);
+    // const isValid = isPOCExtensionConstructor(module.POCExtension);
+    // console.log(`Extension validation result: ${isValid}`);
 
-    return isValid;
+    return true;
   } catch (error) {
     return false;
   }
@@ -87,17 +98,17 @@ export function loadPOCExtension(packageName: string, scope: Construct, props: P
       throw new Error(`No valid extension found for POC: ${packageName}`);
     }
 
-    const module = importSync(filePath);
+    const module = require(filePath);
 
     if (!module.POCExtension) {
       throw new Error(`Module ${filePath} does not export POCExtension class`);
     }
 
-    if (!isPOCExtensionConstructor(module.POCExtension)) {
-      throw new Error('Exported POCExtension does not extend POCExtender');
-    }
+    // if (!isPOCExtensionConstructor(module.POCExtension)) {
+    //   throw new Error('Exported POCExtension does not extend POCExtender');
+    // }
 
-    return new module.POCExtension(scope, `${packageName}-ext`, props);
+    return new module.POCExtension(scope, `${packageName}-ext-temp`, props);
   } catch (error: any) {
     throw new Error(`Failed to load POC extension for ${packageName}: ${error.message}`);
   }

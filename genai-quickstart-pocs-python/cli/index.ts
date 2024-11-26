@@ -35,13 +35,13 @@ async function main() {
           name: 'selectedPoc',
           message: 'Select a POC to run:',
           choices: pocs.map(poc => ({
-            name: `${poc.name}${poc.hasExtension ? ' (Has Extension)' : ''}`,
+            name: `${poc.name}${(poc.hasExtension && !poc.extensionForDeploymentOnly) ? ' (requires AWS resource deployment first)' : ''}`,
             value: poc,
           })),
         },
       ]);
 
-      if (selectedPoc.hasExtension) {
+      if (selectedPoc.hasExtension  && !selectedPoc.extensionForDeploymentOnly) {
         const extensionStack = `${selectedPoc.stackName}`;
         const isDeployed = pocManager.isStackDeployed(extensionStack);
 
@@ -100,7 +100,7 @@ async function main() {
           name: 'selectedPoc',
           message: 'Select a POC to deploy:',
           choices: pocs.map(poc => ({
-            name: `${poc.name}${poc.hasExtension ? ' (Requires AWS Resources Deployed)' : ''}`,
+            name: `${poc.name}${poc.hasExtension ? ' (Requires additional AWS resources)' : ''}`,
             value: poc,
           })),
         },

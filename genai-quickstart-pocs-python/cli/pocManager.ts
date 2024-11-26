@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 import { POC } from './types';
+import { App } from 'aws-cdk-lib';
+import { POCStack } from '../poc-deployment';
 
 export class POCManager {
   private readonly pocsDirectory: string;
@@ -22,17 +24,54 @@ export class POCManager {
       );
 
     return pocDirs.map((dir) => {
-      const hasExtension = fs.existsSync(
-        path.join(this.pocsDirectory, dir, 'cdk', 'poc-extension.ts'),
-      );
-      return {
-        name: dir,
-        hasExtension,
-        path: path.join(this.pocsDirectory, dir),
-        stackName: `${dir}`,
-        requiredEnvVars: this.getRequiredEnvVars(dir),
-      };
-    });
+      const pocPath = dir;
+      const extensionPath = path.join(this.pocsDirectory, pocPath, 'cdk', 'poc-extension.ts')
+      const hasExtension = fs.existsSync(extensionPath);
+
+      if (hasExtension) {
+        try{
+          const importedModule = require(extensionPath);
+        // Create temporary construct to check property
+        const POCExtension = importedModule?.POCExtension;
+        let extensionForDeploymentOnly = false;
+        
+        if (POCExtension) {
+          // Create temporary instance with minimal required props
+          const pocApp = new App();
+          const pocPackageName = pocPath;
+          const tempStack = new POCStack(pocApp, pocPath, {
+            pocName: pocPackageName,
+            pocPackageName: pocPackageName,
+            extensionOnly: true,
+          })
+
+
+          extensionForDeploymentOnly = tempStack.pocExtension?.extensionForDeploymentOnly ?? false;
+        }
+      
+        return {
+          name: dir,
+          hasExtension,
+          extensionForDeploymentOnly,
+          path: path.join(this.pocsDirectory, dir),
+          stackName: `${dir}`,
+          requiredEnvVars: this.getRequiredEnvVars(dir),
+        };
+        } catch (error) {
+          console.error('Error importing module:', error);
+        }
+        
+      } 
+        return {
+          name: dir,
+          hasExtension,
+          extensionForDeploymentOnly: false,
+          path: path.join(this.pocsDirectory, dir),
+          stackName: `${dir}`,
+          requiredEnvVars: this.getRequiredEnvVars(dir),
+        };
+      }
+    );
   }
 
   private getRequiredEnvVars(pocName: string): string[] {
@@ -97,7 +136,7 @@ export class POCManager {
     }
 
     // Create a virtual environment if it doesn't exist
-    const venvPath = path.join(pocPath, '.env');
+    const venvPath = path.join(pocPath, 'venv');
     if (!fs.existsSync(venvPath)) {
       console.log(chalk.blue('Creating virtual environment...'));
       execSync('python3 -m venv venv', { cwd: pocPath, stdio: 'inherit' });

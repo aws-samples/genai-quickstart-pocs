@@ -4,31 +4,26 @@ import { S3StaticWebsiteOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { OpenSearchServerlessVectorCollection } from './oss-collection-construct';
-import { POCExtensionConstruct, POCExtender, POCExtenderProps } from '../../poc-deployment';
+import { POCExtender, POCExtenderProps } from '../../poc-deployment';
 
 
 export class POCExtension extends POCExtender {
-  private pocExtendedConstruct: POCExtensionConstruct;
-  private pocExtenderProps: POCExtenderProps;
+  public extensionForDeploymentOnly: boolean = false;
   constructor(scope: Construct, id: string, props: POCExtenderProps) {
-    super(scope, id);
-    this.pocExtenderProps = props;
-    this.pocExtendedConstruct = new POCExtensionConstruct(scope, 'VideoChapterEditorPOCExtension', props);
-  }
-  public extendPOCInfrastructure(): void {
+    super(scope, id, props);
     const collectionName = 'video-chapter-editor-collection';
     const collectionIndexName = 'chapters';
     const ossCollection = new OpenSearchServerlessVectorCollection(this.pocExtendedConstruct, 'VideoChapterEditorCollection', {
       collectionName,
       indexName: collectionIndexName,
-      taskRoleArn: this.pocExtenderProps.pocTaskDefinition?.taskRole.roleArn,
+      taskRoleArn: props.pocTaskDefinition?.taskRole.roleArn,
     });
     const staticBucket = new Bucket(this.pocExtendedConstruct, 'POCStaticContentBucket', {
       encryption: BucketEncryption.S3_MANAGED,
       enforceSSL: true,
     });
-    if (this.pocExtenderProps.pocTaskDefinition) {
-      staticBucket.grantReadWrite(this.pocExtenderProps.pocTaskDefinition.taskRole);
+    if (props.pocTaskDefinition) {
+      staticBucket.grantReadWrite(props.pocTaskDefinition.taskRole);
     }
 
     const cloudfront = new Distribution(this.pocExtendedConstruct, 'VideoChapterEditorCloudfront', {
@@ -47,6 +42,6 @@ export class POCExtension extends POCExtender {
       BEDROCK_REGION: Stack.of(this.pocExtendedConstruct).region,
 
     });
-
   }
+  
 }
