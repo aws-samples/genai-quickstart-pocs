@@ -15,9 +15,9 @@ boto3.setup_default_session(profile_name=os.getenv('profile_name'))
 # increasing the timeout period when invoking bedrock
 config = botocore.config.Config(connect_timeout=120, read_timeout=120)
 # instantiating the Polly client
-polly = boto3.client('polly', region_name='us-east-1')
+polly = boto3.client('polly')
 # instantiating the Transcribe client
-transcribe = boto3.client('transcribe', region_name='us-east-1')
+transcribe = boto3.client('transcribe')
 
 # Title displayed on the streamlit web app
 st.title(f""":rainbow[Bedrock Speech-to-Text Chat]""")

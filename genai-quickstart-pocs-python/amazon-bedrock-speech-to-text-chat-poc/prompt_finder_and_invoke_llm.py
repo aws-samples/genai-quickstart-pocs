@@ -15,12 +15,11 @@ from langchain_community.vectorstores import Chroma
 # loading in environment variables
 load_dotenv()
 
-# configuring our CLI profile name
-boto3.setup_default_session(profile_name=os.getenv('profile_name'))
+
 # increasing the timeout period when invoking bedrock
 config = botocore.config.Config(connect_timeout=120, read_timeout=120)
 # instantiating the bedrock client
-bedrock = boto3.client('bedrock-runtime', 'us-east-1', endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com', config=config)
+bedrock = boto3.client('bedrock-runtime', config=config)
 
 
 def load_samples():
