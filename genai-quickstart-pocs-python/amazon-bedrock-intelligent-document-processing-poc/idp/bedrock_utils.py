@@ -11,8 +11,8 @@ load_dotenv()
 bucket_name = os.getenv("save_folder")
 
 # Initialize a Bedrock Runtime client in the AWS Region of your choice.
-client = boto3.client("bedrock-runtime", region_name="us-west-2")
-s3_client = boto3.client("s3", region_name="us-east-1")
+client = boto3.client("bedrock-runtime")
+s3_client = boto3.client("s3")
 
 # Set the model ID, e.g., Claude 3 Sonnet.
 model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
