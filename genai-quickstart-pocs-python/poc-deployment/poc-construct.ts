@@ -4,7 +4,7 @@ import { FlowLogDestination, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { DockerImageAsset, Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { Cluster, ContainerImage, CpuArchitecture, FargateTaskDefinition, LogDriver, TaskDefinition } from 'aws-cdk-lib/aws-ecs';
 import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
-import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { AccountRootPrincipal, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -45,6 +45,11 @@ export class POCConstruct extends Construct {
         },
       },
     });
+    this.accessLogsBucket.addToResourcePolicy(new PolicyStatement({
+      actions: ['s3:PutObject'],
+      resources: [`${this.accessLogsBucket.bucketArn}/vpc-flow-logs/*`],
+      principals: [new AccountRootPrincipal()],
+    }));
 
 
     /**
