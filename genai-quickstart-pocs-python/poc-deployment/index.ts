@@ -52,7 +52,6 @@ export class POCStack extends Stack {
       });
       console.log('Main POC Construct Synthesized. Checking if POC has extended infrastructure');
     } else {
-      console.log('Synthesizing POC Extension only');
       this.pocMainConstruct = this;
     }
 
@@ -67,7 +66,6 @@ export class POCStack extends Stack {
         vpc: this.pocMainConstruct instanceof(POCConstruct) ? this.pocMainConstruct.vpc : undefined,
         pocDescription: this.stackProps.pocDescription ?? '',
       });
-      console.log('POC Extended')
 
     } else {
       console.log('POC does not have extended infrastructure');
