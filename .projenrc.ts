@@ -1357,9 +1357,6 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   additionalDeps: [
     'sounddevice',
     'amazon-transcribe',
-    'langchain@^0.1',
-    'langchain-community',
-    'langchain-experimental',
   ],
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a ChatGPT alternative using speech-to-text prompts. The application is constructed with a simple streamlit frontend where users can provide zero shot requests using their computer’s microphone and listen to responses to satisfy a broad range of use cases.',
