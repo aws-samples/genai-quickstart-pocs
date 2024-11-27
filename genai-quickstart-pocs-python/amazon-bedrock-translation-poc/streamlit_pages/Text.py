@@ -1,9 +1,9 @@
 import streamlit as st
-from amazon_bedrock_translation import lst_langs, lst_models, transl_txt_bedrock, parse_xml
+from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_txt_bedrock, analyze_responses, parse_xml
 
-# title of the streamlit page
+# title of the streamlit app
 st.title(f""":rainbow[Translation Helper]""")
-st.subheader("Input a file, source language, and target language to view translation")
+st.subheader("Input text, source language, and target language to view translation")
 
 ###############
 # Sidebar UI #
@@ -12,7 +12,7 @@ st.subheader("Input a file, source language, and target language to view transla
 # List available languages
 langs = lst_langs()
 
-# Select a source and a target language
+# Select a source language
 st.sidebar.selectbox(
     label='Source Language',
     options=langs,
@@ -21,6 +21,7 @@ st.sidebar.selectbox(
     key='src_lang'
 )
 
+# Select a target language
 st.sidebar.selectbox(
     label='Target Language',
     options=langs,
@@ -52,48 +53,35 @@ div.stButton > button:first-child {
 if st.sidebar.button('Clear'):
     st.session_state.messages = []
 
-st.sidebar.markdown("""
-### What is the purpose of this demo?                    
+#####################
+# Text Translation #
+#####################
 
-This is a simple app powered by Streamlit that 1/ takes in a file 2/ translates it to a target language using Amazon Bedrock 
-            
-""")
-
-###########
-# Chat UI #
-###########
-
-# Initialize history
+# configuring values for session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Prompt user for input
-uploaded_file = st.file_uploader("Choose a text file", type=["txt"])
+if prompt := st.chat_input():
 
-if uploaded_file is not None:
-    # Read the contents of the uploaded file
-    file_contents = uploaded_file.getvalue().decode("utf-8")
-    st.write(file_contents)
+    st.write("Prompt:", prompt)
 
-    # Translate user prompt Amazon Bedrock
+    # Translate user prompt using Amazon Bedrock
     translate_output = transl_txt_bedrock(
-        file_contents,
+        prompt,
         st.session_state.src_lang['LanguageCode'],
         st.session_state.tgt_lang['LanguageCode'],
         st.session_state.model['modelId']
     )
     
-    bedrock_translation=parse_xml(translate_output, "translated_text")
+    # Analyze the responses
+    analyze_output = analyze_responses(
+        prompt,
+        translate_output,
+        st.session_state.model['modelId']
+    )
+    analysis=parse_xml(analyze_output, "analysis")
 
     # Display response
-    st.text_area("Bedrock Translation:", str(bedrock_translation), height=200)
-
-    #Add messages to chat history
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": file_contents,
-            "bedrock_translation": bedrock_translation
-        }
-    )
-
+    st.text_area("Bedrock Translation:", str(translate_output), height=200)
+    st.text_area("Analysis:", str(analysis), height=500)

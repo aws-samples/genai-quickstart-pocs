@@ -1598,6 +1598,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-translation-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.',
+    additionalDeps: ['pypdf', 'python-docx'],
   readme: {
     pocGoal: {
       overview: 'The goal of this repository is to provide users with the ability to use Amazon Bedrock to perform translations. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
@@ -1621,18 +1622,21 @@ pythonPocs.push(new StreamlitQuickStartPOC({
     fileWalkthrough: {
       includeDefaults: false,
       files: [{
-        name: 'Text.py',
+        name: 'streamlit_pages/Text.py',
         description: 'Frontend for Text Translate',
       }, {
-        name: 'Chat.py',
+        name: 'streamlit_pages/Chat.py',
         description: 'Frontend for Chat Translate',
       }, {
-        name: 'File.py',
+        name: 'streamlit_pages/File.py',
         description: 'Frontend for File Translate',
       }, {
         name: 'amazon_bedrock_translation.py',
         description: 'Logic required to invoke Amazon Bedrock and parse the response',
-      }, {
+      },{
+        name: 'text_extractor.py',
+        description: 'Logic required to extract text from a file',
+      },{
         name: 'requirements.txt',
         description: 'Python dependencies',
       }],
