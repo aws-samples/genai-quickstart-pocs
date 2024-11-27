@@ -9,6 +9,14 @@
       "type": "runtime"
     },
     {
+      "name": "pypdf",
+      "type": "runtime"
+    },
+    {
+      "name": "python-docx",
+      "type": "runtime"
+    },
+    {
       "name": "python-dotenv",
       "type": "runtime"
     },

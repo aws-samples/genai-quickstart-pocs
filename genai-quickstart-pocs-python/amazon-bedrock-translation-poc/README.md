@@ -58,13 +58,15 @@ When a user interacts with the POC, the flow is as follows:
     * `app.py` - The streamlit frontend
     
     
-    * `Text.py` - Frontend for Text Translate
+    * `streamlit_pages/Text.py` - Frontend for Text Translate
     
-    * `Chat.py` - Frontend for Chat Translate
+    * `streamlit_pages/Chat.py` - Frontend for Chat Translate
     
-    * `File.py` - Frontend for File Translate
+    * `streamlit_pages/File.py` - Frontend for File Translate
     
     * `amazon_bedrock_translation.py` - Logic required to invoke Amazon Bedrock and parse the response
+    
+    * `text_extractor.py` - Logic required to extract text from a file
     
     * `requirements.txt` - Python dependencies
     
