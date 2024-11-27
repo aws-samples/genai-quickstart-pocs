@@ -53,13 +53,6 @@ div.stButton > button:first-child {
 if st.sidebar.button('Clear'):
     st.session_state.messages = []
 
-st.sidebar.markdown("""
-### What is the purpose of this demo?                    
-
-This is a simple app powered by Streamlit that 1/ takes in text 2/ translates it to a target language using Amazon Bedrock 3/ evaluates the translation for accuracy 
-            
-""")
-
 #####################
 # Text Translation #
 #####################
