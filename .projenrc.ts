@@ -1567,7 +1567,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-translation-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.',
-    additionalDeps: ['PyPDF2', 'docx']
+    additionalDeps: ['PyPDF2', 'docx'],
   readme: {
     pocGoal: {
       overview: 'The goal of this repository is to provide users with the ability to use Amazon Bedrock to perform translations. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
