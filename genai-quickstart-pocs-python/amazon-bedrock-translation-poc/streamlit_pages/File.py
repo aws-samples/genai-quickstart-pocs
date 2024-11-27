@@ -52,12 +52,6 @@ div.stButton > button:first-child {
 if st.sidebar.button('Clear'):
     st.session_state.messages = []
 
-st.sidebar.markdown("""
-### What is the purpose of this demo?                    
-
-This is a simple app powered by Streamlit that 1/ takes in a file 2/ translates it to a target language using Amazon Bedrock 
-            
-""")
 
 ###########
 # Chat UI #
@@ -68,7 +62,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Prompt user for input
-uploaded_file = st.file_uploader("Choose a text file", type=["txt"])
+uploaded_file = st.file_uploader("Choose a text file", type=["txt", "pdf", "docx", "doc"])
 
 if uploaded_file is not None:
     # Read the contents of the uploaded file
