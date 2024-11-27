@@ -2,6 +2,9 @@
 amazon-transcribe
 boto3
 botocore
+langchain-community
+langchain-experimental
+langchain>=0.1.0, <0.2.0
 python-dotenv
 sounddevice
 streamlit
