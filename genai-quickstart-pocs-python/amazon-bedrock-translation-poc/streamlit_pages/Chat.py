@@ -1,5 +1,5 @@
 import streamlit as st
-from amazon_bedrock_translation import lst_langs, lst_models, transl_chat_bedrock, parse_xml
+from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_chat_bedrock, parse_xml
 
 # title of the streamlit page
 st.title(f""":rainbow[Translation Helper]""")
@@ -86,11 +86,10 @@ if question := st.chat_input("Interact with the chatbot to receive a response in
                 st.session_state.model['modelId']
             )
     
-            bedrock_translation=parse_xml(translate_output, "response")
 
             # Display the translation response
-            message_placeholder.markdown(f""" {bedrock_translation} """)
+            message_placeholder.markdown(f""" {translate_output} """)
                                          
             # appending the results to the session state
             st.session_state.messages.append({"role": "assistant",
-                                      "content": bedrock_translation})
+                                      "content": translate_output})

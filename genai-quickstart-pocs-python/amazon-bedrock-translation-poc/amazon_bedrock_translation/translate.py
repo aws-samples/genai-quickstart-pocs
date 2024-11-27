@@ -2,6 +2,7 @@ import streamlit as st
 import boto3
 import botocore
 import json
+from typing import Union, List
 
 #################
 # Initial Setup #
@@ -21,14 +22,24 @@ translate = session.client('translate')
 
 #parse xml helper method
 def parse_xml(xml, tag):
-    temp=xml.split(">")
-    
-    tag_to_extract="</"+tag
+    if isinstance(xml, list):
+        for i in range(len(xml)):
+            temp=xml[i].split(">")
+            tag_to_extract="</"+tag
+            for line in temp:
+                if tag_to_extract in line:
+                    parsed_value=line.replace(tag_to_extract, "")
+                    xml[i]=parsed_value
+        return xml
+    else:
+        temp=xml.split(">")
+        
+        tag_to_extract="</"+tag
 
-    for line in temp:
-        if tag_to_extract in line:
-            parsed_value=line.replace(tag_to_extract, "")
-            return parsed_value
+        for line in temp:
+            if tag_to_extract in line:
+                parsed_value=line.replace(tag_to_extract, "")
+                return parsed_value
 
 # Returns a list of languages supported by Amazon and caches the data
 @st.cache_data
@@ -44,62 +55,68 @@ def lst_models():
         byInferenceType='ON_DEMAND'
     )['modelSummaries']
 
-# Translates input text from the source language to the target language using Bedrock
-def transl_txt_bedrock(input_txt, src_lang, tgt_lang, model_id):
-    
-    ##Setup Prompt
-    prompt = f"""    
-        Human:
-        Task: Translate the given text from the source language to the target language.
+def transl_txt_bedrock(input_txt: Union[str, List[str]], src_lang, tgt_lang, model_id):
+    if isinstance(input_txt, str):
+        input_txt = [input_txt]
+    outputs = []
+    for txt in input_txt:
+        ##Setup Prompt
+        prompt = f"""    
+            Human:
+            Task: Translate the given text from the source language to the target language.
 
-        Source language: {src_lang}
-        Target language: {tgt_lang}
-        
-        Text to translate: {input_txt}
-        
-        Translation steps:
-        1. Identify the source and target languages
-        2. Understand the meaning of the input text in the source language
-        3. Convert the text into the target language while preserving the original meaning
-        4. Review the translation for accuracy, fluency, and context
+            Source language: {src_lang}
+            Target language: {tgt_lang}
+            
+            Text to translate: {txt}
+            
+            Translation steps:
+            1. Identify the source and target languages
+            2. Understand the meaning of the input text in the source language
+            3. Convert the text into the target language while preserving the original meaning
+            4. Review the translation for accuracy, fluency, and context
 
-        Only output the translated text
-        
-        <translated_text>
-        </translated_text>
+            Only output the translated text
+            
+            <translated_text>
+            </translated_text>
 
-        Assistant:
-    """
+            Assistant:
+        """
 
-    body=json.dumps(
-        {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 10000,
-            "temperature":0,
-            "top_k":250,
-            "top_p":0.5,
-            "stop_sequences":[],
-            "messages": [
+        body=json.dumps(
             {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ],
-        }  
-    )  
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 10000,
+                "temperature":0,
+                "top_k":250,
+                "top_p":0.5,
+                "stop_sequences":[],
+                "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            }  
+        )  
 
-    #Run Inference
-    modelId = model_id  # change this to use a different version from the model provider if you want to switch 
-    accept = "application/json"
-    contentType = "application/json"
+        #Run Inference
+        modelId = model_id  # change this to use a different version from the model provider if you want to switch 
+        accept = "application/json"
+        contentType = "application/json"
 
-    response = bedrock_runtime.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
-    response_body = json.loads(response.get('body').read())
-    llmOutput = response_body.get("content")[0]["text"]
+        response = bedrock_runtime.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
+        response_body = json.loads(response.get('body').read())
+        llmOutput = response_body.get("content")[0]["text"]
+        outputs.append(parse_xml(llmOutput, "translated_text"))
 
-    return llmOutput
+    if len(outputs) == 1:
+        return outputs[0]
+    
+    return outputs
 
 #Translates chat messages to the target language using Bedrock"""
 def transl_chat_bedrock(input_txt, tgt_lang, model_id):
@@ -154,8 +171,8 @@ def transl_chat_bedrock(input_txt, tgt_lang, model_id):
     response = bedrock_runtime.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
     response_body = json.loads(response.get('body').read())
     llmOutput = response_body.get("content")[0]["text"]
-    print("bedrock" + llmOutput)
-    return llmOutput
+    text = parse_xml(llmOutput, "response")
+    return text
 
 # Analyzes the quality of the translation
 def analyze_responses(input_txt, bedrock_txt, model_id):

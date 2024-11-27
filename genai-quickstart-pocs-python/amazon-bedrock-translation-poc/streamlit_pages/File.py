@@ -1,5 +1,7 @@
 import streamlit as st
-from amazon_bedrock_translation import lst_langs, lst_models, transl_txt_bedrock, parse_xml
+from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_txt_bedrock, parse_xml
+from amazon_bedrock_translation.file_manager import save_file, delete_file
+from amazon_bedrock_translation.text_extractor import extract_text
 
 # title of the streamlit page
 st.title(f""":rainbow[Translation Helper]""")
@@ -40,54 +42,36 @@ st.sidebar.selectbox(
     key='model'
 )
 
-# Add a big red button to clear past messages
-st.markdown("""
-<style>
-div.stButton > button:first-child {
-    background-color: red;
-    color: white;
-}
-</style>""", unsafe_allow_html=True)
 
-if st.sidebar.button('Clear'):
-    st.session_state.messages = []
 
 
 ###########
-# Chat UI #
+# File UI #
 ###########
 
-# Initialize history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
 # Prompt user for input
 uploaded_file = st.file_uploader("Choose a text file", type=["txt", "pdf", "docx", "doc"])
 
 if uploaded_file is not None:
     # Read the contents of the uploaded file
-    file_contents = uploaded_file.getvalue().decode("utf-8")
-    st.write(file_contents)
+    file_path = save_file(uploaded_file)
+    file_contents = extract_text(file_path)
+    delete_file(file_path)
+    with st.expander("Extracted text from file", expanded=False):
+        st.write(file_contents)
+    with st.spinner('Translating...'):
+        # Translate user prompt Amazon Bedrock
+        translate_output = transl_txt_bedrock(
+            file_contents,
+            st.session_state.src_lang['LanguageCode'],
+            st.session_state.tgt_lang['LanguageCode'],
+            st.session_state.model['modelId']
+        )
+        
 
-    # Translate user prompt Amazon Bedrock
-    translate_output = transl_txt_bedrock(
-        file_contents,
-        st.session_state.src_lang['LanguageCode'],
-        st.session_state.tgt_lang['LanguageCode'],
-        st.session_state.model['modelId']
-    )
-    
-    bedrock_translation=parse_xml(translate_output, "translated_text")
+        # Display response
+        with st.expander("Translated text", expanded=True):
+            st.write(translate_output)
 
-    # Display response
-    st.text_area("Bedrock Translation:", str(bedrock_translation), height=200)
-
-    #Add messages to chat history
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": file_contents,
-            "bedrock_translation": bedrock_translation
-        }
-    )
 

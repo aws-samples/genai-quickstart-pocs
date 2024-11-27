@@ -9,11 +9,11 @@
       "type": "runtime"
     },
     {
-      "name": "docx",
+      "name": "pypdf",
       "type": "runtime"
     },
     {
-      "name": "PyPDF2",
+      "name": "python-docx",
       "type": "runtime"
     },
     {

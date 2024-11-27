@@ -1,5 +1,5 @@
 import streamlit as st
-from amazon_bedrock_translation import lst_langs, lst_models, transl_txt_bedrock, analyze_responses, parse_xml
+from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_txt_bedrock, analyze_responses, parse_xml
 
 # title of the streamlit app
 st.title(f""":rainbow[Translation Helper]""")
@@ -74,16 +74,14 @@ if prompt := st.chat_input():
         st.session_state.model['modelId']
     )
     
-    bedrock_translation=parse_xml(translate_output, "translated_text")
-
     # Analyze the responses
-    translate_output = analyze_responses(
+    analyze_output = analyze_responses(
         prompt,
-        bedrock_translation,
+        translate_output,
         st.session_state.model['modelId']
     )
-    analysis=parse_xml(translate_output, "analysis")
+    analysis=parse_xml(analyze_output, "analysis")
 
     # Display response
-    st.text_area("Bedrock Translation:", str(bedrock_translation), height=200)
+    st.text_area("Bedrock Translation:", str(translate_output), height=200)
     st.text_area("Analysis:", str(analysis), height=500)
