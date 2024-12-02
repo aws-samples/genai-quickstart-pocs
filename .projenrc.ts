@@ -1852,6 +1852,13 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocPackageName: 'agentic-technical-image-generation-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a technical image generation from dynamic agentic workflows',
+  additionalDeps: [
+    'pillow',
+    'numpy',
+    'matplotlib',
+    'rdkit',
+    'networkx',
+  ],
 }));
 
 const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];
