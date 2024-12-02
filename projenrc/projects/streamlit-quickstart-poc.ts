@@ -44,7 +44,7 @@ interface StreamlitQuickStartPOCProps {
 
 
 export class StreamlitQuickStartPOC extends PythonProject {
-  private pocProps: StreamlitQuickStartPOCProps;
+  public pocProps: StreamlitQuickStartPOCProps;
   constructor(props: StreamlitQuickStartPOCProps) {
     super({
       parent: props.parentProject,

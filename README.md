@@ -114,6 +114,18 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Image Generation POC](genai-quickstart-pocs-python/amazon-bedrock-image-generation-poc/images/demo.gif)
     
 
+1. **Amazon Bedrock Image Generation with Guardrails**
+    This sample code demonstrates using Amazon Bedrock Guardrails to prevent Stability Diffusion LLM from generating harmful, obscene, or violent images. The application features a streamlit frontend where users input zero-shot requests to Claude 3. Amazon Bedrock Guardrails determine whether to proceed with generating images using the Stability Diffusion model.
+    
+    ![Screen Recording of Amazon Bedrock Image Generation with Guardrails](genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/demo.gif)
+    
+
+1. **Amazon Bedrock Intelligent Document Processing (IDP) POC**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&amp;A to satisfy a broad range of use cases.
+    
+    ![Screen Recording of Amazon Bedrock Intelligent Document Processing (IDP) POC](genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/images/demo.gif)
+    
+
 1. **Amazon Bedrock Knowledgebases RAG POC**
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create vector embeddings for your data sources using Amazon Bedrock Knowledge bases with the ability ask questions against the stored documents. The application is constructed with a RAG based architecture where users can ask questions against the Knowledge bases.
     
@@ -142,6 +154,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a Gen AI model playground. The application is constructed with a simple streamlit frontend where users can input zero shot requests and select any LLM offered by Amazon Bedrock.
     
     ![Screen Recording of Amazon Bedrock Model Playground POC](genai-quickstart-pocs-python/amazon-bedrock-model-playground-poc/images/demo.gif)
+    
+
+1. **Amazon Bedrock PowerPoint Generator**
+    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
     
 
 1. **Amazon Bedrock RAG with Kendra POC**
@@ -206,22 +222,6 @@ This repository contains sample code demonstrating various use cases leveraging 
     The sample also includes a second UI that allows the user to ask about a topic. This will search the video chapters from the videos you&#39;ve provided and provide a video, set to a specific chapter, that was the closest match to the inquiry.
     
     ![Screen Recording of Amazon Bedrock Video Chapter Creator POC](genai-quickstart-pocs-python/amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
-    
-
-1. **Amazon Bedrock PowerPoint Generator**
-    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
-    
-
-1. **Amazon Bedrock Intelligent Document Processing (IDP) POC**
-    This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&amp;A to satisfy a broad range of use cases.
-    
-    ![Screen Recording of Amazon Bedrock Intelligent Document Processing (IDP) POC](genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/images/demo.gif)
-    
-
-1. **Amazon Bedrock Image Generation with Guardrails**
-    This sample code demonstrates using Amazon Bedrock Guardrails to prevent Stability Diffusion LLM from generating harmful, obscene, or violent images. The application features a streamlit frontend where users input zero-shot requests to Claude 3. Amazon Bedrock Guardrails determine whether to proceed with generating images using the Stability Diffusion model.
-    
-    ![Screen Recording of Amazon Bedrock Image Generation with Guardrails](genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/demo.gif)
     
 
 
