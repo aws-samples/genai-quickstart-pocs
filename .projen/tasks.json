@@ -107,9 +107,6 @@
     "eslint": {
       "name": "eslint",
       "description": "Runs eslint against the codebase",
-      "env": {
-        "ESLINT_USE_FLAT_CONFIG": "false"
-      },
       "steps": [
         {
           "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern $@ src test build-tools projenrc .projenrc.ts",
@@ -217,13 +214,13 @@
       },
       "steps": [
         {
-          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@types/node,@types/nunjucks,eslint-import-resolver-typescript,eslint-plugin-import,projen,ts-node,typescript,nunjucks"
+          "exec": "npx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/node,@types/nunjucks,eslint-import-resolver-typescript,eslint-plugin-import,projen,ts-node,typescript,nunjucks"
         },
         {
           "exec": "npm install"
         },
         {
-          "exec": "npm update @stylistic/eslint-plugin @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser commit-and-tag-version constructs eslint-import-resolver-typescript eslint-plugin-import eslint projen ts-node typescript nunjucks"
+          "exec": "npm update @types/node @types/nunjucks @typescript-eslint/eslint-plugin @typescript-eslint/parser commit-and-tag-version constructs eslint-import-resolver-typescript eslint-plugin-import eslint projen ts-node typescript nunjucks"
         },
         {
           "exec": "npx projen"
