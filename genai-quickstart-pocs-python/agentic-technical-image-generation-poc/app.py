@@ -1,3 +1,4 @@
+
 import streamlit as st
 import asyncio
 from technical_image_generation.models import ImageRequest
@@ -77,7 +78,8 @@ async def main():
                     st.session_state.function_id = generator._get_function_id(request, st.session_state.template)
                     image_data = generator.generate_image(request, st.session_state.template)
                     st.session_state.current_image = image_data
-                    st.image(f"data:image/svg+xml;base64,{image_data}")
+                    image_type = 'svg+xml' if image_data.startswith('<svg') else 'png'
+                    st.image(f"data:image/{image_type};base64,{image_data}")
             with col2:
                 if st.button("Try Again"):
                     st.session_state.stage = 'input'
@@ -87,7 +89,8 @@ async def main():
             st.session_state.function_id = generator._get_function_id(request, st.session_state.template)
             image_data = generator.generate_image(request, st.session_state.template)
             st.session_state.current_image = image_data
-            st.image(f"data:image/svg+xml;base64,{image_data}")
+            image_type = 'svg+xml' if image_data.startswith('<svg') else 'png'
+            st.image(f"data:image/{image_type};base64,{image_data}")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -96,11 +99,13 @@ async def main():
                     st.rerun()
             with col2:
                 if st.button("Start Over"):
+                    st.session_state.clear()
                     st.session_state.stage = 'input'
                     st.rerun()
 
     elif st.session_state.stage == 'improve':
-        st.image(f"data:image/svg+xml;base64,{st.session_state.current_image}")
+        image_type = 'svg+xml' if st.session_state.current_image.startswith('<svg') else 'png'
+        st.image(f"data:image/{image_type};base64,{st.session_state.current_image}")
         
         feedback = st.text_area(
             "How would you like to improve this image?",

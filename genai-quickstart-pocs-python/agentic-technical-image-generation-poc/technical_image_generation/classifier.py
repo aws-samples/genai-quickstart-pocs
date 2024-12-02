@@ -4,6 +4,7 @@ import uuid
 from typing import Tuple, Dict, Any, List
 from .models import ImageTemplate
 from .storage import DynamoDBStorage
+from PIL import Image
 
 class ImageClassifier:
     def __init__(self, storage: DynamoDBStorage):
@@ -24,7 +25,7 @@ class ImageClassifier:
     async def _bedrock_chat(self, system_content: str, prompt: str) -> Dict:
         print(f"_bedrock_chat: System content: {system_content[:50]}...")
         response = self.bedrock.converse(
-            modelId='anthropic.claude-3-sonnet-20240229-v1:0',
+            modelId='anthropic.claude-3-5-sonnet-20240620-v1:0',
             messages=[{'role': 'user', 'content': [{'text': prompt}]}],
             system=[{'text': system_content}],
             inferenceConfig={'maxTokens': 1000, 'temperature': 0.7, 'topP': 0.9}
@@ -46,7 +47,19 @@ class ImageClassifier:
         - description: detailed description
         - required_libraries: list of Python libraries needed
         - parameters: dict of parameters with their types and if required
-        - examples: list of example prompts that fit this template"""
+        - examples: list of example prompts that fit this template
+        
+        Only the following python libraries are approved for use as required_libraries:
+        - matplotlib
+        - numpy
+        - pandas
+        - PIL
+        - boto3
+
+        If you think Generative AI will be required to create the image, then the only required_libraries should be boto3, PIL.
+
+        Only output the JSON and nothing else.
+        """
         
         data = await self._bedrock_chat(system_content, prompt)
         return ImageTemplate(id=str(uuid.uuid4()), **data)

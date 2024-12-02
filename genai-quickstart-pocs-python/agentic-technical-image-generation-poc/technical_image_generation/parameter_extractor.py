@@ -13,7 +13,7 @@ class ParameterExtractor:
         Given this prompt: {prompt}
         Extract parameters for image generation based on these requirements: {template.parameters}
         Return JSON with:
-        - found_parameters: dict of parameter values found in prompt
+        - found_parameters: dict of parameter values found in prompt {{param: {{type: str, value: any}}}}
         - missing_parameters: dict of required parameters not found in prompt (null if all found)
         """
         
@@ -29,7 +29,7 @@ class ParameterExtractor:
             start_idx = response_text.find('```json') + 7
             end_idx = response_text.find('```', start_idx)
             response_text = response_text[start_idx:end_idx]
-            
+        print(f"extract_parameters: Response: {response_text}...")
         result = json.loads(response_text)
         return result['found_parameters'], result['missing_parameters']
 
