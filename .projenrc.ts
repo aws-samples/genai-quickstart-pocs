@@ -1846,6 +1846,17 @@ guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`
   },
 }));
 
+pythonPocs.push(new StreamlitQuickStartPOC({
+  parentProject: project,
+  pocName: 'Amazon Bedrock Document Translation POC',
+  pocPackageName: 'amazon-bedrock-document-translation-poc',
+  pocDescription:
+    'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate a document from source language to target language, outputting the translated document to match the input document, just in a the target language.',
+  additionalDeps: [
+    'pypdf', 'PyMuPDF',
+  ],
+}));
+
 const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];
 pythonPocs.sort((a, b) => a.pocProps.pocPackageName.localeCompare(b.pocProps.pocPackageName));
 for (const poc of pythonPocs) {
