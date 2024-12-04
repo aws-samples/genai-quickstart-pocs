@@ -9,6 +9,10 @@
       "type": "runtime"
     },
     {
+      "name": "loguru",
+      "type": "runtime"
+    },
+    {
       "name": "matplotlib",
       "type": "runtime"
     },

@@ -6,7 +6,6 @@ class ImageTemplate:
     id: str
     name: str
     description: str
-    required_libraries: List[str]
     parameters: Dict[str, Dict[str, Any]]
     examples: List[str] = None
 

@@ -1858,6 +1858,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
     'matplotlib',
     'rdkit',
     'networkx',
+    'loguru',
   ],
 }));
 
