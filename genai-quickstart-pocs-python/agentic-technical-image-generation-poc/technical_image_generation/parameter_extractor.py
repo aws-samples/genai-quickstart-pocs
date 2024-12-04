@@ -31,9 +31,7 @@ class ParameterExtractor:
         A parameter can either be one of the "found_parameters" or one of the "missing_parameters". It cannot be both.
         
         
-        Return JSON with:
-        - found_parameters
-        - missing_parameters
+        Return a JSON object with the following structure:
 
         <example_response>
         {{
@@ -55,10 +53,13 @@ class ParameterExtractor:
                 }}
             }}
         }}
+        </example_response>
+
+        "found_parameters" and "missing_parameters" should be dictionaries where the key is the parameter name and the value is a dictionary with the following keys and are BOTH required.
         """
         
         response = self.bedrock.converse(
-            modelId='amazon.nova-pro-v1:0',
+            modelId='amazon.nova-micro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': prompt}]}],
             system=[{'text': system_content}],
         )
@@ -96,7 +97,7 @@ class ParameterExtractor:
         """
         logger.trace(f"System content", system_content)
         response = self.bedrock.converse(
-            modelId='amazon.nova-pro-v1:0',
+            modelId='amazon.nova-micro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': prompt}]}],
             system=[{'text': system_content}],
             inferenceConfig={'maxTokens': 1000, 'temperature': 0.2}
@@ -129,13 +130,18 @@ class ParameterExtractor:
         {missing_params}
         </additional_parameters>
         
+        Render the description in a user-friendly way that explains what the user can expect from the generated image and what they can do to improve it.
+        The output should be broken into three bolded groups:
+        * What will be generated
+        * What parameters were found
+        * What parameters can the user provide to improve the image
         
         Do not attempt to render an image or visual within the description
         Keep it concise and user-friendly.
         """
         logger.trace("generate_description: System content", system_content)
         response = self.bedrock.converse(
-            modelId='amazon.nova-pro-v1:0',
+            modelId='amazon.nova-micro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': prompt}]}],
             system=[{'text': system_content}],
         )

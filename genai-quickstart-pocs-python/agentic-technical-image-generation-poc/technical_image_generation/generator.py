@@ -148,7 +148,8 @@ class ImageGenerator:
         logger.trace("Generate function code model prompt", system_content)
         
         response = self.bedrock.converse(
-            modelId='anthropic.claude-3-5-sonnet-20240620-v1:0',
+            # modelId='anthropic.claude-3-5-sonnet-20240620-v1:0',
+            modelId='amazon.nova-lite-v1:0',
             messages=[{'role': 'user', 'content': [{'text': system_content}]}],
         )
         logger.trace("Response from model", response)
@@ -193,7 +194,7 @@ class ImageGenerator:
         """
         logger.trace(f"Improve Image system content", system_content)
         response = self.bedrock.converse(
-            modelId='amazon.nova-pro-v1:0',
+            modelId='amazon.nova-micro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': system_content}]}],
             inferenceConfig={'maxTokens': 1000, 'temperature': 0.2}
         )
