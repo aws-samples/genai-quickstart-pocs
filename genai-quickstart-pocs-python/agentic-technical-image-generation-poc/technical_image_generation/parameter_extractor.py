@@ -81,10 +81,9 @@ class ParameterExtractor:
         """
         
         response = self.bedrock.converse(
-            modelId='amazon.nova-pro-v1:0',
+            modelId='amazon.nova-micro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': prompt}]}],
             system=[{'text': system_content}],
-            inferenceConfig={'maxTokens': 1000, 'temperature': 0.7}
         )
         
         return response['output']['message']['content'][0]['text']

@@ -34,12 +34,15 @@ async def main():
         st.session_state.prompt = prompt
         
         if st.button("Generate", key="generate_button"):
-            with st.spinner("Analyzing request..."):
+                progess_bar = st.progress(0, text="Analyzing request...")
                 template = await classifier.classify_request(prompt)
+                progess_bar.progress(25, text="Extracting parameters...")
                 parameters, missing_params = await extractor.extract_parameters(prompt, template)
+                progess_bar.progress(50, text="Mapping data to parameter values...")
                 parameter_values = await extractor.map_parameter_values(prompt, template, parameters)
+                progess_bar.progress(75, text="Generating overview...")
                 description = await extractor.generate_description(prompt, template, missing_params)
-                
+                progess_bar.progress(100, text="Done!")
                 st.session_state.template = template
                 st.session_state.parameters = parameters
                 st.session_state.parameter_values = parameter_values

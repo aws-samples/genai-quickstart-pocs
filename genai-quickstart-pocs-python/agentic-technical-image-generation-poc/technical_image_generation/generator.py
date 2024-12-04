@@ -93,6 +93,8 @@ class ImageGenerator:
         2. Take a 'params' argument containing: 
             <request_param_definitons>{template.parameters}</request_param_definitions>
             <request_param_values>{parameter_values}</request_param_values>
+            Make sure to properly parse the parameter value from the parameter dict for each parameter.
+            For example, if you have a parameter 'size', you should parse it as 'size = params['size']['value']'.
         3. The function should end with RETURN of a matplotlib figure or PIL image object. Do not display the image.
         4. The code should only have the one function to execute and no other code to execute outside the defined generate_image function.
         5. The function should be able to execute successfully, using the provided parameters, without raising an exception.
