@@ -28,6 +28,7 @@ const project = new typescript.TypeScriptProject({
     'genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/generated-images/',
     'temp/',
     'cdk.out',
+    '**/misc/**/*',
   ],
   tsconfig: {
     compilerOptions: {

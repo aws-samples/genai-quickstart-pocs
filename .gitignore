@@ -38,6 +38,7 @@ genai-quickstart-pocs-python/amazon-bedrock-alt-text-generator/files/
 genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/generated-images/
 temp/
 cdk.out
+**/misc/**/*
 /dist/changelog.md
 /dist/version.txt
 !/test/
