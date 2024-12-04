@@ -172,7 +172,7 @@ class ImageGenerator:
         encoded_image = base64.b64encode(buf.getvalue()).decode()
         return encoded_image, "image/png" if not isinstance(result, plt.Figure) else "image/svg+xml"
     
-    def improve_image(self, function_id: str, original_code: str, feedback: str) -> str:
+    def improve_image(self, function_id: str, original_code: str, feedback) -> str:
         logger.debug(f"improve_image: Processing feedback: {feedback[:50]}...")
         
         system_content = f"""

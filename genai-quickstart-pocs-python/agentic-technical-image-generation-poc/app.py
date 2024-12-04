@@ -24,6 +24,8 @@ async def main():
         st.session_state.function_id = None
         st.session_state.current_image = None
         st.session_state.current_image_type = None
+        st.session_state.feedback = None
+        st.session_state.previous_feedback = []
     
     if st.session_state.stage == 'input':
         prompt = st.text_area(
@@ -51,16 +53,15 @@ async def main():
                 st.session_state.stage = 'review'
                 st.rerun()
     
-    elif st.session_state.stage == 'review':
-        st.write("Your request:", st.session_state.prompt)
-        st.info(st.session_state.description)
-        
+    elif st.session_state.stage == 'review': 
+        st.markdown("**Your Request**\n\n" + st.session_state.prompt)
+        st.info(st.session_state.description)       
         if st.session_state.missing_params:
-            st.subheader("Missing Parameters")
+            st.subheader("Additional Parameters")
+            st.write("The following parameters are able to be added to improve the image. A default will be assigned if no value is provided.")
             params = {}
             logger.debug(f"Missing params: {st.session_state.missing_params}")
             for param_name, param_info in st.session_state.missing_params.items():
-                logger.debug(param_name, param_info)
                 if param_info["type"] == "number":
                     params[param_name] = st.number_input(
                         param_name,
@@ -76,25 +77,10 @@ async def main():
                         param_name,
                         key=f"param_str_{param_name}"
                     )
-            
-            
             if st.button("Generate with Parameters"):
-                all_params = {**st.session_state.parameters, **params}
-                request = ImageRequest(prompt=st.session_state.prompt, parameters=all_params)
-                st.session_state.function_id = generator._get_function_id(request, st.session_state.template)
-                image_data, image_type = generator.generate_image(request, st.session_state.template, st.session_state.parameter_values)
-                st.session_state.current_image = image_data
-                st.session_state.current_image_type = image_type
-                st.image(f"data:{image_type};base64,{image_data}")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Improve This"):
-                        st.session_state.stage = 'improve'
-                        st.rerun()
-                with col2:
-                    if st.button("Try Again"):
-                        st.session_state.stage = 'input'
-                        st.rerun()
+                st.session_state.parameters = {**st.session_state.parameters, **params}
+                st.session_state.missing_params = None
+                st.rerun()
         else:
             request = ImageRequest(prompt=st.session_state.prompt, parameters=st.session_state.parameters)
             st.session_state.function_id = generator._get_function_id(request, st.session_state.template)
@@ -116,9 +102,16 @@ async def main():
                     st.rerun()
 
     elif st.session_state.stage == 'improve':
+        st.markdown("**Your Request**\n\n" + st.session_state.prompt)
+        st.info(st.session_state.description)
+        if st.session_state.feedback and st.session_state.feedback not in st.session_state.previous_feedback:
+            st.session_state.previous_feedback = st.session_state.previous_feedback + [st.session_state.feedback]
+        st.write("**Your Feedback Given**")
+        for feedback in st.session_state.previous_feedback:
+            st.write(f"* {feedback}")
         st.image(f"data:{st.session_state.current_image_type};base64,{st.session_state.current_image}")
         
-        feedback = st.text_area(
+        st.session_state.feedback = st.text_area(
             "How would you like to improve this image?",
             placeholder="Example: Make the lines thicker and add grid lines",
             key="improvement_feedback"
@@ -132,14 +125,14 @@ async def main():
                     improved_code = generator.improve_image(
                         st.session_state.function_id,
                         function_data['code'],
-                        feedback
+                        [st.session_state.feedback, *st.session_state.previous_feedback]
                     )
                     
                     storage.store_function(st.session_state.function_id, improved_code, {
                         'template_id': st.session_state.template.id,
                         'prompt': st.session_state.prompt,
                         'parameters': st.session_state.template.parameters,
-                        'feedback': feedback
+                        'feedback': st.session_state.feedback
                     })
                     
                     request = ImageRequest(
