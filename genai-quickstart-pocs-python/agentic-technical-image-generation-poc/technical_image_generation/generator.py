@@ -18,16 +18,18 @@ class ImageGenerator:
         self.storage = DynamoDBStorage()
         self.bedrock = boto3.client('bedrock-runtime')
 
-    def generate_image(self, request: ImageRequest, template: ImageTemplate, parameter_values: Dict[str,Dict[str,str]], previous_code: str = None, code_exception: Exception = None, retry_count = 0) -> str:
-        logger.debug(f"generate_image: Processing request: {request.prompt[:50]}...")
-        logger.debug(f"generate_image: Template: {template}")
-        logger.debug(f"generate_image: Request parameters: {request.parameters}")
+    def run_image_generation(self, request: ImageRequest, template: ImageTemplate, parameter_values: Dict[str,Dict[str,str]], previous_code: str = None, code_exception: Exception = None, retry_count = 0) -> str:
+        logger.debug("Generate image")
+        logger.trace(f"generate_image", {
+            'request': request,
+            'template': template
+        })
         
         function_id = self._get_function_id(request, template)
         function_code = self.storage.get_function(function_id)
         
         if not function_code and not code_exception:
-            logger.debug("No existing function found, generating new one")
+            logger.debug("No existing function found. Generating new function code.")
             code = self._generate_function_code(request, template, parameter_values)
             self.storage.store_function(function_id, code, {
                 'template_id': template.id,
@@ -45,24 +47,25 @@ class ImageGenerator:
             })
         else:
             logger.debug("Using existing function")
-            logger.debug(function_code)
+            logger.trace("Existing function code data", function_code)
             code = function_code['code']
 
         # libraries = self._import_required_libraries(template.required_libraries)
         exec_globals = {**globals()}
         local_vars = {}
-        logger.debug(f"generate_image: Loading in function code: {code}")
+        logger.trace("Loading in function code", code)
         exec(code, exec_globals, local_vars)
-        logger.debug(f"generate_image: Function code loaded, extracting function for execution")
+        logger.trace("Function code loaded, extracting function for execution")
         generate_func = local_vars['generate_image']
-        logger.debug(f"generate_image: Retrieve function: {generate_func}")
-        logger.debug(f"generate_image: Executing function with parameters: {request.parameters}")
+        logger.trace(f"Function and Parameters\n{function_code}\n{request.parameters}")
         try:
-            result = generate_func(request.parameters)
+            logger.trace("Executing function")
+            result = generate_func(parameter_values)
+            logger.trace("Function executed", result)
             return self._encode_result(result)
         except Exception as e:
-            logger.error(f"generate_image: Error executing function: {e}")
-            return self.generate_image(request, template, parameter_values, previous_code=code, code_exception=e, retry_count=retry_count)
+            logger.error("Error executing function", e, request.parameters)
+            return self.run_image_generation(request, template, parameter_values, previous_code=code, code_exception=e, retry_count=retry_count)
     
     def _get_function_id(self, request: ImageRequest, template: ImageTemplate) -> str:
         key_components = [
@@ -71,30 +74,30 @@ class ImageGenerator:
         ]
         return hashlib.md5(''.join(key_components).encode()).hexdigest()
     
-    def _import_required_libraries(self, libraries: List[str]) -> Dict:
-        logger.debug(f"_import_required_libraries: Importing {libraries}")
-        imports = {}
-        for lib in libraries:
-            if '.' in lib:
-                module, alias = lib.split(' as ') if ' as ' in lib else (lib, lib.split('.')[-1])
-                imports[alias] = __import__(module, fromlist=[alias])
-            else:
-                imports[lib] = __import__(lib)
-        return imports
     
     def _generate_function_code(self, request: ImageRequest, template: ImageTemplate, parameter_values: Dict[str,Dict[str,str]], previous_code: str = None, code_exception: str = None, retry_count = 0) -> str:
+        logger.debug("Beginning to generate function code")
+        logger.trace("Retry count", retry_count)
         if retry_count > 3:
             raise Exception("Failed to generate code after multiple retries")
-        logger.debug(f"_generate_function_code: Generating code for: {request.prompt[:50]}...")
+        logger.trace(f"_generate_function_code: Generating code",{ "prompt": request.prompt, "template": template, "parameter_values": parameter_values, "previous_code": previous_code, "code_exception": code_exception})
         system_content = f"""
         Create a Python function that generates the requested visualization.
         The function should:
         1. Be named 'generate_image'
-        2. Take a 'params' argument containing: 
-            <request_param_definitons>{template.parameters}</request_param_definitions>
-            <request_param_values>{parameter_values}</request_param_values>
-            Make sure to properly parse the parameter value from the parameter dict for each parameter.
-            For example, if you have a parameter 'size', you should parse it as 'size = params['size']['value']'.
+        2. Take a 'params' argument
+            - The parameter types are defined here:
+            <request_param_definitons>
+            {template.parameters}
+            </request_param_definitions>
+            - The parameter values are provided here:
+            <request_param_values>
+            {parameter_values}
+            </request_param_values>
+            - The generated code should properly extract the value of the parameter from the param object.
+            - If the param is `size`, the value should be extracted as `size = params['size']['value']`
+            - All parameters in the request_param_definitons should be extracted from the params object and used within the code. Do not exclude any parameters.
+            - Parameters should NEVER be hardcoded in the code.
         3. The function should end with RETURN of a matplotlib figure or PIL image object. Do not display the image.
         4. The code should only have the one function to execute and no other code to execute outside the defined generate_image function.
         5. The function should be able to execute successfully, using the provided parameters, without raising an exception.
@@ -125,6 +128,8 @@ class ImageGenerator:
             <previous_code>
             {previous_code}
             </previous_code>
+
+            You should review the previous code, understand the cause of the exception. 
             """
         if code_exception:
             system_content += f"""
@@ -136,44 +141,46 @@ class ImageGenerator:
             """
         system_content += f"""
         
-        Return only the python code for the function. If you are provided a previous_code and code_exception, ensure the newly generated code resolves the exception.
+        Return only the python code for the function. 
+        If you are provided a previous_code and code_exception, ensure the newly generated code resolves the exception.
+        All parameters MUST be extracted from the params object and used within the code. Do not exclude any parameters defined in request_param_definitons. 
         """
-
-        # logger.debug(f"_generate_function_code: Model Prompt - {system_content}")
+        logger.trace("Generate function code model prompt", system_content)
         
         response = self.bedrock.converse(
             modelId='anthropic.claude-3-5-sonnet-20240620-v1:0',
             messages=[{'role': 'user', 'content': [{'text': system_content}]}],
-            # inferenceConfig={'maxTokens': 1000, 'temperature': 0.2}
         )
+        logger.trace("Response from model", response)
         
         response_text = response['output']['message']['content'][0]['text']
         if '```python' in response_text:
             start_idx = response_text.find('```python') + 9
             end_idx = response_text.find('```', start_idx)
             response_text = response_text[start_idx:end_idx]
-            
+        logger.trace("Generated code", response_text)
         return response_text.strip()
     
     def _encode_result(self, result) -> str:
-        logger.debug(f"_encode_result: Encoding generated image; type: {type(result)}")
+        logger.trace(f"_encode_result: Encoding generated image; type: {type(result)}")
         buf = BytesIO()
         if isinstance(result, plt.Figure):
-            logger.debug('saving figure as svg to buffer')
+            logger.trace('saving figure as svg to buffer')
             result.savefig(buf, format='svg')
             buf.seek(0)
         elif isinstance(result, Image.Image):
-            logger.debug('saving image as png to buffer')
+            logger.trace('saving image as png to buffer')
             result.save(buf, format='PNG')
         else:
-            logger.debug('saving else as png to buffer')
+            logger.trace('saving else as png to buffer')
             result.save(buf, format='PNG')
         
         encoded_image = base64.b64encode(buf.getvalue()).decode()
         return encoded_image, "image/png" if not isinstance(result, plt.Figure) else "image/svg+xml"
     
-    def improve_image(self, function_id: str, original_code: str, feedback) -> str:
-        logger.debug(f"improve_image: Processing feedback: {feedback[:50]}...")
+    def improve_image(self, original_code: str, feedback) -> str:
+        logger.debug("Improve Image")
+        logger.trace(f"Improve Image", original_code, feedback)
         
         system_content = f"""
         Improve this image generation function based on user feedback.
@@ -184,17 +191,19 @@ class ImageGenerator:
         
         Return only the improved Python code and nothing else.
         """
-        
+        logger.trace(f"Improve Image system content", system_content)
         response = self.bedrock.converse(
             modelId='amazon.nova-pro-v1:0',
             messages=[{'role': 'user', 'content': [{'text': system_content}]}],
             inferenceConfig={'maxTokens': 1000, 'temperature': 0.2}
         )
+        logger.trace(f"Improve Image response", response)
         
         response_text = response['output']['message']['content'][0]['text']
         if '```python' in response_text:
             start_idx = response_text.find('```python') + 9
             end_idx = response_text.find('```', start_idx)
             response_text = response_text[start_idx:end_idx]
-            
+        
+        logger.trace(f"Improve Image response text", response_text.strip())
         return response_text.strip()
