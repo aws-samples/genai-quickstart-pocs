@@ -120,13 +120,6 @@ async def main():
     elif st.session_state.stage == "improve":
         st.markdown("**Your Request**\n\n" + st.session_state.prompt)
         st.info(st.session_state.description)
-        if (
-            st.session_state.feedback is not None
-            and st.session_state.feedback not in st.session_state.previous_feedback
-        ):
-            st.session_state.previous_feedback = st.session_state.previous_feedback + [
-                st.session_state.feedback
-            ]
         st.write("**Your Feedback Given**")
         for feedback in st.session_state.previous_feedback:
             st.write(f"* {feedback}")
@@ -144,13 +137,11 @@ async def main():
         with col1:
             if st.button("Apply Improvements"):
                 with st.spinner("Improving image..."):
+                    st.session_state.previous_feedback = list(set([st.session_state.feedback] + st.session_state.previous_feedback))
                     function_data = storage.get_function(st.session_state.function_id)
                     improved_code = generator.improve_image(
                         function_data["code"],
-                        [
-                            st.session_state.feedback,
-                            *st.session_state.previous_feedback,
-                        ],
+                        st.session_state.previous_feedback,
                     )
 
                     storage.store_function(
@@ -160,7 +151,7 @@ async def main():
                             "template_id": st.session_state.template.id,
                             "prompt": st.session_state.prompt,
                             "parameters": st.session_state.template.parameters,
-                            "feedback": st.session_state.feedback,
+                            "feedback": st.session_state.previous_feedback,
                         },
                     )
 
