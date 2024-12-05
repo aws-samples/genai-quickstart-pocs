@@ -46,7 +46,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'inquirer',
     'tsx',
     'ora',
-    'chalk'
+    'chalk',
   ],
   devDeps: [
     '@types/nunjucks',
@@ -61,6 +61,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/generated-images/',
     'temp/',
     'cdk.out',
+    '**/misc/**/*',
   ],
 });
 
@@ -1598,7 +1599,7 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocPackageName: 'amazon-bedrock-translation-poc',
   pocDescription:
     'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.',
-    additionalDeps: ['pypdf', 'python-docx'],
+  additionalDeps: ['pypdf', 'python-docx'],
   readme: {
     pocGoal: {
       overview: 'The goal of this repository is to provide users with the ability to use Amazon Bedrock to perform translations. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
@@ -1633,10 +1634,10 @@ pythonPocs.push(new StreamlitQuickStartPOC({
       }, {
         name: 'amazon_bedrock_translation.py',
         description: 'Logic required to invoke Amazon Bedrock and parse the response',
-      },{
+      }, {
         name: 'text_extractor.py',
         description: 'Logic required to extract text from a file',
-      },{
+      }, {
         name: 'requirements.txt',
         description: 'Python dependencies',
       }],
@@ -1904,6 +1905,22 @@ guardrail_identifier=<Guardrail_Identifier>
 guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`,
     }],
   },
+}));
+
+pythonPocs.push(new StreamlitQuickStartPOC({
+  parentProject: project,
+  pocName: 'Amazon Bedrock Agentic Technical Image Generation POC',
+  pocPackageName: 'agentic-technical-image-generation-poc',
+  pocDescription:
+    'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a technical image generation from dynamic agentic workflows',
+  additionalDeps: [
+    'pillow',
+    'numpy',
+    'matplotlib',
+    'rdkit',
+    'networkx',
+    'loguru',
+  ],
 }));
 
 const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];

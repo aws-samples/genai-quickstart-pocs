@@ -228,6 +228,10 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Image Generation with Guardrails](genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/demo.gif)
     
 
+1. **Amazon Bedrock Agentic Technical Image Generation POC**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to implement a technical image generation from dynamic agentic workflows
+    
+
 
 
 ## Sample Proof of Concepts - .NET
