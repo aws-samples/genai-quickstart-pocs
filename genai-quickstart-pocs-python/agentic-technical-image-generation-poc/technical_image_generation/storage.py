@@ -11,7 +11,7 @@ class DynamoDBStorage:
             os.environ.get("TEMPLATES_TABLE")
         )
         self.functions_table = self.dynamodb.Table(
-            os.environ.get("TEMPLATES_TABLE")
+            os.environ.get("FUNCTIONS_TABLE")
         )
 
     def create_template(self, template: ImageTemplate) -> None:
