@@ -2,16 +2,16 @@ import boto3
 from typing import List
 from .models import ImageTemplate
 from loguru import logger
-
+import os
 
 class DynamoDBStorage:
     def __init__(self):
         self.dynamodb = boto3.resource("dynamodb")
         self.templates_table = self.dynamodb.Table(
-            "technical_image_generation_templates"
+            os.environ.get("TEMPLATES_TABLE")
         )
         self.functions_table = self.dynamodb.Table(
-            "technical_image_generation_functions"
+            os.environ.get("TEMPLATES_TABLE")
         )
 
     def create_template(self, template: ImageTemplate) -> None:
