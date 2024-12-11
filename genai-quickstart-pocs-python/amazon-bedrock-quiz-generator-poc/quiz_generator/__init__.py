@@ -1,8 +1,5 @@
 from pydantic import BaseModel, Field
-
-
 from enum import Enum
-from pydantic import BaseModel, Field
 
 class QuestionType(str, Enum):
     MULTI_CHOICE = "multi_choice"
