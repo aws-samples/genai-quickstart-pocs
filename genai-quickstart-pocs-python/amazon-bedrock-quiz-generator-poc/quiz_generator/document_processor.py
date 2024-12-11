@@ -10,7 +10,7 @@ from langchain_community.document_loaders import (
 from langchain_community.document_loaders import AmazonTextractPDFLoader
 
 from uuid import uuid4
-import base64
+from .quiz_chunks import chunk_documents  # Update import
 
 
 temp_storage_path = os.path.join(os.path.dirname(__file__), "../temp")
@@ -18,7 +18,7 @@ if not os.path.exists(temp_storage_path):
     os.makedirs(temp_storage_path)
 
 
-def load_documents_and_images(uploaded_files: list) -> {list[Document], list[str]}:
+def load_documents_and_images(uploaded_files: list) -> tuple[list[Document], list[str]]:
     """
     Loads documents and images from the specified file paths.
 
@@ -34,29 +34,34 @@ def load_documents_and_images(uploaded_files: list) -> {list[Document], list[str
         file_path = persist_document_file(file.getvalue(), uploaded_file_name)
         if uploaded_file_name.endswith(".pdf"):
             docs = load_pdf_document(file_path)
-            documents.extend(docs)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
         elif uploaded_file_name.endswith(".docx") or uploaded_file_name.endswith(
             ".doc"
         ):
             docs = load_docx_document(file_path)
-            documents.extend(docs)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
         elif uploaded_file_name.endswith(".csv"):
             docs = load_csv_document(file_path)
-            documents.extend(docs)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
         elif uploaded_file_name.endswith(".md"):
             docs = load_markdown_document(file_path)
-            documents.extend(docs)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
         elif (
             uploaded_file_name.endswith(".jpg")
             or uploaded_file_name.endswith(".jpeg")
             or uploaded_file_name.endswith(".png")
         ):
             docs = load_image(file_path)
-            documents.extend(docs)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
         elif uploaded_file_name.endswith(".txt"):
             docs = load_text_document(file_path)
-            documents.extend(docs)
-        delete_file(file_path)
+            chunked_docs = chunk_documents(docs)
+            documents.extend(chunked_docs)
     print(f"Loaded {len(documents)} documents")
     return documents, images
 
@@ -65,6 +70,9 @@ def persist_document_file(file_bytes, uploaded_file_name) -> str:
     """
     Persists the uploaded file to disk and returns the file path.
     """
+    if not os.path.exists(temp_storage_path):
+        os.makedirs(temp_storage_path)
+    
     file_name = str(uuid4())
     file_path = os.path.join(
         temp_storage_path, f"{file_name}.{uploaded_file_name.split('.')[-1]}"
@@ -87,10 +95,6 @@ def load_pdf_document(file_path: str) -> list[Document]:
     print(f"Loading text from PDF {file_path}")
     loader = PyPDFLoader(file_path)
     docs = loader.load()
-    if len(docs) > 25:
-        raise ValueError(
-            "PDF document contains too many pages to generate a Quiz without advanced chunking techniques. Try a smaller set of text."
-        )
     return docs
 
 
@@ -145,33 +149,6 @@ def load_image(image_path: str):
     loader = AmazonTextractPDFLoader(image_path)
     return loader.load()
 
-def delete_file(filepath):
-    """
-    Deletes the file and all empty parent directories up to /temp/
-    
-    Args:
-        filepath: Path to file to delete
-        
-    Example:
-        For path 'ABC/temp/dir1/file.pdf':
-        - Deletes file.pdf
-        - Removes dir1 if empty
-        - Stops at temp directory
-    """
-    if not os.path.exists(filepath):
-        return
-        
-    # Delete the file first
-    os.remove(filepath)
-    
-    # Get directory containing the file
-    current_dir = os.path.dirname(filepath)
-    
-    # Keep deleting parent dirs until we hit 'temp' or root
-    while current_dir and os.path.basename(current_dir) != 'temp':
-        try:
-            os.rmdir(current_dir)  # Only removes if empty
-            current_dir = os.path.dirname(current_dir)
-        except OSError:
-            # Directory not empty or other error, stop here
-            break
+# Removed chunk_documents function
+
+# Removed process_chunk function
