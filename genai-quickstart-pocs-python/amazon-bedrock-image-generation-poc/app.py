@@ -1,6 +1,8 @@
 import streamlit as st
 from PIL import Image
 from image_generation import image_generator
+import base64
+from datetime import datetime
 
 st.title(f""":rainbow[Image Generation with Amazon Bedrock]""")
 
@@ -10,36 +12,54 @@ if "messages" not in st.session_state:
 # writing the message that is stored in session state
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-# adding some special effects from the UI perspective
-st.balloons()
-# evaluating st.chat_input and determining if a question has been input
+        if "content" in message:
+            st.markdown(message["content"])
+        if "image" in message:
+            st.image(base64.b64decode(message["image"]), caption=f"Generated Image - {message['modelId']}")
+
+# Move model selection and checkbox to sidebar
+with st.sidebar:
+    st.subheader("Image Model Settings")
+    st.selectbox(
+        "Select a model", 
+        ["amazon.nova-canvas-v1:0", "stability.sd3-large-v1:0"], 
+        key="model_selection"
+    )
+    use_last_image = st.checkbox(
+        "Include my last image with my next request. *Used to change color & style, while keeping image contents similar.*", 
+        key="use_last_image"
+    )
+    st.divider()
+    st.button("Clear Chat", on_click=lambda: [st.session_state.pop("messages", None), st.session_state.pop("last_image", None)])
+
+# Chat input and image generation
 if question := st.chat_input("Ask me to create you an image!"):
-    # with the user icon, write the question to the front end
     with st.chat_message("user"):
         st.markdown(question)
-    # append the question and the role (user) as a message to the session state
-    st.session_state.messages.append({"role": "user",
-                                      "content": question})
-    # respond as the assistant with the answer
+    st.session_state.messages.append({"role": "user", "content": question})
+    
     with st.chat_message("assistant"):
-        # making sure there are no messages present when generating the answer
         message_placeholder = st.empty()
-        # putting a spinning icon to show that the query is in progress
         with st.spinner("Creating you an image!"):
-            # answer placeholder to save in the session state
-            answer = "Generated Image:"
-            # passing the question into the image generation function, which later invokes the llm
-            image_path = image_generator(question)
-            # after the LLM has created an image, it returns a path to where it is saved locally
-            # access that image by using Image.open and giving it the path of the created image
-            generated_image = Image.open(image_path)
-            # Writing to the front-end "Generated Image:"
-            message_placeholder.markdown(f"{answer}")
-            # displaying the image to the front end of the streamlit app
-            st.image(generated_image, caption="Generated Image")
-            # writing a success message to the front-end after the image was created and displayed
+            condition_image = None
+            if st.session_state.get('last_image') and use_last_image:
+                condition_image = st.session_state.last_image
+            model_selected = st.session_state.model_selection
+            image_bytes = image_generator(
+                question, 
+                modelId=model_selected,
+                condition_image=condition_image
+            )
+            
+            encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+            st.session_state.last_image = encoded_image
+            
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": "Generated Image:",
+                "image": encoded_image,
+                "modelId": model_selected,
+            })
+            
+            st.image(image_bytes, caption=f"Generated Image - {model_selected}")
             st.success("Image created")
-    # appending the results to the session state
-    st.session_state.messages.append({"role": "assistant",
-                                      "content": answer})
