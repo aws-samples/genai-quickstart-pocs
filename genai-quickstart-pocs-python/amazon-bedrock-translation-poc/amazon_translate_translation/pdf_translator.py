@@ -1,6 +1,5 @@
 import boto3
 import io
-import json
 import fitz
 
 class PDFTranslator:

@@ -9,6 +9,10 @@
       "type": "runtime"
     },
     {
+      "name": "fitz",
+      "type": "runtime"
+    },
+    {
       "name": "pypdf",
       "type": "runtime"
     },

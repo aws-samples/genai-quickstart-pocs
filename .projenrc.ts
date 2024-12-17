@@ -1566,8 +1566,8 @@ pythonPocs.push(new StreamlitQuickStartPOC({
   pocName: 'Amazon Bedrock Translation POC',
   pocPackageName: 'amazon-bedrock-translation-poc',
   pocDescription:
-    'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.',
-  additionalDeps: ['pypdf', 'python-docx'],
+    'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language. Additionally, this demo also includes an Amazon Translate usecase.',
+  additionalDeps: ['pypdf', 'python-docx', 'fitz'],
   readme: {
     pocGoal: {
       overview: 'The goal of this repository is to provide users with the ability to use Amazon Bedrock to perform translations. This repo comes with a basic frontend to help users stand up a proof of concept in just a few minutes.',
@@ -1586,6 +1586,12 @@ pythonPocs.push(new StreamlitQuickStartPOC({
             1. The user uploads a text file and selects the target language.
             2. The application constructs the appropriate prompt for translation and sends it to Amazon Bedrock.
             3. The translated text from the document is displayed on the frontend application.`,
+        `PDF:
+            1. The user uploads a PDF file and selects the source and target language.
+            2. The application extracts the text from the PDF in small chunks chunks based on the text location.
+            3. The application rapidly sends the chunks to Amazon Translate for translation. Because there is a high volume of small requests, Amazon Translate can more efficiently handle the requests.
+            4. The application constructs a new PDF by redacting the original text and placing the translated text in the same location (with auto size scaling to handle different length than original text).
+            5. The user can download the formatted, translated PDF.`,
       ],
     },
     fileWalkthrough: {
@@ -1600,14 +1606,20 @@ pythonPocs.push(new StreamlitQuickStartPOC({
         name: 'streamlit_pages/File.py',
         description: 'Frontend for File Translate',
       }, {
-        name: 'amazon_bedrock_translation.py',
+        name: 'streamlit_pages/PDF.py',
+        description: 'Frontend for PDF Translate',
+      }, {
+        name: 'amazon_bedrock_translation/translate.py',
         description: 'Logic required to invoke Amazon Bedrock and parse the response',
       }, {
-        name: 'text_extractor.py',
+        name: 'amazon_bedrock_translation/text_extractor.py',
         description: 'Logic required to extract text from a file',
       }, {
-        name: 'requirements.txt',
-        description: 'Python dependencies',
+        name: 'amazon_bedrock_translation/file_manager.py',
+        description: 'Logic required to manage file uploads and downloads',
+      }, {
+        name: 'amazon_translate_translation/pdf_translator.py',
+        description: 'Logic required to translate PDFs with Amazon Translate',
       }],
     },
     extraSteps: [
@@ -1844,17 +1856,6 @@ guardrail_identifier=<Guardrail_Identifier>
 guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`,
     }],
   },
-}));
-
-pythonPocs.push(new StreamlitQuickStartPOC({
-  parentProject: project,
-  pocName: 'Amazon Bedrock Document Translation POC',
-  pocPackageName: 'amazon-bedrock-document-translation-poc',
-  pocDescription:
-    'This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate a document from source language to target language, outputting the translated document to match the input document, just in a the target language.',
-  additionalDeps: [
-    'pypdf', 'PyMuPDF',
-  ],
 }));
 
 const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];

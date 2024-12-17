@@ -3,7 +3,7 @@ from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_c
 
 # title of the streamlit page
 st.title(f""":rainbow[Translation Helper]""")
-st.subheader("Input chat messages and the chatbot will respond in the target language")
+st.subheader("Input chat messages and the Amazon Bedrock LLM powered chatbot will respond in the target language")
 
 ###############
 # Sidebar UI #

@@ -96,10 +96,6 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Aamazon Bedrock Document Generator POC](genai-quickstart-pocs-python/amazon-bedrock-document-generator-poc/images/demo.gif)
     
 
-1. **Amazon Bedrock Document Translation POC**
-    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate a document from source language to target language, outputting the translated document to match the input document, just in a the target language.
-    
-
 1. **Amazon Bedrock GenAI Dynamic Prompt Explained POC**
     This is sample code that can be used to provide a hands on explanation as to how Dynamic Prompting works in relation to Gen AI. The application is constructed with a simple streamlit frontend where users can ask questions against a Amazon Bedrock supported LLM and get a deeper understanding of how few-shot and dynamic prompting works.
     
@@ -213,7 +209,7 @@ This repository contains sample code demonstrating various use cases leveraging 
     
 
 1. **Amazon Bedrock Translation POC**
-    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language. Additionally, this demo also includes an Amazon Translate usecase.
     
     ![Screen Recording of Amazon Bedrock Translation POC](genai-quickstart-pocs-python/amazon-bedrock-translation-poc/images/demo.gif)
     

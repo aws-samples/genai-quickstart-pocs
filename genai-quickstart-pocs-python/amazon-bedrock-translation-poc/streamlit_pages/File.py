@@ -5,7 +5,7 @@ from amazon_bedrock_translation.text_extractor import extract_text
 
 # title of the streamlit page
 st.title(f""":rainbow[Translation Helper]""")
-st.subheader("Input a file, source language, and target language to view translation")
+st.subheader("Input a file, source language, and target language to process the file with Amazon Bedrock LLM powered translation")
 
 ###############
 # Sidebar UI #

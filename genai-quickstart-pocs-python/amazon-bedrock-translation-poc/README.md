@@ -2,7 +2,7 @@
 
 ## Overview of Solution
 
-This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language.
+This is sample code demonstrating the use of Amazon Bedrock and Generative AI to translate text from a source to target language. Additionally, this demo also includes an Amazon Translate usecase.
 
 ![A gif of a screen recording show casing the Amazon Bedrock Translation POC functionality](images/demo.gif)
 
@@ -31,6 +31,13 @@ When a user interacts with the POC, the flow is as follows:
             1. The user uploads a text file and selects the target language.
             2. The application constructs the appropriate prompt for translation and sends it to Amazon Bedrock.
             3. The translated text from the document is displayed on the frontend application.
+
+1. PDF:
+            1. The user uploads a PDF file and selects the source and target language.
+            2. The application extracts the text from the PDF in small chunks chunks based on the text location.
+            3. The application rapidly sends the chunks to Amazon Translate for translation. Because there is a high volume of small requests, Amazon Translate can more efficiently handle the requests.
+            4. The application constructs a new PDF by redacting the original text and placing the translated text in the same location (with auto size scaling to handle different length than original text).
+            5. The user can download the formatted, translated PDF.
 
 
 
@@ -64,11 +71,15 @@ When a user interacts with the POC, the flow is as follows:
     
     * `streamlit_pages/File.py` - Frontend for File Translate
     
-    * `amazon_bedrock_translation.py` - Logic required to invoke Amazon Bedrock and parse the response
+    * `streamlit_pages/PDF.py` - Frontend for PDF Translate
     
-    * `text_extractor.py` - Logic required to extract text from a file
+    * `amazon_bedrock_translation/translate.py` - Logic required to invoke Amazon Bedrock and parse the response
     
-    * `requirements.txt` - Python dependencies
+    * `amazon_bedrock_translation/text_extractor.py` - Logic required to extract text from a file
+    
+    * `amazon_bedrock_translation/file_manager.py` - Logic required to manage file uploads and downloads
+    
+    * `amazon_translate_translation/pdf_translator.py` - Logic required to translate PDFs with Amazon Translate
     
     
 
