@@ -132,20 +132,94 @@ Assistant:"""
         doc = fitz.open(stream=original_pdf_bytes, filetype="pdf")
         
         try:
+            # First pass: Apply all white rectangles
             for page_num in range(len(doc)):
                 page = doc[page_num]
-                
+                for pos in text_positions:
+                    if pos['page'] == page_num:
+                        # Calculate exact text dimensions from bbox
+                        text_height = pos['bbox'][3] - pos['bbox'][1]
+                        text_width = pos['bbox'][2] - pos['bbox'][0]
+                        
+                        # Create precise white rectangle for text coverage
+                        rect = fitz.Rect(
+                            pos['bbox'][0],  # x0
+                            pos['bbox'][1],  # y0
+                            pos['bbox'][0] + text_width,  # x1
+                            pos['bbox'][1] + text_height  # y1
+                        )
+                        
+                        # Draw precise white rectangle
+                        page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1))
+            
+            # Second pass: Place all translated text
+            for page_num in range(len(doc)):
+                page = doc[page_num]
                 for pos, trans in zip(text_positions, translations):
                     if pos['page'] == page_num:
-                        rect = fitz.Rect(pos['bbox'])
-                        annot = page.add_redact_annot(rect)
-                        page.apply_redactions()
+                        available_width = pos['bbox'][2] - pos['bbox'][0]
+                        available_height = pos['bbox'][3] - pos['bbox'][1]
+                        font_size = pos['font_size']
                         
-                        page.insert_text(
-                            point=(pos['x'], pos['y']),
-                            text=trans,
-                            fontsize=pos['font_size']
-                        )
+                        try:
+                            # Create text writer
+                            tw = fitz.TextWriter(page.rect)
+                            font = fitz.Font("helv")
+                            text_width = font.text_length(trans, fontsize=font_size)
+                            
+                            # Rest of text placement logic remains the same
+                            if text_width > available_width:
+                                scaling_factor = available_width / text_width
+                                font_size = max(6, font_size * scaling_factor)
+                            
+                            # If text is still too wide, try wrapping
+                            if font.text_length(trans, fontsize=font_size) > available_width:
+                                words = trans.split()
+                                lines = []
+                                current_line = []
+                                
+                                for word in words:
+                                    test_line = ' '.join(current_line + [word])
+                                    if font.text_length(test_line, fontsize=font_size) <= available_width:
+                                        current_line.append(word)
+                                    else:
+                                        if current_line:
+                                            lines.append(' '.join(current_line))
+                                            current_line = [word]
+                                        else:
+                                            lines.append(word)
+                                            current_line = []
+                                
+                                if current_line:
+                                    lines.append(' '.join(current_line))
+                                
+                                # Calculate vertical spacing
+                                line_height = font_size * 1.2
+                                total_height = line_height * len(lines)
+                                
+                                # Center text block vertically
+                                start_y = pos['y'] + (available_height - total_height) / 2
+                                
+                                # Write each line using TextWriter
+                                for i, line in enumerate(lines):
+                                    y_pos = start_y + (i * line_height)
+                                    tw.append((pos['x'], y_pos), line, font=font, fontsize=font_size)
+                            else:
+                                # Single line - center vertically
+                                y_pos = pos['y'] + (available_height - font_size) / 2
+                                tw.append((pos['x'], y_pos), trans, font=font, fontsize=font_size)
+                            
+                            # Write all text to page
+                            tw.write_text(page)
+                            
+                        except Exception as e:
+                            print(f"Error placing text: {str(e)}")
+                            # Fallback to simple text insertion
+                            page.insert_text(
+                                (pos['x'], pos['y']),
+                                trans,
+                                fontsize=font_size
+                            )
             
             output_stream = io.BytesIO(doc.tobytes())
             return output_stream.getvalue()
