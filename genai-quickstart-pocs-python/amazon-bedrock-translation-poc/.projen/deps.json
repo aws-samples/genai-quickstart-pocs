@@ -9,10 +9,6 @@
       "type": "runtime"
     },
     {
-      "name": "fitz",
-      "type": "runtime"
-    },
-    {
       "name": "PyMuPDF",
       "type": "runtime"
     },
