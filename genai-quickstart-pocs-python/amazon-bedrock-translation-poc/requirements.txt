@@ -2,6 +2,7 @@
 boto3
 botocore
 fitz
+PyMuPDF
 pypdf
 python-docx
 python-dotenv

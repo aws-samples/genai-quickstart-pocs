@@ -13,6 +13,10 @@
       "type": "runtime"
     },
     {
+      "name": "PyMuPDF",
+      "type": "runtime"
+    },
+    {
       "name": "pypdf",
       "type": "runtime"
     },

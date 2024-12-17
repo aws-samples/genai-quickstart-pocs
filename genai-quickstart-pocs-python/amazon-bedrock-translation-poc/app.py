@@ -8,6 +8,7 @@ pages = {
         st.Page("streamlit_pages/Chat.py", title="Translate with Chat"),
         st.Page("streamlit_pages/Text.py", title="Translate Text"),
         st.Page("streamlit_pages/File.py", title="Translate a File"),
+        st.Page("streamlit_pages/PDF.py", title="Translate a PDF"),
     ],
 }
 
