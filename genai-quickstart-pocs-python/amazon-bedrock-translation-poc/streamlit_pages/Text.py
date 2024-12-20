@@ -3,7 +3,7 @@ from amazon_bedrock_translation.translate import lst_langs, lst_models, transl_t
 
 # title of the streamlit app
 st.title(f""":rainbow[Translation Helper]""")
-st.subheader("Input text, source language, and target language to view translation")
+st.subheader("Input text, source language, and target language to view translation from the Amazon Bedrock LLM")
 
 ###############
 # Sidebar UI #
