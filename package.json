@@ -31,13 +31,14 @@
     "organization": false
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^2",
     "@types/node": "ts5.5",
     "@types/nunjucks": "^3.2.6",
-    "@typescript-eslint/eslint-plugin": "^7",
-    "@typescript-eslint/parser": "^7",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
     "aws-cdk": "^2.162.1",
     "esbuild": "^0.24.0",
-    "eslint": "^8",
+    "eslint": "^9",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "projen": "^0.90.5",
