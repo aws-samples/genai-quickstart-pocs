@@ -156,6 +156,12 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Model Playground POC](genai-quickstart-pocs-python/amazon-bedrock-model-playground-poc/images/demo.gif)
     
 
+1. **Amazon Bedrock Multi Modal Embeddings POC**
+    This POC demonstrates the implementation of reverse image search using Amazon Bedrock Titan Multimodal Embeddings model and Anthropic Claude 3, with a Streamlit frontend interfacing with Chroma vector database and local file system as image store. Users can import images from Hugging Face datasets which are processed to generate vector embeddings for the database. The system enables reverse image search where users can make a query and/or upload a reference image to find similar ones, with the LLM model providing detailed analysis of the results.
+    
+    ![Screen Recording of Amazon Bedrock Multi Modal Embeddings POC](genai-quickstart-pocs-python/amazon-bedrock-multi-modal-embeddings-poc/images/demo.gif)
+    
+
 1. **Amazon Bedrock PowerPoint Generator**
     This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
     

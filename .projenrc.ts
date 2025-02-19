@@ -1858,6 +1858,65 @@ guardrail_version=<Guardrail_Version> (this is just a number i.e. 1,2,3 etc...)`
   },
 }));
 
+pythonPocs.push(new StreamlitQuickStartPOC({
+  parentProject: project,
+  pocName: 'Amazon Bedrock Multi Modal Embeddings POC',
+  pocPackageName: 'amazon-bedrock-multi-modal-embeddings-poc',
+  additionalDeps: [
+    'langchain>=0.3.0, <0.4.0',
+    'langchain-community==0.3.3',
+    'langchain-aws',
+    'python-dotenv',
+    'datasets',
+    'chromadb',
+    'json-repair'
+  ],
+  pocDescription:
+    'This POC demonstrates the implementation of reverse image search using Amazon Bedrock Titan Multimodal Embeddings model and Anthropic Claude 3, with a Streamlit frontend interfacing with Chroma vector database and local file system as image store. Users can import images from Hugging Face datasets which are processed to generate vector embeddings for the database. The system enables reverse image search where users can make a query and/or upload a reference image to find similar ones, with the LLM model providing detailed analysis of the results.',
+    readme: {
+      pocGoal: {
+        architectureImage: true,
+        overview:
+          'The goal of this repo is to provide users with the ability to perform reverse image search with Generative AI. This repo comes with a basic streamlit front-end to help users stand up a proof of concept and experiment with multi modal embeddings modal use-cases quickly.',
+        flowSteps: [
+          'User initiates a request to the Streamlit app to load data.',
+          'App sends request to the access dataset from Hugging Face by repo name and number of records.',
+          'Datasets are returned to the app.',
+          'App extracts images from the dataset by the field name and then sends data to Amazon Bedrock (Titan Multimodal Embeddings) for processing',
+          'Amazon Bedrock generates embeddings and returns them to the app.',
+          'App stores the associated images to the Images Store (file system).',
+          'App saves the generated embeddings to the Vector DB (Chroma).',
+          'User sends a query (with or without reference image) to the Streamlit app.',
+          'App sends the query to Amazon Bedrock (Titan) for embedding generation.',
+          'Amazon Bedrock returns the query embeddings.',
+          'App performs similarity search in the Vector DB.',
+          'App retrieves matching results and sends them along with user query to Amazon Bedrock (Anthopic Claude 3 model).',
+          'Claude 3 performs detailed analysis and returns results to the app.'
+        ],
+      },
+      fileWalkthrough: {
+        includeDefaults: true,
+        files: [
+          {
+            name: 'image_service.py',
+            description:
+              'house the logic of the application, including the interacting with vector DB, prompt formatting logic and the Amazon Bedrock API invocations.',
+          },
+        ],
+      },
+      extraSteps: [
+        {
+          instructions:
+            'Create a .env file in the root of this repo. Within the .env file you just created you will need to configure the .env to contain:',
+          command: `AWS_REGION=<AWS_REGION>
+\tAWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+\tAWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+          `,
+        },
+      ],
+    },
+}));
+
 const pythonPocReadmeDetails: Array<POCReadmeDetails> = [];
 pythonPocs.sort((a, b) => a.pocProps.pocPackageName.localeCompare(b.pocProps.pocPackageName));
 for (const poc of pythonPocs) {
