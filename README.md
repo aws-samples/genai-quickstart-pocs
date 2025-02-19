@@ -224,6 +224,27 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Video Chapter Creator POC](genai-quickstart-pocs-python/amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
     
 
+2. **Amazon Bedrock PowerPoint Generator**
+    This is sample code demonstrates the use of Amazon Bedrock and Generative AI to implement a PowerPoint generator. The application is constructed with a simple streamlit frontend where users can input a topic and get a PowerPoint generated based on the topic. Using Generative AI, the solution creates relevant Wikipedia queries to perform in-depth research on the presentation content.
+    
+
+1. **Amazon Bedrock Intelligent Document Processing (IDP) POC**
+    This is sample code demonstrating the use of Amazon Bedrock and Generative AI incorporated into an Intelligent Document Processing (IDP) pipeline using user-uploaded documents. The application is constructed with a simple streamlit frontend where users can upload various document formats and perform different IDP actions such as text extraction, document summarization and classification, entity recognition, and Q&amp;A to satisfy a broad range of use cases.
+    
+    ![Screen Recording of Amazon Bedrock Intelligent Document Processing (IDP) POC](genai-quickstart-pocs-python/amazon-bedrock-intelligent-document-processing-poc/images/demo.gif)
+    
+
+1. **Amazon Bedrock Image Generation with Guardrails**
+    This sample code demonstrates using Amazon Bedrock Guardrails to prevent Stability Diffusion LLM from generating harmful, obscene, or violent images. The application features a streamlit frontend where users input zero-shot requests to Claude 3. Amazon Bedrock Guardrails determine whether to proceed with generating images using the Stability Diffusion model.
+    
+    ![Screen Recording of Amazon Bedrock Image Generation with Guardrails](genai-quickstart-pocs-python/amazon-bedrock-image-guardrails-poc/images/demo.gif)
+    
+
+1. **Amazon Bedrock Multi Modal Embeddings POC**
+    This POC demonstrates the implementation of reverse image search using Amazon Bedrock Titan Multimodal Embeddings model and Anthropic Claude 3, with a Streamlit frontend interfacing with FAISS vector database and local file system as image store. Users can import images from Hugging Face datasets which are processed to generate vector embeddings for the database. The system enables reverse image search where users can make a query and/or upload a reference image to find similar ones, with the LLM model providing detailed analysis of the results.
+    
+    ![Screen Recording of Amazon Bedrock Multi Modal Embeddings POC](genai-quickstart-pocs-python/amazon-bedrock-multi-modal-embeddings-poc/images/demo.gif)
+    
 
 
 ## Sample Proof of Concepts - .NET
