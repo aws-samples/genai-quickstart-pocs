@@ -23,7 +23,7 @@ When a user interacts with the POC, the flow is as follows:
 
 1. If the prompt does not trigger the guardrail it is passed into the bedrock model the user has specified (`invoke_model_with_guardrails.py`)
 
-1. A response is returned by the Amazon Bedrock Model of choice and is passed into the Amazon Bedrock Guardrail (`invoke_model_with_guardrails.py`). If the response is detected as malicious or triggers the guardrail a response will be returned to the end user saying the request is blocked (`invoke_model_with_guardrails.py`)
+1. A response is returned by the Amazon Bedrock Model of choice and is passed into the Amazon Bedrock Guardrail (`invoke_model_with_guardrails.py`). If the response is detected as malicious or triggers the guardrail a response will be returned to the end user saying the request is blocked with the specified topic (`invoke_model_with_guardrails.py`)
 
 1. If the response does not trigger a guardrail, a natural language response is returned to the end user answering the initial text question inserted by the end user (`app.py`)
 
@@ -36,7 +36,9 @@ When a user interacts with the POC, the flow is as follows:
 
 1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock.
 
-1. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
+2. [Python](https://www.python.org/downloads/) v3.11 or greater. The POC runs on python. 
+
+3. A guardrail has been created in AWS Bedrock with 1 or more topic being denied
 
 
 
@@ -59,7 +61,7 @@ When a user interacts with the POC, the flow is as follows:
 
 1. Open the repository in your favorite code editor. In the terminal, navigate to the POC's folder:
     ```zsh
-    cd genai-quickstart-pocs-python/amazon-bedrock-guardrails-poc
+    cd genai-quickstart-pocs-python/amazon-bedrock-guardrails-deny-topics-poc
     ```
 
 1. Configure the python virtual environment, activate it & install project dependencies. *Note: each POC has it's own dependencies & dependency management.*

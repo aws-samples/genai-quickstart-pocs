@@ -68,19 +68,37 @@ def invoke_model(text):
         inferenceConfig=inference_config,
         guardrailConfig=guardrail_config,
     )
-
+    # Checking to see if the guardrail was intervened and if so setting the appropriate output response
     if response['stopReason'] == 'guardrail_intervened':
-        guardrail_topics_invoked = get_guardrail_topic(response)
-        print(guardrail_topics_invoked)
-        output_text = 'Sorry, the model cannot answer this question because it discusses the following topics: {}.'.format(", ".join(guardrail_topics_invoked))
+        try:
+            guardrail_topics_invoked = get_guardrail_topic(response)
+            output_text = 'Sorry, the model cannot answer this question because it discusses the following topics: {}.'.format(", ".join(guardrail_topics_invoked))
+        except:
+            output_text = 'Sorry, the model cannot answer this question'
     else:
         output_text = response['output']['message']['content'][0]['text']
     return output_text
 
 
 def get_guardrail_topic(response):
-    guardrail_topics_raw = response['trace']['guardrail']['inputAssessment'][guardrail_identifier]['topicPolicy']['topics']
+    # Process guardrail response from Amazon Bedrock
+    guardrail = response.get('trace', {}).get('guardrail', {})
+    input_assessments = guardrail.get('inputAssessment', {}).get(guardrail_identifier, [])
+    output_assessments = guardrail.get('outputAssessments', {}).get(guardrail_identifier, [])
+
+    # Determine what topics triggered the guardrail
+    guardrail_topics_raw_input = None
+    guardrail_topics_raw_output = None
+    if input_assessments:
+        guardrail_topics_raw_input = input_assessments.get('topicPolicy', {}).get('topics')
+    if output_assessments:
+        guardrail_topics_raw_output = output_assessments[0].get('topicPolicy', {}).get('topics')
     guardrail_topics = []
-    for guardrail_topic in guardrail_topics_raw:
-        guardrail_topics.append(guardrail_topic['name'])
+    if guardrail_topics_raw_input:
+        for guardrail_topic in guardrail_topics_raw_input:
+            guardrail_topics.append(guardrail_topic['name'])
+    if guardrail_topics_raw_output:
+        for guardrail_topic in guardrail_topics_raw_output:
+            guardrail_topics.append(guardrail_topic['name'])
+            
     return guardrail_topics
