@@ -76,7 +76,7 @@ class Hotel:
     def get_available_rooms(self, room_type: Optional[RoomType] = None, 
                           check_in: datetime = None, 
                           check_out: datetime = None) -> List[Room]:
-        print("In hotel_system.get_available_rooms")
+        #print("In hotel_system.get_available_rooms")
         # Implementation to check room availability
         # Find one room per type
         available_rooms = []
@@ -87,12 +87,9 @@ class Hotel:
             and room.room_type.value not in type_found:
                 available_rooms.append(room)
                 type_found.append(room.room_type.value)
-                print("Found room of type {}".format(room.room_type))
+                #print("Found room of type {}".format(room.room_type))
 
-        # available = [room for room in self.rooms 
-        #             if not room.occupied and 
-        #             (room_type is None or room.room_type == room_type)]
-        print("Done processing in hotel_system.get_available_rooms")
+        #print("Done processing in hotel_system.get_available_rooms")
         return available_rooms
     def get_name(self):
         return self.name

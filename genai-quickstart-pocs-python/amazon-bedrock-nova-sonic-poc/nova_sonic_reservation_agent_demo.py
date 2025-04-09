@@ -523,7 +523,7 @@ class BedrockStreamManager:
             #to replace with spaces as a last step.
             default_system_prompt = """
             You are a friendly hotel reservations assistant named Adam Smith answering the phone for AnyCompany Hotels. You will engage in a spoken dialog exchanging the transcripts of a natural real-time conversation.
-            Address the guest by name, thank them for calling AnyCompany Hotels, and if they have an existing reservation ask them if they are calling about that reservation.
+            Address the guest by name, thank them for calling AnyCompany Hotels and ask how you can help them today.
             Make sure you get the current date so that you can assume current year if the guest only gives a partial date.
             Keep your responses short, generally two or three sentences for chatty scenarios.  
             When responding to the guest, make sure to only give back information that the guest would care about.
@@ -532,7 +532,7 @@ class BedrockStreamManager:
             """.format(self.whoami.phone).replace('\n', ' ')
 
 
-            print("System prompt is: {}".format(default_system_prompt))
+            debug_print("System prompt is: {}".format(default_system_prompt))
 
             # Send initialization events
             prompt_event = self.start_prompt()
