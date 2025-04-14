@@ -1,14 +1,14 @@
 import streamlit as st
 from powerpoint_generator import generate_powerpoint
 from powerpoint_generator.powerpoint import delete_file
-
+import traceback  # Import for detailed exception logging
 
 def reset():
     st.session_state.fields_disabled = False
     st.session_state.topic = ""
     st.session_state.additional_info = ""
-    st.session_state.background_files = []
     st.session_state.research_wikipedia = True
+    # Note: Do not reset background_files directly
 
 
 def lock_for_run():
@@ -20,7 +20,7 @@ if "fields_disabled" not in st.session_state:
 
 
 def process_uploads():
-    files = st.session_state.background_files
+    files = st.session_state.get("background_files", [])
     documents = []
     for file in files:
         documents.append({"file_bytes": file.getvalue(), "file_name": file.name})
@@ -50,12 +50,13 @@ st.toggle(
     key="research_wikipedia",
     value=True,
 )
-st.file_uploader(
+uploaded_files = st.file_uploader(
     "Upload any documents you'd like used as background information.",
     type=["pdf", "docx", "txt"],
     accept_multiple_files=True,
     key="background_files",
 )
+
 if st.button("Generate PowerPoint", disabled=st.session_state.fields_disabled):
     if not st.session_state.topic or not st.session_state.additional_info:
         st.error("Please enter a topic and additional information")
@@ -72,6 +73,7 @@ if st.button("Generate PowerPoint", disabled=st.session_state.fields_disabled):
                 status.write(message)
 
             try:
+                st.write("Initiating PowerPoint generation process...")
                 file_path = generate_powerpoint(
                     st.session_state.topic,
                     st.session_state.additional_info,
@@ -92,11 +94,19 @@ if st.button("Generate PowerPoint", disabled=st.session_state.fields_disabled):
                         file_name="powerpoint.pptx",
                         mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     )
+                st.write("Deleting temporary file after successful download.")
                 delete_file(
                     file_path
                 )  # User has downloaded it, delete it from temp to avoid continously growing
             except Exception as e:
+                # Log detailed error to help in debugging
                 st.error(
                     f"Error generating PowerPoint! Click **Generate PowerPoint** to try again."
                 )
+                st.write("Detailed Error Information:")
+                st.write(traceback.format_exc())  # Show detailed stack trace in the UI
                 st.session_state.fields_disabled = False
+                # Additional logging for debugging
+                st.write(f"Topic: {st.session_state.topic}")
+                st.write(f"Additional Info: {st.session_state.additional_info}")
+                st.write(f"Research Wikipedia: {st.session_state.research_wikipedia}")
