@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploy Docker-based stock data Lambda with Pandas layer (container image)
+
+Resources:
+
+  StockLambdaECRRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: stock-data-tools
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildECRPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: stock-lambda-docker-build
+      Source:
+        Type: GITHUB
+        Location: https://github.com/LucaiB/amazon-bedrock-agent-samples.git
+        GitCloneDepth: 1
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - echo Logging into ECR...
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                - cd src/shared/stock_data/docker_files
+            build:
+              commands:
+                - docker build -t $IMAGE_REPO_NAME .
+                - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+            post_build:
+              commands:
+                - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref StockLambdaECRRepo
+          - Name: IMAGE_TAG
+            Value: latest
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+
+  StockLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "stock-lambda-execution-role-${AWS::Region}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Updated function name to match the expected "stock_data_tools"
+  StockLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: stock_data_tools
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/stock-data-tools:latest"
+      Role: !GetAtt StockLambdaExecutionRole.Arn
+      Timeout: 600
+      MemorySize: 512
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+    DependsOn: BuildCodeCustomResource
+
+  BuildCodeCustomResourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: TriggerCodeBuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  BuildCodeCustomResourceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt BuildCodeCustomResourceRole.Arn
+      Timeout: 300
+      Runtime: python3.12
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          import time
+          import cfnresponse
+
+          def handler(event, context):
+              client = boto3.client("codebuild")
+              if event['RequestType'] == 'Create':
+                  build = client.start_build(projectName=os.environ['PROJECT'])
+                  build_id = build['build']['id']
+                  while True:
+                      status = client.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
+                      if status in ['SUCCEEDED', 'FAILED', 'FAULT', 'TIMED_OUT', 'STOPPED']:
+                          break
+                      time.sleep(10)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+      Environment:
+        Variables:
+          PROJECT: !Ref CodeBuildProject
+
+  BuildCodeCustomResource:
+    Type: Custom::BuildCode
+    Properties:
+      ServiceToken: !GetAtt BuildCodeCustomResourceFunction.Arn
+
+
+  AgentAliasLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref StockLambdaFunction
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent-alias/*
+    DependsOn: StockLambdaFunction
+
+  AgentLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref StockLambdaFunction
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent/*
+    DependsOn: StockLambdaFunction
+
+Outputs:
+  LambdaFunctionName:
+    Value: !Ref StockLambdaFunction
+
+  ECRRepositoryURI:
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/stock-data-tools"

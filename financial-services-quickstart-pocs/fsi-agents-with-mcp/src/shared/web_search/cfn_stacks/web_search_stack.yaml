@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This CloudFormation template deploy Web Search functionality using AWS Lambda Function
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Web Search API keys
+        Parameters:
+          - TavilyApiKey
+
+Parameters:
+  TavilyApiKey:
+    Type: String
+    NoEcho: true
+    Description: Provide TavilyApiKey API Key to utilize /web_search path
+    MinLength: 1
+
+Conditions:
+  HasTavilyApiKey: !Not [!Equals [!Ref TavilyApiKey, ""]]
+
+Resources:
+  #####################
+  ##### API Keys #####
+  ###################
+
+  TavilyApiKeySecret:
+    Type: "AWS::SecretsManager::Secret"
+    Condition: HasTavilyApiKey
+    DeletionPolicy: Retain
+    Properties:
+      Name: !Sub
+        - "TAVILY_API_KEY_${StackId}"
+        - StackId: !Select [2, !Split ["/", !Ref AWS::StackId]]
+      Description: "API Key for Tavily service"
+      SecretString: !Ref TavilyApiKey
+
+  ########################
+  ##### WebSearch #####
+  ######################
+
+  AgentLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      FunctionName: web_search
+      Handler: index.lambda_handler
+      Role: !GetAtt AgentLambdaRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          LOG_LEVEL: "DEBUG"
+          ACTION_GROUP: "WebSearchActionGroup"
+          TAVILY_API_KEY_NAME: !Sub
+            - "TAVILY_API_KEY_${StackId}"
+            - StackId: !Select [2, !Split ["/", !Ref AWS::StackId]]
+      Code:
+        ZipFile: |
+          # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+          # SPDX-License-Identifier: Apache-2.0
+          import http.client
+          import json
+          import logging
+          import os
+          import urllib.parse
+          import urllib.request
+
+          import boto3
+
+          session = boto3.session.Session()
+          secrets_manager = session.client(service_name="secretsmanager")
+
+          log_level = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+          logging.basicConfig(
+              format="[%(asctime)s] p%(process)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+          )
+          logger = logging.getLogger(__name__)
+          logger.setLevel(log_level)
+
+          FUNCTION_NAMES = []
+
+
+          def get_from_secretstore_or_env(SecretId: str) -> str:
+              try:
+                  secret_value = secrets_manager.get_secret_value(SecretId=SecretId)
+              except Exception as e:
+                  logger.error(f"could not get secret {SecretId} from secrets manager: {e}")
+                  raise e
+
+              SecretString: str = secret_value["SecretString"]
+
+              return SecretString
+
+
+          try:
+              TAVILY_API_KEY_NAME = os.environ.get("TAVILY_API_KEY_NAME", "")
+              TAVILY_API_KEY = get_from_secretstore_or_env(SecretId=TAVILY_API_KEY_NAME)
+              FUNCTION_NAMES.append("web_search")
+          except Exception as e:
+              TAVILY_API_KEY = None
+
+
+          def web_search(
+              search_query: str, target_website: str = "", topic: str = None, days: int = None
+          ) -> str:
+              logger.info(f"executing Tavily AI search with {search_query=}")
+
+              base_url = "https://api.tavily.com/search"
+              headers = {"Content-Type": "application/json", "Accept": "application/json"}
+              payload = {
+                  "api_key": TAVILY_API_KEY,
+                  "query": search_query,
+                  "search_depth": "advanced",
+                  "include_images": False,
+                  "include_answer": False,
+                  "include_raw_content": False,
+                  "max_results": 3,
+                  "topic": "general" if topic is None else topic,
+                  "days": 30 if days is None else days,
+                  "include_domains": [target_website] if target_website else [],
+                  "exclude_domains": [],
+              }
+
+              data = json.dumps(payload).encode("utf-8")
+              request = urllib.request.Request(
+                  base_url, data=data, headers=headers
+              )  # nosec: B310 fixed url we want to open
+
+              try:
+                  response = urllib.request.urlopen(
+                      request
+                  )  # nosec: B310 fixed url we want to open
+                  response_data: str = response.read().decode("utf-8")
+                  logger.debug(f"response from Tavily AI search {response_data=}")
+                  return response_data
+              except urllib.error.HTTPError as e:
+                  logger.error(
+                      f"failed to retrieve search results from Tavily AI Search, error: {e.code}"
+                  )
+
+              return ""
+
+
+          def lambda_handler(event, context):
+              logging.debug(f"{event=}")
+
+              agent = event["agent"]
+              actionGroup = event["actionGroup"]
+              function = event["function"]
+              parameters = event.get("parameters", [])
+              responseBody = {"TEXT": {"body": "Error, no function was called"}}
+
+              logger.info(f"{actionGroup=}, {function=}")
+
+              if function in FUNCTION_NAMES:
+                  if function == "web_search":
+                      search_query = None
+                      target_website = None
+                      topic = None
+                      days = None
+
+                      for param in parameters:
+                          if param["name"] == "search_query":
+                              search_query = param["value"]
+                          if param["name"] == "target_website":
+                              target_website = param["value"]
+                          if param["name"] == "topic":
+                              topic = param["value"]
+                          if param["name"] == "days":
+                              days = param["value"]
+
+                      if not search_query:
+                          responseBody = {
+                              "TEXT": {"body": "Missing mandatory parameter: search_query"}
+                          }
+                      else:
+                          search_results = web_search(search_query, target_website, topic, days)
+                          responseBody = {
+                              "TEXT": {
+                                  "body": f"Here are the top search results for the query '{search_query}': {search_results} "
+                              }
+                          }
+
+                          logger.debug(f"query results {search_results=}")
+              else:
+                  TAVILY_API_KEY_NAME = os.environ.get("TAVILY_API_KEY_NAME", "")
+                  responseBody = {"TEXT": {"body": f"Unable to get {TAVILY_API_KEY_NAME} Secret Key"}}
+
+              action_response = {
+                  "actionGroup": actionGroup,
+                  "function": function,
+                  "functionResponse": {"responseBody": responseBody},
+              }
+
+              function_response = {
+                  "response": action_response,
+                  "messageVersion": event["messageVersion"],
+              }
+
+              logger.debug(f"lambda_handler: {function_response=}")
+
+              return function_response
+
+  AgentLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: GetSecretsManagerSecret
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:TAVILY_API_KEY_*
+
+  AgentAliasLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AgentLambdaFunction.Arn
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent-alias/*
+
+  AgentLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AgentLambdaFunction.Arn
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent/*
+
+Outputs:
+  WebScrapeLambdaFunction:
+    Value: !Ref AgentLambdaFunction
+  WebScrapeLambdaFunctionArn:
+    Value: !GetAtt AgentLambdaFunction.Arn

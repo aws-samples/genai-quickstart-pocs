@@ -31,6 +31,7 @@ jspm_packages/
 .cache
 **/.DS_Store
 **/__pycache__/
+.env
 .env/
 venv
 output/

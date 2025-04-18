@@ -1,0 +1,477 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This CloudFormation template deploy File Store functionality using AWS Lambda Function
+  
+Resources:
+  ######################
+  ##### FileStore #####
+  ####################
+
+  AgentLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      FunctionName: working_memory
+      Handler: index.lambda_handler
+      Role: !GetAtt AgentLambdaRole.Arn
+      Timeout: 300
+      Code:
+        ZipFile: |
+          # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+          # SPDX-License-Identifier: Apache-2.0
+          import json
+          import boto3
+          import logging
+          import os
+          from botocore.config import Config
+          from botocore.exceptions import ClientError
+
+          session = boto3.session.Session()
+          s3 = session.resource("s3", config=Config(read_timeout=600))
+          dynamodb = session.resource("dynamodb")
+
+          log_level = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+          logging.basicConfig(
+              format="[%(asctime)s] p%(process)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+          )
+          logger = logging.getLogger(__name__)
+          logger.setLevel(log_level)
+
+          FILE_STORAGE_FOLDER = "AGENT_FILE_STORE"
+          TABLE_PREFIX = "agent-"
+          FUNCTION_NAMES = ["save_file", "get_file", "set_value_for_key", "get_key_value", "delete_table"]
+
+          # Utility functions
+          def get_named_parameter(event, name):
+              if event["parameters"]:
+                  for item in event["parameters"]:
+                      if item["name"] == name:
+                          return item["value"]
+              return None
+          
+          def create_table_if_not_exists(table_name):
+            """
+            Creates a DynamoDB table if it doesn't exist
+            """
+            try:
+                # Try to get the table
+                table = dynamodb.Table(table_name)
+                table.load()  # This will raise an exception if table doesn't exist
+                return table
+                
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                    try:
+                        # Create table if it doesn't exist
+                        table = dynamodb.create_table(
+                            TableName=table_name,
+                            KeySchema=[
+                                {
+                                    'AttributeName': 'key',
+                                    'KeyType': 'HASH'
+                                }
+                            ],
+                            AttributeDefinitions=[
+                                {
+                                    'AttributeName': 'key',
+                                    'AttributeType': 'S'
+                                }
+                            ],
+                            BillingMode='PAY_PER_REQUEST'  # This enables on-demand
+                            # ProvisionedThroughput={
+                            #     'ReadCapacityUnits': 5,
+                            #     'WriteCapacityUnits': 5
+                            # }
+                        )
+                        
+                        # Wait until the table exists
+                        waiter = table.meta.client.get_waiter('table_exists')
+                        waiter.wait(
+                            TableName=table_name,
+                            WaiterConfig={
+                                'Delay': 5,
+                                'MaxAttempts': 20
+                            }
+                        )
+                        return table
+                        
+                    except ClientError as create_error:
+                        if create_error.response['Error']['Code'] == 'ResourceInUseException':
+                            # If table is being created, wait for it to be ready
+                            logger.info(
+                              f"Table {table_name} is being created, waiting..."
+                            )
+                            table = dynamodb.Table(table_name)
+                            waiter = table.meta.client.get_waiter('table_exists')
+                            waiter.wait(
+                                TableName=table_name,
+                                WaiterConfig={
+                                    'Delay': 5,
+                                    'MaxAttempts': 20
+                                }
+                            )
+                            return table
+                        else:
+                            raise create_error
+                else:
+                    raise e
+          
+          # Tool functions
+          def save_file(bucket: str, file_name: str, contents: str, folder_name: str):
+              logger.info(
+                  f"Save file to S3, bucket: {bucket}, folder: {folder_name}, file: {file_name}, contents:\n{contents}"
+              )
+
+              response = s3.Object(
+                  bucket, f"{FILE_STORAGE_FOLDER}/{folder_name}/{file_name}"
+              ).put(Body=contents)
+
+              logger.info(f"S3 response: {response}")
+              return
+
+
+          def get_file(bucket: str, file_name: str, folder_name: str) -> str:
+              logger.info(
+                  f"Get file from s3, bucket: {bucket}, folder: {folder_name}, file: {file_name}"
+              )
+
+              response = s3.Object(
+                  bucket, f"{FILE_STORAGE_FOLDER}/{folder_name}/{file_name}"
+              ).get()
+
+              logger.info(f"S3 response status: {response['ResponseMetadata']['HTTPStatusCode']}")
+
+              contents = response["Body"].read().decode("utf-8")
+              return str(contents)
+          
+          def delete_table(table_name):
+              """
+              Deletes a DynamoDB table if it exists
+              """
+              logger.info(
+                  f"Deleting {table_name}..."
+              )
+              if not isinstance(table_name, str):
+                  raise ValueError("table_name must be a string")
+              
+              try:
+                  table = dynamodb.Table(table_name)
+                  # Check if table exists
+                  table.table_status
+                  # Delete the table
+                  table.delete()
+                  # Wait for the table to be deleted
+                  table.meta.client.get_waiter('table_not_exists').wait(TableName=table_name)
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps(f'Successfully deleted table {table_name}')
+                  }
+              except ClientError as e:
+                  if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                      return {
+                          'statusCode': 404,
+                          'body': json.dumps(f'Table {table_name} does not exist')
+                      }
+                  else:
+                      raise e
+
+          def set_value_for_key(key, value, table_name):
+              """
+              Sets a key-value pair in the specified DynamoDB table
+              """
+              if not all([isinstance(key, str), isinstance(value, str), isinstance(table_name, str)]):
+                  raise ValueError("All parameters must be strings")
+              
+              try:
+                  # Get or create table
+                  table = create_table_if_not_exists(table_name)
+                  
+                  # Wait until table is active
+                  waiter = table.meta.client.get_waiter('table_exists')
+                  waiter.wait(
+                      TableName=table_name,
+                      WaiterConfig={
+                          'Delay': 5,
+                          'MaxAttempts': 20
+                      }
+                  )
+                  
+                  # Make sure table is fully active before putting item
+                  table.load()
+                  if table.table_status != 'ACTIVE':
+                      raise Exception(f"Table {table_name} is not active. Current status: {table.table_status}")
+
+                  # Write the item to the table
+                  response = table.put_item(
+                      Item={
+                          'key': key,
+                          'value': value
+                      }
+                  )
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps(f'Successfully set {key}={value} in table {table_name}')
+                  }
+                  
+              except Exception as e:
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps(f'Error: {str(e)}')
+                  }
+
+          def get_key_value(key, table_name):
+              """
+              Gets a value for a key from the specified DynamoDB table
+              """
+              if not all([isinstance(key, str), isinstance(table_name, str)]):
+                  raise ValueError("All parameters must be strings")
+              
+              try:
+                  table = dynamodb.Table(table_name)
+                  response = table.get_item(
+                      Key={
+                          'key': key
+                      }
+                  )
+                  
+                  if 'Item' in response:
+                      return {
+                          'statusCode': 200,
+                          'body': json.dumps(response['Item']['value'])
+                      }
+                  else:
+                      return {
+                          'statusCode': 404,
+                          'body': json.dumps('no value found')
+                      }
+              except ClientError as e:
+                  if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                      return {
+                          'statusCode': 404,
+                          'body': json.dumps('no value found')
+                      }
+                  else:
+                      raise e          
+
+          def lambda_handler(event, context):
+              logging.debug(f"{event=}")
+
+              agent = event["agent"]
+              actionGroup = event["actionGroup"]
+              function = event["function"]
+              parameters = event.get("parameters", [])
+              session_id = event["sessionId"]
+              responseBody = {"TEXT": {"body": "Error, no function was called"}}
+
+              logger.info(f"{actionGroup=}, {function=}, {session_id=}")
+
+              if function in FUNCTION_NAMES:
+                  if function == "save_file":
+                      contents = get_named_parameter(event, "contents")
+                      bucket = get_named_parameter(event, "bucket")
+                      file_name = get_named_parameter(event, "file_name")
+                      folder_name = get_named_parameter(event, "folder_name")
+
+                      if folder_name is None:
+                          folder_name = session_id
+
+                      if not contents:
+                          responseBody = {
+                              "TEXT": {"body": "Missing mandatory parameter: contents"}
+                          }
+                      elif not bucket:
+                          responseBody = {"TEXT": {"body": "Missing mandatory parameter: bucket"}}
+                      elif not file_name:
+                          responseBody = {
+                              "TEXT": {"body": "Missing mandatory parameter: file_name"}
+                          }
+                      else:
+
+                          try:
+                              save_file(bucket, file_name, contents, folder_name)
+                              responseBody = {
+                                  "TEXT": {
+                                      "body": f"Stored contents to s3://{bucket}/{FILE_STORAGE_FOLDER}/{session_id}/{folder_name}. Contents were: {contents}"
+                                  }
+                              }
+                          except Exception as e:
+                              responseBody = {"TEXT": {"body": f"Error saving file: {e}"}}
+
+                  elif function == "get_file":
+                      bucket = get_named_parameter(event, "bucket")
+                      file_name = get_named_parameter(event, "file_name")
+                      folder_name = get_named_parameter(event, "folder_name")
+
+                      if folder_name is None:
+                          folder_name = session_id
+
+                      if not bucket:
+                          responseBody = {"TEXT": {"body": "Missing mandatory parameter: bucket"}}
+                      elif not file_name:
+                          responseBody = {
+                              "TEXT": {"body": "Missing mandatory parameter: file_name"}
+                          }
+                      else:
+                          contents = get_file(bucket, file_name, folder_name)
+                          responseBody = {
+                              "TEXT": {
+                                  "body": f"Retrieved contents from s3://{bucket}/{FILE_STORAGE_FOLDER}/{folder_name}/{file_name}. Contents were: {contents}"
+                              }
+                          }
+                  elif function == 'set_value_for_key':
+                      # Check for required parameters
+                      key = get_named_parameter(event, "key")
+                      value = get_named_parameter(event, "value")
+                      table_name = get_named_parameter(event, "table_name")
+                      
+                      if all([key, value, table_name]):
+                        tmp_table_name = f"{TABLE_PREFIX}{table_name}"
+                        response = set_value_for_key(key, value, tmp_table_name)
+
+                        responseBody = {
+                            "TEXT": {
+                                "body": response["body"]
+                            }
+                        }
+                      else:
+                        responseBody = {
+                            "TEXT": {"body": "Missing mandatory parameter"}
+                        }
+                  
+                  elif function == 'get_key_value':
+                      # Check for required parameters
+                      key = get_named_parameter(event, 'key')
+                      table_name = get_named_parameter(event, 'table_name')
+
+                      if all([key, table_name]):
+                        tmp_table_name = f"{TABLE_PREFIX}{table_name}"
+                        response = get_key_value(key, tmp_table_name)
+                        responseBody = {
+                            "TEXT": {
+                                "body": response["body"]
+                            }
+                        }
+                      else:
+                        responseBody = {
+                            "TEXT": {"body": "Missing mandatory parameter"}
+                        }
+                  elif function == 'delete_table':
+                      # Check for required parameters
+                      table_name = get_named_parameter(event, 'table_name')
+                      
+                      if table_name:
+                          tmp_table_name = f"{TABLE_PREFIX}{table_name}"
+                          response = delete_table(tmp_table_name)
+                          responseBody = {
+                              "TEXT": {
+                                  "body": response["body"]
+                              }
+                          }
+                      else:
+                        responseBody = {
+                            "TEXT": {"body": "Missing mandatory parameter: table_name"}
+                        }
+              else:
+                  responseBody = {"TEXT": {"body": f"Invalid Function passed."}}
+
+              action_response = {
+                  "actionGroup": actionGroup,
+                  "function": function,
+                  "functionResponse": {"responseBody": responseBody},
+              }
+
+              function_response = {
+                  "response": action_response,
+                  "messageVersion": event["messageVersion"],
+              }
+              logger.debug(f"lambda_handler: {function_response=}")
+
+              return function_response
+
+
+
+  AgentLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ListBucketWithPrefix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - arn:aws:s3:::*
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - AGENT_FILE_STORE/*
+                      - CODE_INTERP_FILE_STORE/*
+        - PolicyName: ReadWriteBucketWithPrefix
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - arn:aws:s3:::*/AGENT_FILE_STORE/*
+                  - arn:aws:s3:::*/CODE_INTERP_FILE_STORE/*
+        - PolicyName: DynamoDBMemoryPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:CreateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:BatchGetItem
+                Resource:
+                  - arn:aws:dynamodb:*:*:table/agent-*
+
+  AgentAliasLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AgentLambdaFunction.Arn
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent-alias/*
+
+  AgentLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AgentLambdaFunction.Arn
+      Principal: bedrock.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent/*
+
+
+Outputs:
+ FileStoreLambdaFunction:
+    Value: !Ref AgentLambdaFunction
+ FileStoreLambdaFunction:
+    Value: !GetAtt AgentLambdaFunction.Arn
