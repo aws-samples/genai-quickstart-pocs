@@ -25,7 +25,7 @@ Examples of Amazon Bedrock Agents for the Financial Services Industry (FSI)
 
 ## Introduction
 
-This directory is a collection of tools and MCP server implementations that Amazon Bedrock Agents can interact with. It also contains industry specific agent examples that cover various use cases across FSI domain.
+This directory is a collection of tools and MCP server implementations that Amazon Bedrock Agents can interact with. It also contains industry specific agent examples that cover various use cases across FSI domain. These resources aim to accelerate the development of Bedrock Agents for the FSI domain and enable users to quickly gain hands-on experience, empowering users to build custom MCP servers and agents tailored to their specific tasks.
 
 ### What is Amazon Bedrock Agent?
 
