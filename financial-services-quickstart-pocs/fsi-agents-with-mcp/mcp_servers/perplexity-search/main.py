@@ -40,7 +40,7 @@ Always cite your sources and indicate when information might be outdated. If you
             agent_name="financial_search_agent",
             action_groups=[perplexity_action_group],
         ).invoke(
-            input_text="What are the current trends in cryptocurrency market regulation using perplexity-ask?"
+            input_text="What are the current trends in cryptocurrency market regulation?"
         )
 
     finally:

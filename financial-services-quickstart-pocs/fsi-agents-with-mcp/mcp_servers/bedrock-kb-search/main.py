@@ -53,7 +53,7 @@ You have access to the following Knowledge Bases with ID: {config.kb_id}.
 """,
             agent_name="knowledge_base_assistant",
             action_groups=[bedrock_kb_action_group],
-        ).invoke(input_text="Tell me about NYLife.")
+        ).invoke(input_text="Can you tell how Insurance Company is doing rating?")
 
     finally:
         # Clean up the MCP client
