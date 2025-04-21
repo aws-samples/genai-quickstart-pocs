@@ -56,7 +56,7 @@ source .venv/bin/activate
 5. Install the required packages.
 
 ```bash
-cd financial-services-quickstart-pocs/fsi-agent-with-mcp/src/InlineAgent
+cd financial-services-quickstart-pocs/agents-samples-with-mcp/src/InlineAgent
 uv pip install -e .
 ```
 
