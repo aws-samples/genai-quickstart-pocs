@@ -1,4 +1,4 @@
-# Model Context Protocol (MCP) with InlingeAgent
+# Model Context Protocol (MCP) with InlineAgent
 
 This documentation provides guidance on how to initially set up the environment and walks through the project architecture.
 
