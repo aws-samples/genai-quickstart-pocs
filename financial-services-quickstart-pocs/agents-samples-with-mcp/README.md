@@ -212,11 +212,7 @@ To get started, follow the instructions from [`mcp_servers`](./mcp_servers) dire
 
 Here is the 10-minute setup guide for MCP servers and agents as well:
 
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/MnFlfGJnu00" 
-frameborder="0" 
-allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-allowfullscreen></iframe>
+[![Agent Samples with MCP Setup Guide](http://img.youtube.com/vi/MnFlfGJnu00/0.jpg)](http://www.youtube.com/watch?v=MnFlfGJnu00 "Agent Samples with MCP Setup Guide")
 
 ## ✅ Prerequisites
 
