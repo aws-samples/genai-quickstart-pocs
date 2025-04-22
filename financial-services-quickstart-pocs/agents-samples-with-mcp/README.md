@@ -210,6 +210,14 @@ The [`capital_markets`](./capital_markets) directory includes capital markets sp
 
 To get started, follow the instructions from [`mcp_servers`](./mcp_servers) directory to configure each MCP server. Once you have set up and tested the MCP servers, you can move on to test the industry specific examples, and also build your own agents from available tools and MCP servers if desired.
 
+Here is the 10-minute setup guide for MCP servers and agents as well:
+
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/MnFlfGJnu00" 
+frameborder="0" 
+allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+allowfullscreen></iframe>
+
 ## ✅ Prerequisites
 
 - Amazon Bedrock Access and CLI Credentials
