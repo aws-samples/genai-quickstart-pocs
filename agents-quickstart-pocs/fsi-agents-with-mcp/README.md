@@ -210,7 +210,7 @@ The [`capital_markets`](./capital_markets) directory includes capital markets sp
 
 To get started, follow the instructions from [`mcp_servers`](./mcp_servers) directory to configure each MCP server. Once you have set up and tested the MCP servers, you can move on to test the industry specific examples, and also build your own agents from available tools and MCP servers if desired.
 
-Here is the 10-minute setup guide for MCP servers and agents as well:
+Additionally, here is the 10-minute setup guide for MCP servers and agents (click the image to view):
 
 [![Agent Samples with MCP Setup Guide](http://img.youtube.com/vi/MnFlfGJnu00/0.jpg)](http://www.youtube.com/watch?v=MnFlfGJnu00 "Agent Samples with MCP Setup Guide")
 
