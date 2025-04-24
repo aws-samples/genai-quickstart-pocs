@@ -59,6 +59,8 @@ The [`mcp_servers`](./mcp_servers) directory contains various MCP servers:
 - 📊 [`financial-datasets`](./mcp_servers/financial-datasets): Integration to financial market data for stocks, cryptocurrencies, and other instruments
 - 📈 [`fredapi`](./mcp_servers/fredapi): Integration to Federal Reserve Economic Data for economic indicators
 
+> 💡 Understanding these individual MCPs will make it easier to comprehend the more complex industry specific examples, which typically use multiple MCPs together.
+
 ## 🛠️ Managed Tools
 
 The [`managed_tools`](./managed_tools) directory contains managed tools for Amazon Bedrock Agents:
@@ -207,6 +209,10 @@ The [`capital_markets`](./capital_markets) directory includes capital markets sp
 ## 🚀 Setup
 
 To get started, follow the instructions from [`mcp_servers`](./mcp_servers) directory to configure each MCP server. Once you have set up and tested the MCP servers, you can move on to test the industry specific examples, and also build your own agents from available tools and MCP servers if desired.
+
+Additionally, here is the 10-minute setup guide for MCP servers and agents (click the image to view):
+
+[![Agent Samples with MCP Setup Guide](http://img.youtube.com/vi/MnFlfGJnu00/0.jpg)](http://www.youtube.com/watch?v=MnFlfGJnu00 "Agent Samples with MCP Setup Guide")
 
 ## ✅ Prerequisites
 

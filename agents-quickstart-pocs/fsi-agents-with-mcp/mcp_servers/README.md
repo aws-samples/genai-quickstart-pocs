@@ -1,4 +1,4 @@
-# Model Context Protocol (MCP) with InlingeAgent
+# Model Context Protocol (MCP) with InlineAgent
 
 This documentation provides guidance on how to initially set up the environment and walks through the project architecture.
 
@@ -56,7 +56,7 @@ source .venv/bin/activate
 5. Install the required packages.
 
 ```bash
-cd financial-services-quickstart-pocs/fsi-agent-with-mcp/src/InlineAgent
+cd agents-quickstart-pocs/fsi-agents-with-mcp/src/InlineAgent
 uv pip install -e .
 ```
 

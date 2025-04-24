@@ -21,7 +21,7 @@ This documentation demonstrates how to use MCP server to perform internet search
    .venv\Scripts\activate
    ```
 
-2. Get a financial datasets API key.
+2. Get a Perplexity API key.
 
    - Visit https://www.perplexity.ai/
    - Create an account.
