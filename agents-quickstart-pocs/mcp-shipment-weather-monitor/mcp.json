@@ -1,0 +1,46 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/poprahul/Downloads"
+      ]
+    },
+    "weather": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "./weather",
+        "run",
+        "server.py"
+      ]
+    },
+    "database": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "./database",
+        "run",
+        "server.py"
+      ]
+    },
+    "email": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "./email_service",
+        "run",
+        "server.py"
+      ],
+      "env": {
+        "SMTP_SERVER": "smtp.gmail.com",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "your-email@gmail.com",
+        "SMTP_PASSWORD": "your-app-password",
+        "SENDER_EMAIL": "your-email@gmail.com"
+      }
+    }
+  }
+}

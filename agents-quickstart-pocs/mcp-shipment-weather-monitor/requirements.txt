@@ -1,0 +1,4 @@
+typer>=0.9.0
+rich>=13.7.0
+aiohttp>=3.9.0
+mcp[cli]>=1.6.0 
