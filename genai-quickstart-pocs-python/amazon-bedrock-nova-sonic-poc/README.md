@@ -80,9 +80,9 @@ The system allows for barge in, so if your mic can hear your speakers it may bar
 
 6. Run the application:
 ```bash
-python reservation_agent_demo.py
+python nova_sonic_reservation_agent_demo.py.py
 # Or with debug mode
-python reservation_agent_demo.py --debug
+python nova_sonic_reservation_agent_demo.py.py --debug
 ```
 
 ## Known Limitation
