@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/poprahul/Desktop",
+        "/Users/poprahul/Downloads"
+      ]
+    },
+    "weather": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/weather",
+        "run",
+        "server.py"
+      ]
+    },
+    "database": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/database",
+        "run",
+        "server.py"
+      ]
+    },
+    "email": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/email_service",
+        "run",
+        "server.py"
+      ],
+      "env": {
+        "SMTP_SERVER": "smtp.gmail.com",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "your-email@gmail.com",
+        "SMTP_PASSWORD": "your-app-password",
+        "SENDER_EMAIL": "your-email@gmail.com"
+      }
+    }
+  }
+}
