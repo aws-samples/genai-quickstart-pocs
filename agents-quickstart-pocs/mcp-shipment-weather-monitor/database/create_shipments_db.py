@@ -56,7 +56,7 @@ dummy_data = [
     ("DHL555666777", "Shipped", "DHL", "New York", "NY", "abc@example.com", "2025-04-15T18:00:00Z"),
     
     # FedEx shipment to Texas with specific email
-    ("FDX111222333", "Ordered", "FedEx", "Austin", "TX", "abc@amazon.com", "2025-04-16T08:45:00Z"),
+    ("FDX111222333", "Ordered", "FedEx", "Austin", "TX", "abc@example.com", "2025-04-16T08:45:00Z"),
     
     # UPS shipment to New Jersey
     ("UPS444555666", "In Transit", "UPS", "Jersey City", "NJ", "abc@example.com", "2025-04-17T06:30:00Z"),
