@@ -5,7 +5,6 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/poprahul/Desktop",
         "/Users/poprahul/Downloads"
       ]
     },
@@ -13,7 +12,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/weather",
+        "./weather",
         "run",
         "server.py"
       ]
@@ -22,7 +21,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/database",
+        "./database",
         "run",
         "server.py"
       ]
@@ -31,7 +30,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/Users/poprahul/workspace/_misc/mcp-demos/builder-madness/email_service",
+        "./email_service",
         "run",
         "server.py"
       ],
