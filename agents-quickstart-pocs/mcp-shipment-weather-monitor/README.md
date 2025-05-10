@@ -1,142 +1,183 @@
 # MCP Shipment Weather Monitor
 
-A Model Context Protocol (MCP) based system that monitors weather conditions to proactively identify and notify customers about potential shipping delays. This microservices architecture combines weather data from the National Weather Service with shipment tracking to ensure timely communication about weather-related delivery impacts.
+This project demonstrates a microservices architecture using Model Context Protocol (MCP) to monitor shipments and weather conditions that might affect deliveries.
 
-## 🌟 Features
+## Features
 
-- **Real-time Weather Monitoring**: Integrates with the National Weather Service API to track weather conditions
-- **Shipment Tracking**: Maintains a database of active shipments and their delivery locations
-- **Automated Notifications**: Sends proactive email alerts to customers about potential weather-related delays
-- **MCP Architecture**: Built using Model Context Protocol for efficient service communication
+- **Real-time Weather Impact Analysis**: Automatically correlate shipment destinations with current weather alerts
+- **Proactive Customer Communication**: Send timely notifications when weather conditions may delay deliveries
+- **Shipment Status Management**: Update shipment statuses based on external conditions
+- **Geographic Filtering**: Query and manage shipments by state or specific tracking numbers
+- **Bulk Operations**: Process multiple shipments simultaneously for efficient updates
+- **Detailed Weather Information**: Access both alerts and forecasts for informed decision-making
+- **Secure Configuration**: Store sensitive credentials in .env files rather than hardcoded values
 
-## 🏗️ Architecture
+## Services
 
-The system consists of three main microservices:
+The system consists of three main services:
 
-### 1. Weather Service
-- Monitors weather conditions and alerts via the National Weather Service API
-- Provides endpoints for:
-  - Getting active weather alerts by state
-  - Retrieving detailed weather forecasts by location
+1. **Database Service**: Manages shipment data and provides query capabilities
+2. **Weather Service**: Interfaces with the National Weather Service API to get weather alerts and forecasts
+3. **Email Service**: Sends notifications to customers about shipment delays
 
-### 2. Database Service
-- Manages shipment tracking information
-- Provides endpoints for:
-  - Retrieving all shipments
-  - Filtering shipments by state
-  - Looking up shipments by tracking number
-  - Updating shipment statuses
-
-### 3. Email Service
-- Handles customer communications
-- Features:
-  - Individual delay notifications
-  - Bulk notification capabilities
-  - Customizable email templates
-
-## 🚀 Getting Started
+## Setup
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- SQLite3
-- SMTP server access for email notifications
+- Python 3.8+
+- uv (Python package manager)
+- MCP CLI (`pip install mcp[cli]`)
+- Amazon Q Developer extension (for testing with Amazon Q)
 
 ### Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/mcp-shipment-weather-monitor.git
-cd mcp-shipment-weather-monitor
-```
-
-2. Set up virtual environments for each service:
-```bash
-# Weather Service
-cd weather
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-# Database Service
-cd ../database
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Email Service
-cd ../email_service
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-3. Configure environment variables for the email service:
-```bash
-export SMTP_SERVER="your.smtp.server"
-export SMTP_PORT="587"
-export SMTP_USERNAME="your_username"
-export SMTP_PASSWORD="your_password"
-export SENDER_EMAIL="your@email.com"
-```
-
-### Running the Services
-
-Start each service in a separate terminal:
+1. Clone this repository
+2. Install dependencies for each service:
 
 ```bash
-# Weather Service
-cd weather
-source .venv/bin/activate
-python server.py
-
-# Database Service
 cd database
-source .venv/bin/activate
+uv pip install -e .
+
+cd ../weather
+uv pip install -e .
+
+cd ../email_service
+uv pip install -e .
+```
+
+### Configuration
+
+#### Email Service Configuration
+
+The email service requires SMTP configuration. Create a `.env` file in the `email_service` directory:
+
+```bash
+# Create a .env file in the email_service directory
+touch email_service/.env
+```
+
+Then edit the `.env` file with your SMTP credentials:
+
+```
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SENDER_EMAIL=your-email@gmail.com
+```
+
+### Database Setup
+
+Initialize the shipments database:
+
+```bash
+cd database
+python create_shipments_db.py
+```
+
+## Running the Services
+
+Start all services using the MCP configuration:
+
+```bash
+mcp start
+```
+
+Or start individual services:
+
+```bash
+# Database service
+cd database
 python server.py
 
-# Email Service
+# Weather service
+cd weather
+python server.py
+
+# Email service
 cd email_service
-source .venv/bin/activate
 python server.py
 ```
 
-## 📝 Usage Example
+## Usage
 
-The system automatically:
-1. Monitors weather conditions in delivery areas
-2. Identifies shipments that might be affected
-3. Sends notifications to customers about potential delays
+Once all services are running, you can interact with them through an MCP-compatible client or through an AI assistant that supports the Model Context Protocol. The services expose the following tools:
 
-Example notification workflow:
-```python
-# Get weather alerts for a state
-alerts = await weather_service.get_alerts("NY")
+### Database Service Tools
+- `get_all_shipments`: Retrieve all shipments in the database
+- `get_shipments_by_state`: Get shipments for a specific state
+- `get_shipment_by_tracking_number`: Look up a shipment by its tracking number
+- `update_status_by_state`: Update the status of all shipments in a state
 
-# If severe weather is detected, find affected shipments
-if alerts:
-    shipments = database_service.get_shipments_by_state("NY")
-    
-    # Send notifications to affected customers
-    email_service.send_bulk_delay_notifications(shipments)
-```
+### Weather Service Tools
+- `get_alerts`: Get active weather alerts for a specific state
+- `get_forecast`: Get detailed weather forecast for specific coordinates
 
-## 🔒 Security
+### Email Service Tools
+- `send_delay_notification`: Send a delay notification for a specific shipment
+- `send_bulk_delay_notifications`: Send notifications for multiple shipments
 
-- Environment variables are used for sensitive configurations
-- SMTP credentials are never stored in code
-- TLS encryption for email communications
-- Secure API endpoints with proper error handling
+## Testing with Amazon Q Developer
 
-## 🤝 Contributing
+Amazon Q Developer provides native support for the Model Context Protocol, making it an excellent tool for testing and interacting with MCP services.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Setup for Amazon Q Developer
 
-## 📄 License
+1. **Install the Amazon Q Developer Extension**:
+   - For VS Code: Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AmazonWebServices.amazon-q-vscode)
+   - For JetBrains IDEs: Install from the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/20498-amazon-q)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+2. **Configure MCP in Amazon Q**:
+   - Open your IDE settings
+   - Navigate to the Amazon Q Developer settings
+   - Enable the Model Context Protocol feature
+   - Verify that Amazon Q can discover your running MCP services
 
-## 🙏 Acknowledgments
+### Example Prompts for Amazon Q
 
-- National Weather Service for their comprehensive weather API
-- Model Context Protocol (MCP) for enabling efficient service communication
+Once your services are running and Amazon Q is configured, you can test the system with prompts like these:
+
+1. **Query Shipment Information**:
+   ```
+   Can you show me all shipments in the database?
+   ```
+
+2. **Check Weather Alerts**:
+   ```
+   Are there any weather alerts for Texas that might affect shipments?
+   ```
+
+3. **Send Notifications for Affected Shipments**:
+   ```
+   There's a storm warning in New York. Can you find all shipments going to NY and send delay notifications to the customers?
+   ```
+
+4. **Update Shipment Status**:
+   ```
+   Please update the status of all shipments to California to "Delayed" due to weather conditions.
+   ```
+
+5. **Complex Workflow**:
+   ```
+   Can you check for weather alerts in Texas, and if there are any severe alerts, find all shipments going to Texas and send delay notifications to those customers?
+   ```
+
+### Troubleshooting MCP with Amazon Q
+
+If Amazon Q isn't connecting to your MCP services:
+
+1. Verify that all services are running (`mcp list` should show all services as active)
+2. Check that the MCP configuration file (`mcp.json`) is correctly set up
+3. Restart the Amazon Q extension
+4. Try explicitly telling Amazon Q which service to use: "Using the database service, show me all shipments"
+
+## Advanced Usage
+
+For more complex scenarios, you can chain operations across multiple services. For example:
+
+1. Query the database for shipments to a specific state
+2. Check weather alerts for that state
+3. If alerts exist, send notifications to affected customers
+4. Update the shipment status in the database
+
+Amazon Q Developer can orchestrate these multi-step workflows when given appropriate instructions.

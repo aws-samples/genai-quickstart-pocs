@@ -5,7 +5,7 @@ This module provides a FastMCP server that handles email notifications for shipm
 particularly those caused by weather conditions. It includes functionality for sending
 individual and bulk email notifications to customers.
 
-The service requires SMTP configuration through environment variables.
+The service requires SMTP configuration through environment variables or a .env file.
 """
 from mcp.server.fastmcp import FastMCP
 import smtplib
@@ -16,7 +16,15 @@ from typing import List, Dict
 import argparse
 import logging
 import sys
+from pathlib import Path
 from datetime import datetime
+
+# Try to import dotenv for .env file support
+try:
+    from dotenv import load_dotenv
+    DOTENV_AVAILABLE = True
+except ImportError:
+    DOTENV_AVAILABLE = False
 
 # Configure logging to provide informative output during service operation
 logging.basicConfig(
@@ -28,7 +36,20 @@ logger = logging.getLogger(__name__)
 # Initialize the FastMCP server with the service name "Email"
 mcp = FastMCP("Email")
 
-# Email configuration - these should be set as environment variables for security
+# Load environment variables from .env file if available
+if DOTENV_AVAILABLE:
+    # Look for .env file in the current directory
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        logger.info(f"Loading configuration from {env_path}")
+        load_dotenv(dotenv_path=env_path)
+    else:
+        logger.warning(f".env file not found at {env_path}. Using environment variables or defaults.")
+else:
+    logger.warning("python-dotenv package not installed. Using environment variables or defaults.")
+    logger.info("To use .env files, install python-dotenv: pip install python-dotenv")
+
+# Email configuration - loaded from .env file or environment variables
 # Default values are provided for development but should be overridden in production
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -56,7 +77,7 @@ def send_email_smtp(to_email: str, subject: str, body: str) -> Dict:
         logger.error("Email configuration is incomplete")
         return {
             "success": False,
-            "error": "Email configuration is incomplete. Please set all required environment variables."
+            "error": "Email configuration is incomplete. Please set all required environment variables or use a .env file."
         }
 
     try:
@@ -218,4 +239,4 @@ if __name__ == "__main__":
     
     logger.info(f"Starting email service on port {args.port}")
     # Run the FastMCP server using stdio transport for communication
-    mcp.run(transport='stdio') 
+    mcp.run(transport='stdio')
