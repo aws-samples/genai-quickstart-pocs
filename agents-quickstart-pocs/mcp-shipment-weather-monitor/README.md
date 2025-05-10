@@ -157,19 +157,6 @@ Once your services are running and Amazon Q is configured, you can test the syst
    Please update the status of all shipments to California to "Delayed" due to weather conditions.
    ```
 
-5. **Complex Workflow**:
-   ```
-   Can you check for weather alerts in Texas, and if there are any severe alerts, find all shipments going to Texas and send delay notifications to those customers?
-   ```
-
-### Troubleshooting MCP with Amazon Q
-
-If Amazon Q isn't connecting to your MCP services:
-
-1. Verify that all services are running (`mcp list` should show all services as active)
-2. Check that the MCP configuration file (`mcp.json`) is correctly set up
-3. Restart the Amazon Q extension
-4. Try explicitly telling Amazon Q which service to use: "Using the database service, show me all shipments"
 
 ## Advanced Usage
 
@@ -181,3 +168,8 @@ For more complex scenarios, you can chain operations across multiple services. F
 4. Update the shipment status in the database
 
 Amazon Q Developer can orchestrate these multi-step workflows when given appropriate instructions.
+
+**Complex Workflow**:
+   ```
+   Can you check for weather alerts in Texas, and if there are any severe alerts, find all shipments going to Texas and send delay notifications to those customers?
+   ```
