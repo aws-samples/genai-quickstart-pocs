@@ -49,11 +49,11 @@ uv pip install -e .
 
 #### Email Service Configuration
 
-The email service requires SMTP configuration. Create a `.env` file in the `email_service` directory:
+The email service requires SMTP configuration. Copy the `.env.example` file to `.env` in the `email_service` directory:
 
 ```bash
-# Create a .env file in the email_service directory
-touch email_service/.env
+# Copy the example config to .env in the email_service directory
+cp email_service/.env.example email_service/.env
 ```
 
 Then edit the `.env` file with your SMTP credentials:
@@ -65,6 +65,8 @@ SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SENDER_EMAIL=your-email@gmail.com
 ```
+
+> **Important**: The `.env` file must exist for the email service to work properly. The `.env.example` file is provided as a template but will not be read by the application.
 
 ### Database Setup
 
