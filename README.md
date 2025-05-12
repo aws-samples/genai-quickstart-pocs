@@ -260,6 +260,9 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock RAG Kendra POC](genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Rag.Kendra.Poc/images/demo.png)
     
 
+## Agent & Model Context Protocol POC - Python
+
+1. **Model Context Protocol (MCP) based Shipment management System** MCP based system that monitors weather conditions to proactively identify and notify customers about potential shipping delays. This microservices architecture combines weather data from the National Weather Service with shipment tracking to ensure timely communication about weather-related delivery impacts.
 
 
 
