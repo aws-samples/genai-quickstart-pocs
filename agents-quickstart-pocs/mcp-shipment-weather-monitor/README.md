@@ -175,3 +175,9 @@ Amazon Q Developer can orchestrate these multi-step workflows when given appropr
    ```
    Can you check for weather alerts in Texas, and if there are any severe alerts, find all shipments going to Texas and send delay notifications to those customers?
    ```
+
+## Quick Demo
+Additionally, here is the quick demo for this application (click the image to view):
+
+![Screen Recording of Demo](images/mcp_demo.gif)
+
