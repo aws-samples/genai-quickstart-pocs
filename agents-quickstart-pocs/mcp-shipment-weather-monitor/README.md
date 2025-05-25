@@ -179,5 +179,5 @@ Amazon Q Developer can orchestrate these multi-step workflows when given appropr
 ## Quick Demo
 Additionally, here is the quick demo for this application (click the image to view):
 
-![Screen Recording of Demo](images/mcp_demo.gif)
+![Screen Recording of Demo](mcp_demo.gif)
 
