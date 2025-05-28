@@ -137,7 +137,7 @@ def generate_powerpoint_sections(
     response: LLMResponseSections = chain.invoke(input_arguments)
     if write_callback:
         write_callback(
-            f"Presentation sections are {",".join([section.title for section in response.section_slides])}"
+            f"Presentation sections are {','.join([section.title for section in response.section_slides])}"
         )
     return response.section_slides
 
