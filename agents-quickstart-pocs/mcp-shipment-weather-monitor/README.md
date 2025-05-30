@@ -180,4 +180,3 @@ Amazon Q Developer can orchestrate these multi-step workflows when given appropr
 Additionally, here is the quick demo:
 
 ![Quick Demo](images/mcp-demo.gif)
-
