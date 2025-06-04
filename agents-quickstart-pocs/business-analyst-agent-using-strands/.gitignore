@@ -1,7 +1,0 @@
-/.venv
-/venv
-/repl_state
-*/__pycache__/*
-/__pycache__
-/sample_data/analysis_results
-/.idea
