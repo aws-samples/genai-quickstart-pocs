@@ -1,0 +1,142 @@
+{
+  "ecommerce_sales": {
+    "description": "6 months of e-commerce sales data across regions, product categories, and customer segments",
+    "file": "ecommerce_sales.csv",
+    "sample_questions": [
+      {
+        "question": "What are our strongest performing regions and why?",
+        "expected_insight": "West Coast leads with 35% higher revenue per customer, driven by Premium segment adoption",
+        "demonstrates": "Geographic analysis with customer segmentation insights"
+      },
+      {
+        "question": "Show me seasonal patterns in our sales data",
+        "expected_insight": "Q4 shows 240% spike in Electronics, while Clothing remains steady year-round",
+        "demonstrates": "Time series analysis with category breakdown"
+      },
+      {
+        "question": "Which product categories drive the most revenue?",
+        "expected_insight": "Electronics: 65% of revenue, highest margins. Clothing: 25% steady volume. Books: declining trend",
+        "demonstrates": "Category performance analysis with trend identification"
+      },
+      {
+        "question": "Are there differences between customer segments?",
+        "expected_insight": "Enterprise customers: 3x higher average order value but 40% longer sales cycles",
+        "demonstrates": "Customer segmentation analysis with behavioral patterns"
+      },
+      {
+        "question": "What insights can you provide about our sales performance?",
+        "expected_insight": "Multi-dimensional analysis covering regional, temporal, and categorical patterns",
+        "demonstrates": "Comprehensive business intelligence synthesis"
+      }
+    ]
+  },
+  "marketing_campaigns": {
+    "description": "Marketing campaign performance across multiple channels and campaign types",
+    "file": "marketing_campaigns.csv", 
+    "sample_questions": [
+      {
+        "question": "Which marketing channels give us the best return on investment?",
+        "expected_insight": "Email: 450% ROI, Social Media: 220% ROI, Paid Search: 180% ROI but highest volume",
+        "demonstrates": "ROI calculation and channel comparison"
+      },
+      {
+        "question": "Show me the relationship between budget and conversions",
+        "expected_insight": "Strong correlation (0.78) up to $10K budget, then diminishing returns above $15K",
+        "demonstrates": "Spend efficiency analysis with optimization recommendations"
+      },
+      {
+        "question": "What's our most cost-effective acquisition channel?",
+        "expected_insight": "Email: $12 cost per conversion, Social: $28, Paid Search: $45 but brings highest-value customers",
+        "demonstrates": "Cost per acquisition analysis with customer value considerations"
+      },
+      {
+        "question": "Are there patterns in campaign performance by type?",
+        "expected_insight": "Product launches: highest engagement, Retargeting: best conversion rates, Brand awareness: lowest immediate ROI",
+        "demonstrates": "Campaign type effectiveness analysis"
+      },
+      {
+        "question": "How can we optimize our marketing budget allocation?",
+        "expected_insight": "Increase email by 40%, maintain social for reach, reduce paid search spend above $10K threshold",
+        "demonstrates": "Budget optimization recommendations based on performance data"
+      }
+    ]
+  },
+  "employee_analytics": {
+    "description": "Employee performance, satisfaction, and development data across departments",
+    "file": "employee_analytics.csv",
+    "sample_questions": [
+      {
+        "question": "What factors correlate most strongly with employee performance?",
+        "expected_insight": "Training hours (0.72 correlation), years of experience (0.58), satisfaction score (0.61)",
+        "demonstrates": "Multi-factor correlation analysis with performance drivers"
+      },
+      {
+        "question": "Are there significant differences between departments?",
+        "expected_insight": "Engineering: highest satisfaction (4.2/5), Sales: highest performance variance, Marketing: best training ROI",
+        "demonstrates": "Department comparison analysis across multiple metrics"
+      },
+      {
+        "question": "Does our training investment pay off in performance gains?",
+        "expected_insight": "Every 10 training hours correlates with 0.3 point performance increase; ROI peaks at 40 hours annually",
+        "demonstrates": "Training effectiveness analysis with optimal investment levels"
+      },
+      {
+        "question": "What insights can you provide about salary vs performance?",
+        "expected_insight": "Moderate correlation (0.45); some high performers underpaid, suggesting retention risk in Engineering",
+        "demonstrates": "Compensation analysis with retention risk identification"
+      },
+      {
+        "question": "Which employees might be at risk for turnover?",
+        "expected_insight": "Low satisfaction + high performance + below-median salary = 15 employees flagged for retention focus",
+        "demonstrates": "Predictive analytics for HR intervention"
+      }
+    ]
+  },
+  "support_tickets": {
+    "description": "Customer support ticket data with resolution times, priorities, and satisfaction scores",
+    "file": "support_tickets.csv",
+    "sample_questions": [
+      {
+        "question": "What patterns do you see in our support ticket resolution times?",
+        "expected_insight": "High priority: 2.3 hrs avg, Medium: 18 hrs, Low: 72 hrs. 85% meet SLA except Technical category",
+        "demonstrates": "Operational performance analysis with SLA tracking"
+      },
+      {
+        "question": "How does ticket priority affect resolution speed?",
+        "expected_insight": "Priority system working well: 10x faster resolution for High vs Low, but Medium tickets often delayed",
+        "demonstrates": "Priority system effectiveness analysis"
+      },
+      {
+        "question": "Which support categories are most challenging for our team?",
+        "expected_insight": "Technical Issues: 45% longer resolution, 20% lower satisfaction. Billing: fastest resolution, highest satisfaction",
+        "demonstrates": "Category difficulty analysis with resource allocation insights"
+      },
+      {
+        "question": "Are there agent performance differences?",
+        "expected_insight": "Top agents: 30% faster resolution + 15% higher satisfaction. Training opportunity identified for 3 agents",
+        "demonstrates": "Individual performance analysis with development recommendations"
+      },
+      {
+        "question": "What trends do you see in our support workload?",
+        "expected_insight": "Monday peak (40% higher volume), Technical issues increasing 15% monthly, satisfaction improving overall",
+        "demonstrates": "Workload forecasting and trend analysis"
+      }
+    ]
+  },
+  "general_tips": {
+    "effective_questions": [
+      "Start with 'What patterns do you see...' for broad analysis",
+      "Ask 'Show me the relationship between...' for correlation analysis", 
+      "Use 'Which [category] performs best...' for comparative analysis",
+      "Try 'What insights can you provide about...' for comprehensive analysis",
+      "Ask 'How can we optimize...' for actionable recommendations"
+    ],
+    "question_patterns": {
+      "exploratory": "What patterns/insights/trends do you see in...",
+      "comparative": "Which [category] performs best/worst for...", 
+      "correlational": "Show me the relationship between X and Y",
+      "optimization": "How can we improve/optimize...",
+      "predictive": "What factors predict/indicate..."
+    }
+  }
+}
