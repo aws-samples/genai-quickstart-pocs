@@ -1,0 +1,9 @@
+boto3
+botocore
+langchain>=0.1.0, <0.2.0
+python-dotenv
+streamlit
+PyPDF2
+PyMuPDF
+pdf2image
+Pillow
