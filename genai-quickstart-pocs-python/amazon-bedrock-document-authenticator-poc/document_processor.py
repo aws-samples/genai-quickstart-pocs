@@ -1,73 +1,93 @@
-import json
-import base64
-import boto3
-import io
-from PIL import Image
-from PyPDF2 import PdfReader
-import fitz  # PyMuPDF
-from pdf2image import convert_from_bytes
-from typing import Dict, List, Any
-import logging
-import re
+# Import necessary libraries
+import json  # For JSON data handling
+import base64  # For encoding and decoding binary data
+import boto3  # AWS SDK for Python
+import io  # For handling I/O operations
+from PIL import Image  # Python Imaging Library for image processing
+from PyPDF2 import PdfReader  # For reading PDF files
+import fitz  # PyMuPDF for advanced PDF processing
+from pdf2image import convert_from_bytes  # For converting PDF to images
+from typing import Dict, List, Any  # Type hinting for better code documentation
+import logging  # For application logging
+import re  # For regular expression operations
 
-# Set up logging
+# Set up logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_bedrock_client():
     """Initialize and return the Bedrock client"""
     try:
+        # Create and return a boto3 client for Bedrock in the us-west-2 region
         return boto3.client('bedrock-runtime', region_name='us-west-2')
     except Exception as e:
+        # Log error if client initialization fails
         logger.error(f"Failed to initialize Bedrock client: {str(e)}")
         raise
 
 class PDFDocument:
     def __init__(self, file_bytes):
+        """Initialize PDFDocument with raw PDF file bytes"""
         try:
+            # Create a PdfReader object from the file bytes
             self.pdf_reader = PdfReader(io.BytesIO(file_bytes), strict=False)
             self.pages = []
+            # Process each page of the PDF
             for page_num in range(len(self.pdf_reader.pages)):
                 try:
                     page = self.pdf_reader.pages[page_num]
+                    # Extract text and images from each page
                     self.pages.append({
                         "text": self._extract_text(page),
                         "images": self._extract_images(page)
                     })
                 except Exception as e:
+                    # Log warning if page processing fails
                     logger.warning(f"Error processing page {page_num}: {str(e)}")
+                    # Add empty page data if processing fails
                     self.pages.append({
                         "text": "",
                         "images": []
                     })
         except Exception as e:
+            # Log error if PDF initialization fails
             logger.error(f"Error initializing PDF document: {str(e)}")
             raise
 
     def _extract_text(self, page) -> str:
+        """Extract text from a PDF page"""
         try:
+            # Attempt to extract text from the page
             text = page.extract_text()
             return text if text else ""
         except Exception as e:
+            # Log warning if text extraction fails
             logger.warning(f"Failed to extract text from page: {str(e)}")
             return ""
 
     def _extract_images(self, page) -> List:
+        """Extract images from a PDF page"""
         try:
+            # Return images if the page has any, otherwise return an empty list
             return page.images if hasattr(page, 'images') else []
         except Exception as e:
+            # Log warning if image extraction fails
             logger.warning(f"Failed to extract images from page: {str(e)}")
             return []
 
     def image_content_block(self, pdf_image) -> Dict:
+        """Convert a PDF image to a content block for AI processing"""
         try:
+            # Extract image data and open it with PIL
             image_bytes = pdf_image.data
             image = Image.open(io.BytesIO(image_bytes))
             
+            # Convert image to JPEG format
             buffered = io.BytesIO()
             image.convert('RGB').save(buffered, format="JPEG", quality=85)
             img_str = base64.b64encode(buffered.getvalue()).decode()
             
+            # Return the image as a content block
             return {
                 "type": "image",
                 "source": {
@@ -77,27 +97,33 @@ class PDFDocument:
                 }
             }
         except Exception as e:
+            # Log error if image processing fails
             logger.error(f"Error processing image: {str(e)}")
             return None
 
     def text_content_block(self, text: str) -> Dict:
+        """Create a text content block for AI processing"""
         return {
             "type": "text",
             "text": text if text else ""
         }
 
     def get_content_blocks(self) -> List[Dict]:
+        """Generate a list of content blocks from PDF pages"""
         content = []
         current_text = ""
 
         try:
+            # Process each page of the PDF
             for page_num, p in enumerate(self.pages):
                 page_images = p['images']
                 page_text = p['text']
                 
+                # Add page number and text to current_text
                 if page_text:
                     current_text += f"PAGE {page_num+1}\n\n{page_text}\n"
                 
+                # If page has images, add current text as a block and process images
                 if len(page_images) > 0:
                     if current_text:
                         content.append(self.text_content_block(current_text))
@@ -107,22 +133,31 @@ class PDFDocument:
                         if image_block:
                             content.append(image_block)
 
+            # Add any remaining text as a content block
             if current_text:
                 content.append(self.text_content_block(current_text))
 
+            # Raise error if no content was extracted
             if not content:
                 raise ValueError("No content could be extracted from the PDF")
 
             return content
         except Exception as e:
+            # Log error if content block generation fails
             logger.error(f"Error getting content blocks: {str(e)}")
             raise
 
+
 def get_analysis_prompt(doc_type: str) -> str:
+    """Generate an analysis prompt based on the document type"""
+    # Base prompt for all document types
     base_prompt = """Analyze this document and extract information with confidence scores. 
     Provide scores between 0 (lowest) and 1 (highest) for each extracted field.
     Focus on key information needed for financial institution verification.\n\n"""
     
+    # Document-specific prompts
+    
+    # ID Document specific JSON structure
     if doc_type == "ID Document":
         return base_prompt + """{
             "document_analysis": {
@@ -139,7 +174,9 @@ def get_analysis_prompt(doc_type: str) -> str:
                 "expiration_date": {"value": "expiration date", "confidence": 0.0},
                 "address": {"value": "address if shown", "confidence": 0.0}
             }
-        }"""
+        }""" 
+    
+    # Bank Statement specific JSON structure
     elif "Bank Statement" in doc_type:
         return base_prompt + """{
             "document_analysis": {
@@ -153,7 +190,9 @@ def get_analysis_prompt(doc_type: str) -> str:
                 "statement_period": {"value": "period covered", "confidence": 0.0},
                 "address": {"value": "account holder's address", "confidence": 0.0}
             }
-        }"""
+        }""" 
+    
+    # Utility Bill specific JSON structure
     elif "Utility Bill" in doc_type:
         return base_prompt + """{
             "document_analysis": {
@@ -168,7 +207,9 @@ def get_analysis_prompt(doc_type: str) -> str:
                 "account_number": {"value": "account number", "confidence": 0.0},
                 "bill_date": {"value": "date of bill", "confidence": 0.0}
             }
-        }"""
+        }""" 
+    
+    # Employment Verification specific JSON structure
     elif "Employment Verification" in doc_type:
         return base_prompt + """{
             "document_analysis": {
@@ -196,7 +237,9 @@ def get_analysis_prompt(doc_type: str) -> str:
                     "contact_info": {"value": "verification contact information", "confidence": 0.0}
                 }
             }
-        }"""
+        }""" 
+   
+    # Pay Stub specific JSON structure
     elif "Pay Stub" in doc_type:
         return base_prompt + """{
             "document_analysis": {
@@ -237,22 +280,25 @@ def get_analysis_prompt(doc_type: str) -> str:
                     "other": {"value": "other deductions", "confidence": 0.0}
                 }
             }
-        }"""
+        }""" 
 
 def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
     """Process a document for authentication and information extraction"""
     try:
+         # Check if a file was uploaded
         if not uploaded_file:
             logger.error("No file uploaded")
             return {
                 "document_name": "No file",
                 "full_analysis": {"error": "No file uploaded"}
             }
-
+        
+        # Get file bytes and check file size
         file_bytes = uploaded_file.getvalue()
         file_size = len(file_bytes)
         logger.info(f"Processing {doc_type} - File size: {file_size} bytes")
 
+        # Check if file size is within limit
         if file_size > 5_000_000:  # 5MB limit
             logger.warning("File size too large")
             raise ValueError("File size too large. Please upload a smaller file.")
@@ -263,7 +309,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                 if uploaded_file.type == 'application/pdf':
                     logger.info(f"Converting {doc_type} PDF to image")
                     try:
-                        # First attempt with PyMuPDF
+                        # Attempt conversion with PyMuPDF
                         pdf_document = fitz.open(stream=file_bytes, filetype="pdf")
                         first_page = pdf_document[0]
                         zoom = 2  # Increase zoom for higher resolution
@@ -274,11 +320,12 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                         logger.info("Successfully converted PDF to image using PyMuPDF")
                     except Exception as e:
                         logger.warning(f"PyMuPDF conversion failed: {str(e)}, trying pdf2image")
-                        # Fallback to pdf2image
+                        # Fallback to pdf2image if PyMuPDF fails
                         images = convert_from_bytes(file_bytes, dpi=200)
                         image = images[0]
                         logger.info("Successfully converted PDF to image using pdf2image")
                 else:
+                    # Process as direct image if not PDF
                     image = Image.open(io.BytesIO(file_bytes))
                     logger.info(f"Processing {doc_type} as direct image")
 
@@ -291,9 +338,11 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                 if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
                     image.thumbnail(max_size, Image.Resampling.LANCZOS)
                 
+                # Save image as PNG
                 image.save(buffered, format="PNG", optimize=True)
                 img_str = base64.b64encode(buffered.getvalue()).decode()
                 
+                # Create content block for the image
                 content_blocks = [{
                     "type": "image",
                     "source": {
@@ -312,6 +361,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
             # Standard processing for other document types
             if uploaded_file.type == 'application/pdf':
                 try:
+                    # Process PDF document
                     pdf_doc = PDFDocument(file_bytes)
                     content_blocks = pdf_doc.get_content_blocks()
                     logger.info("Successfully processed PDF document")
@@ -320,6 +370,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                     raise ValueError(f"Error processing PDF: {str(e)}")
             else:
                 try:
+                    # Process image document
                     image = Image.open(io.BytesIO(file_bytes))
                     buffered = io.BytesIO()
                     image.convert('RGB').save(buffered, format="JPEG", quality=85)
@@ -338,20 +389,20 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                     logger.error(f"Image processing error: {str(e)}")
                     raise ValueError(f"Error processing image: {str(e)}")
 
-        # Add analysis prompt
+        # Add analysis prompt to content blocks
         prompt = get_analysis_prompt(doc_type)
         content_blocks.insert(0, {
             "type": "text",
             "text": prompt
         })
 
-        # Create the message
+        # Create the message for AI model
         messages = [{
             "role": "user",
             "content": content_blocks
         }]
 
-        # Create the request body
+        # Create the request body for Bedrock API
         body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 4096,
@@ -376,7 +427,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
             print("Raw response from Claude:", response_text)
 
             try:
-                # Find the JSON part in the response
+                # Extract JSON from the response
                 json_start = response_text.find('{')
                 json_end = response_text.rfind('}') + 1
                 if json_start != -1 and json_end > json_start:
@@ -385,6 +436,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                 else:
                     raise ValueError("No JSON found in response")
 
+                # Validate extracted information
                 if not analysis or not analysis.get("extracted_info"):
                     raise ValueError("No information extracted from the document")
                 
@@ -396,6 +448,7 @@ def process_document(bedrock_client, uploaded_file, doc_type: str) -> Dict:
                 logger.error(f"Raw response: {response_text}")
                 raise ValueError(f"Error parsing response: {str(e)}")
 
+            # Return the analysis results
             return {
                 "document_name": uploaded_file.name,
                 "full_analysis": analysis
