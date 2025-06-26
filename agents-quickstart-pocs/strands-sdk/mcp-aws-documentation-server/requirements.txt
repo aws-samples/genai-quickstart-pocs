@@ -1,0 +1,4 @@
+strands-agents
+streamlit
+strands-agents-tools 
+awslabs.aws-documentation-mcp-server 
