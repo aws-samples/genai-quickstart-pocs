@@ -1,4 +1,4 @@
-# MCP ServiceNow Helpdesk Assistant with strands and ServiceNow
+# MCP ServiceNow Helpdesk Assistant with Strands
 
 ## 📚 Table of Contents
 - [Overview](#overview)
