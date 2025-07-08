@@ -1,0 +1,10 @@
+# ServiceNow Configuration
+SERVICENOW_INSTANCE_URL=servicenow_instance_url(https://dev20922.service-now.com)
+SERVICENOW_USERNAME=
+SERVICENOW_PASSWORD=
+SERVICENOW_AUTH_TYPE=basic
+
+# AWS Configuration (for Bedrock)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=

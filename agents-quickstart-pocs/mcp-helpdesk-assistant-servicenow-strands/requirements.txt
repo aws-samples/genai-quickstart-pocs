@@ -1,0 +1,15 @@
+# Core dependencies
+strands-agents>=0.1.2
+strands-agents-tools>=0.1.1
+mcp>=1.6.0
+python-dotenv>=1.0.0
+
+# Streamlit and UI dependencies
+streamlit>=1.28.0
+pandas>=2.0.0
+plotly>=5.15.0
+numpy>=1.24.0
+
+# Additional utilities
+requests>=2.31.0
+python-dateutil>=2.8.0 
