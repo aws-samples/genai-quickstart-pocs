@@ -57,6 +57,32 @@ Whether you're an IT support agent, end user, or manager, the MCP ServiceNow Hel
 
 ## Architecture 🏗️
 
+```mermaid
+flowchart TD
+    User["User (Web/CLI)"]
+    Streamlit["Streamlit UI"]
+    Agent["Strands Agent"]
+    Tools["ServiceNow MCP Tools Wrapper"]
+    MCP["ServiceNow MCP Server"]
+    ServiceNow["ServiceNow Platform"]
+
+    User --> Streamlit
+    Streamlit --> Agent
+    Agent --> Tools
+    Tools --> MCP
+    MCP --> ServiceNow
+    Tools -- "Results/Incidents/Knowledge" --> Agent
+    Agent -- "Response" --> Streamlit
+    Streamlit -- "Chat/Incident Actions" --> User
+```
+
+**Flow:**
+- The user interacts with the chatbot via a web (Streamlit) or CLI interface.
+- The UI sends user queries to the Strands Agent.
+- The agent uses the ServiceNow MCP Tools Wrapper to perform actions (create/search/update incidents, etc.).
+- The tools communicate with the ServiceNow MCP Server, which in turn interacts with the ServiceNow Platform.
+- Results are returned back up the chain to the user.
+
 ### MCP ServiceNow Integration
 The application is designed to integrate with ServiceNow using the Model Context Protocol (MCP). The core components are:
 - **Strands Agent**: An intelligent agent that uses large language models (LLMs) to understand and generate natural language. It can plan, reason, and act autonomously.
