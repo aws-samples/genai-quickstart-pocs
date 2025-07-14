@@ -1,5 +1,5 @@
 # ServiceNow Configuration
-SERVICENOW_INSTANCE_URL=servicenow_instance_url(https://dev20922.service-now.com)
+SERVICENOW_INSTANCE_URL=
 SERVICENOW_USERNAME=
 SERVICENOW_PASSWORD=
 SERVICENOW_AUTH_TYPE=basic

@@ -1,5 +1,5 @@
 """
-MCP ServiceNow Helpdesk Assistant - Main Entry Point
+MCP ServiceNow Helpdesk Assistant - Main Entry Point (CLI)
 
 This is the main entry point for the MCP ServiceNow Helpdesk Assistant.
 It provides a simple command-line interface and can also launch the Streamlit app.
@@ -12,7 +12,7 @@ from chatbot_agent import chatbot
 
 def cli_interface():
     """Simple command-line interface for testing"""
-    print("🛠️ MCP ServiceNow Helpdesk Assistant - CLI Mode")
+    print("MCP ServiceNow Helpdesk Assistant - CLI Mode")
     print("=" * 50)
     print("Type 'quit' to exit, 'help' for commands")
     print()
@@ -22,7 +22,7 @@ def cli_interface():
             user_input = input("👤 You: ").strip()
             
             if user_input.lower() in ['quit', 'exit', 'q']:
-                print("👋 Goodbye!")
+                print("Goodbye!")
                 break
             
             if user_input.lower() == 'help':
@@ -30,24 +30,24 @@ def cli_interface():
                 continue
             
             if user_input.lower() == 'trends':
-                print("📊 Analyzing trends...")
+                print("Analyzing trends...")
                 response = chatbot.analyze_trends()
-                print(f"🤖 Assistant: {response}")
+                print(f"Assistant: {response}")
                 continue
             
             if not user_input:
                 continue
             
-            print("🤖 Assistant: ", end="", flush=True)
+            print("Assistant: ", end="", flush=True)
             response = chatbot.process_message(user_input)
             print(response)
             print()
             
         except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
+            print("\nGoodbye!")
             break
         except Exception as e:
-            print(f"❌ Error: {str(e)}")
+            print(f"Error: {str(e)}")
 
 
 def print_help():
@@ -82,7 +82,7 @@ def main():
             print("🧪 Running connection test...")
             test_connection()
         else:
-            print(f"❌ Unknown command: {command}")
+            print(f"Unknown command: {command}")
             print("Available commands: cli, streamlit, test")
     else:
         # Default to CLI mode
@@ -96,18 +96,18 @@ def test_connection():
     try:
         # Test connection
         if chatbot.agent:
-            print("✅ Chatbot agent initialized successfully")
+            print("Chatbot agent initialized successfully")
         else:
-            print("❌ Chatbot agent initialization failed")
+            print("Chatbot agent initialization failed")
         
         # Test basic functionality
         response = chatbot.process_message("Hello, can you help me?")
-        print(f"✅ Basic response test: {response[:100]}...")
+        print(f"Basic response test: {response[:100]}...")
         
-        print("🎉 Connection test completed successfully!")
+        print("Connection test completed successfully!")
         
     except Exception as e:
-        print(f"❌ Connection test failed: {str(e)}")
+        print(f"Connection test failed: {str(e)}")
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ A modern chatbot interface for ServiceNow incident management
 
 import streamlit as st
 import json
+import html
 from datetime import datetime
 from chatbot_agent import chatbot
 from config import CHATBOT_CONFIG
@@ -76,7 +77,7 @@ def main():
     """, unsafe_allow_html=True)
     
     # Header
-    st.markdown('<h1 class="main-header">🛠️ ServiceNow Helpdesk Assistant</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🛠️ Enterprise IT Helpdesk ServiceNow Assistant</h1>', unsafe_allow_html=True)
     st.markdown("---")
     
     # Sidebar
@@ -174,7 +175,7 @@ def main():
                 st.markdown(f"""
                 <div class="chat-message assistant-message">
                     <strong>🤖 Assistant:</strong><br>
-                    {message["content"]}
+                    {html.escape(message["content"])}
                 </div>
                 """, unsafe_allow_html=True)
         
@@ -219,7 +220,7 @@ def main():
     st.markdown("---")
     st.markdown(
         "<div style='text-align: center; color: #666; font-size: 0.8rem;'>"
-        "ServiceNow Helpdesk Assistant | Powered by Strands Agents & MCP"
+        "IT Enterprise ServiceNow Helpdesk Assistant | Powered by Strands Agents & MCP"
         "</div>",
         unsafe_allow_html=True
     )

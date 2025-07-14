@@ -10,9 +10,11 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from strands import Agent, tool
 from strands_tools import swarm, file_write
-from servicenow_tools import servicenow_tools
 from config import CHATBOT_CONFIG
-
+from mcp import StdioServerParameters, stdio_client
+from strands.tools.mcp import MCPClient
+from config import SERVICENOW_MCP_CONFIG
+from config import AWS_CONFIG
 
 class ServiceNowChatbot:
     """Main chatbot agent for ServiceNow incident management"""
@@ -20,33 +22,34 @@ class ServiceNowChatbot:
     def __init__(self):
         self.conversation_history = []
         self.agent = None
+        self.mcp_client = None
+        self.tools = []
         self.initialize_agent()
     
     def initialize_agent(self):
         """Initialize the chatbot agent with tools and system prompt"""
         try:
-            # Connect to ServiceNow MCP server
-            servicenow_tools.connect()
+            # Connect to ServiceNow MCP server and discover tools
+            self.mcp_client = MCPClient(
+                lambda: stdio_client(
+                    StdioServerParameters(
+                        command=SERVICENOW_MCP_CONFIG["command"],
+                        args=SERVICENOW_MCP_CONFIG["args"],
+                        env=SERVICENOW_MCP_CONFIG["env"]
+                    )
+                )
+            )
             
-            # Tool wrapper for create_incident, it shows you the example how you wrap individual tools from server
-            def _create_incident_tool(short_description: str, description: str, category: str = "Email/Communication", priority: str = "High", assignment_group: str = "IT Infrastructure") -> dict:
-                """
-                Create a new incident in ServiceNow.
-                Args:
-                    short_description: Brief description of the incident
-                    description: Detailed description
-                    category: Incident category
-                    priority: Priority level (Low, Medium, High, Critical)
-                    assignment_group: Assignment group
-                Returns:
-                    Incident creation result
-                """
-                return servicenow_tools.create_incident(short_description, description, category, priority, assignment_group)
-
-            create_incident = tool(_create_incident_tool, name="create_incident")
+            # Start the MCP client session
+            self.mcp_client.__enter__()
             
-            # Create the main agent
+            # Discover all available ServiceNow MCP tools
+            self.tools = self.mcp_client.list_tools_sync()
+            print(f"Discovered {len(self.tools)} ServiceNow MCP tools")
+            
+            # Create the main agent.
             self.agent = Agent(
+                model=AWS_CONFIG["model_id"],
                 system_prompt="""You are a ServiceNow Helpdesk Assistant, an AI-powered chatbot designed to help users 
                 manage IT incidents and service requests. You have access to ServiceNow through MCP tools and can 
                 perform various incident management tasks.
@@ -78,7 +81,7 @@ class ServiceNowChatbot:
                 
                 Use the available tools to perform actions and provide helpful responses to users.
                 """,
-                tools=[swarm, file_write]
+                tools=self.tools + [file_write]
             )
         except Exception as e:
             print(f"Error initializing agent: {str(e)}")
@@ -210,49 +213,9 @@ class ServiceNowChatbot:
             Trend analysis report
         """
         try:
-            # Get recent incidents
-            recent_incidents = servicenow_tools.list_recent_incidents(days=30, limit=50)
-            
-            if not recent_incidents["success"]:
-                return "Unable to retrieve recent incidents for trend analysis."
-            
-            incidents = recent_incidents["result"]
-            
-            # Analyze trends
-            categories = {}
-            priorities = {}
-            statuses = {}
-            
-            for incident in incidents:
-                # Count by category
-                category = incident.get("category", "Unknown")
-                categories[category] = categories.get(category, 0) + 1
-                
-                # Count by priority
-                priority = incident.get("priority", "Unknown")
-                priorities[priority] = priorities.get(priority, 0) + 1
-                
-                # Count by status
-                status = incident.get("status", "Unknown")
-                statuses[status] = statuses.get(status, 0) + 1
-            
-            # Generate report
-            report = "## Incident Trend Analysis (Last 30 Days)\n\n"
-            report += f"**Total Incidents Analyzed:** {len(incidents)}\n\n"
-            
-            report += "### By Category:\n"
-            for category, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
-                report += f"- {category}: {count} incidents\n"
-            
-            report += "\n### By Priority:\n"
-            for priority, count in sorted(priorities.items(), key=lambda x: x[1], reverse=True):
-                report += f"- {priority}: {count} incidents\n"
-            
-            report += "\n### By Status:\n"
-            for status, count in sorted(statuses.items(), key=lambda x: x[1], reverse=True):
-                report += f"- {status}: {count} incidents\n"
-            
-            return report
+            # For now, return a message indicating this feature needs to be implemented
+            # with the new MCP approach
+            return "Trend analysis feature is being updated to work with the new MCP implementation. Please use the agent's tools directly for incident analysis."
             
         except Exception as e:
             return f"Error analyzing trends: {str(e)}"
@@ -260,7 +223,8 @@ class ServiceNowChatbot:
     def cleanup(self):
         """Cleanup resources"""
         try:
-            servicenow_tools.disconnect()
+            if self.mcp_client:
+                self.mcp_client.__exit__(None, None, None)
         except:
             pass
 
