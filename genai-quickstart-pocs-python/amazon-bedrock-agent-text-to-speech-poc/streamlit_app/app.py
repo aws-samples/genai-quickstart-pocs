@@ -99,8 +99,8 @@ if end_session_button:
 st.write("## Conversation History")
 
 # Load images outside the loop to optimize performance
-human_image = Image.open('/home/ubuntu/app/streamlit_app/imgs/human.png')
-robot_image = Image.open('/home/ubuntu/app/streamlit_app/imgs/robot.png')
+human_image = Image.open('imgs/human.png')
+robot_image = Image.open('imgs/robot.png')
 circular_human_image = crop_to_circle(human_image)
 circular_robot_image = crop_to_circle(robot_image)
 
@@ -164,7 +164,9 @@ st.write("## Test KB, Action Group, History Prompt")
 # Creating a list of prompts for the specific task
 task_prompts = [
     {"Prompt": "What's the financial status of United Airline?"},
-    {"Prompt":"what's the financial status of LuxuryToNiceLiving Real Estate? Create an audio file based on the result."}
+    {"Prompt":"what's the financial status of LuxuryToNiceLiving Real Estate? Create an audio file based on the result."},
+    {"Prompt":"What are the key regulatory requirements for financial reporting compliance in the real estate industry?"},
+    {"Prompt":"What are the current data privacy standards for companies handling sensitive customer information in the financial services sector? Generate audio response for hands-free and multitasking purposes."},
 ]
 # Displaying the task prompt as a table
 st.table(task_prompts)

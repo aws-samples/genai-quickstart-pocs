@@ -17,7 +17,7 @@ This PoC demonstrates how to combine Amazon Bedrock agents with text-to-speech c
 ## Prerequisites
 
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured with access to Amazon Bedrock
-- [Python](https://www.python.org/downloads/) v3.11 or greater
+- [Python](https://www.python.org/downloads/) v3.12 or greater
 - AWS account with appropriate permissions for Bedrock, Lambda, S3, and Polly services 
 
 
@@ -31,7 +31,7 @@ git clone https://github.com/aws-samples/genai-quickstart-pocs.git
 cd genai-quickstart-pocs/genai-quickstart-pocs-python/amazon-bedrock-agent-text-to-speech-poc
 ```
 
-### Project Structure
+#### Project Structure
 
 - `streamlit_app/` - Streamlit application with agent invocation and text-to-speech logic
 - `agent/` - Lambda function and schema definitions for the Bedrock Agent
@@ -42,23 +42,79 @@ cd genai-quickstart-pocs/genai-quickstart-pocs-python/amazon-bedrock-agent-text-
 ### 2. Configure Lambda Function
 
 Create a Lambda function using the code from `agent/ActionLambda.py`:
+   - Lambda Runtime with Python v3.12+   
+   - Configure AWS Region and S3 Bucket for synthesized speech audio data
 
 #### Resource-Based Policy
-Add the following resource-based policy to allow Bedrock Agent access:
+Follow the sample and add the resource-based policy to allow Bedrock Agent access:
 
 ```json
 {
-  "ArnLike": {
-    "AWS:SourceArn": "arn:aws:bedrock:<AWS-Region>:<AWS-Account-ID>:agent/*"
-  }
+  "Version": "2012-10-17",
+  "Id": "default",
+  "Statement": [
+    {
+      "Sid": "allow-bedrock-agent",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "bedrock.amazonaws.com"
+      },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:<AWS-Region>:<AWS-Account-ID>:function:<Lambda-Function-Name>",
+      "Condition": {
+        "ArnLike": {
+          "AWS:SourceArn": "arn:aws:bedrock:<AWS-Region>:<AWS-Account-ID>:agent/*"
+        }
+      }
+    }
+  ]
 }
 ```
 
 #### Execution Role Permissions
-Ensure the Lambda execution role includes:
+Follow the sample and ensure the Lambda execution role includes:
 - Amazon S3 access permissions
 - Amazon Polly access permissions  
 - CloudWatch Logs permissions
+
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "logs:CreateLogGroup",
+      "Resource": "arn:aws:logs:<AWS-Region>:<AWS-Account-ID>:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:aws:logs:<AWS-Region>:<AWS-Account-ID>:log-group:/aws/lambda/<Lambda-Function-Name>:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*",
+        "s3-object-lambda:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "polly:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 ### 3. Setup Amazon Bedrock Agent
 
@@ -87,9 +143,17 @@ Example response:
 ```
 
 #### Configure Action Group
-- Use the API schema from `agent/ActionSchema.json`
-- Link to the Lambda function created in step 2
-- Create a Bedrock Knowledge Base using the provided sample data
+- Define Action Group Name `AnycompanyIntelligentAgentAction`
+- Choose action group type `Define with API schemas`
+   - Action Group Invocation: Choose `Select an existing Lambda Function` and select the Lambda function created in step 2
+   - Action Group Schema:  Choose `Define via in-line schema editor` and use the API schema from `agent/ActionSchema.json`
+
+#### Configure Knowledge Base
+- Create a Bedrock Knowledge Base 
+   - [S3 as Bedrock data source](https://docs.aws.amazon.com/bedrock/latest/userguide/s3-data-source-connector.html) 
+   - Upload Sample Data provided under `sample_data/` to the S3 data source bucket
+   - [Sync sample data with Bedrock Knowlege Base](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-data-source-sync-ingest.html)
+-  Link the Bedrock Knowledge Base to Bedrock Agent
 
 ### 4. Deploy and Configure Streamlit Application
 
@@ -100,7 +164,7 @@ Example response:
    ```bash
    sudo vi app/streamlit_app/invoke_agent.py
    ```
-   Update: `agentId`, `agentAliasId`, and `region`
+   Update: `agentId`, `agentAliasId`, and `region`. When you first create an Amazon Bedrock agent, you have a working draft version (DRAFT) and a test alias (TSTALIASID) that points to the working draft version. When you make changes to your agent, the changes apply to the working draft. Documentation for [deploying an agent](https://docs.aws.amazon.com/bedrock/latest/userguide/deploy-agent.html).
 
 3. Start the application:
    ```bash
