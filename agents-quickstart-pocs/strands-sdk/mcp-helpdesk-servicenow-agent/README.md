@@ -48,9 +48,22 @@ Strands Agents provides a simple, code-first interface for connecting LLMs to re
 
 ---
 
+## Project Structure
+
+```
+.
+├── chatbot_app.py         # Streamlit web interface
+├── chatbot_agent.py       # Main chatbot agent logic and tool calling (MCP-based)
+├── config.py              # Configuration settings for MCP server, LLM and aws credentials
+├── requirements.txt       # Python dependencies
+├── main.py                # CLI entry point
+├── env                    # Environment variables
+
+---
+
 ## MCP Server Requirement
 
-This project requires a running ServiceNow MCP server. We recommend using the open-source MCP server from [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp).
+This project requires a running ServiceNow MCP server. We recommend using the open-source MCP server from [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp). Follow the setup section to insall and configure the ServiceNow MCP server.
 
 ---
 
@@ -76,24 +89,6 @@ streamlit
 
 ---
 
-## Configuration
-
-Edit `config.py` with your ServiceNow MCP server details:
-```python
-SERVICENOW_MCP_CONFIG = {
-    "command": "path/to/servicenow-mcp/python.exe",
-    "args": ["-m", "servicenow_mcp.cli"],
-    "env": {
-        "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
-        "SERVICENOW_USERNAME": "your-username",
-        "SERVICENOW_PASSWORD": "your-password",
-        "SERVICENOW_AUTH_TYPE": "basic"
-    }
-}
-```
-
----
-
 ## Setup
 
 1. **Clone the repository:**
@@ -105,12 +100,25 @@ SERVICENOW_MCP_CONFIG = {
    ```bash
    pip install -r requirements.txt
    ```
-3. **Configure your MCP server connection:**
-   - Edit `config.py` as shown above.
-4. **Start the ServiceNow MCP server:**
+3. **Instal  the ServiceNow MCP server:**
    - See [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) for setup instructions.
+   - Skip the Setup #3 step under installation of this repository if you are using below config file within your application to start the MCP server.
+   
+4. **Configure  ServiceNow MCP server with your application :**
 
----
+Edit `config.py` with your ServiceNow MCP server details, if you install the servicenow mcp server at 'C:/my-mcp-servers' then command should have this path 'C:\\my-mcp-server\\servicenow-mcp\\.venv\\Scripts\\python.exe"':
+```python
+SERVICENOW_MCP_CONFIG = {
+    "command": "path//to//servicenow-mcp//python.exe",
+    "args": ["-m", "servicenow_mcp.cli"],
+    "env": {
+        "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
+        "SERVICENOW_USERNAME": "your-username",
+        "SERVICENOW_PASSWORD": "your-password",
+        "SERVICENOW_AUTH_TYPE": "basic"
+    }
+}
+```
 
 ## Usage
 
@@ -141,16 +149,7 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 
 ---
 
-## Project Structure
 
-```
-.
-├── chatbot_app.py         # Streamlit web interface
-├── chatbot_agent.py       # Main chatbot agent (MCP-based)
-├── config.py              # Configuration settings
-├── requirements.txt       # Python dependencies
-├── main.py                # CLI entry point
-├── env                    # Environment variables
 ```
 
 
