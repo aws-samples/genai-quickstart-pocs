@@ -4,12 +4,12 @@
 - [Overview](#overview)
 - [What are Strands Agents?](#what-are-strands-agents)
 - [Key Features](#key-features)
+- [Project Structure](#project-structure)
 - [MCP Server Requirement](#mcp-server-requirement)
 - [Dependencies](#dependencies)
-- [Configuration](#configuration)
 - [Setup](#setup)
 - [Usage](#usage)
-- [Project Structure](#project-structure)
+
 - [Sample Prompts](#sample-prompts)
 
 
@@ -60,32 +60,13 @@ Strands Agents provides a simple, code-first interface for connecting LLMs to re
 ├── env                    # Environment variables
 
 ---
+---
 
 ## MCP Server Requirement
 
 This project requires a running ServiceNow MCP server. We recommend using the open-source MCP server from [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp). Follow the setup section to insall and configure the ServiceNow MCP server.
 
 ---
-
-## Dependencies
-
-- Python 3.8+
-- [Strands Agents SDK](https://pypi.org/project/strands-agents/)
-- [strands-agents-tools](https://pypi.org/project/strands-agents-tools/)
-- [ServiceNow MCP server](https://github.com/echelon-ai-labs/servicenow-mcp) 
-- Streamlit
-
-Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-**requirements.txt** should include:
-```
-strands-agents>=0.1.1
-strands-agents-tools>=0.1.1
-streamlit
-```
 
 ---
 
@@ -148,6 +129,14 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 
 
 ---
+
+---
+## Resources
+
+- [Strands Agents SDK](https://pypi.org/project/strands-agents/)
+- [strands-agents-tools](https://pypi.org/project/strands-agents-tools/)
+- [ServiceNow MCP server](https://github.com/echelon-ai-labs/servicenow-mcp) 
+- [Streamlit] (https://streamlit.io/)
 
 
 ```
