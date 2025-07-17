@@ -1,48 +1,35 @@
-# MCP Enterprise IT Helpdesk ServiceNow Assistant
+#  Enterprise IT Helpdesk ServiceNow Assistant
 
 ## 📚 Table of Contents
 - [Overview](#overview)
-- [What are Strands Agents?](#what-are-strands-agents)
 - [Key Features](#key-features)
 - [Project Structure](#project-structure)
-- [MCP Server Requirement](#mcp-server-requirement)
-- [Dependencies](#dependencies)
+- [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Usage](#usage)
-
+- [Available Tools](#available-tools)
 - [Sample Prompts](#sample-prompts)
+- [Resources](#resources)
 
 
 ---
 
 ## Overview
 
-MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incident management, built with [Strands Agents](https://strandsagents.com/) and the Model Context Protocol (MCP). It connects directly to a ServiceNow MCP server, dynamically discovers all available tools, and passes them to a Strands Agent for natural language ITSM support.
+MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incident management, built with [Strands Agents](https://strandsagents.com/) and the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction). It connects directly to a ServiceNow MCP server, dynamically discovers all available tools, and passes them to a Strands Agent for natural language ITSM support.
 
----
-
-## What are Strands Agents?
-
-[Strands Agents](https://strandsagents.com/) is an open-source, model-driven framework for building intelligent, autonomous agents. It allows developers to:
-- Integrate large language models (LLMs) with external tools and APIs
-- Orchestrate complex workflows and multi-step reasoning
-- Build agents that can plan, reason, and act autonomously
-- Support multi-agent collaboration and advanced tool use
-
-Strands Agents provides a simple, code-first interface for connecting LLMs to real-world actions, making it ideal for enterprise automation and AI-driven assistants.
 
 ---
 
 ## Key Features
 - **Dynamic tool discovery**: All available ServiceNow MCP tools are discovered at runtime—no manual wrappers needed.
 - **Direct MCP integration**: No dependency on legacy wrappers or custom tool code.
+- **Perform incident managemnt, change managemnt,knowlegebase management with natural language prompts.**
 - **Modern Streamlit UI**: User-friendly chat interface for ITSM operations.
 - **LLM integration**: Works with Bedrock or other 3rd party LLMs.
 - **Easy extensibility**: Add new ServiceNow tools to the MCP server and they become available instantly. Incorporates Strands's `swarm` tool for multi-agent collaboration.
 - **Query ServiceNow records and tables**: Use natural language to retrieve any record or table in ServiceNow.
 - **Create, update, and delete ServiceNow records**: Perform full CRUD operations on ServiceNow data.
-- **Access and query the ServiceNow Service Catalog**: Search, request, and manage catalog items and requests.
-- **Analyze and optimize the ServiceNow Service Catalog**: Get insights and recommendations for catalog improvements.
 - **Natural language interface for all MCP tools**: Any tool exposed by the MCP server is available to the agent via natural language queries.
 
 
@@ -54,19 +41,22 @@ Strands Agents provides a simple, code-first interface for connecting LLMs to re
 .
 ├── chatbot_app.py         # Streamlit web interface
 ├── chatbot_agent.py       # Main chatbot agent logic and tool calling (MCP-based)
-├── config.py              # Configuration settings for MCP server, LLM and aws credentials
+├── config.py              # Configuration settings for MCP server and model credentials
 ├── requirements.txt       # Python dependencies
 ├── main.py                # CLI entry point
-├── env                    # Environment variables
+
 
 ---
----
-
-## MCP Server Requirement
-
-This project requires a running ServiceNow MCP server. We recommend using the open-source MCP server from [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp). Follow the setup section to insall and configure the ServiceNow MCP server.
 
 ---
+
+## Prerequisites
+
+- **Python 3.8+** installed on your system ([Download Python](https://www.python.org/downloads/))
+- **Git** for cloning the repository ([Download Git](https://git-scm.com/downloads))
+- Access to a **ServiceNow instance** (with credentials)
+- Access to a **ServiceNow MCP server** ([servicenow-mcp GitHub](https://github.com/echelon-ai-labs/servicenow-mcp))
+-  An API key or credentials for your preferred LLM provider (e.g., AWS Bedrock)
 
 ---
 
@@ -77,20 +67,43 @@ This project requires a running ServiceNow MCP server. We recommend using the op
    git clone <your-repo-url>
    cd <your-repo-directory>
    ```
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Instal  the ServiceNow MCP server:**
-   - See [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) for setup instructions.
-   - Skip the Setup #3 step under installation of this repository if you are using below config file within your application to start the MCP server.
-   
-4. **Configure  ServiceNow MCP server with your application :**
+2. **Setup Python VENV and install dependencies:**
 
-Edit `config.py` with your ServiceNow MCP server details, if you install the servicenow mcp server at 'C:/my-mcp-servers' then command should have this path 'C:\\my-mcp-server\\servicenow-mcp\\.venv\\Scripts\\python.exe"':
+   ```bash
+   python -m venv venv
+   source venv/bin/activate # On Windows: .venv\Scripts\activate
+
+   pip install -r requirements.txt
+
+   ```
+3. **Configure credentials:**
+
+   There are two  paths for setting up credentials to use this project:
+   i. Use `aws configure`  
+   ii. Manually set static credentials using environment variables: 
+
+   ```bash
+   export AWS_ACCESS_KEY_ID="<YOUR ACCESS KEY HERE>"
+   export AWS_SECRET_ACCESS_KEY="<YOUR SECRET KEY HERE>"
+
+    ```
+
+
+4. **Instal  the ServiceNow MCP server:**
+   - See [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) for setup instructions.
+   - Skip the Setup #3  under installation of this repository if you are using below config file within your application to start the MCP server.
+   
+5. **Configure  ServiceNow MCP server with your application :**
+
+Edit `config.py` with your ServiceNow MCP server details.  
+If you install the servicenow‑mcp server at `C:/my-mcp-servers`, then your command should look like this:
+
+```powershell
+"C:\\my-mcp-servers\\servicenow-mcp\\.venv\\Scripts\\python.exe"
+
 ```python
 SERVICENOW_MCP_CONFIG = {
-    "command": "path//to//servicenow-mcp//python.exe",
+    "command": "path_to_servicenow_mcp_server\\python.exe",
     "args": ["-m", "servicenow_mcp.cli"],
     "env": {
         "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
@@ -108,7 +121,56 @@ Run the Streamlit app:
 streamlit run chatbot_app.py
 ```
 
-Chat with the agent about incidents, latest trends, or IT support.
+Chat with the agent about incidents,change management, knowlegebase management or IT support.
+
+---
+
+## Available Tools
+
+
+**Incident Management Tools**
+
+- **create_incident** — Create a new incident in ServiceNow  
+- **update_incident** — Update an existing incident in ServiceNow  
+- **add_comment** — Add a comment to an incident in ServiceNow  
+- **resolve_incident** — Resolve an incident in ServiceNow  
+- **list_incidents** — List incidents from ServiceNow  
+
+**Change Management Tools**
+
+- **create_change_request** — Create a new change request in ServiceNow  
+- **update_change_request** — Update an existing change request  
+- **list_change_requests** — List change requests with filtering options  
+- **get_change_request_details** — Get detailed information about a specific change request  
+- **add_change_task** — Add a task to a change request  
+- **submit_change_for_approval** — Submit a change request for approval  
+- **approve_change** — Approve a change request  
+- **reject_change** — Reject a change request  
+
+**Service Catalog Tools**
+
+- **list_catalog_items** — List service catalog items from ServiceNow  
+- **get_catalog_item** — Get a specific service catalog item from ServiceNow  
+- **list_catalog_categories** — List service catalog categories from ServiceNow  
+- **create_catalog_category** — Create a new service catalog category in ServiceNow  
+- **update_catalog_category** — Update an existing service catalog category in ServiceNow  
+- **move_catalog_items** — Move catalog items between categories in ServiceNow  
+- **create_catalog_item_variable** — Create a new variable (form field) for a catalog item  
+- **list_catalog_item_variables** — List all variables for a catalog item  
+- **update_catalog_item_variable** — Update an existing variable for a catalog item  
+- **list_catalogs** — List service catalogs from ServiceNow  
+
+**Knowledge Base Management Tools**
+
+- **create_knowledge_base** — Create a new knowledge base in ServiceNow  
+- **list_knowledge_bases** — List knowledge bases with filtering options  
+- **create_category** — Create a new category in a knowledge base  
+- **create_article** — Create a new knowledge article in ServiceNow  
+- **update_article** — Update an existing knowledge article in ServiceNow  
+- **publish_article** — Publish a knowledge article in ServiceNow  
+- **list_articles** — List knowledge articles with filtering options  
+- **get_article** — Get a specific knowledge article by ID  
+
 
 ---
 
@@ -119,13 +181,13 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 - "Create an incident for email system down."
 - "Search for incidents related to VPN."
 - "Update incident INC0012345 status to resolved."
-- "Show me trends from last week."
 - "Find solutions for password reset."
 - "List all open incidents assigned to the Network team."
 - "Show me the details for incident INC0012345."
 - "Create a high priority incident for server outage."
 - "Search knowledge base for VPN troubleshooting."
-- "What are the recent trends in incidents?"
+- "create a new article in knowledge bases about how to how to avoid Phishing attacks"
+- "Create a new change request for next Tuesday to patch all window production servers with security patch KB33333"
 
 
 ---
@@ -141,5 +203,6 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 
 ```
 
+---
 
-**Built with ❤️ by hdhanoa** 
+**Built by hdhanoa** 

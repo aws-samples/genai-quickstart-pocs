@@ -85,10 +85,6 @@ def main():
         st.markdown('<div class="sidebar-header">Quick Actions</div>', unsafe_allow_html=True)
         
         # Quick action buttons
-        if st.button("📊 View Incident Trends", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show me recent incident trends and analysis"})
-            st.session_state.messages.append({"role": "assistant", "content": chatbot.analyze_trends()})
-            st.rerun()
         
         if st.button("🔍 Search Recent Incidents", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Show me recent incidents"})
@@ -220,7 +216,7 @@ def main():
     st.markdown("---")
     st.markdown(
         "<div style='text-align: center; color: #666; font-size: 0.8rem;'>"
-        "IT Enterprise ServiceNow Helpdesk Assistant | Powered by Strands Agents & MCP"
+        "IT ServiceNow Helpdesk Assistant | Powered by Strands Agents & MCP"
         "</div>",
         unsafe_allow_html=True
     )
