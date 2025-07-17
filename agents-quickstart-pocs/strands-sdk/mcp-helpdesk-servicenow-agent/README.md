@@ -12,14 +12,13 @@
 - [Resources](#resources)
 
 
----
+
 
 ## Overview
 
 MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incident management, built with [Strands Agents](https://strandsagents.com/) and the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction). It connects directly to a ServiceNow MCP server, dynamically discovers all available tools, and passes them to a Strands Agent for natural language ITSM support.
 
 
----
 
 ## Key Features
 - **Dynamic tool discovery**: All available ServiceNow MCP tools are discovered at runtime—no manual wrappers needed.
@@ -33,7 +32,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 - **Natural language interface for all MCP tools**: Any tool exposed by the MCP server is available to the agent via natural language queries.
 
 
----
+
 
 ## Project Structure
 
@@ -46,9 +45,8 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 ├── main.py                # CLI entry point
 
 ```
----
 
----
+
 
 ## Prerequisites
 
@@ -58,7 +56,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 - Access to a **ServiceNow MCP server** ([servicenow-mcp GitHub](https://github.com/echelon-ai-labs/servicenow-mcp))
 -  An API key or credentials for your preferred LLM provider (e.g., AWS Bedrock)
 
----
+
 
 ## Setup
 
@@ -79,7 +77,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 3. **Configure credentials:**
 
    There are two  paths for setting up credentials to use this project:
-   
+
    i. Use `aws configure`  
    ii. Manually set static credentials using environment variables: 
 
@@ -124,7 +122,7 @@ streamlit run chatbot_app.py
 
 Chat with the agent about incidents,change management, knowlegebase management or IT support.
 
----
+
 
 ## Available Tools
 
@@ -173,7 +171,6 @@ Chat with the agent about incidents,change management, knowlegebase management o
 - **get_article** — Get a specific knowledge article by ID  
 
 
----
 
 ## Sample Prompts
 
@@ -191,9 +188,7 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 - "Create a new change request for next Tuesday to patch all window production servers with security patch KB33333"
 
 
----
 
----
 ## Resources
 
 - [Strands Agents SDK](https://pypi.org/project/strands-agents/)
@@ -202,8 +197,9 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 - [Streamlit] (https://streamlit.io/)
 
 
+
 ---
 
-## Footer
+<p align="center">**Built by hdhanoa** </p>
 
-**Built by hdhanoa** 
+
