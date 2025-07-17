@@ -104,7 +104,7 @@ If you install the servicenow‑mcp server at `C:/my-mcp-servers`, then your com
 
 ```python
 SERVICENOW_MCP_CONFIG = {
-    "command": "path_to_servicenow_mcp_server\\python.exe",
+    "command": "path_to_servicenow_mcp_server\\.venv\\Scripts\\python.exe",
     "args": ["-m", "servicenow_mcp.cli"],
     "env": {
         "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
