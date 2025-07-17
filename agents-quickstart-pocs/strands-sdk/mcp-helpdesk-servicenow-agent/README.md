@@ -196,9 +196,9 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 - [ServiceNow MCP server](https://github.com/echelon-ai-labs/servicenow-mcp) 
 - [Streamlit] (https://streamlit.io/)
 
+## Quick Demo
 
-
----
+[![Watch the demo](https://img.youtube.com/vi/5wd0stFDuOE/0.jpg)](https://www.youtube.com/watch?v=5wd0stFDuOE)
 
 <p align="center">**Built by hdhanoa** </p>
 
