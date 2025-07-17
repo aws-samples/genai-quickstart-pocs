@@ -45,7 +45,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 ├── requirements.txt       # Python dependencies
 ├── main.py                # CLI entry point
 
-
+```
 ---
 
 ---
@@ -79,6 +79,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 3. **Configure credentials:**
 
    There are two  paths for setting up credentials to use this project:
+   
    i. Use `aws configure`  
    ii. Manually set static credentials using environment variables: 
 
@@ -201,8 +202,8 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 - [Streamlit] (https://streamlit.io/)
 
 
-```
-
 ---
+
+## Footer
 
 **Built by hdhanoa** 
