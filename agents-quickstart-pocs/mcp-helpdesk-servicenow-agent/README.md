@@ -100,6 +100,8 @@ If you install the servicenow‑mcp server at `C:/my-mcp-servers`, then your com
 ```powershell
 "C:\\my-mcp-servers\\servicenow-mcp\\.venv\\Scripts\\python.exe"
 
+```
+
 ```python
 SERVICENOW_MCP_CONFIG = {
     "command": "path_to_servicenow_mcp_server\\python.exe",
