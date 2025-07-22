@@ -28,7 +28,7 @@ This PoC demonstrates how to combine Amazon Bedrock agents with text-to-speech c
 
 ```bash
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git
-cd genai-quickstart-pocs/genai-quickstart-pocs-python/amazon-bedrock-agent-text-to-speech-poc
+cd genai-quickstart-pocs/agents-quickstart-pocs/amazon-bedrock-agent-text-to-speech-poc
 ```
 
 #### Project Structure
