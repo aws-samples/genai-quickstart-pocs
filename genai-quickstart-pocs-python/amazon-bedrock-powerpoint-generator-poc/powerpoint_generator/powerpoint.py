@@ -51,7 +51,7 @@ def generate_powerpoint_file(topic: str, presentation_content: list[CompleteSect
 
     conclusion_slide = preso.slides.add_slide(section_header_slide_layout)
     conclusion_slide.shapes.placeholders[0].text = "Thank You!"
-    file_path = os.path.join(os.path.dirname(__file__), f"../temp/{uuid4()}.pptx")
+    file_path = os.path.join(os.path.dirname(__file__), f"{uuid4()}.pptx")
     preso.save(file_path)
     logger.info("PowerPoint file generated successfully!")
     if write_callback:
