@@ -2,6 +2,26 @@ from mcp import stdio_client, StdioServerParameters
 from strands import Agent
 from strands.tools.mcp import MCPClient
 import asyncio
+import platform
+import subprocess
+import shutil
+
+def _get_uvx_command():
+    """Get the appropriate uvx command for the current platform."""
+    system = platform.system().lower()
+    
+    if system == "windows":
+        # On Windows, try to find uvx in PATH
+        if shutil.which("uvx"):
+            return "uvx"
+        # If not found, try with .exe extension
+        elif shutil.which("uvx.exe"):
+            return "uvx.exe"
+        else:
+            raise RuntimeError("uvx not found. Please install uv and uvx first.")
+    else:
+        # On macOS/Linux, use uvx directly
+        return "uvx"
 
 # Synchronous function to query AWS documentation using the agent
 # Returns the full response as a string (or AgentResult)
@@ -9,7 +29,7 @@ def query_aws_docs(query_string: str):
     # Create an MCP client that launches the AWS Documentation MCP Server
     stdio_mcp_client = MCPClient(lambda: stdio_client(
         StdioServerParameters(
-            command="uvx", 
+            command=_get_uvx_command(), 
             args=["awslabs.aws-documentation-mcp-server@latest"]
         )))
     # Use a synchronous context manager for MCPClient
@@ -23,7 +43,7 @@ def _stream_agent_chunks(query_string: str):
     # Create an MCP client for the AWS Documentation MCP Server
     stdio_mcp_client = MCPClient(lambda: stdio_client(
         StdioServerParameters(
-            command="uvx",
+            command=_get_uvx_command(),
             args=["awslabs.aws-documentation-mcp-server@latest"]
         )
     ))

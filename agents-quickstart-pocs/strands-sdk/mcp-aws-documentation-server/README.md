@@ -19,30 +19,102 @@ This project provides a Streamlit-based chatbot app and agent tools for interact
 - `README.md`: Project documentation
 
 ## Setup
+
+### Prerequisites
+
+- Python 3.10 or newer
+- Git (for cloning the repository)
+- Internet connection (for installing dependencies and accessing AWS docs)
+
+#### Installing uv and uvx
+
+**macOS:**
+```bash
+# Using curl (recommended)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Using Homebrew
+brew install uv
+
+# Verify installation
+uv --version
+uvx --version
+```
+
+**Windows:**
+```powershell
+# Using PowerShell (recommended)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Using winget
+winget install astral-sh.uv
+
+# Using Chocolatey
+choco install uv
+
+# Verify installation (restart terminal if needed)
+uv --version
+uvx --version
+```
+
+### Project Setup
+
 1. **Clone the repository:**
    ```bash
    git clone <your-repo-url>
    cd mcp-aws-documentation-server
    ```
-2. **Create a virtual environment (recommended):**
+
+2. **Using uv (recommended):**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   # Create virtual environment and install dependencies
+   uv sync
+   
+   # Activate the environment
+   source .venv/bin/activate  # macOS/Linux
+   # or
+   .venv\Scripts\activate     # Windows
    ```
-3. **Install dependencies:**
+
+3. **Alternative: Using traditional pip:**
    ```bash
+   # Create a virtual environment (recommended):
+   python3 -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # or
+   venv\Scripts\activate     # Windows
+   
+   # Install dependencies:
    pip install -r requirements.txt
    ```
 
 ## Usage
-- **Run the Streamlit chatbot app:**
-  ```bash
-  streamlit run chatbot_app.py
-  ```
+
+### Running the Chatbot App
+```bash
+streamlit run chatbot_app.py
+```
+- This will open the chatbot UI in your browser (usually at http://localhost:8501).
+- You can now ask questions about AWS documentation in the chat interface.
+
+### Running the Agent Directly (Optional)
+For CLI testing or debugging:
+```bash
+python agent.py
+```
 
 ## Customization
-- Update `agent.py` to change agent logic, tools, or streaming behavior.
-- Update `chatbot_app.py` to modify the UI, branding, or chat workflow.
+- **Agent Logic:** Edit `agent.py` to change how queries are processed or to add new tools.
+- **UI/Branding:** Edit `chatbot_app.py` to modify the Streamlit interface, sidebar, or branding.
+
+## Troubleshooting
+- **Dependencies:** Ensure you are using Python 3.10+ and all dependencies are installed.
+- **AWS Credentials:** If you use AWS services, make sure your credentials are set up (see [AWS docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)).
+- **Port in Use:** If port 8501 is busy, Streamlit will suggest an alternative or you can specify one:
+  ```bash
+  streamlit run chatbot_app.py --server.port 8502
+  ```
+- **MCP Server Issues:** Ensure the MCP server can be launched from your environment. Check logs for errors.
 
 ## Contributing
 Pull requests and issues are welcome! Please open an issue to discuss your ideas or report bugs.
