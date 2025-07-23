@@ -1,6 +1,5 @@
 import streamlit as st
-import asyncio
-from agent import query_aws_docs, query_aws_docs_streaming
+from agent import query_aws_docs, query_aws_docs_simple
 
 # Set Streamlit page config and main title
 st.set_page_config(page_title="AWS Docs Chatbot", page_icon="🤖")
@@ -35,26 +34,37 @@ for i, (user_msg, bot_msg) in enumerate(st.session_state["history"]):
 # Chat input at the bottom of the page
 prompt = st.chat_input("Type your question and press Enter...")
 
-# Async handler for streaming agent responses to the UI
-async def handle_streaming(prompt):
-    streamed_response = ""
-    response_placeholder = st.empty()
-    # Show a spinner while waiting for the agent's response
-    with st.spinner("Looking up documentation..."):
-        try:
-            # Stream each chunk as it arrives from the agent
-            async for chunk in query_aws_docs_streaming(prompt):
-                streamed_response += chunk
-                response_placeholder.markdown(streamed_response)
-        except Exception as e:
-            streamed_response = f"Error: {e}"
-            response_placeholder.markdown(streamed_response)
-    # Add the user prompt and streamed response to chat history
-    st.session_state["history"].append((prompt, streamed_response))
-
-# If the user submits a prompt, display it and stream the agent's response
+# If the user submits a prompt, display it and get the agent's response
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
+    
     with st.chat_message("assistant"):
-        asyncio.run(handle_streaming(prompt)) 
+        # Show a spinner while waiting for the agent's response
+        with st.spinner("Looking up documentation..."):
+            try:
+                # Try the simple version first, then fallback to timeout version
+                try:
+                    response = query_aws_docs_simple(prompt)
+                except:
+                    # Fallback to timeout version
+                    response = query_aws_docs(prompt, timeout_seconds=15)
+                
+                # Extract the text content from the response
+                if hasattr(response, 'text'):
+                    response_text = response.text
+                elif hasattr(response, 'content'):
+                    response_text = response.content
+                else:
+                    response_text = str(response)
+                
+                # Display the response
+                st.markdown(response_text)
+                
+                # Add the user prompt and response to chat history
+                st.session_state["history"].append((prompt, response_text))
+                
+            except Exception as e:
+                error_message = f"Error: {e}"
+                st.error(error_message)
+                st.session_state["history"].append((prompt, error_message)) 

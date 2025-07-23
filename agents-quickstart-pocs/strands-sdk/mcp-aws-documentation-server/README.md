@@ -115,6 +115,7 @@ python agent.py
   streamlit run chatbot_app.py --server.port 8502
   ```
 - **MCP Server Issues:** Ensure the MCP server can be launched from your environment. Check logs for errors.
+- **Windows uvx Issues:** If running on a Windows machine, the `uvx` command may fail. Please adapt the code in `agent.py` to use the proper way of running `uvx` on Windows. The current implementation includes cross-platform detection, but you may need to modify the `_get_uvx_command()` function based on your specific Windows environment.
 
 ## Contributing
 Pull requests and issues are welcome! Please open an issue to discuss your ideas or report bugs.
