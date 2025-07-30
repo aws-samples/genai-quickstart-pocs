@@ -1,0 +1,26 @@
+{
+  "vpc": {
+    "cidr": "10.0.0.0/16",
+    "maxAzs": 3,
+    "createPublicSubnets": true,
+    "createEndpoints": true
+  },
+  "redshift": {
+    "namespaceName": "emr-kb-namespace",
+    "workgroupName": "emr-kb-workgroup",
+    "databaseName": "dev",
+    "baseCapacity": 8
+  },
+  "bedrock": {
+    "kbName": "EMR-SQL-KB",
+    "kbDescription": "SQL knowledge base for EMR troubleshooting",
+    "modelId": "anthropic.claude-3-sonnet-20240229-v1:0"
+  },
+  "glue": {
+    "databaseName": "emr_kb"
+  },
+  "tags": {
+    "Project": "EMR-KB",
+    "Environment": "Development"
+  }
+}

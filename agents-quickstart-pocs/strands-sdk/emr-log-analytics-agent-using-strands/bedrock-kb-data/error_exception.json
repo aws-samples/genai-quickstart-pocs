@@ -1,0 +1,1 @@
+{"id": "error-exception-fatal", "summary": "Error/Exception Detected in the EMR Logs", "keywords": ["ERROR", "EXCEPTION", "FATAL"], "knowledge_center_links": null, "description": "An error or exception was detected in the EMR logs. Check the message followed by the error to troubleshoot further."}
