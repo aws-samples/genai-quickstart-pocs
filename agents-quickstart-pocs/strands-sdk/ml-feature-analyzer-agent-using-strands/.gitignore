@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AWS
+.aws/
+*.pem
+# AWS credentials and sensitive config
+aws-credentials.txt
+credentials.json
+.amazonq
+
+# CDK
+cdk.out/
+node_modules/
+cdk.context.json
+
+# Data and results
+data/
+analysis_results/
+
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+sagemaker_logs/
+
+# Linting
+.flake8-cache/
+.flake8
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local configuration overrides
+local_config.json
+.env
+.env.local
+.ash

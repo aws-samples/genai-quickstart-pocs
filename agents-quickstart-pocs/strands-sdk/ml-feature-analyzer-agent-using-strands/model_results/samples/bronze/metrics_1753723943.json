@@ -1,0 +1,21 @@
+{
+  "metrics": {
+    "auc": 0.8566666841506958
+  },
+  "job_name": "bronze-credit-model-1753722495",
+  "model_type": "bronze",
+  "attributes_used": [
+    "age",
+    "duration_months",
+    "credit_amount",
+    "installment_rate",
+    "employment_status",
+    "checking_account_status",
+    "credit_history",
+    "savings_account_status",
+    "personal_status_sex",
+    "other_debtors"
+  ],
+  "extraction_method": "sagemaker_automl",
+  "note": "Only AUC from SageMaker AutoML - no estimated metrics"
+}
