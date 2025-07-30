@@ -1,0 +1,41 @@
+{
+  "model_type": "baseline",
+  "sdk_used": "SageMaker Core",
+  "configuration": {
+    "max_candidates": 1,
+    "max_runtime_per_job": 180,
+    "max_total_runtime": 360,
+    "objective_metric": "AUC",
+    "problem_type": "BinaryClassification"
+  },
+  "attributes": {
+    "basic": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status"
+    ],
+    "premium": [],
+    "all_used": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status"
+    ],
+    "basic_count": 5,
+    "premium_count": 0,
+    "total_count": 5
+  },
+  "job_name": "baseline-credit-model-1753721783",
+  "metrics": {
+    "auc": 0.682619035243988
+  },
+  "training_time": 1753723943.4609458,
+  "infrastructure": {
+    "bucket": "ml-feature-analyzer-1234567891112-us-west-1",
+    "role": "arn:aws:iam::1234567891112:role/MLFeatureAnalyzer-SageMaker-us-west-1",
+    "region": "us-west-1"
+  }
+}
