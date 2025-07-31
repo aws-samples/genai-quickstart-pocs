@@ -1,6 +1,7 @@
 from mcp import stdio_client, StdioServerParameters
 from strands import Agent
 from strands.tools.mcp import MCPClient
+from strands.models.bedrock import BedrockModel
 import asyncio
 import platform
 import subprocess
@@ -42,7 +43,9 @@ def query_aws_docs(query_string: str, timeout_seconds=60):
             # Use a synchronous context manager for MCPClient
             with stdio_mcp_client:
                 tools = stdio_mcp_client.list_tools_sync()
-                agent = Agent(tools=tools)
+                # Create agent with Claude Haiku model
+                model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
+                agent = Agent(tools=tools, model=model)
                 return agent(query_string)
         except Exception as e:
             return f"Error in agent execution: {str(e)}"
@@ -83,7 +86,9 @@ def query_aws_docs_simple(query_string: str):
         # Use a synchronous context manager for MCPClient
         with stdio_mcp_client:
             tools = stdio_mcp_client.list_tools_sync()
-            agent = Agent(tools=tools)
+            # Create agent with Claude Haiku model
+            model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
+            agent = Agent(tools=tools, model=model)
             result = agent(query_string)
             
             # Extract text content
@@ -108,7 +113,9 @@ def _stream_agent_chunks(query_string: str):
     # Use a synchronous context manager for MCPClient
     with stdio_mcp_client:
         tools = stdio_mcp_client.list_tools_sync()
-        agent = Agent(tools=tools)
+        # Create agent with Claude Haiku model
+        model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
+        agent = Agent(tools=tools, model=model)
         # If the agent supports streaming, yield each chunk as a string
         if hasattr(agent, 'stream'):
             for chunk in agent.stream(query_string):

@@ -55,8 +55,22 @@ if prompt:
                     response_text = response.text
                 elif hasattr(response, 'content'):
                     response_text = response.content
+                elif hasattr(response, 'message'):
+                    response_text = response.message
+                elif hasattr(response, 'response'):
+                    response_text = response.response
+                elif hasattr(response, 'result'):
+                    response_text = response.result
                 else:
                     response_text = str(response)
+                
+                # Clean up the response text
+                if response_text and isinstance(response_text, str):
+                    # Remove any extra whitespace
+                    response_text = response_text.strip()
+                    # If response is empty or just whitespace, provide a fallback
+                    if not response_text:
+                        response_text = "I'm sorry, I couldn't find a specific answer to your question. Please try rephrasing your question or ask about a different AWS service."
                 
                 # Display the response
                 st.markdown(response_text)
@@ -67,4 +81,5 @@ if prompt:
             except Exception as e:
                 error_message = f"Error: {e}"
                 st.error(error_message)
+                st.info("The AWS Documentation MCP Server may be experiencing issues. Please try again in a moment.")
                 st.session_state["history"].append((prompt, error_message)) 
