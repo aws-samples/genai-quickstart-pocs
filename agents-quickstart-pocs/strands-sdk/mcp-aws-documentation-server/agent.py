@@ -29,7 +29,7 @@ def _get_uvx_command():
 
 # Synchronous function to query AWS documentation using the agent
 # Returns the full response as a string (or AgentResult)
-def query_aws_docs(query_string: str, timeout_seconds=60):
+def query_aws_docs(query_string: str, timeout_seconds=30):
     """Query AWS documentation with timeout protection."""
     
     def run_agent():
@@ -43,10 +43,23 @@ def query_aws_docs(query_string: str, timeout_seconds=60):
             # Use a synchronous context manager for MCPClient
             with stdio_mcp_client:
                 tools = stdio_mcp_client.list_tools_sync()
-                # Create agent with Claude Haiku model
-                model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
-                agent = Agent(tools=tools, model=model)
-                return agent(query_string)
+                            # Create agent with Claude Haiku model
+            model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
+            agent = Agent(tools=tools, model=model)
+            
+            # Add constraints to prevent infinite loops
+            constrained_query = f"""Please answer the following question about AWS documentation: "{query_string}"
+
+IMPORTANT CONSTRAINTS:
+- Use exactly 1 tool call only
+- Provide a concise, direct answer
+- If you can't find specific information in 1 call, provide a general answer
+- Do not make excessive tool calls
+- Focus on the most relevant information only
+
+Question: {query_string}"""
+            
+            return agent(constrained_query)
         except Exception as e:
             return f"Error in agent execution: {str(e)}"
     
@@ -89,7 +102,20 @@ def query_aws_docs_simple(query_string: str):
             # Create agent with Claude Haiku model
             model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
             agent = Agent(tools=tools, model=model)
-            result = agent(query_string)
+            
+            # Add constraints to prevent infinite loops
+            constrained_query = f"""Please answer the following question about AWS documentation: "{query_string}"
+
+IMPORTANT CONSTRAINTS:
+- Use exactly 1 tool call only
+- Provide a concise, direct answer
+- If you can't find specific information in 1 call, provide a general answer
+- Do not make excessive tool calls
+- Focus on the most relevant information only
+
+Question: {query_string}"""
+            
+            result = agent(constrained_query)
             
             # Extract text content
             if hasattr(result, 'text'):
@@ -116,9 +142,22 @@ def _stream_agent_chunks(query_string: str):
         # Create agent with Claude Haiku model
         model = BedrockModel(model="anthropic.claude-3-haiku-20240307-v1:0")
         agent = Agent(tools=tools, model=model)
+        
+        # Add constraints to prevent infinite loops
+        constrained_query = f"""Please answer the following question about AWS documentation: "{query_string}"
+
+IMPORTANT CONSTRAINTS:
+- Use exactly 1 tool call only
+- Provide a concise, direct answer
+- If you can't find specific information in 1 call, provide a general answer
+- Do not make excessive tool calls
+- Focus on the most relevant information only
+
+Question: {query_string}"""
+        
         # If the agent supports streaming, yield each chunk as a string
         if hasattr(agent, 'stream'):
-            for chunk in agent.stream(query_string):
+            for chunk in agent.stream(constrained_query):
                 # Extract string content from chunk (AgentResult or similar)
                 if hasattr(chunk, 'text'):
                     yield chunk.text
@@ -128,7 +167,7 @@ def _stream_agent_chunks(query_string: str):
                     yield str(chunk)
         else:
             # Fallback: yield the full result as a string
-            result = agent(query_string)
+            result = agent(constrained_query)
             if hasattr(result, 'text'):
                 yield result.text
             elif hasattr(result, 'content'):
