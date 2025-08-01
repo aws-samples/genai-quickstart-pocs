@@ -4,7 +4,7 @@ Convert the feature design into a series of prompts for a code-generation LLM th
 
 ## Task List
 
-- [ ] 1. Set up standard project structure and tooling
+- [x] 1. Set up standard project structure and tooling
   - Create opinionated monorepo structure following industry best practices:
     ```
     risk-assessment/
@@ -19,12 +19,21 @@ Convert the feature design into a series of prompts for a code-generation LLM th
     │   │   │   ├── interfaces/
     │   │   │   └── utils/
     │   │   └── test/
-    │   ├── agents/                  # Lambda functions for AI agents
+    │   ├── agents/                  # Strands agents for AgentCore deployment
     │   │   ├── src/
-    │   │   │   ├── handlers/
-    │   │   │   ├── services/
-    │   │   │   ├── models/
-    │   │   │   └── utils/
+    │   │   │   ├── behavioral/
+    │   │   │   ├── sentiment/
+    │   │   │   ├── compliance/
+    │   │   │   ├── predictive/
+    │   │   │   ├── market-context/
+    │   │   │   └── shared/
+    │   │   └── test/
+    │   ├── mcp-servers/             # MCP servers as Lambda functions
+    │   │   ├── src/
+    │   │   │   ├── financial-data/
+    │   │   │   ├── compliance/
+    │   │   │   ├── communication/
+    │   │   │   └── shared/
     │   │   └── test/
     │   ├── api/                     # API Gateway Lambda functions
     │   │   ├── src/
@@ -77,25 +86,24 @@ Convert the feature design into a series of prompts for a code-generation LLM th
   - _Requirements: 2.1, 3.3, 1.2_
 
 - [ ] 3. Create AWS infrastructure foundation
-- [ ] 3.1 Implement AWS CDK stack following best practices
-  - Create modular CDK constructs for each service (DynamoDB, S3, Kinesis)
+- [ ] 3.1 Implement AWS CDK stack with AgentCore integration
+  - Create modular CDK constructs for AgentCore Runtime, Memory, Identity, Observability
+  - Implement CDK constructs for TimeStream, S3, DynamoDB, Kinesis
+  - Set up AgentCore platform configuration and permissions
+  - Configure Strands agent deployment infrastructure
   - Implement separate stacks for different environments (dev, staging, prod)
-  - Use CDK context and environment variables for configuration
-  - Follow AWS CDK naming conventions and tagging standards
-  - Implement proper IAM roles with least-privilege access
-  - Create CDK deployment scripts with environment-specific parameters
+  - Create CDK deployment scripts with AgentCore-specific parameters
   - Add CDK unit tests for infrastructure validation
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 3.2 Implement Lambda function templates following AWS best practices
-  - Create standardized Lambda handler structure with proper error handling
-  - Implement middleware pattern for cross-cutting concerns (logging, validation, auth)
-  - Create shared utilities following single responsibility principle
-  - Set up proper Lambda environment variable management
-  - Implement structured logging with correlation IDs
-  - Create Lambda layer for shared dependencies
-  - Write comprehensive unit tests with mocked AWS services
-  - Follow AWS Lambda performance optimization patterns
+- [ ] 3.2 Implement Strands agent templates and MCP server templates
+  - Create standardized Strands agent structure with AgentCore integration
+  - Implement MCP server Lambda templates for external tool integration
+  - Set up AgentCore Memory, Identity, and Observability integration patterns
+  - Create shared utilities for agent-to-agent communication
+  - Implement structured logging with AgentCore Observability
+  - Write comprehensive unit tests with mocked AgentCore services
+  - Follow Strands framework and AgentCore best practices
   - _Requirements: 4.3, 8.1_
 
 - [ ] 4. Implement data ingestion pipeline
@@ -105,100 +113,120 @@ Convert the feature design into a series of prompts for a code-generation LLM th
   - Write unit tests for data processing logic
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 4.2 Implement S3 event triggering system
-  - Configure S3 event notifications to trigger agent Lambdas
-  - Write integration tests for event flow
+- [ ] 4.2 Implement AgentCore event triggering system
+  - Configure data events to trigger Strands agents on AgentCore Runtime
+  - Set up AgentCore session isolation and microVM management
+  - Write integration tests for AgentCore event flow
   - _Requirements: 1.1, 7.4_
 
-- [ ] 5. Implement Gen AI agent foundation
-- [ ] 5.1 Create base agent interface and AWS Bedrock integration
-  - Write abstract base agent class with standardized interface
-  - Implement AWS Bedrock client wrapper with error handling
-  - Create unit tests for Bedrock integration
+- [ ] 5. Implement Strands agent foundation on AgentCore
+- [ ] 5.1 Create base Strands agent interface with AgentCore integration
+  - Write abstract base Strands agent class with AgentCore Runtime integration
+  - Implement AgentCore Memory, Identity, and Observability integration
+  - Set up foundation model integration (Claude, Nova, Titan) through AgentCore
+  - Create unit tests for AgentCore integration
   - _Requirements: 4.1, 4.2, 4.3, 6.1_
 
-- [ ] 5.2 Implement agent result processing and storage
-  - Write functions to store agent results in DynamoDB
-  - Implement result validation and confidence scoring
-  - Create unit tests for result storage
+- [ ] 5.2 Implement MCP server foundation for external tools
+  - Write base MCP server interface for external data access
+  - Implement MCP protocol handlers for agent tool integration
+  - Set up secure credential management through AgentCore Identity
+  - Create unit tests for MCP server functionality
   - _Requirements: 4.4, 7.1, 8.2_
 
-- [ ] 6. Implement behavioral analysis agent
-- [ ] 6.1 Create behavioral agent with Claude 3.5 Haiku integration
-  - Write BehavioralAgent class extending base agent
-  - Implement transaction pattern analysis logic
-  - Create unit tests with mocked Bedrock responses
+- [ ] 6. Implement behavioral analysis Strands agent
+- [ ] 6.1 Create behavioral Strands agent for AgentCore deployment
+  - Write BehavioralAgent using Strands framework with Claude 3.5 Haiku
+  - Implement AgentCore Memory integration for behavioral pattern storage
+  - Set up MCP integration for Financial Data MCP server access
+  - Deploy agent to AgentCore Runtime with proper configuration
+  - Create unit tests with mocked AgentCore services
   - _Requirements: 1.1, 2.1, 2.2, 4.1_
 
-- [ ] 6.2 Implement behavioral risk scoring and recommendations
-  - Write risk tolerance calculation algorithms
-  - Implement behavioral flag detection logic
-  - Create unit tests for risk scoring accuracy
+- [ ] 6.2 Implement Financial Data MCP server
+  - Write Financial Data MCP server as Lambda function
+  - Implement portfolio analysis, market data, and risk calculation tools
+  - Set up secure external API access through AgentCore Identity
+  - Create unit tests for MCP server tool functionality
   - _Requirements: 2.2, 7.2, 4.4_
 
-- [ ] 7. Implement sentiment analysis agent
-- [ ] 7.1 Create sentiment agent with Amazon Nova Micro integration
-  - Write SentimentAgent class with communication processing
-  - Implement sentiment scoring and emotional indicator detection
+- [ ] 7. Implement sentiment analysis Strands agent
+- [ ] 7.1 Create sentiment Strands agent for AgentCore deployment
+  - Write SentimentAgent using Strands framework with Amazon Nova Micro
+  - Implement AgentCore Memory integration for sentiment pattern storage
+  - Set up MCP integration for Communication MCP server access
+  - Deploy agent to AgentCore Runtime with microVM isolation
   - Create unit tests with sample communication data
   - _Requirements: 3.1, 3.2, 3.3, 4.1_
 
-- [ ] 7.2 Implement stress level analysis and alerting
-  - Write stress detection algorithms based on communication patterns
-  - Implement alert generation for high-stress indicators
-  - Create unit tests for stress level accuracy
+- [ ] 7.2 Implement Communication MCP server
+  - Write Communication MCP server as Lambda function
+  - Implement sentiment analysis, emotional indicators, and stress detection tools
+  - Set up NLP service integration for text and voice processing
+  - Create unit tests for communication analysis accuracy
   - _Requirements: 3.2, 7.4, 4.2_
 
-- [ ] 8. Implement compliance validation agent
-- [ ] 8.1 Create compliance agent with Amazon Titan Text Express
-  - Write ComplianceAgent class with regulatory validation logic
-  - Implement audit trail generation and compliance checking
+- [ ] 8. Implement compliance validation Strands agent
+- [ ] 8.1 Create compliance Strands agent for AgentCore deployment
+  - Write ComplianceAgent using Strands framework with Amazon Titan Text Express
+  - Implement AgentCore Observability integration for decision tracing
+  - Set up MCP integration for Compliance MCP server access
+  - Deploy agent to AgentCore Runtime with audit trail capabilities
   - Create unit tests for compliance validation rules
   - _Requirements: 8.1, 8.2, 8.3, 4.1_
 
-- [ ] 8.2 Implement explainable AI compliance features
-  - Write natural language explanation generation for compliance decisions
-  - Implement audit trail storage and retrieval
+- [ ] 8.2 Implement Compliance MCP server and explainable AI features
+  - Write Compliance MCP server as Lambda function
+  - Implement regulatory validation, audit trails, and compliance reporting tools
+  - Set up AgentCore Observability integration for explainable AI
   - Create unit tests for explanation quality and completeness
   - _Requirements: 8.2, 8.5, 4.2_
 
-- [ ] 9. Implement predictive analytics agent
-- [ ] 9.1 Create predictive agent with Claude 3.5 Sonnet integration
-  - Write PredictiveAgent class with forecasting capabilities
-  - Implement risk change prediction algorithms
+- [ ] 9. Implement predictive analytics Strands agent
+- [ ] 9.1 Create predictive Strands agent for AgentCore deployment
+  - Write PredictiveAgent using Strands framework with Claude 3.5 Sonnet
+  - Implement AgentCore Memory integration for historical pattern access
+  - Set up cross-agent memory sharing for behavioral and sentiment insights
+  - Deploy agent to AgentCore Runtime with extended runtime capabilities
   - Create unit tests with historical data scenarios
   - _Requirements: 5.1, 5.2, 4.1_
 
-- [ ] 9.2 Implement proactive alert generation
-  - Write alert logic for predicted risk changes
-  - Implement recommendation engine for preventive actions
+- [ ] 9.2 Implement proactive alert generation through AgentCore Observability
+  - Write alert logic using AgentCore Observability for real-time monitoring
+  - Implement recommendation engine with cross-agent collaboration
+  - Set up AgentCore Memory for prediction accuracy tracking
   - Create unit tests for alert accuracy and timing
   - _Requirements: 5.2, 5.4, 4.2_
 
-- [ ] 10. Implement market context agent
-- [ ] 10.1 Create market context agent with Amazon Nova Lite
-  - Write MarketContextAgent class with multimodal processing
-  - Implement market condition analysis and customer impact assessment
+- [ ] 10. Implement market context Strands agent
+- [ ] 10.1 Create market context Strands agent for AgentCore deployment
+  - Write MarketContextAgent using Strands framework with Amazon Nova Lite
+  - Implement multimodal processing capabilities for charts and market data
+  - Set up MCP integration for Financial Data MCP server market tools
+  - Deploy agent to AgentCore Runtime with secure API access
   - Create unit tests with market data scenarios
   - _Requirements: 5.3, 6.2, 4.1_
 
-- [ ] 10.2 Implement market-aware risk adjustments
-  - Write algorithms to adjust risk scores based on market conditions
-  - Implement customer reaction prediction based on psychological profiles
+- [ ] 10.2 Implement market-aware risk adjustments with cross-agent collaboration
+  - Write algorithms using AgentCore Memory for behavioral correlation
+  - Implement customer reaction prediction with cross-agent insights
+  - Set up real-time market event correlation through AgentCore Memory
   - Create unit tests for market impact accuracy
   - _Requirements: 5.3, 2.2, 4.4_
 
-- [ ] 11. Implement multi-agent collaboration system
-- [ ] 11.1 Create agent orchestration and result synthesis
-  - Write orchestration logic to coordinate multiple agents
-  - Implement result synthesis algorithms to combine agent outputs
-  - Create unit tests for collaboration accuracy
+- [ ] 11. Implement Strands multi-agent collaboration on AgentCore
+- [ ] 11.1 Configure Strands orchestration for AgentCore Runtime
+  - Set up Strands orchestrator for autonomous agent workflow management
+  - Implement AgentCore Memory-based result synthesis
+  - Configure cross-agent memory sharing and collaboration patterns
+  - Create unit tests for Strands orchestration accuracy
   - _Requirements: 6.1, 6.2, 6.3, 7.1_
 
-- [ ] 11.2 Implement conflict resolution and consensus building
-  - Write algorithms to resolve conflicting agent assessments
-  - Implement confidence weighting and consensus mechanisms
-  - Create unit tests for conflict resolution scenarios
+- [ ] 11.2 Implement consensus building through AgentCore Memory
+  - Configure Strands framework conflict resolution mechanisms
+  - Implement confidence weighting using AgentCore Memory insights
+  - Set up consensus building algorithms with cross-agent collaboration
+  - Create unit tests for consensus building scenarios
   - _Requirements: 6.3, 6.4, 4.4_
 
 - [ ] 12. Implement real-time processing and updates
@@ -227,16 +255,18 @@ Convert the feature design into a series of prompts for a code-generation LLM th
   - Create unit tests for simulation accuracy
   - _Requirements: 9.1, 9.2, 4.2_
 
-- [ ] 14. Implement conversational AI interface
-- [ ] 14.1 Create natural language query processing
-  - Write conversational interface for agent interactions
-  - Implement natural language explanation generation
+- [ ] 14. Implement conversational AI interface with AgentCore
+- [ ] 14.1 Create natural language query processing through AgentCore
+  - Write conversational interface using AgentCore's native capabilities
+  - Implement natural language explanation generation with AgentCore Observability
+  - Set up interactive agent communication through AgentCore Memory
   - Create unit tests for conversation quality
   - _Requirements: 4.2, 4.3, 8.5_
 
-- [ ] 14.2 Implement interactive Q&A with agents
-  - Write logic for direct agent questioning and responses
-  - Implement context-aware conversation management
+- [ ] 14.2 Implement interactive Q&A with Strands agents
+  - Write logic for direct agent questioning using Strands framework
+  - Implement context-aware conversation management with AgentCore Memory
+  - Set up real-time agent reasoning transparency through AgentCore Observability
   - Create unit tests for Q&A accuracy and relevance
   - _Requirements: 4.3, 4.4, 6.2_
 

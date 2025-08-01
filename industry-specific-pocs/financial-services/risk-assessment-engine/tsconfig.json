@@ -1,0 +1,54 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "removeComments": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["packages/shared/src/*"],
+      "@agents/*": ["packages/agents/src/*"],
+      "@mcp-servers/*": ["packages/mcp-servers/src/*"],
+      "@api/*": ["packages/api/src/*"],
+      "@infrastructure/*": ["packages/infrastructure/lib/*"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*",
+    "packages/*/lib/**/*",
+    "packages/*/test/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.js",
+    "**/*.d.ts"
+  ],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/agents" },
+    { "path": "./packages/mcp-servers" },
+    { "path": "./packages/api" },
+    { "path": "./packages/infrastructure" },
+    { "path": "./packages/frontend" }
+  ]
+}
