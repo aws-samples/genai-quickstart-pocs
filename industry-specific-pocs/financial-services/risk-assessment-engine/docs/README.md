@@ -1,8 +1,8 @@
-# Risk Assessment Engine Documentation
+# Agentic Customer Risk Assessment Engine Documentation
 
 ## Overview
 
-The Gen AI-Powered Customer Risk Assessment Engine automatically evaluates customer financial risk profiles by analyzing their behavior, communications, and market interactions using AWS AgentCore and Strands framework.
+The Agentic Customer Risk Assessment Engine automatically evaluates customer financial risk profiles by analyzing their behavior, communications, and market interactions using AWS AgentCore and Strands framework.
 
 ## Architecture
 

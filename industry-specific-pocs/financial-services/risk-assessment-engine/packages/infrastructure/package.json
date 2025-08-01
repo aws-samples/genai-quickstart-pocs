@@ -1,5 +1,5 @@
 {
-  "name": "@risk-assessment/infrastructure",
+  "name": "@agentic-risk-assessment/infrastructure",
   "version": "1.0.0",
   "description": "AWS CDK infrastructure code",
   "main": "lib/index.js",
@@ -22,7 +22,7 @@
     "synth": "cdk synth"
   },
   "dependencies": {
-    "@risk-assessment/shared": "^1.0.0",
+    "@agentic-risk-assessment/shared": "^1.0.0",
     "aws-cdk-lib": "^2.110.0",
     "constructs": "^10.3.0"
   },

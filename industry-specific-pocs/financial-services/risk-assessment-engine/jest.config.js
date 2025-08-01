@@ -31,11 +31,11 @@ module.exports = {
     }
   },
   moduleNameMapping: {
-    '^@shared/(.*)$': '<rootDir>/packages/shared/src/$1',
-    '^@agents/(.*)$': '<rootDir>/packages/agents/src/$1',
-    '^@mcp-servers/(.*)$': '<rootDir>/packages/mcp-servers/src/$1',
-    '^@api/(.*)$': '<rootDir>/packages/api/src/$1',
-    '^@infrastructure/(.*)$': '<rootDir>/packages/infrastructure/lib/$1'
+    '^@agentic-shared/(.*)$': '<rootDir>/packages/shared/src/$1',
+    '^@agentic-agents/(.*)$': '<rootDir>/packages/agents/src/$1',
+    '^@agentic-mcp-servers/(.*)$': '<rootDir>/packages/mcp-servers/src/$1',
+    '^@agentic-api/(.*)$': '<rootDir>/packages/api/src/$1',
+    '^@agentic-infrastructure/(.*)$': '<rootDir>/packages/infrastructure/lib/$1'
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testTimeout: 30000,

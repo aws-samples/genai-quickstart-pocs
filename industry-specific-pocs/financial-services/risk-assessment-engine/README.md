@@ -1,6 +1,6 @@
-# Gen AI-Powered Customer Risk Assessment Engine
+# Agentic Customer Risk Assessment Engine
 
-A comprehensive risk assessment system that uses AWS AgentCore and Strands framework to analyze customer financial behavior, communications, and market interactions for accurate risk profiling.
+A comprehensive agentic risk assessment system that uses AWS AgentCore and Strands framework to analyze customer financial behavior, communications, and market interactions for accurate risk profiling.
 
 ## Features
 

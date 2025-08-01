@@ -1,5 +1,5 @@
 {
-  "name": "@risk-assessment/agents",
+  "name": "@agentic-risk-assessment/agents",
   "version": "1.0.0",
   "description": "Strands agents for AgentCore deployment",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@risk-assessment/shared": "^1.0.0",
+    "@agentic-risk-assessment/shared": "^1.0.0",
     "@aws-sdk/client-bedrock-runtime": "^3.450.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.450.0",
     "strands-framework": "^1.0.0"

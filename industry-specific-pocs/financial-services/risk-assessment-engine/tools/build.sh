@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Build script for risk assessment engine
+# Build script for agentic customer risk assessment engine
 set -e
 
-echo "Building Risk Assessment Engine..."
+echo "Building Agentic Customer Risk Assessment Engine..."
 
 # Clean previous builds
 echo "Cleaning previous builds..."
@@ -29,4 +29,4 @@ npm run test
 echo "Building packages..."
 npm run build
 
-echo "Build completed successfully!"
+echo "Agentic Customer Risk Assessment Engine build completed successfully!"

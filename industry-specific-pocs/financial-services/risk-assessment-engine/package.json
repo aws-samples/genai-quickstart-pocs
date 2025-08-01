@@ -1,7 +1,7 @@
 {
-  "name": "risk-assessment-engine",
+  "name": "agentic-customer-risk-assessment-engine",
   "version": "1.0.0",
-  "description": "Gen AI-Powered Customer Risk Assessment Engine",
+  "description": "Agentic Customer Risk Assessment Engine",
   "private": true,
   "workspaces": [
     "packages/*"

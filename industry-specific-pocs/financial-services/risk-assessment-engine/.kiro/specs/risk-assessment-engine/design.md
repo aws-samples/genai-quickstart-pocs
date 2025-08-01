@@ -1,8 +1,8 @@
-# Gen AI-Powered Customer Risk Assessment Engine Design
+# Agentic Customer Risk Assessment Engine Design
 
 ## Overview
 
-The Gen AI-Powered Customer Risk Assessment Engine automatically evaluates customer financial risk profiles by analyzing their behavior, communications, and market interactions. Instead of relying on static questionnaires, the system uses AI agents to understand how customers actually behave with their money.
+The Agentic Customer Risk Assessment Engine automatically evaluates customer financial risk profiles by analyzing their behavior, communications, and market interactions. Instead of relying on static questionnaires, the system uses AI agents to understand how customers actually behave with their money.
 
 ### How It Works
 1. **Data Collection**: Customer transactions, communications, and market data flow into the system

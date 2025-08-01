@@ -25,11 +25,11 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["packages/shared/src/*"],
-      "@agents/*": ["packages/agents/src/*"],
-      "@mcp-servers/*": ["packages/mcp-servers/src/*"],
-      "@api/*": ["packages/api/src/*"],
-      "@infrastructure/*": ["packages/infrastructure/lib/*"]
+      "@agentic-shared/*": ["packages/shared/src/*"],
+      "@agentic-agents/*": ["packages/agents/src/*"],
+      "@agentic-mcp-servers/*": ["packages/mcp-servers/src/*"],
+      "@agentic-api/*": ["packages/api/src/*"],
+      "@agentic-infrastructure/*": ["packages/infrastructure/lib/*"]
     }
   },
   "include": [

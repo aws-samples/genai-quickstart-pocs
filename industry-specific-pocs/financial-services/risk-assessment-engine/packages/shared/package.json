@@ -1,5 +1,5 @@
 {
-  "name": "@risk-assessment/shared",
+  "name": "@agentic-risk-assessment/shared",
   "version": "1.0.0",
   "description": "Shared types, interfaces, and utilities",
   "main": "dist/index.js",

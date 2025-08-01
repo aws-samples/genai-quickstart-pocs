@@ -4,7 +4,7 @@
 
 This application provides real-time evaluation of customer comprehensive risk profiles by analyzing Risk Tolerance and Risk Capacity through three integrated dimensions: behavioral metrics, psychological indicators, and sentiment & communications analysis. 
 
-The system leverages **Gen AI agents powered by AWS Bedrock AgentCore, Strands, and MCP servers** to deliver intelligent, explainable, and adaptive risk assessment capabilities that surpass traditional rule-based systems. Specialized agents collaborate through AWS Bedrock AgentCore orchestration, utilizing foundation models like Claude 3.5 Sonnet and Amazon Nova for cost-effective, high-quality analysis.
+The system leverages **agentic AI capabilities powered by AWS Bedrock AgentCore, Strands, and MCP servers** to deliver intelligent, explainable, and adaptive risk assessment capabilities that surpass traditional rule-based systems. Specialized agents collaborate through AWS Bedrock AgentCore orchestration, utilizing foundation models like Claude 3.5 Sonnet and Amazon Nova for cost-effective, high-quality analysis.
 
 Key capabilities include:
 - **Multi-agent collaboration** for comprehensive risk analysis
@@ -52,39 +52,39 @@ Key capabilities include:
 
 ### Gen AI Intelligence Requirements
 
-### Requirement 4: Gen AI Pattern Recognition and Explanations
+### Requirement 4: Agentic Pattern Recognition and Explanations
 
-**User Story:** As a risk analyst, I want Gen AI agents to analyze complex behavioral patterns and provide interactive natural language explanations, so that I can gain deeper insights into customer risk profiles with clear reasoning.
+**User Story:** As a risk analyst, I want agentic AI agents to analyze complex behavioral patterns and provide interactive natural language explanations, so that I can gain deeper insights into customer risk profiles with clear reasoning.
 
 #### Acceptance Criteria
 
-1. WHEN behavioral data is processed THEN Gen AI agents SHALL identify complex patterns, correlations, and anomalies that traditional rule-based systems might miss
-2. WHEN risk assessments are generated THEN Gen AI agents SHALL provide natural language explanations tailored to different audiences (analysts, customers, regulators)
-3. WHEN I ask questions about risk assessments THEN Gen AI agents SHALL provide interactive responses with detailed reasoning and supporting evidence
-4. WHEN multiple analysis dimensions are combined THEN Gen AI agents SHALL explain how different factors contribute to the overall risk profile with confidence levels
+1. WHEN behavioral data is processed THEN agentic AI agents SHALL identify complex patterns, correlations, and anomalies that traditional rule-based systems might miss
+2. WHEN risk assessments are generated THEN agentic AI agents SHALL provide natural language explanations tailored to different audiences (analysts, customers, regulators)
+3. WHEN I ask questions about risk assessments THEN agentic AI agents SHALL provide interactive responses with detailed reasoning and supporting evidence
+4. WHEN multiple analysis dimensions are combined THEN agentic AI agents SHALL explain how different factors contribute to the overall risk profile with confidence levels
 5. WHEN I challenge agent conclusions THEN they SHALL provide additional evidence, acknowledge limitations, and adjust confidence levels appropriately
 
 ### Requirement 5: Predictive Risk Analytics
 
-**User Story:** As a risk analyst, I want Gen AI agents to predict potential risk profile changes and provide proactive recommendations, so that I can take preventive actions before customers make unsuitable financial decisions.
+**User Story:** As a risk analyst, I want agentic AI agents to predict potential risk profile changes and provide proactive recommendations, so that I can take preventive actions before customers make unsuitable financial decisions.
 
 #### Acceptance Criteria
 
-1. WHEN analyzing customer behavior trends THEN predictive Gen AI agents SHALL forecast potential risk profile changes with confidence intervals
+1. WHEN analyzing customer behavior trends THEN predictive agentic AI agents SHALL forecast potential risk profile changes with confidence intervals
 2. WHEN risk predictions indicate concerning trends THEN agents SHALL generate proactive alerts with specific recommended interventions
 3. WHEN market conditions change THEN agents SHALL assess how individual customers might react based on their psychological profiles
 4. WHEN generating recommendations THEN agents SHALL provide personalized communication strategies and optimal timing for customer engagement
 
 ### Requirement 6: Multi-Agent Collaboration
 
-**User Story:** As a risk analyst, I want to observe multiple specialized Gen AI agents working collaboratively, so that I can understand how different AI capabilities combine to create comprehensive risk assessments.
+**User Story:** As a risk analyst, I want to observe multiple specialized agentic AI agents working collaboratively, so that I can understand how different AI capabilities combine to create comprehensive risk assessments.
 
 #### Acceptance Criteria
 
-1. WHEN processing customer data THEN the system SHALL demonstrate multiple specialized agents (Behavioral Analyst, Sentiment Analyzer, Compliance Officer, Market Context Agent) working together
+1. WHEN processing customer data THEN the system SHALL demonstrate multiple specialized agentic agents (Behavioral Analyst, Sentiment Analyzer, Compliance Officer, Market Context Agent) working together
 2. WHEN agents collaborate THEN the system SHALL show their communication, data sharing, and decision-making processes in real-time
 3. WHEN conflicts arise between agent assessments THEN the system SHALL demonstrate resolution processes and consensus building
-4. WHEN final risk assessments are generated THEN the system SHALL show how each agent contributed to the overall decision
+4. WHEN final risk assessments are generated THEN the system SHALL show how each agentic agent contributed to the overall decision
 
 ### Risk Assessment Requirements
 

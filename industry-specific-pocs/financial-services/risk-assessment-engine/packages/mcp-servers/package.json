@@ -1,5 +1,5 @@
 {
-  "name": "@risk-assessment/mcp-servers",
+  "name": "@agentic-risk-assessment/mcp-servers",
   "version": "1.0.0",
   "description": "MCP servers as Lambda functions",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@risk-assessment/shared": "^1.0.0",
+    "@agentic-risk-assessment/shared": "^1.0.0",
     "@aws-lambda-powertools/logger": "^1.14.2",
     "@aws-lambda-powertools/tracer": "^1.14.2",
     "@aws-lambda-powertools/metrics": "^1.14.2",
