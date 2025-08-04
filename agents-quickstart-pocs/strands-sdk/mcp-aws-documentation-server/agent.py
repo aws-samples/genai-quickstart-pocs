@@ -107,6 +107,17 @@ def query_aws_docs_simple(query_string: str):
                 command=_get_uvx_command(), 
                 args=["awslabs.aws-documentation-mcp-server@latest"]
             )))
+        '''For Windows, please change the code to 
+            stdio_mcp_client = MCPClient(lambda: stdio_client(
+                StdioServerParameters(
+                command=_get_uvx_command(), 
+                args=[
+                    "--from", 
+                    "awslabs.aws-documentation-mcp-server@latest", 
+                    "awslabs.aws-documentation-mcp-server.exe"
+                ]
+            )))
+        '''
         # Use a synchronous context manager for MCPClient
         with stdio_mcp_client:
             tools = stdio_mcp_client.list_tools_sync()
