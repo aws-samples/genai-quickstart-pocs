@@ -1,0 +1,30 @@
+{
+  "environment": "demo",
+  "aws": {
+    "region": "us-east-1",
+    "account": "current"
+  },
+  "features": {
+    "enableMonitoring": false,
+    "enableBackups": false,
+    "enableMultiAZ": false,
+    "enableDetailedLogging": true,
+    "enableMockResponses": true
+  },
+  "resources": {
+    "lambda": {
+      "memorySize": 1024,
+      "timeout": 60
+    },
+    "dynamodb": {
+      "billingMode": "PAY_PER_REQUEST",
+      "pointInTimeRecovery": false
+    },
+    "apiGateway": {
+      "throttling": {
+        "rateLimit": 100,
+        "burstLimit": 200
+      }
+    }
+  }
+}

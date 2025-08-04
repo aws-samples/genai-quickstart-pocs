@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment AI Agent - Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+        }
+
+        .demo-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-section h2 i {
+            color: #667eea;
+        }
+
+        .api-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .demo-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-area {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .investment-ideas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .idea-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .idea-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .idea-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .idea-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .idea-metrics {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .risk-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-conservative {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .risk-moderate {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .risk-aggressive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .time-horizon {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .quick-test {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .quick-test h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .test-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .test-btn:hover {
+            background: #5a6268;
+        }
+
+        .api-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-info h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .api-endpoint {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        @media (max-width: 768px) {
+            .api-demo {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Investment AI Agent</h1>
+            <p>Live Demo - Multi-Agent AI System for Investment Research</p>
+        </div>
+
+        <div class="demo-card">
+            <div class="demo-section">
+                <h2><i class="fas fa-server"></i> API Status</h2>
+                <div id="api-status" class="status-indicator status-offline">
+                    <i class="fas fa-circle"></i> Checking...
+                </div>
+                
+                <div class="api-info">
+                    <h3>Deployed API Endpoints</h3>
+                    <div class="api-endpoint">
+                        <strong>Base URL:</strong> https://fflo4lgd6d.execute-api.us-west-2.amazonaws.com/v1
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>Health Check:</strong> GET /api/v1/health
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>Investment Ideas:</strong> GET /api/v1/ideas
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2><i class="fas fa-play"></i> Quick Demo</h2>
+                
+                <div class="api-demo">
+                    <div>
+                        <button id="health-check" class="demo-button">
+                            <i class="fas fa-heartbeat"></i> Health Check
+                        </button>
+                        <div id="health-response" class="response-area" style="display: none;"></div>
+                    </div>
+                    
+                    <div>
+                        <button id="get-ideas" class="demo-button">
+                            <i class="fas fa-lightbulb"></i> Get Investment Ideas
+                        </button>
+                        <div id="ideas-response" class="response-area" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="quick-test">
+                    <h3>Quick API Tests</h3>
+                    <div class="test-buttons">
+                        <button class="test-btn" onclick="testEndpoint('/api/v1/version')">Version Info</button>
+                        <button class="test-btn" onclick="testEndpoint('/api/v1/ideas')">Investment Ideas</button>
+                        <button class="test-btn" onclick="testCurl()">Show cURL Commands</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2><i class="fas fa-chart-pie"></i> Sample Investment Ideas</h2>
+                <div id="investment-ideas" class="investment-ideas">
+                    <!-- Ideas will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://fflo4lgd6d.execute-api.us-west-2.amazonaws.com/v1';
+        
+        class DemoApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.checkApiStatus();
+            }
+
+            setupEventListeners() {
+                document.getElementById('health-check').addEventListener('click', () => {
+                    this.performHealthCheck();
+                });
+
+                document.getElementById('get-ideas').addEventListener('click', () => {
+                    this.getInvestmentIdeas();
+                });
+            }
+
+            async checkApiStatus() {
+                const statusElement = document.getElementById('api-status');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/health`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        statusElement.className = 'status-indicator status-online';
+                        statusElement.innerHTML = '<i class="fas fa-circle"></i> API Online';
+                    } else {
+                        throw new Error('API returned error');
+                    }
+                } catch (error) {
+                    statusElement.className = 'status-indicator status-offline';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i> API Offline';
+                }
+            }
+
+            async performHealthCheck() {
+                const button = document.getElementById('health-check');
+                const responseArea = document.getElementById('health-response');
+                
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner spinner"></i> Checking...';
+                responseArea.style.display = 'block';
+                responseArea.innerHTML = '<div class="loading"><i class="fas fa-spinner spinner"></i> Performing health check...</div>';
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/health`);
+                    const data = await response.json();
+                    
+                    responseArea.innerHTML = `
+                        <div class="success">✅ Health Check Successful</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    responseArea.innerHTML = `
+                        <div class="error">❌ Health Check Failed</div>
+                        <pre>Error: ${error.message}</pre>
+                    `;
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-heartbeat"></i> Health Check';
+                }
+            }
+
+            async getInvestmentIdeas() {
+                const button = document.getElementById('get-ideas');
+                const responseArea = document.getElementById('ideas-response');
+                const ideasContainer = document.getElementById('investment-ideas');
+                
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner spinner"></i> Loading...';
+                responseArea.style.display = 'block';
+                responseArea.innerHTML = '<div class="loading"><i class="fas fa-spinner spinner"></i> Generating investment ideas...</div>';
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/ideas`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        responseArea.innerHTML = `
+                            <div class="success">✅ Investment Ideas Retrieved</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                        
+                        this.displayInvestmentIdeas(data.ideas || []);
+                    } else {
+                        throw new Error(data.message || 'Failed to get ideas');
+                    }
+                } catch (error) {
+                    responseArea.innerHTML = `
+                        <div class="error">❌ Failed to Get Ideas</div>
+                        <pre>Error: ${error.message}</pre>
+                    `;
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-lightbulb"></i> Get Investment Ideas';
+                }
+            }
+
+            displayInvestmentIdeas(ideas) {
+                const container = document.getElementById('investment-ideas');
+                
+                if (!ideas || ideas.length === 0) {
+                    container.innerHTML = '<p>No investment ideas available.</p>';
+                    return;
+                }
+
+                container.innerHTML = ideas.map(idea => `
+                    <div class="idea-card">
+                        <div class="idea-title">${idea.title}</div>
+                        <div class="idea-description">${idea.description}</div>
+                        <div class="idea-metrics">
+                            <span class="risk-badge risk-${idea.riskLevel}">${idea.riskLevel} Risk</span>
+                            <span class="time-horizon">${idea.timeHorizon}</span>
+                        </div>
+                        ${idea.expectedReturn ? `<div style="margin-top: 10px; font-weight: 600; color: #28a745;">Expected Return: ${idea.expectedReturn}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Global functions for quick tests
+        async function testEndpoint(endpoint) {
+            const url = `${API_BASE}${endpoint}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                alert(`${endpoint}:\n\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                alert(`Error testing ${endpoint}:\n\n${error.message}`);
+            }
+        }
+
+        function testCurl() {
+            const commands = [
+                `curl ${API_BASE}/api/v1/health`,
+                `curl ${API_BASE}/api/v1/version`,
+                `curl ${API_BASE}/api/v1/ideas`,
+                `curl -X POST ${API_BASE}/api/v1/ideas -H "Content-Type: application/json" -d '{"investmentHorizon":"medium","riskTolerance":"moderate"}'`
+            ];
+            
+            alert('cURL Commands:\n\n' + commands.join('\n\n'));
+        }
+
+        // Initialize the demo app
+        new DemoApp();
+    </script>
+</body>
+</html>

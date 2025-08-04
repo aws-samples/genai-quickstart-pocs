@@ -1,0 +1,224 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+
+env:
+  NODE_VERSION: '18.x'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'dev'
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Build application
+      working-directory: investment-ai-agent
+      run: npm run build
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Run pre-deployment validation
+      working-directory: investment-ai-agent
+      run: npm run validate:deployment
+      
+    - name: Deploy to AWS
+      working-directory: investment-ai-agent
+      run: |
+        npx cdk bootstrap --context environment=dev
+        npx cdk deploy --all --require-approval never --context environment=dev
+        
+    - name: Run post-deployment tests
+      working-directory: investment-ai-agent
+      run: npm run test:deployment:dev
+      
+    - name: Update deployment status
+      working-directory: investment-ai-agent
+      run: npm run deployment:notify -- --environment=dev --status=success
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.event.inputs.environment == 'staging' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch')
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Build application
+      working-directory: investment-ai-agent
+      run: npm run build
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Run pre-deployment validation
+      working-directory: investment-ai-agent
+      run: npm run validate:deployment
+      
+    - name: Deploy to AWS
+      working-directory: investment-ai-agent
+      run: |
+        npx cdk bootstrap --context environment=staging
+        npx cdk deploy --all --require-approval never --context environment=staging
+        
+    - name: Run post-deployment tests
+      working-directory: investment-ai-agent
+      run: npm run test:deployment:staging
+      
+    - name: Run smoke tests
+      working-directory: investment-ai-agent
+      run: npm run test:smoke:staging
+      
+    - name: Update deployment status
+      working-directory: investment-ai-agent
+      run: npm run deployment:notify -- --environment=staging --status=success
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.event.inputs.environment == 'prod'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Build application
+      working-directory: investment-ai-agent
+      run: npm run build
+      
+    - name: Configure AWS credentials
+      uses: aws/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Run pre-deployment validation
+      working-directory: investment-ai-agent
+      run: npm run validate:deployment
+      
+    - name: Create deployment backup
+      working-directory: investment-ai-agent
+      run: npm run deployment:backup -- --environment=prod
+      
+    - name: Deploy to AWS (Blue-Green)
+      working-directory: investment-ai-agent
+      run: |
+        npx cdk bootstrap --context environment=prod
+        npx cdk deploy --all --require-approval never --context environment=prod --context deploymentStrategy=blue-green
+        
+    - name: Run post-deployment tests
+      working-directory: investment-ai-agent
+      run: npm run test:deployment:prod
+      
+    - name: Run comprehensive smoke tests
+      working-directory: investment-ai-agent
+      run: npm run test:smoke:prod
+      
+    - name: Finalize blue-green deployment
+      working-directory: investment-ai-agent
+      run: npm run deployment:finalize -- --environment=prod
+      
+    - name: Update deployment status
+      working-directory: investment-ai-agent
+      run: npm run deployment:notify -- --environment=prod --status=success
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Rollback deployment
+      working-directory: investment-ai-agent
+      run: npm run deployment:rollback
+      
+    - name: Notify rollback
+      working-directory: investment-ai-agent
+      run: npm run deployment:notify -- --status=rollback

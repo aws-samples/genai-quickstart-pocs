@@ -1,0 +1,70 @@
+{
+  "environment": "staging",
+  "region": "us-east-1",
+  "stackName": "InvestmentAiAgentStack-Staging",
+  "tags": {
+    "Environment": "Staging",
+    "Project": "InvestmentAiAgent",
+    "Owner": "DevTeam",
+    "CostCenter": "Engineering"
+  },
+  "lambda": {
+    "memorySize": 512,
+    "timeout": 60,
+    "reservedConcurrency": 50,
+    "logRetention": 14
+  },
+  "apiGateway": {
+    "throttling": {
+      "rateLimit": 500,
+      "burstLimit": 1000
+    },
+    "caching": {
+      "enabled": true,
+      "ttl": 300
+    }
+  },
+  "dynamodb": {
+    "billingMode": "PAY_PER_REQUEST",
+    "pointInTimeRecovery": true,
+    "backupRetention": 14
+  },
+  "s3": {
+    "versioning": true,
+    "encryption": "KMS",
+    "lifecycleRules": {
+      "transitionToIA": 30,
+      "transitionToGlacier": 90,
+      "expiration": 730
+    }
+  },
+  "cognito": {
+    "passwordPolicy": {
+      "minLength": 12,
+      "requireLowercase": true,
+      "requireUppercase": true,
+      "requireDigits": true,
+      "requireSymbols": true
+    },
+    "mfaConfiguration": "OPTIONAL"
+  },
+  "monitoring": {
+    "enableXRay": true,
+    "enableDetailedMonitoring": true,
+    "alarmNotifications": true
+  },
+  "bedrock": {
+    "models": {
+      "claudeSonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "claudeHaiku": "anthropic.claude-3-haiku-20240307-v1:0",
+      "novaPro": "amazon.nova-pro-v1:0"
+    },
+    "maxTokens": 4000,
+    "temperature": 0.7
+  },
+  "security": {
+    "enableWAF": true,
+    "enableGuardDuty": true,
+    "enableSecurityHub": false
+  }
+}
