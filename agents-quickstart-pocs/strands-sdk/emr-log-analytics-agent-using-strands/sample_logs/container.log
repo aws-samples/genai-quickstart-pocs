@@ -1,0 +1,14 @@
+2024-01-15 10:25:00,000 INFO  [main] ApplicationMaster: Starting ApplicationMaster
+2024-01-15 10:25:01,111 INFO  [main] ApplicationMaster: Registering ApplicationMaster
+2024-01-15 10:25:02,222 INFO  [RMCommunicator Allocator] RMContainerAllocator: Got allocated containers 3
+2024-01-15 10:25:03,333 INFO  [AsyncDispatcher event handler] ContainerLauncherImpl: Processing the event EventType: CONTAINER_REMOTE_LAUNCH
+2024-01-15 10:25:04,444 INFO  [ContainerLauncher #0] ContainerLauncherImpl: Launching container container_1705312500000_0001_01_000002
+2024-01-15 10:25:10,555 INFO  [AsyncDispatcher event handler] TaskAttemptImpl: TaskAttempt attempt_1705312500000_0001_m_000000_0 transitioned from ASSIGNED to RUNNING
+2024-01-15 10:25:15,666 WARN  [IPC Server handler 2 on 8030] TaskAttemptListenerImpl: Task attempt_1705312500000_0001_m_000000_0 reporting high memory usage
+2024-01-15 10:25:20,777 ERROR [AsyncDispatcher event handler] TaskAttemptImpl: Task attempt_1705312500000_0001_m_000000_0 failed due to: Container killed by the ApplicationMaster. Container killed on request. Exit code is 143
+Container exited with a non-zero exit code 143. This typically indicates that the container was killed by YARN, either due to being over the memory limit or exceeding the virtual memory limit.
+2024-01-15 10:25:21,888 INFO  [AsyncDispatcher event handler] TaskImpl: Task task_1705312500000_0001_m_000000 failed attempt attempt_1705312500000_0001_m_000000_0
+2024-01-15 10:25:22,999 INFO  [AsyncDispatcher event handler] JobImpl: Num completed Tasks: 0
+2024-01-15 10:25:23,000 ERROR [AsyncDispatcher event handler] JobImpl: Job job_1705312500000_0001 failed with state FAILED due to: Task failed task_1705312500000_0001_m_000000
+Job failed as tasks failed. failedMaps:1 failedReduces:0
+2024-01-15 10:25:24,111 INFO  [main] ApplicationMaster: Unregistering ApplicationMaster with final status FAILED

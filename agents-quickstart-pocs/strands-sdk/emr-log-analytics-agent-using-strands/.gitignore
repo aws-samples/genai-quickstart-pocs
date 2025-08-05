@@ -150,5 +150,6 @@ Thumbs.db
 
 # Project specific
 *.log
+!sample_logs/*.log
 temp/
 tmp/.flake8
