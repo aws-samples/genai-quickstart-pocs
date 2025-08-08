@@ -1,0 +1,44 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:CreateDataAutomationProject",
+                "bedrock:GetDataAutomationProject",
+                "bedrock:ListDataAutomationProjects",
+                "bedrock:UpdateDataAutomationProject",
+                "bedrock:DeleteDataAutomationProject",
+                "bedrock:CreateBlueprint",
+                "bedrock:GetBlueprint",
+                "bedrock:ListBlueprints",
+                "bedrock:UpdateBlueprint",
+                "bedrock:DeleteBlueprint",
+                "bedrock:InvokeDataAutomationAsync",
+                "bedrock:GetDataAutomationStatus",
+                "bedrock:ListDataAutomationJobs"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::<your-document-storage-bucket>",
+                "arn:aws:s3:::<your-document-storage-bucket>/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetCallerIdentity"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
