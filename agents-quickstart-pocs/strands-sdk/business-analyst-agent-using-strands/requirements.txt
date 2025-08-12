@@ -55,7 +55,7 @@ pandas==2.2.3
 pillow==11.2.1
 plotly==6.0.0
 prompt_toolkit==3.0.51
-protobuf==5.29.3
+protobuf==5.29.5
 pyarrow==19.0.0
 pydantic==2.11.5
 pydantic-settings==2.9.1
