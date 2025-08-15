@@ -1,0 +1,164 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18.x'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Run linting
+      working-directory: investment-ai-agent
+      run: npm run lint || echo "Linting not configured yet"
+      
+    - name: Run unit tests
+      working-directory: investment-ai-agent
+      run: npm run test:unit
+      
+    - name: Run integration tests
+      working-directory: investment-ai-agent
+      run: npm run test:integration
+      
+    - name: Run security tests
+      working-directory: investment-ai-agent
+      run: npm run test:security-all
+      
+    - name: Generate test coverage
+      working-directory: investment-ai-agent
+      run: npm run test:coverage
+      
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        directory: investment-ai-agent/coverage
+        fail_ci_if_error: false
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Build TypeScript
+      working-directory: investment-ai-agent
+      run: npm run build
+      
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          investment-ai-agent/dist/
+          investment-ai-agent/package.json
+          investment-ai-agent/package-lock.json
+        retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Run npm audit
+      working-directory: investment-ai-agent
+      run: npm audit --audit-level=high
+      
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+        command: test
+      continue-on-error: true
+
+  validate-infrastructure:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: investment-ai-agent/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: investment-ai-agent
+      run: npm ci
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Validate CDK templates
+      working-directory: investment-ai-agent
+      run: |
+        npx cdk synth --all
+        npx cdk diff --all || true
+        
+    - name: Run CDK security checks
+      working-directory: investment-ai-agent
+      run: |
+        npm install -g cdk-nag
+        npx cdk synth --all --app "npx ts-node --prefer-ts-exts scripts/cdk-nag-app.ts"
+      continue-on-error: true

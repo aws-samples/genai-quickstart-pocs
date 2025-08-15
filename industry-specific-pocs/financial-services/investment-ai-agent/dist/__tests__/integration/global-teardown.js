@@ -1,0 +1,12 @@
+"use strict";
+/**
+ * Global teardown for integration tests
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+async function globalTeardown() {
+    console.log('🧹 Cleaning up integration test environment...');
+    // Clean up any global test resources
+    console.log('✅ Integration test cleanup complete');
+}
+exports.default = globalTeardown;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2xvYmFsLXRlYXJkb3duLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vc3JjL19fdGVzdHNfXy9pbnRlZ3JhdGlvbi9nbG9iYWwtdGVhcmRvd24udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IjtBQUFBOztHQUVHOztBQUVZLEtBQUssVUFBVSxjQUFjO0lBQzFDLE9BQU8sQ0FBQyxHQUFHLENBQUMsZ0RBQWdELENBQUMsQ0FBQztJQUU5RCxxQ0FBcUM7SUFFckMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQ0FBcUMsQ0FBQyxDQUFDO0FBQ3JELENBQUM7QUFORCxpQ0FNQyIsInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogR2xvYmFsIHRlYXJkb3duIGZvciBpbnRlZ3JhdGlvbiB0ZXN0c1xuICovXG5cbmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIGdsb2JhbFRlYXJkb3duKCkge1xuICBjb25zb2xlLmxvZygn8J+nuSBDbGVhbmluZyB1cCBpbnRlZ3JhdGlvbiB0ZXN0IGVudmlyb25tZW50Li4uJyk7XG4gIFxuICAvLyBDbGVhbiB1cCBhbnkgZ2xvYmFsIHRlc3QgcmVzb3VyY2VzXG4gIFxuICBjb25zb2xlLmxvZygn4pyFIEludGVncmF0aW9uIHRlc3QgY2xlYW51cCBjb21wbGV0ZScpO1xufSJdfQ==
