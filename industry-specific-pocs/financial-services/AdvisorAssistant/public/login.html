@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Advisor AI Assistant - Login</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-header h1 {
+            color: #333;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .login-header p {
+            color: #666;
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .login-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .login-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .auth-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+        
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Advisor AI Assistant</h1>
+            <p>Sign in to access your personalized financial advisor</p>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Email or Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div id="new-password-section" style="display: none;">
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" name="new-password">
+                    <small>Must be 8+ characters with uppercase, lowercase, and numbers</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-button" id="login-button">
+                Sign In
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <a href="/">Back to Home</a>
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 5px; font-size: 0.9em; color: #666;">
+            <strong>Note:</strong> Contact your administrator for login credentials.
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        let currentSession = null;
+        let challengeName = null;
+        
+        // Handle form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('login-button');
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+            
+            // Reset messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Disable button
+            button.disabled = true;
+            button.textContent = 'Signing In...';
+            
+            try {
+                const formData = new FormData(e.target);
+                
+                let requestBody;
+                let endpoint;
+                
+                if (challengeName === 'NEW_PASSWORD_REQUIRED') {
+                    // Handle password change challenge
+                    endpoint = '/api/auth/challenge';
+                    requestBody = {
+                        challengeName: challengeName,
+                        session: currentSession,
+                        challengeResponses: {
+                            USERNAME: formData.get('username'),
+                            NEW_PASSWORD: formData.get('new-password')
+                        }
+                    };
+                    button.textContent = 'Setting Password...';
+                } else {
+                    // Initial login
+                    endpoint = '/api/auth/login';
+                    requestBody = {
+                        username: formData.get('username'),
+                        password: formData.get('password')
+                    };
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successDiv.textContent = 'Login successful! Redirecting...';
+                    successDiv.style.display = 'block';
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else if (result.challengeName === 'NEW_PASSWORD_REQUIRED') {
+                    // Show new password field
+                    currentSession = result.session;
+                    challengeName = result.challengeName;
+                    
+                    document.getElementById('new-password-section').style.display = 'block';
+                    document.getElementById('new-password').required = true;
+                    button.textContent = 'Set New Password';
+                    
+                    errorDiv.textContent = 'Please set a new permanent password';
+                    errorDiv.style.display = 'block';
+                } else {
+                    errorDiv.textContent = result.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                if (!challengeName) {
+                    button.disabled = false;
+                    button.textContent = 'Sign In';
+                } else {
+                    button.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

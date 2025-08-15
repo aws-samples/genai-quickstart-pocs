@@ -1,0 +1,833 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Application Infrastructure for Advisor Assistant POC - ECS Based'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: poc
+    Description: Environment name
+  
+  ApplicationName:
+    Type: String
+    Default: advisor-assistant
+    Description: Application name for resource naming
+
+  SecurityStackName:
+    Type: String
+    Description: Name of the security foundation stack
+    Default: advisor-assistant-security-poc
+
+  # Rate Limiting Configuration
+  RateLimitAuthMax:
+    Type: Number
+    Default: 10
+    Description: Maximum authentication attempts per window (5 recommended for production)
+    MinValue: 1
+    MaxValue: 100
+
+  RateLimitApiMax:
+    Type: Number
+    Default: 1000
+    Description: Maximum API requests per window (100 recommended for production)
+    MinValue: 10
+    MaxValue: 10000
+
+  RateLimitAiMax:
+    Type: Number
+    Default: 50
+    Description: Maximum AI analysis requests per hour (10 recommended for production)
+    MinValue: 1
+    MaxValue: 500
+
+Resources:
+  # DynamoDB Tables (simplified for POC)
+  CompaniesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-companies'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ticker
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ticker
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  FinancialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-financials'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ticker
+          AttributeType: S
+        - AttributeName: quarter-year
+          AttributeType: S
+        - AttributeName: reportDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ticker
+          KeyType: HASH
+        - AttributeName: quarter-year
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ReportDateIndex
+          KeySchema:
+            - AttributeName: reportDate
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  AnalysisDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-analysis-data'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ticker
+          AttributeType: S
+        - AttributeName: quarter-year
+          AttributeType: S
+        - AttributeName: reportDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ticker
+          KeyType: HASH
+        - AttributeName: quarter-year
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ReportDateIndex
+          KeySchema:
+            - AttributeName: reportDate
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  AlertsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-alerts'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: ticker
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: TickerIndex
+          KeySchema:
+            - AttributeName: ticker
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  AnalysesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-analyses'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: ticker
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: TickerIndex
+          KeySchema:
+            - AttributeName: ticker
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-sessions'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  UserConfigTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-user-config'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  SystemConfigTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-system-config'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+        - Key: Purpose
+          Value: SystemConfiguration
+
+  # S3 Bucket for document storage
+  AdvisorDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ApplicationName}-${Environment}-data-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: 
+                Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # Application Load Balancer
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${ApplicationName}-${Environment}-alb'
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - Fn::ImportValue: !Sub '${SecurityStackName}-PublicSubnet'
+        - Fn::ImportValue: !Sub '${SecurityStackName}-PublicSubnet2'
+      SecurityGroups:
+        - Fn::ImportValue: !Sub '${SecurityStackName}-ALBSecurityGroup'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # ALB Target Group with optimized health checks
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${ApplicationName}-${Environment}-tg'
+      Port: 3000
+      Protocol: HTTP
+      VpcId:
+        Fn::ImportValue: !Sub '${SecurityStackName}-VPC'
+      TargetType: ip
+      # Health check configuration optimized for Node.js startup
+      HealthCheckPath: /api/health
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 15      # Check every 15 seconds (faster detection)
+      HealthCheckTimeoutSeconds: 10       # 10 second timeout (more generous)
+      HealthyThresholdCount: 2            # 2 consecutive successes = healthy
+      UnhealthyThresholdCount: 3          # 3 consecutive failures = unhealthy
+      # Matcher for successful health checks
+      Matcher:
+        HttpCode: '200,201,202'           # Accept multiple success codes
+      # Deregistration delay (how long to wait before stopping old tasks)
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '30'                     # 30 seconds (faster than default 300)
+        - Key: stickiness.enabled
+          Value: 'false'                  # No sticky sessions needed
+        - Key: load_balancing.algorithm.type
+          Value: 'round_robin'            # Even distribution
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # ALB HTTP Listener
+  ALBHTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # ALB Listener Rule for Health Check
+  ALBHealthCheckRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/api/health'
+      ListenerArn: !Ref ALBHTTPListener
+      Priority: 1
+
+  # ECS Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${ApplicationName}-${Environment}-cluster'
+      CapacityProviders:
+        - FARGATE
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # ECS Task Definition
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${ApplicationName}-${Environment}-task'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 512
+      Memory: 1024
+      ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub '${ApplicationName}-app'
+          Image: !Sub 
+            - '${ECRRepository}:latest'
+            - ECRRepository: 
+                Fn::ImportValue: !Sub '${ApplicationName}-${Environment}-ecr-ECRRepository'
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: !Ref Environment
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: DYNAMODB_TABLE_PREFIX
+              Value: !Sub '${ApplicationName}-${Environment}'
+            - Name: ANALYSIS_DATA_TABLE_NAME
+              Value: !Ref AnalysisDataTable
+            - Name: S3_BUCKET_NAME
+              Value: !Ref AdvisorDataBucket
+            - Name: SNS_TOPIC_ARN
+              Value: !Ref AdvisorAlertsTopic
+            - Name: SQS_QUEUE_URL
+              Value: !Ref AdvisorProcessingQueue
+            - Name: EVENTBRIDGE_BUS_NAME
+              Value: !Ref AdvisorEventBus
+            - Name: COGNITO_USER_POOL_ID
+              Value:
+                Fn::ImportValue: !Sub '${SecurityStackName}-UserPoolId'
+            - Name: COGNITO_CLIENT_ID
+              Value:
+                Fn::ImportValue: !Sub '${SecurityStackName}-UserPoolClient'
+            - Name: COGNITO_DOMAIN
+              Value: !Sub '${ApplicationName}-${Environment}-auth'
+            - Name: COGNITO_REDIRECT_URI
+              Value: !Sub 'http://${ApplicationLoadBalancer.DNSName}/auth/callback'
+            - Name: APPLICATION_URL
+              Value: !Sub 'http://${ApplicationLoadBalancer.DNSName}'
+            - Name: SESSION_SECRET
+              Value: !Sub '${ApplicationName}-${Environment}-session-secret-change-in-production'
+            - Name: USER_AGENT
+              Value: !Sub '${ApplicationName}@${Environment}.com'
+            - Name: CLOUDWATCH_LOG_GROUP
+              Value: !Ref ECSLogGroup
+            - Name: BEDROCK_MODEL_ID
+              Value: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0'
+            - Name: BEDROCK_REGION
+              Value: !Ref AWS::Region
+            - Name: DATA_PROVIDER
+              Value: enhanced_multi_provider
+            # New Data Provider Configuration
+            - Name: YAHOO_FINANCE_ENABLED
+              Value: 'true'
+            - Name: CACHE_DURATION_STOCK
+              Value: '300'
+            - Name: CACHE_DURATION_NEWS
+              Value: '1800'
+            - Name: CACHE_DURATION_MACRO
+              Value: '86400'
+
+            - Name: NEWSAPI_DAILY_LIMIT
+              Value: '1000'
+            # Rate Limiting Configuration
+            - Name: RATE_LIMIT_AUTH_MAX
+              Value: !Ref RateLimitAuthMax
+            - Name: RATE_LIMIT_AUTH_WINDOW_MS
+              Value: '900000'  # 15 minutes
+            - Name: RATE_LIMIT_API_MAX
+              Value: !Ref RateLimitApiMax
+            - Name: RATE_LIMIT_API_WINDOW_MS
+              Value: '900000'  # 15 minutes
+            - Name: RATE_LIMIT_AI_MAX
+              Value: !Ref RateLimitAiMax
+            - Name: RATE_LIMIT_AI_WINDOW_MS
+              Value: '3600000'  # 1 hour
+          Secrets:
+            - Name: NEWSAPI_KEY
+              ValueFrom: !Sub 
+                - '${SecretArn}:api_key::'
+                - SecretArn: 
+                    Fn::ImportValue: !Sub '${SecurityStackName}-NewsAPISecret'
+            - Name: FRED_API_KEY
+              ValueFrom: !Sub 
+                - '${SecretArn}:api_key::'
+                - SecretArn: 
+                    Fn::ImportValue: !Sub '${SecurityStackName}-FREDSecret'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          Essential: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # ECS Service with proper deployment configuration
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: ALBHTTPListener
+    Properties:
+      ServiceName: !Sub '${ApplicationName}-${Environment}-service'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref ECSTaskDefinition
+      LaunchType: FARGATE
+      DesiredCount: 1
+      # Deployment Configuration for rolling updates
+      DeploymentConfiguration:
+        MaximumPercent: 200          # Allow up to 2 tasks during deployment
+        MinimumHealthyPercent: 50    # Keep at least 50% healthy during deployment
+        DeploymentCircuitBreaker:
+          Enable: true               # Enable circuit breaker for failed deployments
+          Rollback: true             # Auto-rollback on failure
+      # Health check grace period
+      HealthCheckGracePeriodSeconds: 300  # 5 minutes for app to start
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - Fn::ImportValue: !Sub '${SecurityStackName}-ECSSecurityGroup'
+          Subnets:
+            - Fn::ImportValue: !Sub '${SecurityStackName}-PrivateSubnet'
+            - Fn::ImportValue: !Sub '${SecurityStackName}-PrivateSubnet2'
+          AssignPublicIp: DISABLED
+      LoadBalancers:
+        - ContainerName: !Sub '${ApplicationName}-app'
+          ContainerPort: 3000
+          TargetGroupArn: !Ref ALBTargetGroup
+      # Propagate tags from service to tasks
+      PropagateTags: SERVICE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # IAM Roles for ECS
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ApplicationName}-${Environment}-ecs-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-NewsAPISecret'
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-FREDSecret'
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource:
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-KMSKeyArn'
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ApplicationName}-${Environment}-ecs-task-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+      Policies:
+        - PolicyName: AdvisorAssistantTaskPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:DescribeTable
+                Resource:
+                  - !GetAtt CompaniesTable.Arn
+                  - !GetAtt FinancialsTable.Arn
+                  - !GetAtt AnalysisDataTable.Arn
+                  - !GetAtt AlertsTable.Arn
+                  - !GetAtt AnalysesTable.Arn
+                  - !GetAtt SessionsTable.Arn
+                  - !GetAtt UserConfigTable.Arn
+                  - !GetAtt SystemConfigTable.Arn
+                  - !Sub '${CompaniesTable.Arn}/index/*'
+                  - !Sub '${FinancialsTable.Arn}/index/*'
+                  - !Sub '${AnalysisDataTable.Arn}/index/*'
+                  - !Sub '${AlertsTable.Arn}/index/*'
+                  - !Sub '${AnalysesTable.Arn}/index/*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub '${AdvisorDataBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !GetAtt AdvisorDataBucket.Arn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref AdvisorAlertsTopic
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - !GetAtt AdvisorProcessingQueue.Arn
+                  - !GetAtt AdvisorDeadLetterQueue.Arn
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !GetAtt AdvisorEventBus.Arn
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-NewsAPISecret'
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-FREDSecret'
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource:
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-KMSKeyArn'
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminInitiateAuth
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminSetUserPassword
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:ListUsers
+                  - cognito-idp:AdminListGroupsForUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                Resource:
+                  - Fn::ImportValue: !Sub '${SecurityStackName}-UserPool'
+
+  # SNS Topic for alerts
+  AdvisorAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ApplicationName}-${Environment}-alerts'
+      DisplayName: Advisor Assistant Alerts
+      KmsMasterKeyId: 
+        Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # SQS Queues
+  AdvisorProcessingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${ApplicationName}-${Environment}-processing'
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 1209600  # 14 days
+      KmsMasterKeyId: 
+        Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AdvisorDeadLetterQueue.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  AdvisorDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${ApplicationName}-${Environment}-processing-dlq'
+      MessageRetentionPeriod: 1209600  # 14 days
+      KmsMasterKeyId: 
+        Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # EventBridge Custom Bus
+  AdvisorEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub '${ApplicationName}-${Environment}-events'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+  # CloudWatch Log Groups
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/ecs/${ApplicationName}-${Environment}'
+      RetentionInDays: 7
+      KmsKeyId: 
+        Fn::ImportValue: !Sub '${SecurityStackName}-KMSKeyArn'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+
+
+
+Outputs:
+  ApplicationLoadBalancerDNS:
+    Description: Application Load Balancer DNS Name
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub '${AWS::StackName}-ALBDNSName'
+
+  ApplicationURL:
+    Description: Application URL
+    Value: !Sub 'http://${ApplicationLoadBalancer.DNSName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApplicationURL'
+
+  ECSClusterName:
+    Description: ECS Cluster Name
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub '${AWS::StackName}-ECSCluster'
+
+  CompaniesTableName:
+    Description: Companies Table Name
+    Value: !Ref CompaniesTable
+    Export:
+      Name: !Sub '${AWS::StackName}-CompaniesTable'
+
+  AnalysisDataTableName:
+    Description: Analysis Data Table Name
+    Value: !Ref AnalysisDataTable
+    Export:
+      Name: !Sub '${AWS::StackName}-AnalysisDataTable'
+
+  AlertsTableName:
+    Description: Alerts Table Name
+    Value: !Ref AlertsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-AlertsTable'
+
+  AnalysesTableName:
+    Description: Analyses Table Name
+    Value: !Ref AnalysesTable
+    Export:
+      Name: !Sub '${AWS::StackName}-AnalysesTable'
+
+  SessionsTableName:
+    Description: Sessions Table Name
+    Value: !Ref SessionsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-SessionsTable'
+
+  UserConfigTableName:
+    Description: User Config Table Name
+    Value: !Ref UserConfigTable
+    Export:
+      Name: !Sub '${AWS::StackName}-UserConfigTable'
+
+  AdvisorDataBucketName:
+    Description: Advisor Data Bucket Name
+    Value: !Ref AdvisorDataBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-AdvisorDataBucket'
+
+  SQSQueueUrl:
+    Description: SQS Queue URL
+    Value: !Ref AdvisorProcessingQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-SQSQueue'
+
+  SNSTopicArn:
+    Description: SNS Topic ARN
+    Value: !Ref AdvisorAlertsTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-SNSTopic'
+
+  EventBusName:
+    Description: EventBridge Bus Name
+    Value: !Ref AdvisorEventBus
+    Export:
+      Name: !Sub '${AWS::StackName}-EventBus'

@@ -1,0 +1,96 @@
+{
+  "poc": {
+    "aws": {
+      "region": "us-east-1",
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": false
+      },
+      "ecs": {
+        "cpu": 512,
+        "memory": 1024,
+        "desiredCount": 1
+      },
+      "alb": {
+        "healthCheck": {
+          "path": "/api/health",
+          "intervalSeconds": 30
+        }
+      },
+      "cloudwatch": {
+        "logRetentionDays": 7
+      }
+    },
+    "features": {
+      "enableDetailedMonitoring": false,
+      "enableXRayTracing": false,
+      "enableBackups": false,
+      "enableMFA": false
+    }
+  },
+  "dev": {
+    "aws": {
+      "region": "us-east-1",
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": false
+      },
+      "ecs": {
+        "cpu": 512,
+        "memory": 1024,
+        "desiredCount": 1
+      },
+      "alb": {
+        "healthCheck": {
+          "path": "/api/health",
+          "intervalSeconds": 30
+        }
+      },
+      "cloudwatch": {
+        "logRetentionDays": 14
+      }
+    },
+    "features": {
+      "enableDetailedMonitoring": true,
+      "enableXRayTracing": true,
+      "enableBackups": false,
+      "enableMFA": false
+    }
+  },
+  "prod": {
+    "aws": {
+      "region": "us-east-1",
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": true,
+        "globalTables": true
+      },
+      "lambda": {
+        "memorySize": 1024,
+        "timeout": 300,
+        "reservedConcurrency": 100
+      },
+      "apiGateway": {
+        "throttling": {
+          "rateLimit": 2000,
+          "burstLimit": 5000
+        }
+      },
+      "cloudwatch": {
+        "logRetentionDays": 90
+      }
+    },
+    "features": {
+      "enableDetailedMonitoring": true,
+      "enableXRayTracing": true,
+      "enableBackups": true,
+      "enableMultiRegion": true
+    },
+    "security": {
+      "enableWAF": true,
+      "enableGuardDuty": true,
+      "enableSecurityHub": true,
+      "enableConfig": true
+    }
+  }
+}

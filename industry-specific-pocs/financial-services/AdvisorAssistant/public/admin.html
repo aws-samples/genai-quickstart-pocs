@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Admin - Advisor AI Assistant</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #e7f3ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #b8daff;
+        }
+        
+        .tab-btn {
+            background: #f8f9fa;
+            border: none;
+            padding: 12px 24px;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .model-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .model-card.selected {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        
+        .model-card h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+        }
+        
+        .model-card p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .current-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .tab-btn {
+            background: #f8f9fa;
+            border: none;
+            padding: 12px 24px;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .model-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+        
+        .model-card.selected {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        
+        .model-card h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+        }
+        
+        .model-card p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .current-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="card" id="loadingPanel">
+        <h1>🔄 Loading...</h1>
+        <p>Checking authentication...</p>
+        <p><small>If this page doesn't load, try refreshing or check the browser console for errors.</small></p>
+    </div>
+    
+    <div class="card" id="loginPrompt" style="display: none;">
+        <h1>🔒 Authentication Required</h1>
+        <div class="error">
+            <p>You must be logged in to access the admin panel.</p>
+        </div>
+        <a href="/login.html" class="btn">Go to Login</a>
+        <a href="/" class="btn" style="background: #6c757d;">Back to Home</a>
+    </div>
+    
+    <div class="card" id="adminPanel" style="display: none;">
+        <h1>🔧 Admin Panel</h1>
+        
+        <div class="info">
+            <strong>Logged in as:</strong> <span id="currentUser">Loading...</span>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div style="margin: 20px 0; border-bottom: 2px solid #e9ecef;">
+            <button class="tab-btn active" onclick="showTab('users')">👥 User Management</button>
+            <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
+        </div>
+        
+        <!-- Users Tab Content -->
+        <div id="users-tab" class="tab-content active">
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                <strong>⚠️ User Management - Restricted Access</strong><br>
+                This section is for authorized users only. All actions are logged.
+            </div>
+        
+        <div class="info">
+            <strong>Purpose:</strong> Create users for the Advisor AI Assistant application.
+            <br><br>
+            <strong>Process:</strong> You will receive a temporary password to share with the user. They must set a permanent password on first login.
+        </div>
+        
+        <form id="createUserForm">
+            <div style="margin-bottom: 15px;">
+                <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address:</label>
+                <input type="email" id="email" name="email" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="user@company.com">
+                <small style="color: #666; font-size: 0.9em;">You will receive a temporary password to share with the user</small>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; font-weight: bold;">
+                    <input type="checkbox" id="isAdmin" name="isAdmin" style="margin-right: 8px;">
+                    Add to Admin Group (grants admin access)
+                </label>
+            </div>
+            
+            <button type="submit" id="createUserBtn" class="btn">
+                Create User
+            </button>
+        </form>
+        
+                <div id="result"></div>
+        </div>
+        
+        <!-- Settings Tab Content -->
+        <div id="settings-tab" class="tab-content">
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                <strong>⚠️ System Settings - Restricted Access</strong><br>
+                Changes to these settings affect all users. All actions are logged.
+            </div>
+            
+            <h3>🤖 AI Model Configuration</h3>
+            <div class="info">
+                <strong>Current Model:</strong> <span id="currentModel">Loading...</span><br>
+                <strong>Environment:</strong> <span id="currentEnvironment">Loading...</span>
+            </div>
+            
+            <div id="modelSelection">
+                <h4>Available Claude Models:</h4>
+                <div id="modelList">Loading available models...</div>
+                
+                <button id="switchModelBtn" class="btn" style="display: none; margin-top: 15px;" onclick="switchModel()">
+                    Switch to Selected Model
+                </button>
+            </div>
+            
+            <div id="modelResult"></div>
+            
+            <hr style="margin: 30px 0;">
+            
+            <h3>📈 System Information</h3>
+            <div id="systemInfo">
+                <p><strong>Data Provider:</strong> <span id="dataProvider">Loading...</span></p>
+                <p><strong>Rate Limits:</strong></p>
+                <ul id="rateLimits">Loading...</ul>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Settings Tab Content -->
+        <div id="settings-tab" class="tab-content">
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                <strong>⚠️ System Settings - Restricted Access</strong><br>
+                Changes to these settings affect all users. All actions are logged.
+            </div>
+            
+            <h3>🤖 AI Model Configuration</h3>
+            <div class="info">
+                <strong>Current Model:</strong> <span id="currentModel">Loading...</span><br>
+                <strong>Environment:</strong> <span id="currentEnvironment">Loading...</span>
+            </div>
+            
+            <div id="modelSelection">
+                <h4>Available Claude Models:</h4>
+                <div id="modelList">Loading available models...</div>
+                
+                <button id="switchModelBtn" class="btn" style="display: none; margin-top: 15px;" onclick="switchModel()">
+                    Switch to Selected Model
+                </button>
+            </div>
+            
+            <div id="modelResult"></div>
+            
+            <hr style="margin: 30px 0;">
+            
+            <h3>📈 System Information</h3>
+            <div id="systemInfo">
+                <p><strong>Data Provider:</strong> <span id="dataProvider">Loading...</span></p>
+                <p><strong>Rate Limits:</strong></p>
+                <ul id="rateLimits">Loading...</ul>
+            </div>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <h3>Quick Links</h3>
+        <a href="/login.html" class="btn" style="text-decoration: none; display: inline-block;">Go to Login</a>
+        <a href="/" class="btn" style="text-decoration: none; display: inline-block; background: #28a745;">Go to App</a>
+        <button onclick="logout()" class="btn" style="background: #dc3545;">Logout</button>
+    </div>
+
+    <script type="text/javascript">
+        let selectedModelId = null;
+        let currentSettings = null;
+        
+        // Copy to clipboard function (works with both HTTP and HTTPS)
+        function copyToClipboard(text) {
+            // Try modern clipboard API first (HTTPS only)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopySuccess();
+                }).catch(function(err) {
+                    console.error('Clipboard API failed: ', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                // Fallback for HTTP or older browsers
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        // Fallback copy method for HTTP sites
+        function fallbackCopyToClipboard(text) {
+            // Create a temporary textarea element
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    showCopyError();
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                showCopyError();
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Show copy success feedback
+        function showCopySuccess() {
+            const copyBtn = document.getElementById('copyPasswordBtn');
+            if (copyBtn) {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.style.background = '#28a745';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '#007bff';
+                }, 2000);
+            }
+        }
+
+        // Show copy error feedback
+        function showCopyError() {
+            const copyBtn = document.getElementById('copyPasswordBtn');
+            if (copyBtn) {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '❌ Failed';
+                copyBtn.style.background = '#dc3545';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '#007bff';
+                }, 2000);
+            }
+            alert('Could not copy to clipboard. Please select and copy the password manually.');
+        }
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadSettings();
+        });
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                
+                // Hide loading panel
+                document.getElementById('loadingPanel').style.display = 'none';
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Show admin panel
+                    document.getElementById('adminPanel').style.display = 'block';
+                    document.getElementById('loginPrompt').style.display = 'none';
+                    
+                    // Display current user and groups
+                    let displayName = 'User';
+                    let userGroups = [];
+                    
+                    if (data.user) {
+                        if (data.user.email && !data.user.email.includes('unknown')) {
+                            displayName = data.user.email;
+                        } else if (data.user.username && data.user.username !== 'User') {
+                            displayName = data.user.username;
+                        }
+                        
+                        userGroups = data.user.groups || [];
+                    }
+                    
+                    const groupsText = userGroups.length > 0 ? ` (Groups: ${userGroups.join(', ')})` : ' (No groups)';
+                    document.getElementById('currentUser').textContent = displayName + groupsText;
+                    
+                } else {
+                    // Show login prompt
+                    document.getElementById('loginPrompt').style.display = 'block';
+                    document.getElementById('adminPanel').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Admin auth check failed:', error);
+                // Hide loading panel and show login prompt
+                document.getElementById('loadingPanel').style.display = 'none';
+                document.getElementById('loginPrompt').style.display = 'block';
+                document.getElementById('adminPanel').style.display = 'none';
+            }
+        }
+        
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // Handle form submission
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('createUserBtn');
+            const result = document.getElementById('result');
+            const formData = new FormData(e.target);
+            
+            btn.disabled = true;
+            btn.textContent = 'Creating User...';
+            result.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: formData.get('email'),
+                        isAdmin: formData.get('isAdmin') === 'on'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    // Authentication failed
+                    result.innerHTML = `
+                        <div class="error">
+                            <h4>🔒 Authentication Required</h4>
+                            <p>Your session has expired. Please login again.</p>
+                            <a href="/login.html" class="btn">Login Again</a>
+                        </div>
+                    `;
+                    return;
+                } else if (response.status === 403) {
+                    // Authorization failed - not in admin group
+                    result.innerHTML = `
+                        <div class="error">
+                            <h4>🚫 Admin Access Required</h4>
+                            <p><strong>You are not authorized to perform admin functions.</strong></p>
+                            <p>You must be a member of the <code>admin</code> group in Cognito.</p>
+                            <p>Contact your administrator to be added to the admin group.</p>
+                            <hr>
+                            <p><strong>For POC Setup:</strong></p>
+                            <p>Contact your system administrator to be added to the admin group.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ ${data.message}</h4>
+                            <p><strong>User Created:</strong></p>
+                            <p>Email: <code>${data.email}</code></p>
+                            <p>Admin Access: ${data.isAdmin ? '✅ Yes' : '❌ No'}</p>
+                            
+                            <p><strong>🔑 Temporary Password:</strong></p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff; display: flex; align-items: center; justify-content: space-between;">
+                                <code style="font-size: 16px; font-weight: bold; color: #007bff; flex-grow: 1;">${data.temporaryPassword}</code>
+                                <button id="copyPasswordBtn" onclick="copyToClipboard('${data.temporaryPassword}')" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-left: 10px; font-size: 12px;">📋 Copy</button>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin-top: 5px;"><em>⚠️ Share this password securely with the user (email, Slack, etc.)</em></p>
+                            
+                            <p><strong>📧 Next Steps:</strong></p>
+                            <p><em>${data.note}</em></p>
+                            <p><em>${data.instructions}</em></p>
+                            <p><em>Action logged for security purposes.</em></p>
+                        </div>
+                    `;
+                    
+                    // Reset form
+                    document.getElementById('createUserForm').reset();
+                } else {
+                    result.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Error</h4>
+                            <p>${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create User';
+            }
+        });
+        
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+            
+            // Load settings when switching to settings tab
+            if (tabName === 'settings') {
+                loadSettings();
+            }
+        }
+        
+        // Load admin settings
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/admin/settings');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSettings = data.settings;
+                    
+                    // Update current model display
+                    document.getElementById('currentModel').textContent = getModelDisplayName(currentSettings.currentModel);
+                    document.getElementById('currentEnvironment').textContent = currentSettings.environment;
+                    document.getElementById('dataProvider').textContent = currentSettings.dataProvider;
+                    
+                    // Update rate limits
+                    const rateLimitsEl = document.getElementById('rateLimits');
+                    rateLimitsEl.innerHTML = `
+                        <li>Authentication: ${currentSettings.rateLimits.auth.max} attempts per ${Math.round(currentSettings.rateLimits.auth.windowMs / 60000)} minutes</li>
+                        <li>API Requests: ${currentSettings.rateLimits.api.max} requests per ${Math.round(currentSettings.rateLimits.api.windowMs / 60000)} minutes</li>
+                        <li>AI Analysis: ${currentSettings.rateLimits.ai.max} requests per ${Math.round(currentSettings.rateLimits.ai.windowMs / 60000)} minutes</li>
+                    `;
+                    
+                    // Load available models
+                    loadAvailableModels();
+                } else {
+                    document.getElementById('modelList').innerHTML = '<div class="error">Failed to load settings</div>';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                document.getElementById('modelList').innerHTML = '<div class="error">Error loading settings</div>';
+            }
+        }
+        
+        // Load available Claude models
+        async function loadAvailableModels() {
+            try {
+                const response = await fetch('/api/admin/available-models');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayModels(data.models);
+                } else {
+                    document.getElementById('modelList').innerHTML = '<div class="error">Failed to load available models</div>';
+                }
+            } catch (error) {
+                console.error('Error loading models:', error);
+                document.getElementById('modelList').innerHTML = '<div class="error">Error loading models</div>';
+            }
+        }
+        
+        // Display available models
+        function displayModels(models) {
+            const modelListEl = document.getElementById('modelList');
+            
+            if (!models || models.length === 0) {
+                modelListEl.innerHTML = '<div class="error">No Claude models available</div>';
+                return;
+            }
+            
+            let html = '';
+            models.forEach(model => {
+                const isCurrentModel = model.id === currentSettings.currentModel;
+                const cardClass = isCurrentModel ? 'model-card selected' : 'model-card';
+                
+                html += `
+                    <div class="${cardClass}" onclick="selectModel('${model.id}')" data-model-id="${model.id}">
+                        <h4>
+                            ${model.name}
+                            ${isCurrentModel ? '<span class="current-badge">CURRENT</span>' : ''}
+                        </h4>
+                        <p style="margin: 8px 0; color: #666; line-height: 1.4;">${model.description}</p>
+                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;">
+                            <small style="color: #999; font-family: monospace; font-size: 11px; word-break: break-all;">
+                                <strong>Model ID:</strong> ${model.id}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            modelListEl.innerHTML = html;
+        }
+        
+        // Select a model
+        function selectModel(modelId) {
+            // Remove selection from all cards
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            const selectedCard = document.querySelector(`[data-model-id="${modelId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            selectedModelId = modelId;
+            
+            // Show switch button if different from current
+            const switchBtn = document.getElementById('switchModelBtn');
+            if (modelId !== currentSettings.currentModel) {
+                switchBtn.style.display = 'block';
+                switchBtn.textContent = `Switch to ${getModelDisplayName(modelId)}`;
+            } else {
+                switchBtn.style.display = 'none';
+            }
+        }
+        
+        // Switch to selected model
+        async function switchModel() {
+            if (!selectedModelId) {
+                alert('Please select a model first');
+                return;
+            }
+            
+            const switchBtn = document.getElementById('switchModelBtn');
+            const resultEl = document.getElementById('modelResult');
+            
+            switchBtn.disabled = true;
+            switchBtn.textContent = 'Switching Model...';
+            resultEl.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/admin/settings/model', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        modelId: selectedModelId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultEl.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Model Switched Successfully</h4>
+                            <p>${data.message}</p>
+                            <p><strong>New Model:</strong> ${getModelDisplayName(data.currentModel)}</p>
+                            <p><em>AI analysis cache has been cleared. New analyses will use the updated model.</em></p>
+                        </div>
+                    `;
+                    
+                    // Reload settings to update display
+                    setTimeout(() => {
+                        loadSettings();
+                    }, 1000);
+                } else {
+                    resultEl.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Model Switch Failed</h4>
+                            <p>${data.error || 'Unknown error occurred'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error switching model:', error);
+                resultEl.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                switchBtn.disabled = false;
+                switchBtn.textContent = 'Switch to Selected Model';
+            }
+        }
+        
+        // Helper function to get display name for model
+        function getModelDisplayName(modelId) {
+            if (modelId.includes('claude-3-5-sonnet')) return 'Claude 3.5 Sonnet';
+            if (modelId.includes('claude-4')) return 'Claude 4';
+            if (modelId.includes('claude-3-haiku')) return 'Claude 3 Haiku';
+            if (modelId.includes('claude-3-sonnet')) return 'Claude 3 Sonnet';
+            if (modelId.includes('claude-3-opus')) return 'Claude 3 Opus';
+            if (modelId.includes('claude-v2')) return 'Claude v2';
+            return modelId;
+        }
+    </script>
+</body>
+</html>
