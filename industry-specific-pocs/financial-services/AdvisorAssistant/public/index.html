@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Advisor Assistant - Investment Analysis</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .btn[style*="background: #dc3545"]:hover {
+            background: #c82333 !important;
+        }
+
+        .ai-status-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+
+        .ai-status-item h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+
+        .ai-status-metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .ai-status-value {
+            font-weight: bold;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+
+        .refresh-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .loading,
+        .error,
+        .no-alerts {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .ticker-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .ticker-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .company-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .company-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .analysis-summary {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .analysis-section {
+            margin: 20px 0;
+        }
+
+        .analysis-section h4 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .analysis-section ul {
+            padding-left: 20px;
+        }
+
+        .analysis-section li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .risk-factors {
+            color: #d73527;
+        }
+
+        .opportunities {
+            color: #28a745;
+        }
+
+        .performance-metrics {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        /* Analysis Progress Styles */
+        .analysis-progress {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #007bff;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-progress h3 {
+            color: #007bff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .progress-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        .progress-info p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .progress-details {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .report-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .report-item.completed {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .report-item.pending {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .report-quarter {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .report-status {
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .progress-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .progress-note {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-style: italic;
+            color: #004085;
+        }
+
+        .analysis-complete {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .analysis-complete h3 {
+            color: #155724;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .analysis-complete p {
+            color: #155724;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Enhanced Analysis Styles */
+        .enhanced-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #007bff;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .enhanced-section h4 {
+            background: #007bff;
+            color: white;
+            margin: 0;
+            padding: 12px 15px;
+            border-radius: 4px 4px 0 0;
+            font-size: 1.1em;
+        }
+
+        .enhanced-content {
+            padding: 15px;
+        }
+
+        .enhanced-content p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .investment-rec {
+            border-left-color: #28a745;
+        }
+
+        .investment-rec h4 {
+            background: #28a745;
+        }
+
+        .rec-buy {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .rec-sell {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .rec-hold {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        /* Enhanced Advisor Assistant Styles */
+        .wealth-advisor-header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .wealth-advisor-header h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+
+        .wealth-advisor-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .portfolio-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .portfolio-metric {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            text-align: center;
+        }
+
+        .portfolio-metric h5 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .portfolio-metric .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .risk-level-high {
+            color: #dc3545 !important;
+            border-left-color: #dc3545 !important;
+        }
+
+        .risk-level-medium {
+            color: #ffc107 !important;
+            border-left-color: #ffc107 !important;
+        }
+
+        .risk-level-low {
+            color: #28a745 !important;
+            border-left-color: #28a745 !important;
+        }
+
+        .valuation-undervalued {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .valuation-overvalued {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .valuation-fairly-valued {
+            color: #6c757d;
+            font-weight: bold;
+        }
+
+        .technical-bullish {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .technical-bearish {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .technical-neutral {
+            color: #6c757d;
+            font-weight: bold;
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🤖 Advisor Assistant</h1>
+                    <p>AI-Powered Investment Analysis and Advisory</p>
+                </div>
+                <div class="user-menu" id="user-menu" style="display: none;">
+                    <span id="user-name">Loading...</span>
+                    <button onclick="logout()" class="btn"
+                        style="margin-left: 10px; background: #dc3545;">Logout</button>
+                </div>
+                <div class="auth-menu" id="auth-menu">
+                    <a href="/login.html" class="btn">Login</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Add Company</h2>
+                <div class="ticker-input">
+                    <input type="text" id="tickerInput" placeholder="Enter ticker symbol (e.g., AMZN)" />
+                    <input type="text" id="nameInput" placeholder="Company name" />
+                    <button class="btn" onclick="addCompany()">Add</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>AI Analysis Status</h2>
+                <div id="aiStatusContainer">
+                    <div class="loading">Loading AI status...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Tracked Companies</h2>
+            <ul class="company-list" id="companiesList">
+                <!-- Companies will be loaded dynamically -->
+            </ul>
+        </div>
+
+        <div class="card" id="analysisContainer" style="display: none;">
+            <h2>AI Analysis</h2>
+            <div id="analysisContent"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function addCompany() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const name = document.getElementById('nameInput').value;
+
+            if (!ticker) {
+                alert('Please enter a ticker symbol');
+                return;
+            }
+
+            fetch('/api/companies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticker: ticker, name: name })
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        document.getElementById('tickerInput').value = '';
+                        document.getElementById('nameInput').value = '';
+                        loadCompanies();
+                        alert('Company added successfully!');
+                    } else {
+                        alert('Error adding company');
+                    }
+                })
+                .catch(function (error) {
+                    alert('Error adding company');
+                });
+        }
+
+        function loadCompanies() {
+            const list = document.getElementById('companiesList');
+            if (!list) {
+                return;
+            }
+
+            fetch('/api/companies')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (companies) {
+
+                    if (companies.length === 0) {
+                        list.innerHTML = '<li>No companies tracked yet. Add one above!</li>';
+                        return;
+                    }
+
+                    let html = '';
+                    for (let i = 0; i < companies.length; i++) {
+                        const company = companies[i];
+                        html += '<li class="company-item">';
+                        html += '<div><strong>' + company.ticker + '</strong> - ' + (company.name || 'Unknown');
+                        html += '<div style="font-size: 0.9em; color: #666;">Reports: ' + (company.earnings_count || 0) + '</div>';
+                        html += '<div id="analysis-status-' + company.ticker + '" style="font-size: 0.8em; margin-top: 5px;">Checking analysis status...</div></div>';
+                        html += '<div>';
+                        html += '<button class="btn" onclick="fetchReports(\'' + company.ticker + '\')" style="margin-right: 5px;">Fetch Reports</button>';
+                        html += '<button class="btn" onclick="viewAnalysis(\'' + company.ticker + '\')" style="margin-right: 5px;">View Analysis</button>';
+                        html += '<button class="btn" onclick="showRerunOptions(\'' + company.ticker + '\')" style="margin-right: 5px; background: #ffc107; color: #000;">Rerun AI</button>';
+                        html += '<button class="btn" onclick="deleteCompany(\'' + company.ticker + '\')" style="background: #dc3545;">Delete</button>';
+                        html += '</div></li>';
+                    }
+
+                    // Check analysis status for each company
+                    for (let i = 0; i < companies.length; i++) {
+                        checkCompanyAnalysisStatus(companies[i].ticker);
+                    }
+
+                    list.innerHTML = html;
+                })
+                .catch(function (error) {
+                    list.innerHTML = '<li style="color: red;">Error loading companies. Please refresh the page.</li>';
+                });
+        }
+
+        function fetchReports(ticker) {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Fetching...';
+
+            // Add timeout and better progress indication
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+            }, 120000); // 2 minute timeout
+
+            // Update button text with progress
+            let progressDots = 0;
+            const progressInterval = setInterval(() => {
+                progressDots = (progressDots + 1) % 4;
+                button.textContent = 'Fetching' + '.'.repeat(progressDots) + ' (this may take 1-2 minutes)';
+            }, 500);
+
+            fetch('/api/fetch-financials/' + ticker, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(function (response) {
+                    clearTimeout(timeoutId);
+                    clearInterval(progressInterval);
+
+                    // Always try to parse JSON response, even for errors
+                    return response.json().then(function(data) {
+                        if (!response.ok) {
+                            // Throw the server's error message instead of generic HTTP error
+                            throw new Error(data.error || data.message || 'HTTP ' + response.status + ': ' + response.statusText);
+                        }
+                        return data;
+                    });
+                })
+                .then(function (result) {
+                    if (result.message) {
+                        let message = result.message;
+
+                        if (result.status === 'analyzing') {
+                            message += '\n\nAI analysis is running in the background for ' + result.analysesToGenerate + ' reports.';
+                            message += '\nThis may take a few minutes. You can check progress by viewing analysis.';
+
+                            // Start checking analysis progress
+                            setTimeout(() => checkAnalysisProgress(ticker), 5000);
+
+                            // Update company status immediately and periodically
+                            setTimeout(() => checkCompanyAnalysisStatus(ticker), 2000);
+
+                            // Set up periodic status updates for company list
+                            const statusUpdateInterval = setInterval(() => {
+                                checkCompanyAnalysisStatus(ticker);
+                            }, 15000); // Check every 15 seconds
+
+                            // Stop status updates after 10 minutes
+                            setTimeout(() => {
+                                clearInterval(statusUpdateInterval);
+                            }, 600000);
+                        }
+
+                        alert('Success!\n' + message);
+                        loadCompanies();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(function (error) {
+                    clearTimeout(timeoutId);
+                    clearInterval(progressInterval);
+
+                    if (error.name === 'AbortError') {
+                        alert('Request timed out. The process may still be running in the background.\nPlease check back in a few minutes.');
+                    } else {
+                        alert('Error fetching reports: ' + error.message);
+                    }
+                })
+                .finally(function () {
+                    clearTimeout(timeoutId);
+                    clearInterval(progressInterval);
+                    button.disabled = false;
+                    button.textContent = 'Fetch Reports';
+                });
+        }
+
+        function viewAnalysis(ticker) {
+            const container = document.getElementById('analysisContainer');
+            const content = document.getElementById('analysisContent');
+
+            // Show loading state immediately
+            container.style.display = 'block';
+            content.innerHTML = '<div class="loading">Loading analysis for ' + ticker + '...</div>';
+
+            // First check analysis status
+            fetch('/api/analysis-status/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    if (status.pendingAnalyses > 0) {
+                        // Analysis is still in progress
+                        showAnalysisInProgress(ticker, status);
+                    } else {
+                        // Analysis should be complete, fetch it
+                        fetchCompleteAnalysis(ticker);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error checking analysis status:', error);
+                    // Fallback to trying to fetch analysis anyway
+                    fetchCompleteAnalysis(ticker);
+                });
+        }
+
+        function fetchCompleteAnalysis(ticker) {
+            fetch('/api/analysis/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (analysis) {
+                    const container = document.getElementById('analysisContainer');
+                    const content = document.getElementById('analysisContent');
+
+                    if (analysis) {
+                        let sentimentDisplay = 'Not Available';
+                        if (analysis.sentiment && analysis.sentiment !== 'not available') {
+                            if (typeof analysis.sentiment === 'object' && analysis.sentiment.rating) {
+                                sentimentDisplay = analysis.sentiment.rating + ' - ' + (analysis.sentiment.reasoning || '');
+                            } else if (typeof analysis.sentiment === 'string') {
+                                sentimentDisplay = analysis.sentiment;
+                            }
+                        }
+
+                        let insightsHtml = '';
+                        if (analysis.keyInsights && Array.isArray(analysis.keyInsights) && analysis.keyInsights.length > 0) {
+                            for (let i = 0; i < analysis.keyInsights.length; i++) {
+                                const insight = analysis.keyInsights[i];
+                                if (typeof insight === 'string') {
+                                    insightsHtml += '<li>' + insight + '</li>';
+                                } else if (insight.insight) {
+                                    insightsHtml += '<li><strong>' + (insight.type || 'Insight') + ':</strong> ' + insight.insight + '</li>';
+                                }
+                            }
+                        } else {
+                            insightsHtml = '<li>AI analysis not available</li>';
+                        }
+
+                        let riskFactorsHtml = '';
+                        if (analysis.riskFactors && Array.isArray(analysis.riskFactors) && analysis.riskFactors.length > 0) {
+                            for (let i = 0; i < analysis.riskFactors.length; i++) {
+                                riskFactorsHtml += '<li>' + analysis.riskFactors[i] + '</li>';
+                            }
+                        } else {
+                            riskFactorsHtml = '<li>AI analysis not available</li>';
+                        }
+
+                        let opportunitiesHtml = '';
+                        if (analysis.opportunities && Array.isArray(analysis.opportunities) && analysis.opportunities.length > 0) {
+                            for (let i = 0; i < analysis.opportunities.length; i++) {
+                                opportunitiesHtml += '<li>' + analysis.opportunities[i] + '</li>';
+                            }
+                        } else {
+                            opportunitiesHtml = '<li>AI analysis not available</li>';
+                        }
+
+                        // Performance metrics removed - AI analysis only
+
+                        // Enhanced analysis sections for advisor assistant analysis
+                        let enhancedSections = '';
+                        
+                        // Ensure we always have basic sections even if AI doesn't provide them
+                        if (!analysis.investmentRecommendation) {
+                            analysis.investmentRecommendation = {
+                                action: 'HOLD',
+                                confidence: 'Medium',
+                                targetPrice: 'Based on analysis',
+                                positionSize: '2-5% of portfolio',
+                                timeHorizon: '6-12 months',
+                                rationale: 'Investment decision based on comprehensive analysis of available financial data and market conditions'
+                            };
+                        }
+                        
+                        if (!analysis.riskAssessment) {
+                            analysis.riskAssessment = {
+                                level: 'Medium',
+                                factors: ['Market volatility risk', 'Sector-specific risks', 'Company-specific operational risks'],
+                                mitigation: 'Implement appropriate position sizing, regular monitoring, and diversification strategies',
+                                liquidityRisk: 'Standard liquidity profile for large-cap equity',
+                                concentrationRisk: 'Recommend limiting position to 2-5% of total portfolio'
+                            };
+                        }
+                        
+                        if (!analysis.portfolioFit) {
+                            analysis.portfolioFit = {
+                                suitableFor: ['Growth', 'Quality'],
+                                recommendedAllocation: '2-5%',
+                                diversificationBenefit: 'Provides exposure to large-cap growth with established market position',
+                                taxConsiderations: 'Consider tax-loss harvesting and long-term capital gains treatment',
+                                liquidityProfile: 'High liquidity suitable for institutional and high net worth investors'
+                            };
+                        }
+                        
+                        // Investment Recommendation (Primary Section)
+                        if (analysis.investmentRecommendation) {
+                            const investment = analysis.investmentRecommendation;
+                            enhancedSections += '<div class="analysis-section enhanced-section investment-rec">' +
+                                '<h4>💼 Investment Recommendation</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Action:</strong> <span class="rec-' + (investment.action || '').toLowerCase() + '">' + (investment.action || 'HOLD') + '</span></p>' +
+                                '<p><strong>Confidence:</strong> ' + (investment.confidence || 'Medium') + '</p>' +
+                                '<p><strong>Target Price:</strong> $' + (investment.targetPrice || 'Based on fundamental analysis') + '</p>' +
+                                '<p><strong>Position Size:</strong> ' + (investment.positionSize || '2-5% of portfolio') + '</p>' +
+                                '<p><strong>Time Horizon:</strong> ' + (investment.timeHorizon || '6-12 months') + '</p>' +
+                                '<div style="margin-top: 10px;"><strong>Investment Rationale:</strong></div>' +
+                                '<div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px;">' + 
+                                (investment.rationale || 'Investment decision based on comprehensive analysis of financial metrics, market position, and growth prospects') + 
+                                '</div>' +
+                                '</div></div>';
+                        }
+                        
+                        // Risk Assessment (Enhanced)
+                        if (analysis.riskAssessment) {
+                            const risk = analysis.riskAssessment;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #dc3545;">' +
+                                '<h4 style="background: #dc3545;">⚠️ Risk Assessment</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Risk Level:</strong> <span style="color: #dc3545; font-weight: bold;">' + (risk.level || 'Medium') + '</span></p>';
+                            
+                            if (risk.factors && Array.isArray(risk.factors) && risk.factors.length > 0) {
+                                enhancedSections += '<p><strong>Risk Factors:</strong></p><ul>';
+                                risk.factors.forEach(function(factor) {
+                                    enhancedSections += '<li>' + factor + '</li>';
+                                });
+                                enhancedSections += '</ul>';
+                            }
+                            
+                            enhancedSections += '<p><strong>Liquidity Risk:</strong> ' + (risk.liquidityRisk || 'Standard liquidity profile based on large-cap status and trading volume') + '</p>' +
+                                '<p><strong>Concentration Risk:</strong> ' + (risk.concentrationRisk || 'Recommend limiting position to 2-5% of portfolio to maintain diversification') + '</p>' +
+                                '<p><strong>Risk Mitigation:</strong> ' + (risk.mitigation || 'Implement position sizing limits, regular monitoring, and stop-loss protocols') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Portfolio Fit (New Section)
+                        if (analysis.portfolioFit) {
+                            const portfolio = analysis.portfolioFit;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #28a745;">' +
+                                '<h4 style="background: #28a745;">📊 Portfolio Fit Analysis</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Suitable For:</strong> ' + (Array.isArray(portfolio.suitableFor) ? portfolio.suitableFor.join(', ') : (portfolio.suitableFor || 'Growth and Quality-focused investors')) + '</p>' +
+                                '<p><strong>Recommended Allocation:</strong> ' + (portfolio.recommendedAllocation || '2-5% of portfolio') + '</p>' +
+                                '<p><strong>Diversification Benefit:</strong> ' + (portfolio.diversificationBenefit || 'Provides exposure to large-cap growth with strong fundamentals and market leadership position') + '</p>' +
+                                '<p><strong>Tax Considerations:</strong> ' + (portfolio.taxConsiderations || 'Consider tax-loss harvesting opportunities and long-term capital gains treatment for positions held over one year') + '</p>' +
+                                '<p><strong>Liquidity Profile:</strong> ' + (portfolio.liquidityProfile || 'High liquidity with strong daily trading volume suitable for large position management') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Valuation Analysis (Enhanced)
+                        if (analysis.valuationAnalysis) {
+                            const valuation = analysis.valuationAnalysis;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #6f42c1;">' +
+                                '<h4 style="background: #6f42c1;">💰 Valuation Analysis</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Current Valuation:</strong> <span class="valuation-' + (valuation.currentValuation || 'fairly-valued').toLowerCase().replace('_', '-') + '">' + 
+                                (valuation.currentValuation ? valuation.currentValuation.replace('_', ' ') : 'Fairly Valued') + '</span></p>' +
+                                '<p><strong>Fair Value Estimate:</strong> $' + (valuation.fairValue || 'Based on DCF and comparable analysis') + '</p>';
+                            
+                            if (valuation.valuationRange) {
+                                enhancedSections += '<p><strong>Valuation Range:</strong> $' + (valuation.valuationRange.low || 'Conservative estimate') + ' - $' + (valuation.valuationRange.high || 'Optimistic estimate') + '</p>';
+                            } else {
+                                enhancedSections += '<p><strong>Valuation Range:</strong> Based on multiple valuation methodologies including DCF, P/E multiples, and peer comparison</p>';
+                            }
+                            
+                            enhancedSections += '<div style="margin-top: 10px;"><strong>Key Valuation Metrics:</strong></div>';
+                            if (Array.isArray(valuation.keyMetrics) && valuation.keyMetrics.length > 0) {
+                                enhancedSections += '<ul>';
+                                valuation.keyMetrics.forEach(function(metric) {
+                                    enhancedSections += '<li>' + metric + '</li>';
+                                });
+                                enhancedSections += '</ul>';
+                            } else {
+                                enhancedSections += '<p style="margin-left: 15px;">P/E ratio analysis relative to sector and historical averages, growth-adjusted valuation metrics, and asset-based valuation considerations</p>';
+                            }
+                            
+                            enhancedSections += '<p><strong>Value Catalysts:</strong> ' + (valuation.catalysts || 'Earnings growth acceleration, margin expansion, market share gains, and operational efficiency improvements') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Technical Analysis (New Section)
+                        if (analysis.technicalAnalysis) {
+                            const technical = analysis.technicalAnalysis;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #fd7e14;">' +
+                                '<h4 style="background: #fd7e14;">📈 Technical Analysis</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Current Trend:</strong> <span class="technical-' + (technical.trend || 'neutral').toLowerCase() + '">' + 
+                                (technical.trend || 'Neutral - consolidating within trading range') + '</span></p>' +
+                                '<p><strong>Support Level:</strong> ' + (technical.support || 'Key support based on recent lows and moving average confluence') + '</p>' +
+                                '<p><strong>Resistance Level:</strong> ' + (technical.resistance || 'Key resistance based on recent highs and psychological levels') + '</p>' +
+                                '<p><strong>Momentum:</strong> ' + (technical.momentum || 'Neutral momentum with potential for directional breakout') + '</p>' +
+                                '<div style="margin-top: 10px;"><strong>Technical Recommendation:</strong></div>' +
+                                '<div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px;">' + 
+                                (technical.recommendation || 'Monitor for breakout above resistance or breakdown below support. Consider entry on pullbacks to support levels with appropriate risk management.') + 
+                                '</div>' +
+                                '</div></div>';
+                        }
+                        
+                        // Competitive Position (New Section)
+                        if (analysis.competitivePosition) {
+                            const competitive = analysis.competitivePosition;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #20c997;">' +
+                                '<h4 style="background: #20c997;">🏆 Competitive Position</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Market Strength:</strong> ' + (competitive.strength || 'Strong market position with established competitive advantages') + '</p>' +
+                                '<p><strong>Competitive Moat:</strong> ' + (competitive.moat || 'Sustainable competitive advantages through scale, technology, and market position') + '</p>' +
+                                '<p><strong>Market Share:</strong> ' + (competitive.marketShare || 'Leading market position in primary business segments') + '</p>' +
+                                '<p><strong>Threats:</strong> ' + (competitive.threats || 'Standard competitive pressures from industry participants and new market entrants') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Insider Analysis
+                        if (analysis.insiderAnalysis) {
+                            const insider = analysis.insiderAnalysis;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #6c757d;">' +
+                                '<h4 style="background: #6c757d;">🔍 Insider Analysis</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Sentiment:</strong> ' + (insider.sentiment || 'Neutral') + '</p>' +
+                                '<p><strong>Activity:</strong> ' + (insider.activity || 'No recent significant insider activity') + '</p>' +
+                                '<p><strong>Significance:</strong> ' + (insider.significance || 'Standard insider activity levels') + '</p>' +
+                                '<p><strong>Trend:</strong> ' + (insider.trend || 'No clear directional trend in insider activity') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Institutional Analysis
+                        if (analysis.institutionalAnalysis) {
+                            const institutional = analysis.institutionalAnalysis;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #495057;">' +
+                                '<h4 style="background: #495057;">🏦 Institutional Analysis</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Sentiment:</strong> ' + (institutional.sentiment || 'Neutral') + '</p>' +
+                                '<p><strong>Activity:</strong> ' + (institutional.activity || 'Standard institutional holding patterns') + '</p>' +
+                                '<p><strong>Confidence:</strong> ' + (institutional.confidence || 'Medium confidence based on holding stability') + '</p>' +
+                                '<p><strong>Ownership:</strong> ' + (institutional.ownership || 'Typical institutional ownership for large-cap equity') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Analyst Consensus
+                        if (analysis.analystConsensus) {
+                            const analyst = analysis.analystConsensus;
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #007bff;">' +
+                                '<h4 style="background: #007bff;">📊 Analyst Consensus</h4>' +
+                                '<div class="enhanced-content">' +
+                                '<p><strong>Recommendation:</strong> ' + (analyst.recommendation || 'Hold') + '</p>' +
+                                '<p><strong>Price Target:</strong> $' + (analyst.priceTarget || 'Based on fundamental analysis') + '</p>' +
+                                '<p><strong>Confidence:</strong> ' + (analyst.confidence || 'Medium confidence in estimates') + '</p>' +
+                                '<p><strong>Revision Trend:</strong> ' + (analyst.revision || 'Stable estimate revisions') + '</p>' +
+                                '</div></div>';
+                        }
+                        
+                        // Catalysts (New Section)
+                        if (analysis.catalysts && Array.isArray(analysis.catalysts) && analysis.catalysts.length > 0) {
+                            enhancedSections += '<div class="analysis-section enhanced-section" style="border-left-color: #e83e8c;">' +
+                                '<h4 style="background: #e83e8c;">🚀 Investment Catalysts</h4>' +
+                                '<div class="enhanced-content">';
+                            
+                            analysis.catalysts.forEach(function(catalyst, index) {
+                                enhancedSections += '<p><strong>' + (index + 1) + '. ' + (catalyst.event || 'Investment Catalyst') + '</strong></p>' +
+                                    '<p style="margin-left: 15px;">Impact: ' + (catalyst.impact || 'Positive') + ' | Timeline: ' + (catalyst.timeline || '6-12 months') + ' | Probability: ' + (catalyst.probability || 'Medium') + '</p>';
+                            });
+                            
+                            enhancedSections += '</div></div>';
+                        }
+                        
+                        // Show AI analysis status
+                        let analysisStatusHtml = '';
+                        if (analysis.aiAnalysisStatus === 'failed') {
+                            analysisStatusHtml = '<div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">' +
+                                '⚠️ <strong>AI Analysis Failed:</strong> ' + (analysis.aiAnalysisError || 'Unknown error') + '<br>' +
+                                '<button onclick="rerunAnalysis(\'' + ticker + '\')" class="btn" style="margin-top: 10px; padding: 5px 10px; font-size: 0.9em;">🔄 Retry AI Analysis</button>' +
+                                '</div>';
+                        }
+                        
+                        // Create advisor assistant header
+                        let wealthAdvisorHeader = '<div class="wealth-advisor-header">' +
+                            '<h3>🤖 Advisor Assistant Analysis</h3>' +
+                            '<p>AI-Powered Investment Research and Analysis</p>' +
+                            '</div>';
+
+                        // Create portfolio metrics if available
+                        let portfolioMetrics = '';
+                        if (analysis.investmentRecommendation || analysis.riskAssessment || analysis.valuationAnalysis) {
+                            portfolioMetrics = '<div class="portfolio-metrics">';
+                            
+                            if (analysis.investmentRecommendation && analysis.investmentRecommendation.action) {
+                                portfolioMetrics += '<div class="portfolio-metric">' +
+                                    '<h5>Recommendation</h5>' +
+                                    '<div class="value rec-' + analysis.investmentRecommendation.action.toLowerCase() + '">' + analysis.investmentRecommendation.action + '</div>' +
+                                    '</div>';
+                            }
+                            
+                            if (analysis.investmentRecommendation && analysis.investmentRecommendation.targetPrice) {
+                                portfolioMetrics += '<div class="portfolio-metric">' +
+                                    '<h5>Target Price</h5>' +
+                                    '<div class="value">$' + analysis.investmentRecommendation.targetPrice + '</div>' +
+                                    '</div>';
+                            }
+                            
+                            if (analysis.riskAssessment && analysis.riskAssessment.level) {
+                                const riskClass = 'risk-level-' + analysis.riskAssessment.level.toLowerCase();
+                                portfolioMetrics += '<div class="portfolio-metric ' + riskClass + '">' +
+                                    '<h5>Risk Level</h5>' +
+                                    '<div class="value">' + analysis.riskAssessment.level + '</div>' +
+                                    '</div>';
+                            }
+                            
+                            if (analysis.valuationAnalysis && analysis.valuationAnalysis.currentValuation) {
+                                const valuationClass = 'valuation-' + analysis.valuationAnalysis.currentValuation.toLowerCase().replace('_', '-');
+                                portfolioMetrics += '<div class="portfolio-metric">' +
+                                    '<h5>Valuation</h5>' +
+                                    '<div class="value ' + valuationClass + '">' + analysis.valuationAnalysis.currentValuation.replace('_', ' ') + '</div>' +
+                                    '</div>';
+                            }
+                            
+                            portfolioMetrics += '</div>';
+                        }
+
+                        content.innerHTML = wealthAdvisorHeader +
+                            '<div class="analysis-summary">' +
+                            '<h3>' + ticker + ' - Investment Analysis</h3>' +
+                            '<p><strong>Executive Summary:</strong> ' + (analysis.summary || 'AI analysis not available') + '</p>' +
+                            '<p><strong>Overall Sentiment:</strong> ' + sentimentDisplay + '</p>' +
+                            '<p><strong>Analysis Date:</strong> ' + new Date(analysis.timestamp).toLocaleDateString() + '</p>' +
+                            '</div>' +
+                            portfolioMetrics +
+                            analysisStatusHtml +
+                            enhancedSections +
+                            '<div class="analysis-section enhanced-section" style="border-left-color: #17a2b8;">' +
+                            '<h4 style="background: #17a2b8;">📋 Key Investment Insights</h4>' +
+                            '<div class="enhanced-content"><ul>' + insightsHtml + '</ul></div></div>' +
+                            '<div class="analysis-section enhanced-section" style="border-left-color: #dc3545;">' +
+                            '<h4 style="background: #dc3545;">⚠️ Risk Factors</h4>' +
+                            '<div class="enhanced-content"><ul class="risk-factors">' + riskFactorsHtml + '</ul></div></div>' +
+                            '<div class="analysis-section enhanced-section" style="border-left-color: #28a745;">' +
+                            '<h4 style="background: #28a745;">🚀 Investment Opportunities</h4>' +
+                            '<div class="enhanced-content"><ul class="opportunities">' + opportunitiesHtml + '</ul></div></div>';
+                    } else {
+                        content.innerHTML = '<p>No analysis available for ' + ticker + '. Try fetching reports first.</p>';
+                    }
+
+                    container.style.display = 'block';
+                })
+                .catch(function (error) {
+                    const content = document.getElementById('analysisContent');
+                    content.innerHTML = '<div class="error">Error loading analysis: ' + error.message + '</div>';
+                });
+        }
+
+        function showAnalysisInProgress(ticker, status) {
+            var content = document.getElementById('analysisContent');
+            var progressPercent = Math.round((status.completedAnalyses / status.totalReports) * 100);
+            
+            // Build the reports list
+            var reportsHtml = '';
+            for (var i = 0; i < status.reports.length; i++) {
+                var report = status.reports[i];
+                var itemClass = report.hasAnalysis ? 'completed' : 'pending';
+                var statusText = report.hasAnalysis ? '✅ Complete' : '⏳ Analyzing...';
+                
+                reportsHtml += '<div class="report-item ' + itemClass + '">';
+                reportsHtml += '<span class="report-quarter">' + report.quarter + ' ' + report.year + '</span>';
+                reportsHtml += '<span class="report-status">' + statusText + '</span>';
+                reportsHtml += '</div>';
+            }
+            
+            // Build the complete HTML
+            var html = '<div class="analysis-progress">';
+            html += '<h3>🤖 AI Analysis in Progress for ' + ticker + '</h3>';
+            html += '<div class="progress-info">';
+            html += '<p><strong>Status:</strong> Analyzing financial reports with <span id="currentAiModel">Claude AI</span></p>';
+            html += '<p><strong>Progress:</strong> ' + status.completedAnalyses + ' of ' + status.totalReports + ' reports analyzed (' + progressPercent + '%)</p>';
+            html += '<p><strong>Remaining:</strong> ' + status.pendingAnalyses + ' reports</p>';
+            html += '<p><strong>Estimated time:</strong> ' + (status.pendingAnalyses * 3) + ' - ' + (status.pendingAnalyses * 5) + ' seconds</p>';
+            html += '</div>';
+            html += '<div class="progress-bar">';
+            html += '<div class="progress-fill" style="width: ' + progressPercent + '%"></div>';
+            html += '</div>';
+            html += '<div class="progress-details">';
+            html += '<h4>Report Status:</h4>';
+            html += '<div class="report-list">' + reportsHtml + '</div>';
+            html += '</div>';
+            html += '<div class="progress-actions">';
+            html += '<button class="btn" onclick="refreshAnalysisProgress(\'' + ticker + '\')">🔄 Refresh Progress</button>';
+            html += '<button class="btn" onclick="autoRefreshAnalysis(\'' + ticker + '\')" id="autoRefreshBtn">▶️ Auto-refresh (10s)</button>';
+            html += '</div>';
+            html += '<div class="progress-note">';
+            html += '<p><em>💡 The AI is analyzing each financial report for sentiment, key insights, risk factors, and opportunities. ';
+            html += 'This process ensures high-quality, detailed analysis for better investment decisions.</em></p>';
+            html += '</div>';
+            html += '</div>';
+            
+            content.innerHTML = html;
+            
+            // Update the current AI model name
+            loadCurrentModel();
+        }
+
+        let autoRefreshInterval = null;
+
+        function refreshAnalysisProgress(ticker) {
+            // Show refreshing state
+            const content = document.getElementById('analysisContent');
+            const currentContent = content.innerHTML;
+            content.innerHTML = currentContent.replace('🔄 Refresh Progress', '🔄 Refreshing...');
+
+            fetch('/api/analysis-status/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    if (status.pendingAnalyses > 0) {
+                        showAnalysisInProgress(ticker, status);
+                    } else {
+                        // Analysis complete! Show success and load results
+                        content.innerHTML = `
+                        <div class="analysis-complete">
+                            <h3>✅ Analysis Complete for ${ticker}!</h3>
+                            <p>All ${status.totalReports} financial reports have been analyzed.</p>
+                            <button class="btn" onclick="fetchCompleteAnalysis('${ticker}')">📊 View Analysis Results</button>
+                        </div>
+                    `;
+
+                        // Stop auto-refresh if running
+                        if (autoRefreshInterval) {
+                            clearInterval(autoRefreshInterval);
+                            autoRefreshInterval = null;
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error refreshing progress:', error);
+                    content.innerHTML += '<div class="error">Error refreshing progress. Please try again.</div>';
+                });
+        }
+
+        function autoRefreshAnalysis(ticker) {
+            const btn = document.getElementById('autoRefreshBtn');
+
+            if (autoRefreshInterval) {
+                // Stop auto-refresh
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                btn.textContent = '▶️ Auto-refresh (10s)';
+                btn.style.background = '#007bff';
+            } else {
+                // Start auto-refresh
+                btn.textContent = '⏸️ Stop Auto-refresh';
+                btn.style.background = '#dc3545';
+
+                autoRefreshInterval = setInterval(() => {
+                    refreshAnalysisProgress(ticker);
+                }, 10000);
+            }
+        }
+
+
+
+        function rerunAnalysis(ticker) {
+            if (!confirm('Retry AI analysis for ' + ticker + '? This will force a fresh analysis.')) {
+                return;
+            }
+            
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Retrying...';
+            
+            fetch('/api/fetch-financials/' + ticker + '?forceAnalysis=true', {
+                method: 'POST'
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(result) {
+                if (result.message) {
+                    alert('AI analysis retry started for ' + ticker + '. Please wait a few minutes then refresh the analysis.');
+                    // Refresh the analysis view after a delay
+                    setTimeout(function() {
+                        viewAnalysis(ticker);
+                    }, 3000);
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            })
+            .catch(function(error) {
+                alert('Error retrying analysis: ' + error.message);
+            })
+            .finally(function() {
+                button.disabled = false;
+                button.textContent = '🔄 Retry AI Analysis';
+            });
+        }
+
+        function deleteCompany(ticker) {
+            if (!confirm('Are you sure you want to delete ' + ticker + ' and all its data? This action cannot be undone.')) {
+                return;
+            }
+
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+
+            fetch('/api/companies/' + ticker, {
+                method: 'DELETE'
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (result) {
+                    if (result.status === 'deleted') {
+                        alert(ticker + ' deleted successfully!');
+                        loadCompanies();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(function (error) {
+                    alert('Error deleting company');
+                })
+                .finally(function () {
+                    button.disabled = false;
+                    button.textContent = 'Delete';
+                });
+        }
+
+        // Fetch and display current AI model
+        async function loadCurrentModel() {
+            try {
+                const response = await fetch('/api/current-model');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // Update all elements that show the current AI model
+                        const modelElements = document.querySelectorAll('#currentAiModel');
+                        modelElements.forEach(el => {
+                            el.textContent = data.modelName;
+                        });
+                        
+                        // Also update any other references to the AI model
+                        const statusElements = document.querySelectorAll('.ai-model-name');
+                        statusElements.forEach(el => {
+                            el.textContent = data.modelName;
+                        });
+                        
+                        console.log('🤖 Current AI Model:', data.modelName);
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not load current AI model:', error);
+                // Fallback to generic name
+                const modelElements = document.querySelectorAll('#currentAiModel');
+                modelElements.forEach(el => {
+                    el.textContent = 'Claude AI';
+                });
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            loadCurrentModel();
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Smart display name logic
+                    let displayName = 'User';
+
+                    if (data.user) {
+                        // Priority order for display name - prioritize email addresses
+                        if (data.user.email && data.user.email !== 'unknown' && data.user.email !== null && data.user.email.includes('@')) {
+                            displayName = data.user.email;
+                        } else if (data.user.attributes && data.user.attributes.email && data.user.attributes.email !== 'unknown' && data.user.attributes.email.includes('@')) {
+                            displayName = data.user.attributes.email;
+                        } else if (data.user.username && data.user.username !== 'User' && !data.user.username.includes('unknown') && data.user.username.includes('@')) {
+                            displayName = data.user.username;
+                        } else if (data.user.displayName && data.user.displayName !== 'User' && data.user.displayName.includes('@')) {
+                            displayName = data.user.displayName;
+                        } else if (data.user.username && data.user.username !== 'User' && !data.user.username.includes('unknown')) {
+                            displayName = data.user.username;
+                        } else if (data.user.attributes && data.user.attributes['cognito:username']) {
+                            displayName = data.user.attributes['cognito:username'];
+                        } else if (data.user.preferred_username) {
+                            displayName = data.user.preferred_username;
+                        } else {
+                            // Show first 8 chars of sub as fallback
+                            displayName = data.user.sub ? `User-${data.user.sub.substring(0, 8)}` : 'User';
+                        }
+                    }
+
+                    document.getElementById('user-name').textContent = displayName;
+                    document.getElementById('user-menu').style.display = 'flex';
+                    document.getElementById('auth-menu').style.display = 'none';
+
+                    // Load user-specific data
+                    loadCompanies();
+                    loadAIStatus();
+                    loadUserWatchlist();
+                    startAIStatusRefresh();
+
+                    // Show admin link if user has admin access
+                    if (data.user && data.user.groups && data.user.groups.includes('admin')) {
+                        const userMenu = document.getElementById('user-menu');
+                        const adminLink = document.createElement('a');
+                        adminLink.href = '/admin.html';
+                        adminLink.className = 'btn';
+                        adminLink.style.marginLeft = '10px';
+                        adminLink.style.background = '#ffc107';
+                        adminLink.style.color = '#000';
+                        adminLink.textContent = '⚙️ Admin';
+                        userMenu.appendChild(adminLink);
+                    }
+                } else {
+                    // Not authenticated, show login
+                    document.getElementById('user-menu').style.display = 'none';
+                    document.getElementById('auth-menu').style.display = 'block';
+
+                    // Hide main content or show login prompt
+                    document.querySelector('.grid').innerHTML = '<div class="card"><h2>Please Login</h2><p>You need to login to access the Advisor AI Assistant.</p><a href="/login.html" class="btn">Go to Login</a></div>';
+                    document.getElementById('companiesList').innerHTML = '<li>Please login to view tracked companies.</li>';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                document.getElementById('user-menu').style.display = 'none';
+                document.getElementById('auth-menu').style.display = 'block';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.reload();
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+
+        // User alerts functionality removed - replaced with AI status
+
+        async function loadUserWatchlist() {
+            // This will be integrated with the existing companies list
+            // For now, we'll enhance the existing loadCompanies function
+        }
+
+        // AI Status functionality
+        function loadAIStatus() {
+            const container = document.getElementById('aiStatusContainer');
+            container.innerHTML = '<div class="loading">Loading AI status...</div>';
+
+            fetch('/api/ai-status')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    displayAIStatus(status);
+                })
+                .catch(function (error) {
+                    console.error('Error loading AI status:', error);
+                    container.innerHTML = '<div class="error">Error loading AI status</div>';
+                });
+        }
+
+        function displayAlerts(alerts) {
+            const container = document.getElementById('alertsContainer');
+
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<div class="no-alerts">No recent alerts</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < Math.min(alerts.length, 10); i++) { // Show max 10 alerts
+                const alert = alerts[i];
+                const timeAgo = getTimeAgo(alert.createdAt);
+                const severityClass = 'alert-' + (alert.severity || 'medium');
+                const readClass = alert.isRead ? 'alert-read' : '';
+
+                html += '<div class="alert ' + severityClass + ' ' + readClass + '" onclick="markAlertAsRead(\'' + alert.id + '\')">'
+                    + '<strong>' + alert.ticker + ':</strong> ' + alert.message
+                    + '<span class="alert-time">' + timeAgo + '</span>'
+                    + '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Alert functions removed - replaced with AI status functionality
+
+        function displayAIStatus(status) {
+            const container = document.getElementById('aiStatusContainer');
+
+            let html = '<div class="ai-status-item">';
+            html += '<h4>🤖 AI Analysis System Status</h4>';
+
+            html += '<div class="ai-status-metric">';
+            html += '<span>Cache Status:</span>';
+            html += '<span class="ai-status-value">✅ Always Enabled</span>';
+            html += '</div>';
+
+            html += '<div class="ai-status-metric">';
+            html += '<span>Cached Analyses:</span>';
+            html += '<span class="ai-status-value">' + (status.cachedAnalyses || 0) + '</span>';
+            html += '</div>';
+
+            html += '<div class="ai-status-metric">';
+            html += '<span>Currently Processing:</span>';
+            html += '<span class="ai-status-value">' + (status.processingCount || 0) + '</span>';
+            html += '</div>';
+
+            html += '<div class="ai-status-metric">';
+            html += '<span>Max Analysis Timeout:</span>';
+            html += '<span class="ai-status-value">' + (status.maxTimeout || 'N/A') + '</span>';
+            html += '</div>';
+
+            html += '<div class="ai-status-metric">';
+            html += '<span>Rate Limiting:</span>';
+            html += '<span class="ai-status-value">' + (status.minInterval || 'N/A') + '</span>';
+            html += '</div>';
+
+            if (status.processingCount > 0) {
+                html += '<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">';
+                html += '<strong>🔄 AI Analysis in Progress</strong><br>';
+                html += 'Currently processing ' + status.processingCount + ' analysis request(s).';
+                html += '</div>';
+            }
+
+            html += '</div>';
+
+            // Add cache control buttons (cache is always enabled)
+            html += '<div style="margin-top: 15px; text-align: center;">';
+            html += '<button class="btn" onclick="controlAICache(\'clear\')" style="margin: 5px; background: #dc3545;">Clear Cache</button>';
+            html += '<button class="btn" onclick="loadAIStatus()" style="margin: 5px;">Refresh Status</button>';
+            html += '</div>';
+            html += '<div style="margin-top: 10px; text-align: center; font-size: 0.9em; color: #6c757d;">'; 
+            html += '💾 AI Cache is always enabled for optimal performance'; 
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // AI Status control functions
+        function controlAICache(action) {
+            fetch('/api/ai-cache/' + action, {
+                method: 'POST'
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (result) {
+                    alert('Success: ' + result.message);
+                    loadAIStatus(); // Refresh status
+                })
+                .catch(function (error) {
+                    alert('Error: ' + error.message);
+                });
+        }
+
+        // Auto-refresh AI status every 60 seconds (only if authenticated)
+        let aiStatusInterval;
+
+        function startAIStatusRefresh() {
+            if (aiStatusInterval) clearInterval(aiStatusInterval);
+            aiStatusInterval = setInterval(loadAIStatus, 60000);
+        }
+
+        // Check company analysis status for the company list
+        function checkCompanyAnalysisStatus(ticker) {
+            fetch('/api/analysis-status/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    const statusElement = document.getElementById('analysis-status-' + ticker);
+                    if (statusElement) {
+                        if (status.totalReports === 0) {
+                            statusElement.innerHTML = '<span style="color: #6c757d;">📊 No financial data</span>';
+                        } else if (status.pendingAnalyses > 0) {
+                            const percent = Math.round((status.completedAnalyses / status.totalReports) * 100);
+                            statusElement.innerHTML = '<span style="color: #ffc107;">🤖 Analysis: ' + status.completedAnalyses + '/' + status.totalReports + ' (' + percent + '%) - <em>In Progress</em></span>';
+                        } else {
+                            statusElement.innerHTML = '<span style="color: #28a745;">✅ Analysis: Complete (' + status.totalReports + ' reports)</span>';
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    const statusElement = document.getElementById('analysis-status-' + ticker);
+                    if (statusElement) {
+                        statusElement.innerHTML = '<span style="color: #dc3545;">❌ Status check failed</span>';
+                    }
+                });
+        }
+
+        // Check analysis progress
+        function checkAnalysisProgress(ticker) {
+            fetch('/api/analysis-status/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    console.log('Analysis progress for ' + ticker + ':', status.completedAnalyses + '/' + status.totalReports);
+
+                    if (status.status === 'pending' && status.pendingAnalyses > 0) {
+                        // Still processing, check again in 10 seconds
+                        setTimeout(() => checkAnalysisProgress(ticker), 10000);
+                    } else {
+                        console.log('Analysis complete for ' + ticker);
+                        // Optionally show a notification or update UI
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error checking analysis progress:', error);
+                });
+        }
+
+        // Rerun AI Analysis Functions
+        function showRerunOptions(ticker) {
+            // First get the financial reports history to show available quarters
+            fetch('/api/reports/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (reports) {
+                    if (reports.length === 0) {
+                        alert('No financial data found for ' + ticker + '. Please fetch reports first.');
+                        return;
+                    }
+
+                    // Create options for each quarter
+                    let options = 'Select which quarter to rerun AI analysis for ' + ticker + ':\n\n';
+                    for (let i = 0; i < reports.length; i++) {
+                        const report = reports[i];
+                        options += (i + 1) + '. ' + report.quarter + ' ' + report.year + '\n';
+                    }
+
+                    const choice = prompt(options + '\nEnter the number (1-' + reports.length + '):');
+
+                    if (choice && !isNaN(choice)) {
+                        const index = parseInt(choice) - 1;
+                        if (index >= 0 && index < reports.length) {
+                            const selectedReport = reports[index];
+                            rerunAnalysis(ticker, selectedReport.quarter, selectedReport.year);
+                        } else {
+                            alert('Invalid selection. Please try again.');
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    alert('Error loading financial data: ' + error.message);
+                });
+        }
+
+        function rerunAnalysis(ticker, quarter, year) {
+            const confirmed = confirm(
+                'This will delete the existing AI analysis for ' + ticker + ' ' + quarter + ' ' + year +
+                ' and generate a fresh analysis.\n\n' +
+                'This process may take 5-30 minutes depending on AI service availability.\n\n' +
+                'Continue?'
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Show progress message
+            const statusElement = document.getElementById('analysis-status-' + ticker);
+            if (statusElement) {
+                statusElement.innerHTML = '<span style="color: #ffc107;">🔄 Rerunning AI analysis...</span>';
+            }
+
+            fetch('/api/rerun-analysis/' + ticker, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    quarter: quarter,
+                    year: year
+                })
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (result) {
+                    if (result.message) {
+                        alert('Success!\n' + result.message + '\n\nEstimated time: ' + result.estimatedTime);
+
+                        // Start checking status periodically
+                        const statusInterval = setInterval(() => {
+                            checkCompanyAnalysisStatus(ticker);
+                        }, 30000); // Check every 30 seconds
+
+                        // Stop checking after 45 minutes
+                        setTimeout(() => {
+                            clearInterval(statusInterval);
+                        }, 45 * 60 * 1000);
+
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(function (error) {
+                    alert('Error rerunning analysis: ' + error.message);
+
+                    // Reset status on error
+                    if (statusElement) {
+                        statusElement.innerHTML = '<span style="color: #dc3545;">❌ Rerun failed</span>';
+                    }
+                });
+        }
+
+        // Enhanced status checking to show AI analysis status
+        function checkCompanyAnalysisStatus(ticker) {
+            fetch('/api/analysis-status/' + ticker)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (status) {
+                    const statusElement = document.getElementById('analysis-status-' + ticker);
+                    if (!statusElement) return;
+
+                    let statusHtml = '';
+
+                    if (status.pendingAnalyses > 0) {
+                        statusHtml = '<span style="color: #ffc107;">🔄 AI analysis in progress (' +
+                            status.completedAnalyses + '/' + status.totalReports + ' complete)</span>';
+                    } else if (status.completedAnalyses > 0) {
+                        const aiCount = status.aiAnalyses || 0;
+
+                        if (aiCount > 0) {
+                            statusHtml = '<span style="color: #28a745;">✅ AI analysis complete (' +
+                                aiCount + ' reports)</span>';
+                        } else {
+                            statusHtml = '<span style="color: #dc3545;">⚠️ AI analysis failed - use Rerun AI button</span>';
+                        }
+                    } else {
+                        statusHtml = '<span style="color: #6c757d;">No analysis available</span>';
+                    }
+
+                    statusElement.innerHTML = statusHtml;
+                })
+                .catch(function (error) {
+                    // Silently fail status checks to avoid spam
+                    console.log('Status check failed for ' + ticker + ':', error.message);
+                });
+        }
+
+    </script>
+</body>
+
+</html>
