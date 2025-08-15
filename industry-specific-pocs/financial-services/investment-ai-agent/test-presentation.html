@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Idea Presentation Test</title>
+    <link rel="stylesheet" href="src/frontend/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Investment Idea Presentation Test</h1>
+            <p>Testing the investment idea visualization components</p>
+        </header>
+
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Investment Ideas</h2>
+                <div class="results-controls">
+                    <div class="view-toggle">
+                        <button id="grid-view" class="view-btn active" data-view="grid">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button id="list-view" class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                        <button id="comparison-view" class="view-btn" data-view="comparison">
+                            <i class="fas fa-balance-scale"></i> Compare
+                        </button>
+                    </div>
+                    <div class="sort-controls">
+                        <select id="sort-by">
+                            <option value="confidence">Sort by Confidence</option>
+                            <option value="return">Sort by Expected Return</option>
+                            <option value="risk">Sort by Risk Level</option>
+                        </select>
+                        <button id="sort-order" class="btn btn-sm" data-order="desc">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="request-results" class="results-content grid-view">
+                <!-- Sample Investment Ideas -->
+                <div class="investment-idea">
+                    <div class="idea-header">
+                        <h3 class="idea-title">Technology Growth Portfolio</h3>
+                        <div class="idea-actions">
+                            <button class="idea-action-btn" title="Save to Portfolio">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                            <button class="idea-action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-score high">
+                        <i class="fas fa-chart-line"></i>
+                        85% Confidence
+                    </div>
+                    
+                    <div class="idea-description">
+                        A diversified technology portfolio focusing on AI, cloud computing, and semiconductor companies with strong growth potential.
+                    </div>
+                    
+                    <div class="idea-metrics">
+                        <div class="metric">
+                            <span class="metric-value">12.5%</span>
+                            <span class="metric-label">Expected Return</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">Medium</span>
+                            <span class="metric-label">Time Horizon</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">5</span>
+                            <span class="metric-label">Assets</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-tags">
+                        <span class="idea-tag sector">Technology</span>
+                        <span class="idea-tag asset-class">Equities</span>
+                    </div>
+                    
+                    <div class="idea-footer">
+                        <div class="risk-indicator">
+                            <div class="risk-dot medium"></div>
+                            <span>Medium Risk</span>
+                        </div>
+                        <div class="time-horizon">Medium-term</div>
+                    </div>
+                </div>
+
+                <div class="investment-idea">
+                    <div class="idea-header">
+                        <h3 class="idea-title">ESG Bond Fund</h3>
+                        <div class="idea-actions">
+                            <button class="idea-action-btn" title="Save to Portfolio">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                            <button class="idea-action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-score high">
+                        <i class="fas fa-chart-line"></i>
+                        92% Confidence
+                    </div>
+                    
+                    <div class="idea-description">
+                        A sustainable bond portfolio focusing on environmental and social impact investments with stable returns.
+                    </div>
+                    
+                    <div class="idea-metrics">
+                        <div class="metric">
+                            <span class="metric-value">6.8%</span>
+                            <span class="metric-label">Expected Return</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">Long</span>
+                            <span class="metric-label">Time Horizon</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">3</span>
+                            <span class="metric-label">Assets</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-tags">
+                        <span class="idea-tag sector">ESG</span>
+                        <span class="idea-tag asset-class">Fixed Income</span>
+                    </div>
+                    
+                    <div class="idea-footer">
+                        <div class="risk-indicator">
+                            <div class="risk-dot low"></div>
+                            <span>Low Risk</span>
+                        </div>
+                        <div class="time-horizon">Long-term</div>
+                    </div>
+                </div>
+
+                <div class="investment-idea">
+                    <div class="idea-header">
+                        <h3 class="idea-title">Emerging Markets Opportunity</h3>
+                        <div class="idea-actions">
+                            <button class="idea-action-btn" title="Save to Portfolio">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                            <button class="idea-action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-score medium">
+                        <i class="fas fa-chart-line"></i>
+                        68% Confidence
+                    </div>
+                    
+                    <div class="idea-description">
+                        High-growth potential investments in emerging markets with focus on infrastructure and consumer goods.
+                    </div>
+                    
+                    <div class="idea-metrics">
+                        <div class="metric">
+                            <span class="metric-value">18.2%</span>
+                            <span class="metric-label">Expected Return</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">Long</span>
+                            <span class="metric-label">Time Horizon</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">7</span>
+                            <span class="metric-label">Assets</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-tags">
+                        <span class="idea-tag sector">Emerging Markets</span>
+                        <span class="idea-tag asset-class">Equities</span>
+                    </div>
+                    
+                    <div class="idea-footer">
+                        <div class="risk-indicator">
+                            <div class="risk-dot high"></div>
+                            <span>High Risk</span>
+                        </div>
+                        <div class="time-horizon">Long-term</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investment Idea Detail Modal -->
+        <div id="idea-detail-modal" class="modal idea-modal" style="display: none;">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h3 id="idea-title">Investment Idea Details</h3>
+                    <button id="close-idea-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="idea-detail-tabs">
+                        <button class="tab-btn active" data-tab="overview">Overview</button>
+                        <button class="tab-btn" data-tab="analysis">Analysis</button>
+                        <button class="tab-btn" data-tab="risks">Risks</button>
+                        <button class="tab-btn" data-tab="data">Supporting Data</button>
+                        <button class="tab-btn" data-tab="compliance">Compliance</button>
+                    </div>
+                    <div class="idea-detail-content">
+                        <div id="overview-tab" class="tab-content active">
+                            <div class="overview-summary">
+                                <div class="overview-main">
+                                    <h4>Investment Rationale</h4>
+                                    <p>This technology portfolio is designed to capitalize on the ongoing digital transformation and AI revolution. The selected companies have strong fundamentals, innovative products, and significant market opportunities.</p>
+                                    
+                                    <div class="explanation-section">
+                                        <div class="explanation-header">
+                                            <i class="fas fa-lightbulb explanation-icon"></i>
+                                            <span class="explanation-title">Why This Investment Makes Sense</span>
+                                        </div>
+                                        <div class="explanation-content">
+                                            The technology sector continues to show strong growth potential driven by AI adoption, cloud migration, and digital transformation initiatives across industries.
+                                        </div>
+                                        <div class="reasoning-steps">
+                                            <div class="reasoning-step">
+                                                <div class="step-number">1</div>
+                                                <div class="step-content">
+                                                    <div class="step-title">Market Analysis</div>
+                                                    <div class="step-description">Analyzed current market conditions and identified key trends affecting this investment opportunity.</div>
+                                                </div>
+                                            </div>
+                                            <div class="reasoning-step">
+                                                <div class="step-number">2</div>
+                                                <div class="step-content">
+                                                    <div class="step-title">Risk Assessment</div>
+                                                    <div class="step-description">Evaluated risk factors and determined overall risk level as medium.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="overview-sidebar">
+                                    <div class="key-metrics">
+                                        <div class="key-metric">
+                                            <span class="key-metric-value">85%</span>
+                                            <span class="key-metric-label">Confidence Score</span>
+                                        </div>
+                                        <div class="key-metric">
+                                            <span class="key-metric-value">12.5%</span>
+                                            <span class="key-metric-label">Expected Return</span>
+                                        </div>
+                                        <div class="key-metric">
+                                            <span class="key-metric-value">Medium</span>
+                                            <span class="key-metric-label">Risk Level</span>
+                                        </div>
+                                        <div class="key-metric">
+                                            <span class="key-metric-value">Medium</span>
+                                            <span class="key-metric-label">Time Horizon</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="analysis-tab" class="tab-content">
+                            <div class="analysis-section">
+                                <h4>Scenario Analysis</h4>
+                                <div class="scenario-analysis">
+                                    <div class="scenario best">
+                                        <div class="scenario-label">Best Case</div>
+                                        <div class="scenario-value">18.5%</div>
+                                        <div class="scenario-probability">25% probability</div>
+                                    </div>
+                                    <div class="scenario expected">
+                                        <div class="scenario-label">Expected Case</div>
+                                        <div class="scenario-value">12.5%</div>
+                                        <div class="scenario-probability">50% probability</div>
+                                    </div>
+                                    <div class="scenario worst">
+                                        <div class="scenario-label">Worst Case</div>
+                                        <div class="scenario-value">3.2%</div>
+                                        <div class="scenario-probability">25% probability</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="risks-tab" class="tab-content">
+                            <div class="risk-matrix">
+                                <div class="risk-category">
+                                    <h5>Market Risks</h5>
+                                    <div class="risk-item">
+                                        <span class="risk-severity medium">Medium</span>
+                                        <div class="risk-description">Technology sector volatility may impact short-term performance</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="data-tab" class="tab-content">
+                            <div class="data-sources">
+                                <h4>Data Sources</h4>
+                                <div class="data-source">
+                                    <div class="data-source-icon">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <div class="data-source-info">
+                                        <div class="data-source-name">Market Data Provider</div>
+                                        <div class="data-source-meta">15 data points</div>
+                                    </div>
+                                    <div class="data-source-reliability">
+                                        <div class="reliability-score">95%</div>
+                                        <div class="reliability-label">Reliable</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="compliance-tab" class="tab-content">
+                            <div class="compliance-status compliant">
+                                <i class="fas fa-check-circle compliance-icon compliant"></i>
+                                <div>
+                                    <strong>Compliant</strong>
+                                    <p>This investment idea meets all regulatory requirements and compliance standards.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="export-idea" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button id="save-idea" class="btn btn-primary">
+                        <i class="fas fa-bookmark"></i> Save to Portfolio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple test functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // View toggle functionality
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const view = this.dataset.view;
+                    const container = document.getElementById('request-results');
+                    container.className = `results-content ${view}-view`;
+                });
+            });
+
+            // Investment idea click to show modal
+            document.querySelectorAll('.investment-idea').forEach(idea => {
+                idea.addEventListener('click', function() {
+                    document.getElementById('idea-detail-modal').style.display = 'flex';
+                });
+            });
+
+            // Close modal
+            document.getElementById('close-idea-modal').addEventListener('click', function() {
+                document.getElementById('idea-detail-modal').style.display = 'none';
+            });
+
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+                });
+            });
+
+            // Action buttons
+            document.querySelectorAll('.idea-action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    alert('Action button clicked!');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

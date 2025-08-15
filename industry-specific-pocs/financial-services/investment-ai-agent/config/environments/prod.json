@@ -1,0 +1,88 @@
+{
+  "environment": "prod",
+  "region": "us-east-1",
+  "stackName": "InvestmentAiAgentStack-Prod",
+  "tags": {
+    "Environment": "Production",
+    "Project": "InvestmentAiAgent",
+    "Owner": "ProdTeam",
+    "CostCenter": "Business"
+  },
+  "lambda": {
+    "memorySize": 1024,
+    "timeout": 120,
+    "reservedConcurrency": 100,
+    "logRetention": 30
+  },
+  "apiGateway": {
+    "throttling": {
+      "rateLimit": 2000,
+      "burstLimit": 5000
+    },
+    "caching": {
+      "enabled": true,
+      "ttl": 600
+    }
+  },
+  "dynamodb": {
+    "billingMode": "PROVISIONED",
+    "readCapacity": 100,
+    "writeCapacity": 50,
+    "pointInTimeRecovery": true,
+    "backupRetention": 30,
+    "globalTables": true
+  },
+  "s3": {
+    "versioning": true,
+    "encryption": "KMS",
+    "crossRegionReplication": true,
+    "lifecycleRules": {
+      "transitionToIA": 30,
+      "transitionToGlacier": 90,
+      "transitionToDeepArchive": 365,
+      "expiration": 2555
+    }
+  },
+  "cognito": {
+    "passwordPolicy": {
+      "minLength": 14,
+      "requireLowercase": true,
+      "requireUppercase": true,
+      "requireDigits": true,
+      "requireSymbols": true
+    },
+    "mfaConfiguration": "ON",
+    "advancedSecurityMode": "ENFORCED"
+  },
+  "monitoring": {
+    "enableXRay": true,
+    "enableDetailedMonitoring": true,
+    "alarmNotifications": true,
+    "enableInsights": true
+  },
+  "bedrock": {
+    "models": {
+      "claudeSonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "claudeHaiku": "anthropic.claude-3-haiku-20240307-v1:0",
+      "novaPro": "amazon.nova-pro-v1:0"
+    },
+    "maxTokens": 4000,
+    "temperature": 0.7
+  },
+  "security": {
+    "enableWAF": true,
+    "enableGuardDuty": true,
+    "enableSecurityHub": true,
+    "enableConfig": true,
+    "enableCloudTrail": true
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "cron(0 2 * * ? *)",
+    "retention": 30
+  },
+  "multiRegion": {
+    "enabled": true,
+    "regions": ["us-east-1", "us-west-2"]
+  }
+}
