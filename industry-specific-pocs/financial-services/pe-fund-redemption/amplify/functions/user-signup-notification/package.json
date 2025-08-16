@@ -1,0 +1,10 @@
+{
+  "name": "user-signup-notification",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "handler.mjs",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.600.0"
+  }
+}

@@ -1,0 +1,7 @@
+version: 1
+functions:
+  fund-documents:
+    runtime: python3.11
+    layers: []
+    environment:
+      S3_BUCKET: tonytrev-ab2
