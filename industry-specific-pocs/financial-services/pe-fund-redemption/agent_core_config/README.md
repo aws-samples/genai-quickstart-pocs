@@ -1,6 +1,6 @@
 # Agent Core Configuration
 
-This folder contains Lambda functions and MCP Gateway configuration for the PE Fund Redemption system.
+This folder contains Lambda functions and MCP Gateway configuration for the PE Fund Redemption system. Because AgentCore is still in preview, much of this functionality can not yet be put into a CDK and thus these steps need to be run manually. 
 
 ## Automated Deployment
 
@@ -13,18 +13,15 @@ python create_gateways.py     # Creates MCP Gateway with Lambda targets
 ## Manual Steps Required
 
 ### 1. Create MySQL Connector Lambda
-The `MSSqlConnect` function must be created manually:
-- **Runtime:** Node.js 18.x
-- **Code:** Use `sql_lambda_connector.ts`
-- **Dependencies:** Requires `mysql2` and `@aws-sdk/client-secrets-manager` (add as Layer)
-- **IAM Permissions:** Secrets Manager read access
+The `MSSqlConnect` function must be created manually in the RDS window with a Proxy Connection:
 
-### 2. Set Up Database Connection
 **Easiest Method:**
 1. Go to RDS Console → Your Aurora cluster
 2. Click **"Set up lambda connection"**
 3. Follow wizard to create/configure RDS Proxy
 4. This automatically handles VPC, security groups, and Lambda configuration
+5. Set up environment vaiables in your lambda function
+6. Use the code here and put it into the Lambda: `sql_lambda_connector.ts`
 
 **Manual Alternative:**
 ```bash

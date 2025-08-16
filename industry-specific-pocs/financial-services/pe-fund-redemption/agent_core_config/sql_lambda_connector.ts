@@ -1,34 +1,39 @@
 import mysql from 'mysql2/promise';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
-const secretsClient = new SecretsManagerClient({ region: 'us-east-1' });
+// NOTE: Environment variables must be added manually in Lambda Console:
+// DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+// Go to Lambda Console → Configuration → Environment variables → Edit
 
 export const handler = async (event) => {
+  console.log('Lambda started, event:', JSON.stringify(event));
+  
   const query = event.query || 'SELECT 1';
+  console.log('Query to execute:', query);
   
   try {
-    // Get database credentials and proxy endpoint from Secrets Manager
-    const secretName = 'MsSQLConnect-SM';
-    const command = new GetSecretValueCommand({ SecretId: secretName });
-    const secretResponse = await secretsClient.send(command);
+    // Validate environment variables
+    const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
-    if (!secretResponse.SecretString) {
-      throw new Error('Secret not found or empty');
+    if (missingVars.length > 0) {
+      throw new Error(`Missing environment variables: ${missingVars.join(', ')}`);
     }
-    
-    const secret = JSON.parse(secretResponse.SecretString);
-  
 
-    // Connect using proxy endpoint and credentials from secret
+    console.log('Connecting to database via proxy:', process.env.DB_HOST);
+    
+    // Connect using environment variables
     const connection = await mysql.createConnection({
-      host: secret.proxy,
-      user: secret.username,
-      password: secret.password,
-      database: secret.dbname,
-      port: secret.port || 3306
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: 3306,
     });
 
+    console.log('Connected successfully, executing query...');
     const [rows] = await connection.execute(query);
+    console.log('Query executed, rows returned:', Array.isArray(rows) ? rows.length : 'unknown');
+    
     await connection.end();
     
     return {
@@ -39,9 +44,16 @@ export const handler = async (event) => {
       })
     };
   } catch (error) {
+    console.error('Lambda error:', error);
+    console.error('Error stack:', error.stack);
+    
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: error.message || 'Unknown error',
+        errorType: error.constructor.name,
+        stack: error.stack
+      })
     };
   }
 };
