@@ -1,0 +1,40 @@
+version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 20
+        - nvm use 20
+        - node -v && npm -v
+        - npm ci --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream
+        - npm ci --cache .npm --prefer-offline --prefix amplify/functions/user-signup-notification
+    build:
+      commands:
+        # Root deps if present (don’t fail if no lockfile)
+        - npm ci --cache .npm --prefer-offline || npm install --cache .npm --prefer-offline
+        # Deploy backend with AWS_APP_ID
+        - npx ampx --version
+        - npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID" --outputs-version 1.2
+  artifacts:
+    baseDirectory: .
+    files:
+      - amplify_outputs.*
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 20
+        - nvm use 20
+        - node -v
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .npm/**/*
+      - node_modules/**/*

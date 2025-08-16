@@ -1,0 +1,7 @@
+version: 1
+functions:
+  database-query:
+    runtime: python3.11
+    layers: []
+    environment:
+      MYSQL_LAMBDA_FUNCTION: MSSqlConnect
