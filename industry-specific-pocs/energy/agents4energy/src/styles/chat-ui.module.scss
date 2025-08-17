@@ -1,0 +1,103 @@
+@use "@cloudscape-design/design-tokens/index" as awsui;
+
+.chat_container {
+  margin-bottom: -40px;
+  // min-height: calc(100vh - 200px); //96px
+  // max-height: calc(20vh); //96px
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@media (min-width: 466px) {
+  .chat_container {
+    min-height: calc(100vh - 300px);
+  }
+}
+
+// @media (min-width: 689px) {
+//   .chat_container {
+//     min-height: calc(100vh - 60px);
+//   }
+// }
+
+// @media (min-width: 913px) {
+//   .chat_container {
+//     min-height: calc(100vh - 68px);
+//   }
+// }
+
+.welcome_text {
+  color: awsui.$color-text-body-default;
+  font-size: 3rem;
+  font-weight: bolder;
+  opacity: 0.4;
+}
+
+.input_container {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: awsui.$space-scaled-l;
+  padding-top: awsui.$space-scaled-xxl;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    awsui.$color-background-container-content 20%
+  );
+  margin-left: -8px;
+  margin-right: -8px;
+  container-type: inline-size;
+  container-name: input_container;
+}
+
+.input_textarea_container {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.input_textarea {
+  resize: none;
+  border: none;
+  padding: 12px 12px 12px 4px;
+  background-color: transparent;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+}
+
+.btn_chabot_message_copy {
+  float: right;
+}
+
+.horizontal-split {
+  flex: 1
+}
+.markdownTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdownTable th,
+.markdownTable td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd; /* Adds a line below each row */
+}
+
+.markdownTable tr + tr {
+  border-top: 1px solid #ddd; /* Adds a line above each row */
+}
+
+.hiddenRow {
+  display: none; /* Hides the row */
+}
+
+.prose {
+  flex: 1;
+  overflow-y: auto; /* If you want scrolling when content overflows */
+  color: unset!important;
+}
+
