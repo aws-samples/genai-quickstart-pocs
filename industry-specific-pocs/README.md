@@ -10,6 +10,7 @@ Currently, this section includes GenAI proof of concepts for the following indus
 - Financial Services
 - Manufacturing
 - Retail
+- Energy
 
 Each industry directory contains specialized examples demonstrating how generative AI can be applied to solve industry-specific challenges, optimize processes, and create new opportunities within that particular domain.
 

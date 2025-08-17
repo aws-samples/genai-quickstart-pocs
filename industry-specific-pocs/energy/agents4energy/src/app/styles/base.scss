@@ -1,0 +1,90 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+@use '~@cloudscape-design/design-tokens' as cs;
+
+body {
+  background: cs.$color-background-layout-main;
+  position: relative;
+}
+
+.custom-main-header {
+  display: block;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin: 0;
+  background-color: #0f1b2a;
+  font-family: cs.$font-family-base;
+  border-bottom: solid 1px #414d5c;
+}
+
+ul.menu-list {
+  display: flex;
+  align-items: center;
+  height: 39px;
+  margin: 0;
+  padding: 0 40px;
+  list-style: none;
+  font-size: 14px;
+
+  & > li {
+    padding: 0;
+    margin: 0;
+    margin-right: 8px;
+
+    > a {
+      padding: 0 6px;
+    }
+
+    a,
+    div,
+    button,
+    input,
+    label {
+      float: left;
+      color: cs.$color-text-interactive-default;
+      line-height: 16px;
+    }
+
+    #visual-refresh-toggle {
+      margin-right: 5px;
+      margin-top: 1px;
+    }
+
+    a,
+    a:hover {
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    &.title {
+      font-weight: bold;
+    }
+  }
+
+  @media only screen and (max-width: 493px) {
+    padding: 4px 20px;
+    flex-wrap: wrap;
+    height: fit-content;
+
+    .title {
+      flex: 1 1 100%;
+      margin-bottom: 8px;
+    }
+
+    li {
+      width: min-content;
+
+      button,
+      a {
+        text-align: left;
+      }
+
+      a {
+        padding: 0;
+      }
+    }
+  }
+}

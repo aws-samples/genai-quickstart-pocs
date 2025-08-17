@@ -1,0 +1,9 @@
+table_name,column_name
+equipmenttypes,equiptypeid
+locationtypes,loctypeid
+mainttypes,mainttypeid
+statustypes,statusid
+businessunits,buid
+equipment,equipid
+maintenance,maintid
+locations,locationid
