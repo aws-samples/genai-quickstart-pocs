@@ -1,0 +1,19 @@
+2024-01-15 10:30:15,123 INFO  [Driver] SparkContext: Running Spark version 3.4.0
+2024-01-15 10:30:16,456 INFO  [Driver] SparkEnv: Registering MapOutputTracker
+2024-01-15 10:30:17,789 INFO  [Driver] SparkEnv: Registering BlockManagerMaster
+2024-01-15 10:30:18,012 INFO  [Driver] BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper
+2024-01-15 10:30:19,345 INFO  [Driver] SparkContext: Successfully started SparkContext
+2024-01-15 10:30:20,678 INFO  [Driver] SparkUI: Bound SparkUI to 0.0.0.0, and started at http://ip-10-0-1-100.ec2.internal:4040
+2024-01-15 10:30:25,901 INFO  [Executor task launch worker for task 0] Executor: Running task 0.0 in stage 0.0 (TID 0)
+2024-01-15 10:30:30,234 ERROR [Executor task launch worker for task 0] Executor: Exception in task 0.0 in stage 0.0 (TID 0)
+java.lang.OutOfMemoryError: Java heap space
+	at java.util.Arrays.copyOf(Arrays.java:3332)
+	at java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:124)
+	at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:448)
+	at java.lang.StringBuilder.append(StringBuilder.java:136)
+	at org.apache.spark.sql.catalyst.expressions.codegen.CodeFormatter$.format(CodeFormatter.scala:75)
+2024-01-15 10:30:31,567 ERROR [task-result-getter-0] TaskSetManager: Task 0 in stage 0.0 failed 1 times; aborting job
+2024-01-15 10:30:32,890 INFO  [dag-scheduler-event-loop] DAGScheduler: Job 0 failed: collect at SparkPlan.scala:414, took 12.456789 s
+2024-01-15 10:30:33,123 ERROR [main] SparkContext: Error occurred during job execution
+2024-01-15 10:30:34,456 INFO  [shutdown-hook-0] SparkContext: Invoking stop() from shutdown hook
+2024-01-15 10:30:35,789 INFO  [shutdown-hook-0] SparkContext: Successfully stopped SparkContext
