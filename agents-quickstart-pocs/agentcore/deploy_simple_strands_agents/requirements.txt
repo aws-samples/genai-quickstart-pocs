@@ -1,0 +1,15 @@
+# Core dependencies for AWS and configuration
+PyYAML>=6.0
+boto3>=1.26.0
+flask>=2.0.0
+requests>=2.25.0
+
+# Strands Agents framework
+strands-agents>=1.4.0
+
+# Amazon Bedrock AgentCore Runtime
+bedrock-agentcore>=0.1.2
+
+# AgentCore CLI and starter toolkit
+agentcore>=0.1.6
+bedrock-agentcore-starter-toolkit>=0.1.6
