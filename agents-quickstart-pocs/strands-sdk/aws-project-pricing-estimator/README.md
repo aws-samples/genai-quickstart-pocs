@@ -1,6 +1,8 @@
 # AWS Pricing Agent Chatbot
 
-A Streamlit-based chatbot that uses Strands Agents and the AWS Pricing MCP (Model Context Protocol) server to provide intelligent responses about AWS pricing and cost analysis.
+Use this chatbot to ask for estimated costs for your projects. A typical sample prompt could be "Please estimate costs for my application that consists of 7 lambda fucntions that are invoked 22000 times daily and update a mySQL aurora server with 300 GB storage. An API gateway is the endpoint that connects to the lambdas" This chatbot allows you to keep track of estimated costs during developent. You can also ask questions like "What if I substitute lambdas with EC2 containers?" etc. to test alternative pricing for your project. 
+
+This is a Streamlit-based chatbot that uses Strands Agents and the AWS Pricing MCP (Model Context Protocol) server to provide intelligent responses about AWS pricing and cost analysis.
 
 ## Features
 

@@ -45,6 +45,8 @@ def get_uv_command():
     # Platform-specific fallbacks
     if platform.system() == "Windows":
         # Windows: try common installation paths
+        # Windows: You might have to add the path to uv.exe in your system if it is not in the choices below
+
         possible_paths = [
             os.path.expanduser("~\\AppData\\Local\\Programs\\uv\\uv.exe"),
             os.path.expanduser("~\\AppData\\Roaming\\Python\\Python39\\Scripts\\uv.exe"),

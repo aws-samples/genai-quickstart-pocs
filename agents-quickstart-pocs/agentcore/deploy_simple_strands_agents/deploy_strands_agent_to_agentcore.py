@@ -3,14 +3,15 @@
 Deploy Strands Calculator Agent to AgentCore
 
 This script deploys the strands calculator agent to Amazon Bedrock AgentCore
-using the non-interactive configuration approach that avoids interactive prompts.
+using an interactive configuration approach that guides users through the process.
 
 Features:
-- Non-interactive agentcore configure with command-line flags
+- Interactive agentcore configure with user prompts
 - Automatic ECR repository creation
 - Automatic execution role setup with proper permissions
 - Cloud deployment using CodeBuild
 - Comprehensive error handling and status monitoring
+- User-friendly prompts and guidance throughout the process
 """
 
 import os
@@ -26,6 +27,16 @@ class StrandsAgentCoreDeployer:
     def __init__(self):
         self.agent_id = None
         self.agent_alias_id = None
+        
+        # Display important message about deployment process
+        print("=" * 80)
+        print("🚀 STRANDS AGENT DEPLOYMENT TO AGENTCORE")
+        print("=" * 80)
+        print("💡 This deployment process will prompt you for configuration choices.")
+        print("   You can accept defaults by pressing Enter for all options.")
+        print("   The program will guide you through each step interactively.")
+        print("=" * 80)
+        print()
         
     def check_prerequisites(self) -> bool:
         """Check if all prerequisites are met."""
@@ -260,11 +271,35 @@ if __name__ == "__main__":
             
             # Only configure if we don't have a valid existing configuration
             if not os.path.exists(config_file) or 'agent_id' not in open(config_file, 'r').read():
-                print("   📝 Configuration needed but interactive prompts detected")
-                print("   💡 Please run the following command manually to configure the agent:")
-                print(f"      agentcore configure --entrypoint {agent_file} --name strands_calculator_agent --execution-role arn:aws:iam::{account_id}:role/AmazonBedrockExecutionRoleForAgents --ecr {account_id}.dkr.ecr.{region}.amazonaws.com/strands-calculator-agent --region {region}")
-                print("   🔄 After configuration, run this deployment script again")
-                return False
+                print("   📝 Configuration needed - running interactive agentcore configure...")
+                print("   💡 You will be prompted for configuration options.")
+                print("   💡 Recommended: Accept all defaults by pressing Enter for each prompt.")
+                print()
+                
+                # Run interactive agentcore configure
+                try:
+                    print("   🔧 Running: agentcore configure with required parameters...")
+                    print("   📝 Please respond to the prompts below:")
+                    print("   💡 Tip: Press Enter to accept defaults for most options")
+                    print("-" * 60)
+                    
+                    # Run the configure command with required parameters but allow interactive input for choices
+                    result = subprocess.run(['agentcore', 'configure', '--entrypoint', agent_file], 
+                                          capture_output=False,  # Allow interactive input
+                                          text=True)
+                    
+                    if result.returncode == 0:
+                        print("   ✅ Configuration completed successfully!")
+                    else:
+                        print(f"   ❌ Configuration failed with exit code: {result.returncode}")
+                        return False
+                        
+                except subprocess.CalledProcessError as e:
+                    print(f"   ❌ Configuration failed: {e}")
+                    return False
+                except Exception as e:
+                    print(f"   ❌ Unexpected error during configuration: {e}")
+                    return False
             
             # List current directory to debug
             print("   📁 Current directory contents:")
@@ -278,9 +313,11 @@ if __name__ == "__main__":
                 return False
             
             # Deploy the agent directly to cloud
-            print("   Deploying agent...")
             print("   🚀 Deploying to cloud...")
             try:
+                print("   📝 Running: agentcore launch")
+                print("   💡 This may take several minutes. Please wait...")
+                
                 result = subprocess.run(['agentcore', 'launch'], 
                                       capture_output=True, text=True, timeout=600)  # Increased timeout for cloud deployment
                 if result.returncode == 0:
@@ -400,7 +437,7 @@ def main():
         # Create strands agent file
         agent_file = deployer.create_strands_agent_file()
         
-        # Deploy agent using the updated non-interactive approach
+        # Deploy agent using the interactive approach
         if not deployer.deploy_agent(agent_file, None):
             print("❌ Agent deployment failed. Exiting.")
             return

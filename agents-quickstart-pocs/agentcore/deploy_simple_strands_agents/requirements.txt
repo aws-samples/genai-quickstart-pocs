@@ -6,6 +6,7 @@ requests>=2.25.0
 
 # Strands Agents framework
 strands-agents>=1.4.0
+strands-agents-tools>=0.2.0
 
 # Amazon Bedrock AgentCore Runtime
 bedrock-agentcore>=0.1.2
