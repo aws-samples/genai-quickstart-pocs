@@ -6,15 +6,31 @@ import os
 
 def lambda_handler(event, context):
     """
-    Unified PE Data Service MCP Handler
-    Handles all data operations: investors, investments, fund_mapping, redemption_requests, fund_documents
+    PE Data Service MCP Handler
+    Handles CSV data operations: investors, investments, fund_mapping, redemption_requests
     """
     
+    # Debug logging
+    print(f"DEBUG: Received event: {json.dumps(event)}")
+    
     try:
-        # Parse the MCP request
+        # Handle direct format from MCP Gateway: {"operation": "get_investors", "filters": {...}}
+        if 'operation' in event:
+            print("DEBUG: Using direct MCP Gateway format")
+            result = handle_data_request(event)
+            return {
+                'statusCode': 200,
+                'body': json.dumps({
+                    'content': [{'type': 'text', 'text': json.dumps(result, indent=2)}]
+                })
+            }
+        
+        # Handle MCP Protocol format for direct testing
         body = json.loads(event.get('body', '{}'))
         method = body.get('method')
         params = body.get('params', {})
+        
+        print(f"DEBUG: Method: {method}, Params: {params}")
         
         if method == 'tools/list':
             return {
@@ -22,14 +38,14 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     'tools': [
                         {
-                            'name': 'pe_data_service',
-                            'description': 'Unified PE data service for all fund, investor, and document operations',
+                            'name': 'data_service',
+                            'description': 'Query PE fund data from CSV databases',
                             'inputSchema': {
                                 'type': 'object',
                                 'properties': {
                                     'operation': {
                                         'type': 'string',
-                                        'enum': ['get_investors', 'get_investments', 'get_fund_mapping', 'get_redemption_requests', 'get_fund_document'],
+                                        'enum': ['get_investors', 'get_investments', 'get_fund_mapping', 'get_redemption_requests'],
                                         'description': 'The data operation to perform'
                                     },
                                     'filters': {
@@ -41,13 +57,13 @@ def lambda_handler(event, context):
                                             'fund_name': {'type': 'string'},
                                             'investor_class': {'type': 'string'},
                                             'investor_name': {'type': 'string'},
-                                            'status': {'type': 'string'},
-                                            'min_amount': {'type': 'number'},
-                                            'max_amount': {'type': 'number'},
                                             'min_net_worth': {'type': 'number'},
                                             'max_net_worth': {'type': 'number'},
+                                            'min_amount': {'type': 'number'},
+                                            'max_amount': {'type': 'number'},
                                             'start_date': {'type': 'string'},
                                             'end_date': {'type': 'string'},
+                                            'status': {'type': 'string'},
                                             'limit': {'type': 'integer', 'default': 100}
                                         }
                                     }
@@ -63,8 +79,8 @@ def lambda_handler(event, context):
             tool_name = params.get('name')
             arguments = params.get('arguments', {})
             
-            if tool_name == 'pe_data_service':
-                result = handle_pe_data_request(arguments)
+            if tool_name == 'data_service':
+                result = handle_data_request(arguments)
                 return {
                     'statusCode': 200,
                     'body': json.dumps({
@@ -84,50 +100,23 @@ def lambda_handler(event, context):
             }
             
     except Exception as e:
+        print(f"ERROR: {str(e)}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
 
-def handle_pe_data_request(arguments):
-    """Handle the unified PE data request"""
+def handle_data_request(arguments):
+    """Handle the data request"""
     operation = arguments.get('operation')
     filters = arguments.get('filters', {})
     
-    if operation == 'get_fund_document':
-        return get_fund_document(filters)
-    elif operation in ['get_investors', 'get_investments', 'get_fund_mapping', 'get_redemption_requests']:
+    print(f"DEBUG: Operation: {operation}, Filters: {filters}")
+    
+    if operation in ['get_investors', 'get_investments', 'get_fund_mapping', 'get_redemption_requests']:
         return get_csv_data(operation, filters)
     else:
         raise ValueError(f"Unknown operation: {operation}")
-
-def get_fund_document(filters):
-    """Get fund document from S3"""
-    fund_name = filters.get('fund_name')
-    investor_class = filters.get('investor_class', 'ClassA')
-    
-    if not fund_name:
-        raise ValueError("fund_name is required for get_fund_document operation")
-    
-    bucket = os.environ.get('FUND_DOCUMENTS_BUCKET')
-    if not bucket:
-        raise ValueError("FUND_DOCUMENTS_BUCKET environment variable not set")
-    
-    s3_client = boto3.client('s3', region_name='us-east-1')
-    s3_key = f"fund_documents/{fund_name}_{investor_class}.txt"
-    
-    try:
-        response = s3_client.get_object(Bucket=bucket, Key=s3_key)
-        document_content = response['Body'].read().decode('utf-8')
-        
-        return {
-            'operation': 'get_fund_document',
-            'fund_name': fund_name,
-            'investor_class': investor_class,
-            'document': document_content
-        }
-    except s3_client.exceptions.NoSuchKey:
-        raise ValueError(f"Document not found: {s3_key} in bucket {bucket}")
 
 def get_csv_data(operation, filters):
     """Get CSV data from S3"""
@@ -150,7 +139,7 @@ def get_csv_data(operation, filters):
         response = s3_client.get_object(Bucket=bucket, Key=s3_key)
         csv_content = response['Body'].read().decode('utf-8')
         
-        # Parse CSV
+        # Parse CSV and apply filters
         csv_reader = csv.DictReader(io.StringIO(csv_content))
         data = []
         limit = filters.get('limit', 100)
@@ -165,7 +154,8 @@ def get_csv_data(operation, filters):
             'operation': operation,
             'total_found': len(data),
             'filters_applied': filters,
-            'data': data
+            'data': data,
+            'source': f's3://{bucket}/{s3_key}'
         }
         
     except s3_client.exceptions.NoSuchKey:

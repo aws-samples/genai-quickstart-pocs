@@ -11,17 +11,24 @@ import os
 from bedrock_agentcore_starter_toolkit.operations.gateway.client import GatewayClient
 import logging
 
-def get_lambda_arn():
-    """Dynamically discover the pe-data-service Lambda ARN"""
+def get_lambda_arns():
+    """Dynamically discover both Lambda ARNs"""
     lambda_client = boto3.client('lambda', region_name='us-east-1')
     
-    try:
-        response = lambda_client.get_function(FunctionName='pe-data-service')
-        return response['Configuration']['FunctionArn']
-    except lambda_client.exceptions.ResourceNotFoundException:
-        print("❌ Lambda function 'pe-data-service' not found!")
-        print("Please run deploy_lambdas.py first")
-        return None
+    arns = {}
+    functions = ['fund-document-service', 'data-service']
+    
+    for func_name in functions:
+        try:
+            response = lambda_client.get_function(FunctionName=func_name)
+            arns[func_name] = response['Configuration']['FunctionArn']
+            print(f"✅ Found {func_name}: {arns[func_name]}")
+        except lambda_client.exceptions.ResourceNotFoundException:
+            print(f"❌ Lambda function '{func_name}' not found!")
+            print("Please run deploy_lambdas.py first")
+            return None
+    
+    return arns
 
 def main():
     # Check for AWS credentials
@@ -43,12 +50,14 @@ def main():
     except secrets_client.exceptions.ResourceNotFoundException:
         pass  # Good, no existing gateway
     
-    # Get Lambda ARN
-    lambda_arn = get_lambda_arn()
-    if not lambda_arn:
+    # Get Lambda ARNs
+    lambda_arns = get_lambda_arns()
+    if not lambda_arns:
         return
     
-    print(f"✅ Found Lambda function: {lambda_arn}")
+    print(f"✅ Found Lambda functions:")
+    for name, arn in lambda_arns.items():
+        print(f"   {name}: {arn}")
     
     # Setup the client
     client = GatewayClient(region_name="us-east-1")
@@ -82,22 +91,49 @@ def main():
         })
     )
     
-    print("🔧 Creating Lambda target...")
+    print("🔧 Creating Lambda targets...")
     
-    # Create Lambda target with simplified MCP tool schema
-    target_payload = {
-        "lambdaArn": lambda_arn,
+    # Create Fund Document Service target
+    doc_target_payload = {
+        "lambdaArn": lambda_arns['fund-document-service'],
         "toolSchema": {
             "inlinePayload": [
                 {
-                    "name": "pe_data_service",
-                    "description": "Unified PE data service for all fund, investor, and document operations",
+                    "name": "fund_document_service",
+                    "description": "Retrieve fund documents from S3 storage",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "fund_name": {
+                                "type": "string",
+                                "description": "Fund name (e.g., FUND001, Strategic Growth Fund 1)"
+                            },
+                            "investor_class": {
+                                "type": "string",
+                                "description": "Investor class: ClassA, ClassB, or Institutional"
+                            }
+                        },
+                        "required": ["fund_name"]
+                    }
+                }
+            ]
+        }
+    }
+    
+    # Create Data Service target
+    data_target_payload = {
+        "lambdaArn": lambda_arns['data-service'],
+        "toolSchema": {
+            "inlinePayload": [
+                {
+                    "name": "data_service",
+                    "description": "Query PE fund data from CSV databases",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "operation": {
                                 "type": "string",
-                                "description": "The data operation to perform: get_investors, get_investments, get_fund_mapping, get_redemption_requests, or get_fund_document"
+                                "description": "Operation: get_investors, get_investments, get_fund_mapping, or get_redemption_requests"
                             },
                             "filters": {
                                 "type": "object",
@@ -115,7 +151,7 @@ def main():
                                     "max_net_worth": {"type": "number"},
                                     "start_date": {"type": "string"},
                                     "end_date": {"type": "string"},
-                                    "limit": {"type": "integer"}
+                                    "limit": {"type": "number"}
                                 }
                             }
                         },
@@ -126,24 +162,36 @@ def main():
         }
     }
     
+    # Create both targets
     try:
-        lambda_target = client.create_mcp_gateway_target(
+        doc_target = client.create_mcp_gateway_target(
             gateway=gateway,
-            name='pe-data-service',
+            name='fund-document-service',
             target_type="lambda",
-            target_payload=target_payload,
+            target_payload=doc_target_payload,
             credentials=None,
         )
-        print("✅ Created Lambda target: pe-data-service")
+        print("✅ Created Lambda target: fund-document-service")
+        
+        data_target = client.create_mcp_gateway_target(
+            gateway=gateway,
+            name='data-service',
+            target_type="lambda",
+            target_payload=data_target_payload,
+            credentials=None,
+        )
+        print("✅ Created Lambda target: data-service")
         
     except Exception as e:
-        print(f"⚠️  Error creating Lambda target: {e}")
-        print("You can create it later with gateway_update.py")
+        print(f"⚠️  Error creating Lambda targets: {e}")
+        print("You can create them later with gateway_update.py")
     
     print(f"\n🎉 Gateway deployment complete!")
     print(f"Gateway ID: {gateway['gatewayId']}")
     print(f"Gateway URL: {gateway['gatewayUrl']}")
-    print(f"Lambda ARN: {lambda_arn}")
+    print(f"Lambda ARNs:")
+    for name, arn in lambda_arns.items():
+        print(f"  {name}: {arn}")
     print(f"\n📝 Next steps:")
     print("1. Test with: AWS_PROFILE=your-profile uv run test_mcp_gateway.py")
     print("2. Use gateway_update.py for future updates")

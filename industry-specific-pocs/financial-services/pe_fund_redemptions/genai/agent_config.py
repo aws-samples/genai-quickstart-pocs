@@ -40,7 +40,8 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
                          personality = 'basic',
                          session_id = None,
                          s3_bucket = None,
-                         s3_prefix = None):
+                         s3_prefix = None,
+                         tools = None):
     """
     Create and return a configured Strands agent instance.
     
@@ -110,17 +111,25 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         print("Using default SlidingWindowConversationManager (no S3 session persistence)")
 
     # Create and return the agent
-    tools_list = [pull_fund_document, pull_s3_fund_mapping, pull_s3_investments, pull_s3_investors, pull_s3_redemption_requests]
-    
-    # Add knowledge base tool for analyst personality
-    if personality == 'analyst':
-        tools_list.append(knowledge_base_retrieve)
-    
+    if tools is not None:
+        # Use provided tools (e.g., from MCP client)
+        print(f"Using provided tools: {[getattr(tool, 'tool_name', str(tool)) for tool in tools]}")
+        tools_list = tools
+    else:
+        # Use local tools for other personalities
+        print("Using local tools")
+        tools_list = [pull_fund_document, pull_s3_fund_mapping, pull_s3_investments, pull_s3_investors, pull_s3_redemption_requests]
+        
+        # Add knowledge base tool for analyst personality
+        if personality == 'analyst':
+            tools_list.append(knowledge_base_retrieve)
+
+    # Create agent
     strands_agent = Agent(
         model=bedrock_model,
         system_prompt=system_prompt,
         conversation_manager=conversation_manager,
-        session_manager=session_manager,  # Add session manager
+        session_manager=session_manager,
         tools=tools_list
     )
     

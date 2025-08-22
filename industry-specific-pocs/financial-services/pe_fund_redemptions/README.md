@@ -149,7 +149,7 @@ uv run agent_invoke.py
 
 If you have made it this far, it is now time to add an additional optional feature. Configuring your tools to run as a unified MCP service. To do this, we setup a single Lambda function that handles all data operations and is available as a standalone tool for other Agents to use.
 
-**New Unified Architecture**: We've moved from multiple MCP servers to a single unified data service that handles all operations through one tool with operation parameters.
+**New Two-Tool Architecture**: We've moved from a single unified tool to two specialized MCP services - one for fund documents and one for data operations - providing cleaner separation of concerns.
 
 Lets get Started...
 
@@ -172,10 +172,10 @@ Follow the instructions in the MCP configuration README:
 # Navigate to genai directory for uv commands
 cd genai
 
-# Deploy unified Lambda function (auto-discovers S3 bucket)
+# Deploy Lambda functions (auto-discovers S3 bucket)
 uv run ../agent_core_config/deploy_lambdas.py
 
-# Create MCP Gateway with unified target
+# Create MCP Gateway with two targets
 uv run ../agent_core_config/gateway_deploy.py
 # OR
 uv run ../agent_core_config/gateway_update.py
@@ -273,10 +273,11 @@ Embedded directly in the AI agent for fast execution:
 
 #### **MCP-Based Tools**
 Deployed as Lambda functions and accessed via AgentCore Gateway to demonstrate new MCP capabilities:
-- **Unified Data Service**: Single `pe_data_service` tool with operation parameter
-- **All Operations**: `get_investors`, `get_investments`, `get_fund_mapping`, `get_redemption_requests`, `get_fund_document`
+- **Fund Document Service**: `fund_document_service` tool for retrieving fund documents from S3
+- **Data Service**: `data_service` tool with operation parameters for CSV data queries
+- **Operations Available**: `get_investors`, `get_investments`, `get_fund_mapping`, `get_redemption_requests`
 - **S3-Based**: Reads from S3 document storage and CSV data files
-- **Consistent Interface**: Same functionality as local tools but via MCP gateway
+- **Clean Interface**: Simplified two-tool approach for better agent understanding
 
 This dual approach showcases both traditional embedded tools and the new Model Context Protocol (MCP) integration capabilities of AgentCore, providing flexibility in tool deployment and execution patterns.
 
@@ -300,8 +301,8 @@ Specialized for redemption processing with:
 - Detailed recommendation generation with supporting evidence
 
 ### **MCP PE Manager** (`mcp`)
-Same functionality as PE Manager but using unified MCP service:
-- Single `pe_data_service` tool with operation parameters
+Same functionality as PE Manager but using MCP Gateway services:
+- Two MCP tools: `fund_document_service` and `data_service`
 - All data operations through MCP gateway
 - Demonstrates Model Context Protocol capabilities
 

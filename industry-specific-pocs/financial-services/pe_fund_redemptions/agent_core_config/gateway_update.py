@@ -11,17 +11,24 @@ import os
 from bedrock_agentcore_starter_toolkit.operations.gateway.client import GatewayClient
 import logging
 
-def get_lambda_arn():
-    """Dynamically discover the pe-data-service Lambda ARN"""
+def get_lambda_arns():
+    """Dynamically discover both Lambda ARNs"""
     lambda_client = boto3.client('lambda', region_name='us-east-1')
     
-    try:
-        response = lambda_client.get_function(FunctionName='pe-data-service')
-        return response['Configuration']['FunctionArn']
-    except lambda_client.exceptions.ResourceNotFoundException:
-        print("❌ Lambda function 'pe-data-service' not found!")
-        print("Please run deploy_lambdas.py first")
-        return None
+    arns = {}
+    functions = ['fund-document-service', 'data-service']
+    
+    for func_name in functions:
+        try:
+            response = lambda_client.get_function(FunctionName=func_name)
+            arns[func_name] = response['Configuration']['FunctionArn']
+            print(f"✅ Found {func_name}: {arns[func_name]}")
+        except lambda_client.exceptions.ResourceNotFoundException:
+            print(f"❌ Lambda function '{func_name}' not found!")
+            print("Please run deploy_lambdas.py first")
+            return None
+    
+    return arns
 
 def get_existing_gateway_config():
     """Get existing gateway configuration from Secrets Manager"""

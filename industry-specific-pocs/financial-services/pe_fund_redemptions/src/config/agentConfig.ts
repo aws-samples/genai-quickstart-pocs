@@ -46,7 +46,7 @@ export const PERSONALITY_OPTIONS: PersonalityOption[] = [
   },
   {
     id: 'analyst',
-    name: 'PR Fund Analyst',
+    name: 'PE Fund Analyst',
     description: 'Not redemptions focused - returns information on the PE Funds/Inestors'
   },
 ];
