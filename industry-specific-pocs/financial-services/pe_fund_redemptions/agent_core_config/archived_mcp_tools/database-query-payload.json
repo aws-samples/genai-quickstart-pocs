@@ -1,0 +1,79 @@
+{
+    "lambdaArn": "arn:aws:lambda:us-east-1:782319166618:function:database-query",
+    "toolSchema": {
+        "inlinePayload": [
+            {
+                "name": "get_fund_mapping",
+                "description": "Get fund mapping data with optional filtering by field and value",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "type": "string",
+                            "description": "Column name to filter by (e.g., fund_id, fund_name, investor_class)"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value to search for (partial match)"
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "get_investments",
+                "description": "Get investment records with optional filtering by field and value",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "type": "string",
+                            "description": "Column name to filter by (e.g., investor_id, fund_id, investment_amount)"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value to search for (partial match)"
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "get_investors",
+                "description": "Get investor information with optional filtering by field and value",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "type": "string",
+                            "description": "Column name to filter by (e.g., investor_name, email, estimated_net_worth)"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value to search for (partial match)"
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "get_redemption_requests",
+                "description": "Get redemption requests with optional filtering by field and value",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "type": "string",
+                            "description": "Column name to filter by (e.g., status, investor_id, fund_id)"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value to search for (partial match)"
+                        }
+                    },
+                    "required": []
+                }
+            }
+        ]
+    }
+}
