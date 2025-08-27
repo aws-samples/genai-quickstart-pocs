@@ -26,8 +26,9 @@
 #   ./deploy.sh [environment] [region]
 #
 # EXAMPLES:
-#   ./deploy.sh poc us-east-1 YOUR_API_KEY
-#   ./deploy.sh dev us-west-2
+#   export NEWSAPI_KEY=your_key
+#   export FRED_API_KEY=your_key
+#   ./deploy.sh poc us-east-1 
 #
 # PREREQUISITES:
 # - AWS CLI configured with appropriate permissions
@@ -35,8 +36,7 @@
 
 #
 # ESTIMATED DEPLOYMENT TIME: 10-15 minutes
-# ESTIMATED MONTHLY COST: $85-100 (POC configuration)
-#
+
 #############################################################################
 
 # Exit on any error to prevent partial deployments

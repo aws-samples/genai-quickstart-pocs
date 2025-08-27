@@ -685,6 +685,29 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
   }
 });
 
+// Reports endpoint - returns financial reports for a ticker (used by rerun AI functionality)
+app.get('/api/reports/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
+  try {
+    const { ticker } = req.params;
+    const financials = await assistant.getFinancialHistory(ticker);
+    
+    // Transform the data to match what the frontend expects
+    const reports = financials.map(financial => ({
+      quarter: financial.quarter,
+      year: financial.year,
+      revenue: financial.revenue,
+      netIncome: financial.netIncome,
+      eps: financial.eps,
+      reportDate: financial.reportDate || financial.timestamp
+    }));
+    
+    res.json(reports);
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // New endpoint to fetch and analyze financial data with enhanced timeout handling
 app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
   console.log(`🚀 FETCH FINANCIALS ENDPOINT HIT - Ticker: ${req.params.ticker}`);
