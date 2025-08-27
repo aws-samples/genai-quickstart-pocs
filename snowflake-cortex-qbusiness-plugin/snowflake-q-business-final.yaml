@@ -1,0 +1,424 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Snowflake Q Business Plugin with existing resources and comprehensive configuration'
+
+Parameters:
+  ExistingSecretsManagerArn:
+    Type: String
+    Description: ARN of the existing Secrets Manager secret containing Snowflake OAuth credentials
+    
+  ExistingIDCInstanceArn:
+    Type: String
+    Description: ARN of the existing IAM Identity Center instance
+    
+  ApplicationName:
+    Type: String
+    Description: Name for the Q Business application
+    Default: SnowflakeCortexApp
+
+  CortexSearchServiceName:
+    Type: String
+    Description: Name of the Snowflake Cortex Search service
+    Default: PUMP_SEARCH_SERVICE
+
+  PluginDisplayName:
+    Type: String
+    Description: Display name for the plugin
+    Default: Snowflake-Cortex-Search
+
+Resources:
+  # IAM Role for Q Business Application
+  QBusinessApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-QBApp'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: qbusiness.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonQBusinessServiceRolePolicy
+
+  # Q Business Application with comprehensive configuration
+  QBusinessApplication:
+    Type: AWS::QBusiness::Application
+    Properties:
+      DisplayName: !Sub '${ApplicationName}-Application'
+      Description: Q Business Application for Snowflake Cortex Search with comprehensive LLM configuration
+      RoleArn: !GetAtt QBusinessApplicationRole.Arn
+      IdentityCenterInstanceArn: !Ref ExistingIDCInstanceArn
+      # Enable all available features
+      AttachmentsConfiguration:
+        AttachmentsControlMode: ENABLED
+      PersonalizationConfiguration:
+        PersonalizationControlMode: ENABLED
+      QAppsConfiguration:
+        QAppsControlMode: ENABLED
+      # Enable automatic subscriptions with Pro tier
+      AutoSubscriptionConfiguration:
+        AutoSubscribe: ENABLED
+        DefaultSubscriptionType: Q_BUSINESS
+
+  # Wait for Q Business Application to be active
+  WaitForQBusinessApplication:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref WaitHandle
+      Timeout: '600'
+      Count: 0
+
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  # Web Experience
+  QBusinessWebExperience:
+    Type: AWS::QBusiness::WebExperience
+    DependsOn: WaitForQBusinessApplication
+    Properties:
+      ApplicationId: !Ref QBusinessApplication
+      Title: Snowflake Cortex Search
+      Subtitle: Search your Snowflake data using natural language
+      SamplePromptsControlMode: ENABLED
+
+  # IAM Role for Q Business Plugin
+  QBusinessPluginRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-QBPlugin'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: qbusiness.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: QBusinessPluginPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: 
+                  - !Ref ExistingSecretsManagerArn
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${AWS::StackName}-plugin-oauth-secret*'
+
+  # Lambda Function to Read Secret Values
+  SecretReaderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-secret-reader'
+      Runtime: python3.13
+      Handler: index.lambda_handler
+      Role: !GetAtt QBusinessPluginRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import cfnresponse
+          
+          def lambda_handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+                  
+                  secret_arn = event['ResourceProperties']['SecretArn']
+                  secrets_client = boto3.client('secretsmanager')
+                  
+                  response = secrets_client.get_secret_value(SecretArn=secret_arn)
+                  secret_data = json.loads(response['SecretString'])
+                  
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                      'Account': secret_data.get('account', ''),
+                      'Warehouse': secret_data.get('warehouse', ''),
+                      'Database': secret_data.get('database', ''),
+                      'Schema': secret_data.get('schema', ''),
+                      'Role': secret_data.get('role', ''),
+                      'ClientId': secret_data.get('client_id', ''),
+                      'ClientSecret': secret_data.get('client_secret', ''),
+                      'RefreshToken': secret_data.get('refresh_token', '')
+                  })
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {}, str(e))
+
+  # Custom Resource to Read Secret
+  SecretReader:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt SecretReaderFunction.Arn
+      SecretArn: !Ref ExistingSecretsManagerArn
+
+  # Plugin OAuth Secret
+  PluginOAuthSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}-plugin-oauth-secret'
+      Description: OAuth credentials for Snowflake Q Business Plugin
+      SecretString: !Sub |
+        {
+          "client_id": "${SecretReader.ClientId}",
+          "client_secret": "${SecretReader.ClientSecret}",
+          "refresh_token": "${SecretReader.RefreshToken}"
+        }
+
+  # Snowflake Cortex Search Plugin
+  SnowflakeCortexPlugin:
+    Type: AWS::QBusiness::Plugin
+    DependsOn: WaitForQBusinessApplication
+    Properties:
+      ApplicationId: !Ref QBusinessApplication
+      DisplayName: !Ref PluginDisplayName
+      Type: SERVICE_NOW
+      AuthConfiguration:
+        OAuth2ClientCredentialConfiguration:
+          SecretArn: !Ref PluginOAuthSecret
+          RoleArn: !GetAtt QBusinessPluginRole.Arn
+      ServerUrl: !Sub 'https://${SecretReader.Account}.snowflakecomputing.com'
+      CustomPluginConfiguration:
+        Description: Snowflake Cortex Search integration for Q Business
+        ApiSchema: !Sub |
+          {
+            "openapi": "3.0.0",
+            "info": {
+              "title": "Snowflake Cortex Search API",
+              "version": "1.0.0",
+              "description": "API for searching Snowflake data using Cortex Search"
+            },
+            "servers": [
+              {
+                "url": "https://${SecretReader.Account}.snowflakecomputing.com"
+              }
+            ],
+            "paths": {
+              "/api/v2/statements": {
+                "post": {
+                  "summary": "Execute Snowflake Cortex Search query",
+                  "description": "Search for information using Snowflake Cortex Search service",
+                  "operationId": "searchCortex",
+                  "requestBody": {
+                    "required": true,
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "statement": {
+                              "type": "string",
+                              "description": "SQL statement to execute Cortex Search"
+                            },
+                            "warehouse": {
+                              "type": "string",
+                              "default": "${SecretReader.Warehouse}"
+                            },
+                            "database": {
+                              "type": "string", 
+                              "default": "${SecretReader.Database}"
+                            },
+                            "schema": {
+                              "type": "string",
+                              "default": "${SecretReader.Schema}"
+                            },
+                            "role": {
+                              "type": "string",
+                              "default": "${SecretReader.Role}"
+                            }
+                          },
+                          "required": ["statement"]
+                        },
+                        "example": {
+                          "statement": "SELECT SNOWFLAKE.CORTEX.SEARCH_PREVIEW('${CortexSearchServiceName}', 'pump maintenance') as results;",
+                          "warehouse": "${SecretReader.Warehouse}",
+                          "database": "${SecretReader.Database}",
+                          "schema": "${SecretReader.Schema}",
+                          "role": "${SecretReader.Role}"
+                        }
+                      }
+                    }
+                  },
+                  "responses": {
+                    "200": {
+                      "description": "Successful search response",
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "type": "object",
+                            "properties": {
+                              "resultSetMetaData": {
+                                "type": "object"
+                              },
+                              "data": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array"
+                                }
+                              },
+                              "code": {
+                                "type": "string"
+                              },
+                              "statementStatusUrl": {
+                                "type": "string"
+                              },
+                              "requestId": {
+                                "type": "string"
+                              },
+                              "sqlState": {
+                                "type": "string"
+                              },
+                              "statementHandle": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "createdOn": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "security": [
+                    {
+                      "OAuth2": ["session:role:${SecretReader.Role}"]
+                    }
+                  ]
+                }
+              }
+            },
+            "components": {
+              "securitySchemes": {
+                "OAuth2": {
+                  "type": "oauth2",
+                  "flows": {
+                    "clientCredentials": {
+                      "tokenUrl": "https://${SecretReader.Account}.snowflakecomputing.com/oauth/token-request",
+                      "scopes": {
+                        "session:role:${SecretReader.Role}": "Access to Snowflake with specified role"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ApiSchemaType: OPEN_API_3
+
+Outputs:
+  QBusinessApplicationId:
+    Description: Q Business Application ID
+    Value: !Ref QBusinessApplication
+    Export:
+      Name: !Sub '${AWS::StackName}-ApplicationId'
+
+  QBusinessWebExperienceUrl:
+    Description: Q Business Web Experience URL
+    Value: !GetAtt QBusinessWebExperience.DefaultEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-WebExperienceUrl'
+
+  PluginId:
+    Description: Snowflake Cortex Search Plugin ID
+    Value: !Sub '${QBusinessApplication}|${SnowflakeCortexPlugin}'
+    Export:
+      Name: !Sub '${AWS::StackName}-PluginId'
+
+  PluginArn:
+    Description: Snowflake Cortex Search Plugin ARN
+    Value: !Sub 'arn:aws:qbusiness:${AWS::Region}:${AWS::AccountId}:application/${QBusinessApplication}/plugin/${SnowflakeCortexPlugin}'
+    Export:
+      Name: !Sub '${AWS::StackName}-PluginArn'
+
+  OAuthCredentialsArn:
+    Description: OAuth credentials secret ARN
+    Value: !Ref PluginOAuthSecret
+    Export:
+      Name: !Sub '${AWS::StackName}-OAuthCredentialsArn'
+
+  SnowflakeAccountUrl:
+    Description: Snowflake account URL
+    Value: !Sub 'https://${SecretReader.Account}.snowflakecomputing.com'
+    Export:
+      Name: !Sub '${AWS::StackName}-SnowflakeAccountUrl'
+
+  LLMConfigurationInstructions:
+    Description: Manual LLM configuration instructions
+    Value: !Sub 
+      - |
+        🤖 LLM CONFIGURATION REQUIRED (MANUAL STEPS):
+        
+        ⚠️  The following settings must be enabled manually in the AWS Console:
+        
+        1. ✅ "Allow end users to send queries directly to the LLM" (You've enabled this)
+        2. ⚠️  "Allow Amazon Q to fall back to LLM knowledge" (Enable this for better responses)
+        
+        📍 To enable the fallback setting:
+        1. Go to: https://console.aws.amazon.com/qbusiness/home?region=${AWS::Region}#/applications/${ApplicationId}
+        2. Click "Edit" or go to "Settings" tab
+        3. Look for "Allow Amazon Q to fall back to LLM knowledge"
+        4. Enable this setting and save changes
+        
+        💡 Benefits:
+        - Users can ask general questions even without Snowflake data
+        - Q Business will use AI knowledge when your data doesn't contain the answer
+        - Better user experience with comprehensive responses
+        
+        🔧 These settings are console-only and not available via CloudFormation/API yet.
+      - ApplicationId: !Ref QBusinessApplication
+    Export:
+      Name: !Sub '${AWS::StackName}-LLMInstructions'
+
+  DeploymentSummary:
+    Description: Complete deployment summary with next steps
+    Value: !Sub 
+      - |
+        🎉 DEPLOYMENT COMPLETE!
+        
+        🌐 Web Interface: ${WebUrl}
+        🔌 Plugin: ${PluginName} (${PluginId})
+        🔐 OAuth Secret: ${OAuthArn}
+        
+        📋 Next Steps:
+        1. Access the Q Business web interface using the URL above
+        2. Sign in with your IAM Identity Center user
+        3. Enable "Allow Amazon Q to fall back to LLM knowledge" in console (see LLM Configuration output)
+        4. Test the Snowflake Cortex Search plugin
+        5. Ask questions about pump maintenance and repair
+        
+        ✅ CONFIGURED FEATURES:
+        - ✅ File uploads: Enabled
+        - ✅ Personalization: Enabled  
+        - ✅ Q Apps: Enabled
+        - ✅ Auto subscriptions: Enabled (Q Business Pro tier)
+        - ✅ Sample prompts: Enabled
+        
+        🤖 LLM CONFIGURATION:
+        - ✅ Direct LLM queries: Enabled (manual configuration)
+        - ⚠️  LLM knowledge fallback: Requires manual configuration
+        
+        📊 Snowflake Configuration:
+        - Account: ${Account}
+        - Database: ${Database}
+        - Schema: ${Schema}
+        - Cortex Service: ${CortexService}
+      - WebUrl: !GetAtt QBusinessWebExperience.DefaultEndpoint
+        PluginName: !Ref PluginDisplayName
+        PluginId: !Sub '${QBusinessApplication}|${SnowflakeCortexPlugin}'
+        OAuthArn: !Ref PluginOAuthSecret
+        Account: !GetAtt SecretReader.Account
+        Database: !GetAtt SecretReader.Database
+        Schema: !GetAtt SecretReader.Schema
+        CortexService: !Ref CortexSearchServiceName
+    Export:
+      Name: !Sub '${AWS::StackName}-DeploymentSummary'
