@@ -1,0 +1,15 @@
+name: emr_log_analysis
+description: Prompt for comprehensive EMR log analysis with AWS Documentation
+prompt: |
+  Analyze the provided EMR logs and produce an assessment with the following structure:
+
+  **KEY FINDINGS:**
+  - List the most important issues found in the logs
+  - Highlight error patterns or recurring problems
+
+  **ROOT CAUSE ANALYSIS:**
+  - For each issue, explain the most likely root cause
+
+  **RECOMMENDATIONS:**
+  - Provide actionable recommendations for each issue
+  - Include specific configuration changes when applicable
