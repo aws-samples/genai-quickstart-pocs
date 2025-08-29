@@ -1,0 +1,19 @@
+analysis: |
+    Given the following question: {question}
+    And this context about the data: {context}
+    Provide a detailed analysis of the data.
+
+sql_generation: |
+    Given the following question: {question}
+    And this context about the database schema: {context}
+    
+    Generate a SQL query for Amazon Redshift that will answer the question.
+    
+    IMPORTANT RULES:
+    - Use the NORTHWIND schema: northwind.table_name
+    - Do NOT use "USE DATABASE" statements (not supported in Redshift)
+    - Available tables: northwind.customers, northwind.orders, northwind.products, northwind.order_details, northwind.categories, northwind.suppliers, northwind.employees, northwind.shippers
+    - Use proper Redshift SQL syntax
+    - Return only the SQL query without explanations
+    
+    The query should be efficient and follow best practices.
