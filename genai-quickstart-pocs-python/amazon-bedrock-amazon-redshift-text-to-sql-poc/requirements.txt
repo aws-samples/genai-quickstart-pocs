@@ -1,0 +1,9 @@
+streamlit>=1.24.0
+pandas>=1.5.3
+numpy>=1.24.3
+boto3>=1.28.0
+psycopg2-binary>=2.9.0
+faiss-cpu>=1.7.4
+python-dotenv>=1.0.0
+
+requests>=2.31.0
