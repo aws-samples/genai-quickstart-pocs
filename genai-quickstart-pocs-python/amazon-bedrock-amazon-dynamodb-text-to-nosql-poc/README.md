@@ -1,5 +1,5 @@
 # Amazon Bedrock & Amazon DynamoDB Sales Analyst POC (Text to NoSQL)
-**Authors: Shashi Makkapati, Senthil Kamala Rathinam, Jacob Scheatzle**
+**Authors: Senthil Kamala Rathinam, Shashi Makkapati, Jacob Scheatzle**
 
 ## Overview of Solution
 
