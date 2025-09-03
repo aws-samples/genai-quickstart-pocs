@@ -1,4 +1,5 @@
 # Amazon Bedrock & Amazon Redshift Sales Analyst POC (Text to SQL)
+**Authors: Shashi Makkapati, Senthil Kamala Rathinam, Jacob Scheatzle**
 
 ## Overview of Solution
 
