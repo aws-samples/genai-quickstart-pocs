@@ -98,7 +98,7 @@ When a user interacts with the POC, the flow is as follows:
     python3 setup.py
     ```
 
-6. Open the `.env` file in the root folder. Replace the placeholders with your actual AWS credentials and save the file:
+6. Create a `.env` file in the root folder. Replace the placeholders with your actual AWS credentials and save the file:
 
     ```bash
     # AWS Configuration (Required)
