@@ -2,7 +2,7 @@ docx2txt
 boto3
 botocore
 langchain>=0.3.0, <0.4.0
-langchain-community==0.3.3
+langchain-community==0.3.27
 langchain-aws
 python-dotenv
 streamlit
