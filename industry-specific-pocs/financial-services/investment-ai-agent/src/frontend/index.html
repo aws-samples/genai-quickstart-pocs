@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment AI Agent - Request Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Investment AI Agent</h1>
+            <p>Generate personalized investment ideas powered by AI</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Request Form -->
+            <div id="request-form-container" class="form-container">
+                <h2>Investment Idea Request</h2>
+                <form id="investment-request-form" class="investment-form">
+                    <!-- Basic Parameters -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-cog"></i> Basic Parameters</h3>
+                        
+                        <div class="form-group">
+                            <label for="investment-horizon">Investment Horizon *</label>
+                            <select id="investment-horizon" name="investmentHorizon" required>
+                                <option value="">Select investment horizon</option>
+                                <option value="intraday">Intraday</option>
+                                <option value="short-term">Short-term (&lt; 1 year)</option>
+                                <option value="medium-term">Medium-term (1-5 years)</option>
+                                <option value="long-term">Long-term (&gt; 5 years)</option>
+                                <option value="flexible">Flexible</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="risk-tolerance">Risk Tolerance *</label>
+                            <select id="risk-tolerance" name="riskTolerance" required>
+                                <option value="">Select risk tolerance</option>
+                                <option value="very-conservative">Very Conservative</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="aggressive">Aggressive</option>
+                                <option value="very-aggressive">Very Aggressive</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="investment-amount">Investment Amount</label>
+                            <div class="input-group">
+                                <select id="currency" name="currency">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="JPY">JPY</option>
+                                </select>
+                                <input type="number" id="investment-amount" name="investmentAmount" 
+                                       placeholder="Enter amount" min="0" step="1000">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="priority">Request Priority</label>
+                            <select id="priority" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Asset Preferences -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-chart-pie"></i> Asset Preferences</h3>
+                        
+                        <div class="form-group">
+                            <label>Asset Classes</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="equities">
+                                    <span>Equities</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="fixed-income">
+                                    <span>Fixed Income</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="commodities">
+                                    <span>Commodities</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="currencies">
+                                    <span>Currencies</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="real-estate">
+                                    <span>Real Estate</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="alternatives">
+                                    <span>Alternatives</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="assetClasses" value="cryptocurrencies">
+                                    <span>Cryptocurrencies</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sectors">Preferred Sectors</label>
+                            <input type="text" id="sectors" name="sectors" 
+                                   placeholder="e.g., Technology, Healthcare, Finance (comma-separated)">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Geographic Focus</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="geographicFocus" value="north-america">
+                                    <span>North America</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="geographicFocus" value="europe">
+                                    <span>Europe</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="geographicFocus" value="asia-pacific">
+                                    <span>Asia Pacific</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="geographicFocus" value="emerging-markets">
+                                    <span>Emerging Markets</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="geographicFocus" value="global">
+                                    <span>Global</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="excluded-investments">Excluded Investments</label>
+                            <input type="text" id="excluded-investments" name="excludedInvestments" 
+                                   placeholder="e.g., Tobacco, Weapons, Gambling (comma-separated)">
+                        </div>
+                    </div>
+
+                    <!-- Generation Parameters -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-sliders-h"></i> Generation Parameters</h3>
+                        
+                        <div class="form-group">
+                            <label for="minimum-confidence">Minimum Confidence (%)</label>
+                            <input type="range" id="minimum-confidence" name="minimumConfidence" 
+                                   min="0" max="100" value="70" class="slider">
+                            <span class="slider-value">70%</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maximum-ideas">Maximum Ideas</label>
+                            <input type="range" id="maximum-ideas" name="maximumIdeas" 
+                                   min="1" max="20" value="5" class="slider">
+                            <span class="slider-value">5</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="research-depth">Research Depth</label>
+                            <select id="research-depth" name="researchDepth">
+                                <option value="basic">Basic</option>
+                                <option value="standard" selected>Standard</option>
+                                <option value="comprehensive">Comprehensive</option>
+                                <option value="deep-dive">Deep Dive</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="includeAlternatives" value="true">
+                                    <span>Include Alternative Investments</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="includeESGFactors" value="true">
+                                    <span>Include ESG Factors</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="includeVisualizations" value="true" checked>
+                                    <span>Include Visualizations</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="includeBacktesting" value="true">
+                                    <span>Include Backtesting</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="includeRiskAnalysis" value="true" checked>
+                                    <span>Include Risk Analysis</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="form-section collapsible">
+                        <h3 class="collapsible-header">
+                            <i class="fas fa-cogs"></i> Advanced Options
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </h3>
+                        <div class="collapsible-content">
+                            <div class="form-group">
+                                <label for="liquidity-requirement">Liquidity Requirement</label>
+                                <select id="liquidity-requirement" name="liquidityRequirement">
+                                    <option value="flexible" selected>Flexible</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="output-format">Output Format</label>
+                                <select id="output-format" name="outputFormat">
+                                    <option value="detailed" selected>Detailed</option>
+                                    <option value="summary">Summary</option>
+                                    <option value="executive">Executive</option>
+                                    <option value="technical">Technical</option>
+                                    <option value="presentation">Presentation</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="thematic-focus">Thematic Focus</label>
+                                <input type="text" id="thematic-focus" name="thematicFocus" 
+                                       placeholder="e.g., AI, Clean Energy, Aging Population (comma-separated)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" id="reset-form" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                        <button type="submit" id="submit-request" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Request Status -->
+            <div id="request-status-container" class="status-container" style="display: none;">
+                <h2>Request Status</h2>
+                <div id="request-status" class="status-card">
+                    <div class="status-header">
+                        <span id="status-badge" class="status-badge">Processing</span>
+                        <span id="request-id" class="request-id"></span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="progress-text" class="progress-text">0%</span>
+                    </div>
+                    <div id="current-step" class="current-step"></div>
+                    <div id="estimated-time" class="estimated-time"></div>
+                    <div id="processing-history" class="processing-history"></div>
+                </div>
+                <div class="status-actions">
+                    <button id="refresh-status" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button id="cancel-request" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Cancel Request
+                    </button>
+                    <button id="new-request" class="btn btn-primary" style="display: none;">
+                        <i class="fas fa-plus"></i> New Request
+                    </button>
+                </div>
+            </div>
+
+            <!-- Request Results -->
+            <div id="request-results-container" class="results-container" style="display: none;">
+                <div class="results-header">
+                    <h2>Investment Ideas</h2>
+                    <div class="results-controls">
+                        <div class="view-toggle">
+                            <button id="grid-view" class="view-btn active" data-view="grid">
+                                <i class="fas fa-th"></i> Grid
+                            </button>
+                            <button id="list-view" class="view-btn" data-view="list">
+                                <i class="fas fa-list"></i> List
+                            </button>
+                            <button id="comparison-view" class="view-btn" data-view="comparison">
+                                <i class="fas fa-balance-scale"></i> Compare
+                            </button>
+                        </div>
+                        <div class="sort-controls">
+                            <select id="sort-by">
+                                <option value="confidence">Sort by Confidence</option>
+                                <option value="return">Sort by Expected Return</option>
+                                <option value="risk">Sort by Risk Level</option>
+                                <option value="timeHorizon">Sort by Time Horizon</option>
+                            </select>
+                            <button id="sort-order" class="btn btn-sm" data-order="desc">
+                                <i class="fas fa-sort-amount-down"></i>
+                            </button>
+                        </div>
+                        <div class="filter-controls">
+                            <button id="filter-toggle" class="btn btn-sm">
+                                <i class="fas fa-filter"></i> Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Panel -->
+                <div id="filter-panel" class="filter-panel" style="display: none;">
+                    <div class="filter-group">
+                        <label>Confidence Range</label>
+                        <div class="range-slider">
+                            <input type="range" id="confidence-min" min="0" max="100" value="0">
+                            <input type="range" id="confidence-max" min="0" max="100" value="100">
+                            <div class="range-values">
+                                <span id="confidence-min-val">0%</span> - <span id="confidence-max-val">100%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Risk Level</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" value="low" checked> Low</label>
+                            <label><input type="checkbox" value="medium" checked> Medium</label>
+                            <label><input type="checkbox" value="high" checked> High</label>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Asset Classes</label>
+                        <div class="checkbox-group" id="asset-class-filters">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="apply-filters" class="btn btn-primary">Apply</button>
+                        <button id="clear-filters" class="btn btn-secondary">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Results Content -->
+                <div id="request-results" class="results-content">
+                    <!-- Results will be populated dynamically -->
+                </div>
+
+                <!-- Investment Idea Detail Modal -->
+                <div id="idea-detail-modal" class="modal idea-modal" style="display: none;">
+                    <div class="modal-content large">
+                        <div class="modal-header">
+                            <h3 id="idea-title">Investment Idea Details</h3>
+                            <button id="close-idea-modal" class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="idea-detail-tabs">
+                                <button class="tab-btn active" data-tab="overview">Overview</button>
+                                <button class="tab-btn" data-tab="analysis">Analysis</button>
+                                <button class="tab-btn" data-tab="risks">Risks</button>
+                                <button class="tab-btn" data-tab="data">Supporting Data</button>
+                                <button class="tab-btn" data-tab="compliance">Compliance</button>
+                            </div>
+                            <div class="idea-detail-content">
+                                <div id="overview-tab" class="tab-content active">
+                                    <!-- Overview content -->
+                                </div>
+                                <div id="analysis-tab" class="tab-content">
+                                    <!-- Analysis content -->
+                                </div>
+                                <div id="risks-tab" class="tab-content">
+                                    <!-- Risk analysis content -->
+                                </div>
+                                <div id="data-tab" class="tab-content">
+                                    <!-- Supporting data content -->
+                                </div>
+                                <div id="compliance-tab" class="tab-content">
+                                    <!-- Compliance content -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="export-idea" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button id="save-idea" class="btn btn-primary">
+                                <i class="fas fa-bookmark"></i> Save to Portfolio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison View -->
+                <div id="comparison-container" class="comparison-container" style="display: none;">
+                    <div class="comparison-header">
+                        <h3>Investment Ideas Comparison</h3>
+                        <div class="comparison-controls">
+                            <select id="comparison-metric">
+                                <option value="all">All Metrics</option>
+                                <option value="returns">Returns</option>
+                                <option value="risks">Risks</option>
+                                <option value="fundamentals">Fundamentals</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="comparison-table" class="comparison-table">
+                        <!-- Comparison table will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button id="download-results" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Download Results
+                    </button>
+                    <button id="provide-feedback" class="btn btn-primary">
+                        <i class="fas fa-comment"></i> Provide Feedback
+                    </button>
+                    <button id="share-results" class="btn btn-secondary">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Request History -->
+            <div id="request-history-container" class="history-container">
+                <h2>Request History</h2>
+                <div class="history-filters">
+                    <select id="history-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="processing">Processing</option>
+                        <option value="failed">Failed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <input type="date" id="history-date-from" placeholder="From Date">
+                    <input type="date" id="history-date-to" placeholder="To Date">
+                    <button id="apply-filters" class="btn btn-secondary">Apply Filters</button>
+                </div>
+                <div id="request-history" class="history-list">
+                    <!-- History will be populated dynamically -->
+                </div>
+                <div class="pagination">
+                    <button id="prev-page" class="btn btn-secondary" disabled>Previous</button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button id="next-page" class="btn btn-secondary" disabled>Next</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Feedback Modal -->
+        <div id="feedback-modal" class="modal" style="display: none;">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h3>Provide Feedback</h3>
+                    <button id="close-feedback-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="feedback-form">
+                        <!-- Feedback Type Selection -->
+                        <div class="form-group">
+                            <label for="feedback-type">Feedback Type *</label>
+                            <select id="feedback-type" name="feedbackType" required>
+                                <option value="">Select feedback type</option>
+                                <option value="investment-idea-quality">Investment Idea Quality</option>
+                                <option value="analysis-accuracy">Analysis Accuracy</option>
+                                <option value="system-performance">System Performance</option>
+                                <option value="user-experience">User Experience</option>
+                                <option value="feature-request">Feature Request</option>
+                                <option value="bug-report">Bug Report</option>
+                                <option value="general">General Feedback</option>
+                            </select>
+                        </div>
+
+                        <!-- Category Selection -->
+                        <div class="form-group">
+                            <label for="feedback-category">Category *</label>
+                            <select id="feedback-category" name="category" required>
+                                <option value="">Select category</option>
+                                <option value="accuracy">Accuracy</option>
+                                <option value="relevance">Relevance</option>
+                                <option value="completeness">Completeness</option>
+                                <option value="timeliness">Timeliness</option>
+                                <option value="usability">Usability</option>
+                                <option value="performance">Performance</option>
+                                <option value="compliance">Compliance</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Rating -->
+                        <div class="form-group">
+                            <label>Overall Rating *</label>
+                            <div class="rating-container">
+                                <div class="rating-stars">
+                                    <span class="star" data-rating="1">★</span>
+                                    <span class="star" data-rating="2">★</span>
+                                    <span class="star" data-rating="3">★</span>
+                                    <span class="star" data-rating="4">★</span>
+                                    <span class="star" data-rating="5">★</span>
+                                </div>
+                                <div class="rating-labels">
+                                    <span class="rating-label">Poor</span>
+                                    <span class="rating-label">Fair</span>
+                                    <span class="rating-label">Good</span>
+                                    <span class="rating-label">Very Good</span>
+                                    <span class="rating-label">Excellent</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="feedback-title">Title *</label>
+                            <input type="text" id="feedback-title" name="title" required
+                                   placeholder="Brief summary of your feedback" maxlength="200">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group">
+                            <label for="feedback-description">Description *</label>
+                            <textarea id="feedback-description" name="description" rows="4" required
+                                      placeholder="Please provide detailed feedback..." maxlength="2000"></textarea>
+                            <div class="character-count">
+                                <span id="description-count">0</span>/2000 characters
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="form-group">
+                            <label for="feedback-tags">Tags</label>
+                            <input type="text" id="feedback-tags" name="tags"
+                                   placeholder="Add tags separated by commas (e.g., performance, accuracy, ui)">
+                            <small class="form-help">Tags help us categorize and prioritize your feedback</small>
+                        </div>
+
+                        <!-- Specific Investment Idea Feedback -->
+                        <div id="idea-specific-feedback" class="form-section" style="display: none;">
+                            <h4>Investment Idea Specific Feedback</h4>
+                            
+                            <div class="form-group">
+                                <label for="idea-rating">Idea Quality Rating</label>
+                                <div class="rating-stars" data-rating-type="idea">
+                                    <span class="star" data-rating="1">★</span>
+                                    <span class="star" data-rating="2">★</span>
+                                    <span class="star" data-rating="3">★</span>
+                                    <span class="star" data-rating="4">★</span>
+                                    <span class="star" data-rating="5">★</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="action-taken">Action Taken</label>
+                                <select id="action-taken" name="actionTaken">
+                                    <option value="">Select action</option>
+                                    <option value="implemented">Implemented</option>
+                                    <option value="partially-implemented">Partially Implemented</option>
+                                    <option value="considered">Considered</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="pending">Pending Review</option>
+                                    <option value="requires-more-research">Requires More Research</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>What aspects were most valuable?</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="analysis-depth">
+                                        <span>Analysis Depth</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="data-sources">
+                                        <span>Data Sources</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="risk-assessment">
+                                        <span>Risk Assessment</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="timing">
+                                        <span>Timing Insights</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="explanations">
+                                        <span>Clear Explanations</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="valuableAspects" value="compliance">
+                                        <span>Compliance Considerations</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Performance Feedback -->
+                        <div id="performance-feedback" class="form-section" style="display: none;">
+                            <h4>System Performance Feedback</h4>
+                            
+                            <div class="form-group">
+                                <label for="response-time">Response Time</label>
+                                <select id="response-time" name="responseTime">
+                                    <option value="">How was the response time?</option>
+                                    <option value="very-fast">Very Fast (&lt; 30 seconds)</option>
+                                    <option value="fast">Fast (30-60 seconds)</option>
+                                    <option value="acceptable">Acceptable (1-2 minutes)</option>
+                                    <option value="slow">Slow (2-5 minutes)</option>
+                                    <option value="very-slow">Very Slow (&gt; 5 minutes)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="system-issues">Did you experience any issues?</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="systemIssues" value="slow-loading">
+                                        <span>Slow Loading</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="systemIssues" value="errors">
+                                        <span>Error Messages</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="systemIssues" value="timeouts">
+                                        <span>Request Timeouts</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="systemIssues" value="ui-problems">
+                                        <span>UI Problems</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="systemIssues" value="data-issues">
+                                        <span>Data Display Issues</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information (Optional) -->
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="follow-up-consent" name="followUpConsent">
+                                I consent to being contacted for follow-up on this feedback
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-feedback" class="btn btn-secondary">Cancel</button>
+                    <button id="submit-feedback" class="btn btn-primary" disabled>Submit Feedback</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Success Modal -->
+        <div id="feedback-success-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-check-circle text-success"></i> Feedback Submitted</h3>
+                    <button id="close-success-modal" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Thank you for your feedback! Your input helps us improve the Investment AI Agent.</p>
+                    <div class="feedback-reference">
+                        <strong>Reference ID:</strong> <span id="feedback-reference-id"></span>
+                    </div>
+                    <p class="feedback-follow-up">
+                        We review all feedback and will use your insights to enhance our service. 
+                        If you provided contact consent, we may reach out for additional details.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-success-feedback" class="btn btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing your request...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
