@@ -410,6 +410,12 @@
             margin: 0 0 15px 0;
             font-size: 1.2em;
         }
+        
+        .stock-price-section h4 .timestamp {
+            color: #6c757d;
+            font-size: 0.8em;
+            font-weight: normal;
+        }
 
         .price-display {
             margin-bottom: 20px;
@@ -1219,8 +1225,44 @@
                             const changeSymbol = price.change >= 0 ? '+' : '';
                             const changePercent = price.changePercent ? (price.changePercent * 100).toFixed(2) : '0.00';
                             
+                            // Format timestamp for display in Central Time
+                            let timestampDisplay = '';
+                            if (price.timestamp) {
+                                const priceDate = new Date(price.timestamp);
+                                // Debug: log the original timestamp and converted time
+                                console.log('Original timestamp:', price.timestamp);
+                                console.log('Converted to Central Time:', priceDate.toLocaleString('en-US', {
+                                    timeZone: 'America/Chicago',
+                                    timeZoneName: 'short'
+                                }));
+                                
+                                const options = {
+                                    month: 'numeric',
+                                    day: 'numeric', 
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    timeZone: 'America/Chicago',
+                                    timeZoneName: 'short'
+                                };
+                                timestampDisplay = '<span class="timestamp"> - ' + priceDate.toLocaleString('en-US', options) + '</span>';
+                            } else {
+                                // Fallback to current time if no timestamp available
+                                const now = new Date();
+                                const options = {
+                                    month: 'numeric',
+                                    day: 'numeric', 
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    timeZone: 'America/Chicago',
+                                    timeZoneName: 'short'
+                                };
+                                timestampDisplay = '<span class="timestamp"> - ' + now.toLocaleString('en-US', options) + ' (cached)</span>';
+                            }
+                            
                             stockPriceSection = '<div class="stock-price-section">' +
-                                '<h4>📈 Current Stock Price</h4>' +
+                                '<h4>📈 Current Stock Price' + timestampDisplay + '</h4>' +
                                 '<div class="price-display">' +
                                 '<div class="current-price">$' + (price.price ? price.price.toFixed(2) : 'N/A') + '</div>' +
                                 '<div class="price-change ' + changeClass + '">' +

@@ -241,7 +241,7 @@ try:
         "beta": info.get("beta"),
         "week52High": info.get("fiftyTwoWeekHigh"),
         "week52Low": info.get("fiftyTwoWeekLow"),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.utcnow().isoformat() + "Z"
     }
     
     print(json.dumps(result))
