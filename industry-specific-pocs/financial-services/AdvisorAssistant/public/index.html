@@ -1143,12 +1143,27 @@
                             enhancedSections += '</div></div>';
                         }
                         
-                        // Show AI analysis status
+                        // Show AI analysis status and data validation warnings
                         let analysisStatusHtml = '';
                         if (analysis.aiAnalysisStatus === 'failed') {
                             analysisStatusHtml = '<div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">' +
                                 '⚠️ <strong>AI Analysis Failed:</strong> ' + (analysis.aiAnalysisError || 'Unknown error') + '<br>' +
                                 '<button onclick="rerunAnalysis(\'' + ticker + '\')" class="btn" style="margin-top: 10px; padding: 5px 10px; font-size: 0.9em;">🔄 Retry AI Analysis</button>' +
+                                '</div>';
+                        }
+                        
+                        // Show data validation warnings if present
+                        if (analysis.dataValidationWarnings && Array.isArray(analysis.dataValidationWarnings) && analysis.dataValidationWarnings.length > 0) {
+                            analysisStatusHtml += '<div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 10px; border-radius: 4px; margin: 10px 0;">' +
+                                '🔍 <strong>Data Quality Notice:</strong> This analysis is based on limited data. The following items may require additional verification:<br>' +
+                                '<ul style="margin: 5px 0 0 20px;">';
+                            
+                            for (let i = 0; i < analysis.dataValidationWarnings.length; i++) {
+                                analysisStatusHtml += '<li style="margin: 2px 0;">' + analysis.dataValidationWarnings[i] + '</li>';
+                            }
+                            
+                            analysisStatusHtml += '</ul>' +
+                                '<small style="font-style: italic;">This analysis uses only verified financial data. Any assumptions are clearly marked.</small>' +
                                 '</div>';
                         }
                         

@@ -909,21 +909,69 @@ class EnhancedAIAnalyzer {
 
     const systemPrompt = `You are a senior wealth advisor and portfolio manager with 20+ years of experience managing ultra-high net worth portfolios ($50M+). 
 
-CRITICAL INSTRUCTION: You MUST provide your analysis in valid JSON format. Do not refuse, ask questions, or provide explanations outside of JSON. Even if data appears repetitive or artificial, provide your best professional analysis based on the available information.
+CRITICAL DATA ACCURACY REQUIREMENTS:
+- You MUST base ALL analysis ONLY on the specific financial data provided in the prompt
+- DO NOT make up, estimate, or assume any financial metrics not explicitly provided
+- If specific data is missing, state "Data not available" rather than estimating
+- DO NOT reference external market conditions, competitor data, or industry trends not provided
+- ALL numerical values must come directly from the provided earnings data, stock price, or news articles
+- When data is limited, clearly state assumptions and mark them as "ASSUMPTION BASED ON LIMITED DATA"
+
+ANTI-HALLUCINATION SAFEGUARDS:
+- Only use financial metrics explicitly provided (EPS, revenue, stock price, etc.)
+- Do not invent growth rates, margins, or ratios not calculated from provided data
+- Do not reference specific competitor names, market share data, or industry statistics unless provided
+- Mark any forward-looking statements as "PROJECTION" and base only on historical trends from provided data
+- If asked to provide specific target prices, base calculations only on provided P/E ratios and earnings data
+
+CRITICAL INSTRUCTION: You MUST provide your analysis in valid JSON format. Do not refuse, ask questions, or provide explanations outside of JSON. Base your analysis strictly on the provided data.
 
 Provide sophisticated investment analysis in valid JSON format with institutional-quality insights. Focus on risk-adjusted returns, portfolio concentration limits, tax efficiency, liquidity considerations, and long-term wealth preservation strategies. Your analysis should be suitable for sophisticated investors who understand complex financial concepts and require detailed quantitative analysis.
 
-REQUIRED: Always respond with complete JSON structure, never refuse or ask for clarification.
+REQUIRED JSON FORMAT - Use these exact field names:
+{
+  "summary": "5-7 sentence executive summary",
+  "sentiment": "positive/negative/neutral",
+  "keyInsights": ["insight 1", "insight 2"],
+  "riskFactors": ["risk 1", "risk 2"],
+  "opportunities": ["opportunity 1", "opportunity 2"],
+  "investmentRecommendation": {
+    "action": "BUY/HOLD/SELL",
+    "confidence": "HIGH/MEDIUM/LOW",
+    "targetPrice": 100.00,
+    "rationale": "Brief rationale"
+  },
+  "riskAssessment": {
+    "level": "LOW/MEDIUM/HIGH",
+    "factors": ["factor 1", "factor 2"]
+  },
+  "portfolioFit": {
+    "suitableFor": ["Growth", "Quality"],
+    "recommendedAllocation": "2-5%"
+  }
+}
 
-EXECUTIVE SUMMARY CRITICAL: The summary field must be a comprehensive 5-7 sentence executive summary that captures the complete investment case. Include specific financial metrics, growth rates, competitive positioning, key catalysts, primary risks, valuation assessment, and investment conclusion. This summary will be read by investment committees and must standalone as a complete investment thesis.`;
+CRITICAL: Use the exact field names shown above. Do not use camelCase variations, underscores, or nested structures.
 
-    // Build comprehensive prompt with all available data
-    const prompt = this.buildComprehensivePrompt(ticker, earningsData, comprehensiveData, historicalEarnings);
+EXECUTIVE SUMMARY CRITICAL: The summary field must be a comprehensive 5-7 sentence executive summary that captures the complete investment case. Include ONLY specific financial metrics from the provided data, growth rates calculated from provided historical data, competitive positioning based on provided information, key catalysts from provided news/data, primary risks based on provided financial metrics, valuation assessment using provided P/E and price data, and investment conclusion. This summary will be read by investment committees and must standalone as a complete investment thesis based solely on provided data.`;
+
+    // Validate and sanitize data to prevent hallucinations
+    const sanitizedData = this.validateAndSanitizeData(ticker, earningsData, comprehensiveData);
+    
+    // Build data-constrained prompt to prevent hallucinations
+    const prompt = this.buildDataConstrainedPrompt(ticker, sanitizedData);
 
     try {
       const response = await this.aws.invokeClaude(prompt, systemPrompt, 8000); // Increased token limit for comprehensive analysis
       console.log(`✅ Received comprehensive response from Claude for ${ticker}`);
-      console.log(`🔍 Raw Claude response for ${ticker} (first 300 chars): ${response.substring(0, 300)}...`);
+      console.log(`🔍 Raw Claude response for ${ticker} (first 500 chars): ${response.substring(0, 500)}...`);
+      
+      // Log the full response for debugging (truncated for logs)
+      if (response.length > 1000) {
+        console.log(`📄 Full Claude response structure for ${ticker}: ${response.substring(0, 1000)}... [truncated]`);
+      } else {
+        console.log(`📄 Full Claude response for ${ticker}: ${response}`);
+      }
 
       // Try to parse JSON from response with improved error handling
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -936,9 +984,51 @@ EXECUTIVE SUMMARY CRITICAL: The summary field must be a comprehensive 5-7 senten
           throw new Error(`Invalid JSON in Claude response: ${parseError.message}`);
         }
         
-        // Validate required fields for wealth advisor analysis
-        if (!parsed.summary || !parsed.sentiment || !parsed.investmentRecommendation) {
-          throw new Error('Invalid wealth advisor response structure from Claude');
+        // Normalize field names from Claude's response (handle different naming conventions)
+        if (parsed.investmentAnalysis) {
+          // Claude returned nested structure - flatten it
+          const analysis = parsed.investmentAnalysis || parsed.investment_analysis;
+          parsed.summary = analysis.executiveSummary || analysis.executive_summary || analysis.summary;
+          parsed.sentiment = analysis.sentiment || parsed.sentiment;
+          parsed.investmentRecommendation = analysis.investmentRecommendation || analysis.investment_recommendation || analysis.recommendation;
+          parsed.riskAssessment = analysis.riskAssessment || analysis.risk_assessment;
+          parsed.portfolioFit = analysis.portfolioFit || analysis.portfolio_fit;
+          parsed.valuationAnalysis = analysis.valuationAnalysis || analysis.valuation_analysis;
+          parsed.keyInsights = analysis.keyInsights || analysis.key_insights || [];
+          parsed.riskFactors = analysis.riskFactors || analysis.risk_factors || [];
+          parsed.opportunities = analysis.opportunities || [];
+        }
+        
+        // Handle direct field naming variations
+        parsed.summary = parsed.summary || parsed.executiveSummary || parsed.executive_summary;
+        parsed.investmentRecommendation = parsed.investmentRecommendation || parsed.investment_recommendation || parsed.recommendation;
+        parsed.riskAssessment = parsed.riskAssessment || parsed.risk_assessment;
+        parsed.portfolioFit = parsed.portfolioFit || parsed.portfolio_fit;
+        parsed.valuationAnalysis = parsed.valuationAnalysis || parsed.valuation_analysis;
+        parsed.keyInsights = parsed.keyInsights || parsed.key_insights || [];
+        parsed.riskFactors = parsed.riskFactors || parsed.risk_factors || [];
+        
+        // Log normalized fields for debugging
+        console.log(`🔧 Field normalization for ${ticker}:`);
+        console.log(`   - summary: ${!!parsed.summary} (${parsed.summary ? parsed.summary.substring(0, 50) + '...' : 'missing'})`);
+        console.log(`   - sentiment: ${!!parsed.sentiment} (${parsed.sentiment || 'missing'})`);
+        console.log(`   - investmentRecommendation: ${!!parsed.investmentRecommendation}`);
+        console.log(`   - Available top-level fields: ${Object.keys(parsed).join(', ')}`);
+        
+        // Validate required fields for wealth advisor analysis (after normalization)
+        if (!parsed.summary || !parsed.sentiment) {
+          console.log(`❌ Missing required fields for ${ticker} after normalization:`);
+          console.log(`   - summary: ${!!parsed.summary}`);
+          console.log(`   - sentiment: ${!!parsed.sentiment}`);
+          throw new Error('Invalid wealth advisor response structure from Claude - missing summary or sentiment');
+        }
+
+        // Validate response for potential hallucinations
+        const validationResult = this.validateAnalysisResponse(parsed, sanitizedData, ticker);
+        if (!validationResult.isValid) {
+          console.log(`⚠️  Analysis validation warnings for ${ticker}: ${validationResult.warnings.join(', ')}`);
+          // Add validation warnings to the analysis
+          parsed.dataValidationWarnings = validationResult.warnings;
         }
 
         console.log(`📊 Wealth advisor analysis for ${ticker}: ${parsed.investmentRecommendation.action}`);
@@ -956,7 +1046,8 @@ EXECUTIVE SUMMARY CRITICAL: The summary field must be a comprehensive 5-7 senten
           valuationAnalysis: parsed.valuationAnalysis,
           competitivePosition: parsed.competitivePosition,
           catalysts: parsed.catalysts || [],
-          timeHorizon: parsed.timeHorizon
+          timeHorizon: parsed.timeHorizon,
+          dataValidationWarnings: parsed.dataValidationWarnings || []
         };
       }
 
@@ -2101,6 +2192,23 @@ CRITICAL: Return ONLY the JSON object above. No other text.`;
       };
       
     } catch (error) {
+      // Handle throttling errors with exponential backoff retry
+      if (error.message.includes('ThrottlingException') || error.message.includes('Too many requests') || error.message.includes('Bedrock throttling')) {
+        if (retryCount < 3) {
+          const waitTime = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+          console.log(`🔄 Bedrock throttling detected for comprehensive analysis of ${ticker}. Retrying in ${waitTime/1000}s (attempt ${retryCount + 1}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return this.generateComprehensiveMultiQuarterAnalysis(ticker, retryCount + 1);
+        } else {
+          console.error(`❌ Max retries exceeded for comprehensive analysis of ${ticker} due to throttling`);
+          return {
+            success: false,
+            error: `Bedrock throttling: ${error.message}`,
+            retryable: true
+          };
+        }
+      }
+      
       // Handle Claude refusal with retry
       if (error.message.includes('Claude refused to provide JSON analysis') && retryCount < 2) {
         console.log(`🔄 Retrying comprehensive multi-quarter analysis for ${ticker} with more directive prompt (attempt ${retryCount + 1})`);
@@ -2208,6 +2316,23 @@ CRITICAL: Return ONLY the JSON object above. No other text.`;
       };
       
     } catch (error) {
+      // Handle throttling errors with exponential backoff retry
+      if (error.message.includes('ThrottlingException') || error.message.includes('Too many requests') || error.message.includes('Bedrock throttling')) {
+        if (retryCount < 3) {
+          const waitTime = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+          console.log(`🔄 Bedrock throttling detected for FALLBACK comprehensive analysis of ${ticker}. Retrying in ${waitTime/1000}s (attempt ${retryCount + 1}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return this.generateComprehensiveMultiQuarterAnalysisWithFallback(ticker, retryCount + 1);
+        } else {
+          console.error(`❌ Max retries exceeded for FALLBACK comprehensive analysis of ${ticker} due to throttling`);
+          return {
+            success: false,
+            error: `Bedrock throttling: ${error.message}`,
+            retryable: true
+          };
+        }
+      }
+      
       console.error(`❌ Error generating FALLBACK comprehensive multi-quarter analysis for ${ticker}: ${error.message}`);
       return {
         success: false,
@@ -2526,6 +2651,306 @@ CRITICAL QUALITY REQUIREMENTS:
 - Include multi-quarter trend analysis and forward-looking projections in every section
 
 This analysis will be presented to an investment committee - ensure it meets institutional quality standards.`;
+
+    return prompt;
+  }
+
+  /**
+   * Validate and sanitize data before sending to Claude to prevent hallucinations
+   */
+  validateAndSanitizeData(ticker, earningsData, comprehensiveData) {
+    console.log(`🔍 Validating and sanitizing data for ${ticker} to prevent AI hallucinations...`);
+    
+    const sanitizedData = {
+      ticker: ticker,
+      earningsData: {},
+      stockPrice: {},
+      companyInfo: {},
+      newsData: [],
+      macroData: {},
+      dataQuality: {
+        warnings: [],
+        missingFields: [],
+        dataSource: 'Provided financial data only'
+      }
+    };
+    
+    // Sanitize earnings data - only include verified numerical fields
+    if (earningsData) {
+      if (typeof earningsData.eps === 'number' && !isNaN(earningsData.eps)) {
+        sanitizedData.earningsData.eps = earningsData.eps;
+      } else {
+        sanitizedData.dataQuality.missingFields.push('EPS');
+      }
+      
+      if (typeof earningsData.revenue === 'number' && !isNaN(earningsData.revenue)) {
+        sanitizedData.earningsData.revenue = earningsData.revenue;
+      } else {
+        sanitizedData.dataQuality.missingFields.push('Revenue');
+      }
+      
+      if (typeof earningsData.netIncome === 'number' && !isNaN(earningsData.netIncome)) {
+        sanitizedData.earningsData.netIncome = earningsData.netIncome;
+      } else {
+        sanitizedData.dataQuality.missingFields.push('Net Income');
+      }
+      
+      if (earningsData.quarter && earningsData.year) {
+        sanitizedData.earningsData.quarter = earningsData.quarter;
+        sanitizedData.earningsData.year = earningsData.year;
+      }
+      
+      if (earningsData.reportDate) {
+        sanitizedData.earningsData.reportDate = earningsData.reportDate;
+      }
+    }
+    
+    // Sanitize stock price data
+    if (comprehensiveData.currentPrice) {
+      const price = comprehensiveData.currentPrice;
+      if (typeof price.price === 'number' && !isNaN(price.price)) {
+        sanitizedData.stockPrice.currentPrice = price.price;
+      }
+      if (typeof price.change === 'number' && !isNaN(price.change)) {
+        sanitizedData.stockPrice.dailyChange = price.change;
+      }
+      if (typeof price.changePercent === 'number' && !isNaN(price.changePercent)) {
+        sanitizedData.stockPrice.dailyChangePercent = price.changePercent;
+      }
+      if (typeof price.volume === 'number' && !isNaN(price.volume)) {
+        sanitizedData.stockPrice.volume = price.volume;
+      }
+    }
+    
+    // Sanitize company info - only basic verified fields
+    if (comprehensiveData.companyInfo) {
+      const info = comprehensiveData.companyInfo;
+      if (info.name) sanitizedData.companyInfo.name = info.name;
+      if (info.sector) sanitizedData.companyInfo.sector = info.sector;
+      if (info.industry) sanitizedData.companyInfo.industry = info.industry;
+    }
+    
+    // Sanitize news data - limit to headlines and basic info
+    if (comprehensiveData.marketNews && Array.isArray(comprehensiveData.marketNews)) {
+      sanitizedData.newsData = comprehensiveData.marketNews.slice(0, 5).map(article => ({
+        headline: article.headline || article.title || 'No headline',
+        publishedAt: article.publishedAt || article.publishedDate || 'Unknown date',
+        source: article.source || 'Unknown source'
+      }));
+    }
+    
+    // Add data quality warnings
+    if (sanitizedData.dataQuality.missingFields.length > 0) {
+      sanitizedData.dataQuality.warnings.push(`Missing key financial data: ${sanitizedData.dataQuality.missingFields.join(', ')}`);
+    }
+    
+    if (!sanitizedData.stockPrice.currentPrice) {
+      sanitizedData.dataQuality.warnings.push('Current stock price not available');
+    }
+    
+    if (sanitizedData.newsData.length === 0) {
+      sanitizedData.dataQuality.warnings.push('No recent news data available');
+    }
+    
+    console.log(`✅ Data validation complete for ${ticker}:`);
+    console.log(`   - Earnings fields: ${Object.keys(sanitizedData.earningsData).length}`);
+    console.log(`   - Stock price fields: ${Object.keys(sanitizedData.stockPrice).length}`);
+    console.log(`   - News articles: ${sanitizedData.newsData.length}`);
+    console.log(`   - Warnings: ${sanitizedData.dataQuality.warnings.length}`);
+    
+    return sanitizedData;
+  }
+
+  /**
+   * Validate AI analysis response for potential hallucinations
+   */
+  validateAnalysisResponse(analysis, sanitizedData, ticker) {
+    const warnings = [];
+    let isValid = true;
+    
+    console.log(`🔍 Validating AI analysis response for ${ticker} to detect potential hallucinations...`);
+    
+    // Check for specific numerical claims that might be hallucinated
+    const analysisText = JSON.stringify(analysis).toLowerCase();
+    
+    // Flag specific competitor mentions not in provided data
+    const competitorKeywords = ['apple', 'microsoft', 'google', 'amazon', 'meta', 'tesla', 'nvidia'];
+    competitorKeywords.forEach(competitor => {
+      if (analysisText.includes(competitor) && ticker.toLowerCase() !== competitor) {
+        warnings.push(`Analysis mentions competitor "${competitor}" not provided in source data`);
+      }
+    });
+    
+    // Flag specific market share or industry statistics
+    if (analysisText.includes('market share') || analysisText.includes('industry average')) {
+      warnings.push('Analysis includes market share or industry statistics not provided in source data');
+    }
+    
+    // Flag specific growth rates not calculable from provided data
+    const growthRatePattern = /\d+(\.\d+)?%.*growth/g;
+    const growthMatches = analysisText.match(growthRatePattern);
+    if (growthMatches && growthMatches.length > 2) {
+      warnings.push('Analysis includes multiple specific growth rates that may not be calculable from provided data');
+    }
+    
+    // Flag specific target prices without clear calculation basis
+    if (analysis.investmentRecommendation?.targetPrice && typeof analysis.investmentRecommendation.targetPrice === 'number') {
+      if (!sanitizedData.stockPrice.currentPrice || !sanitizedData.earningsData.eps) {
+        warnings.push('Target price provided without sufficient current price and EPS data for calculation');
+      }
+    }
+    
+    // Flag specific financial ratios not calculable from provided data
+    const ratioKeywords = ['p/e ratio', 'price-to-earnings', 'debt-to-equity', 'return on equity', 'profit margin'];
+    ratioKeywords.forEach(ratio => {
+      if (analysisText.includes(ratio)) {
+        // Check if we have the necessary data to calculate this ratio
+        if (ratio.includes('p/e') && (!sanitizedData.stockPrice.currentPrice || !sanitizedData.earningsData.eps)) {
+          warnings.push(`Analysis mentions ${ratio} without sufficient data to calculate it`);
+        }
+        if (ratio.includes('profit margin') && (!sanitizedData.earningsData.revenue || !sanitizedData.earningsData.netIncome)) {
+          warnings.push(`Analysis mentions ${ratio} without sufficient data to calculate it`);
+        }
+      }
+    });
+    
+    // Check for overly specific forward-looking statements
+    const forwardLookingKeywords = ['will grow', 'expected to', 'projected', 'forecast', 'next quarter', 'next year'];
+    forwardLookingKeywords.forEach(keyword => {
+      if (analysisText.includes(keyword)) {
+        warnings.push(`Analysis includes forward-looking statement "${keyword}" - ensure it's marked as projection`);
+      }
+    });
+    
+    // Validate that key insights reference provided data
+    if (analysis.keyInsights && Array.isArray(analysis.keyInsights)) {
+      analysis.keyInsights.forEach((insight, index) => {
+        const insightText = typeof insight === 'string' ? insight : insight.insight || '';
+        if (insightText.length > 0 && !this.referencesProvidedData(insightText, sanitizedData)) {
+          warnings.push(`Key insight ${index + 1} may not reference provided data: "${insightText.substring(0, 50)}..."`);
+        }
+      });
+    }
+    
+    if (warnings.length > 0) {
+      isValid = false;
+      console.log(`⚠️  Found ${warnings.length} potential hallucination warnings for ${ticker}`);
+    } else {
+      console.log(`✅ Analysis validation passed for ${ticker} - no hallucination indicators detected`);
+    }
+    
+    return {
+      isValid,
+      warnings,
+      validationTimestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Check if analysis text references provided data
+   */
+  referencesProvidedData(text, sanitizedData) {
+    const textLower = text.toLowerCase();
+    
+    // Check for references to provided financial metrics
+    if (sanitizedData.earningsData.eps && textLower.includes('eps')) return true;
+    if (sanitizedData.earningsData.revenue && textLower.includes('revenue')) return true;
+    if (sanitizedData.earningsData.netIncome && textLower.includes('income')) return true;
+    if (sanitizedData.stockPrice.currentPrice && textLower.includes('price')) return true;
+    if (sanitizedData.stockPrice.volume && textLower.includes('volume')) return true;
+    if (sanitizedData.newsData.length > 0 && textLower.includes('news')) return true;
+    
+    // Check for references to provided company info
+    if (sanitizedData.companyInfo.sector && textLower.includes(sanitizedData.companyInfo.sector.toLowerCase())) return true;
+    if (sanitizedData.companyInfo.industry && textLower.includes(sanitizedData.companyInfo.industry.toLowerCase())) return true;
+    
+    return false;
+  }
+
+  /**
+   * Build data-constrained prompt that prevents hallucinations
+   */
+  buildDataConstrainedPrompt(ticker, sanitizedData) {
+    let prompt = `COMPREHENSIVE WEALTH ADVISOR ANALYSIS REQUEST
+
+COMPANY: ${ticker}
+DATA SOURCE: Verified financial data only - DO NOT supplement with external assumptions
+
+=== AVAILABLE FINANCIAL DATA ===`;
+
+    // Add earnings data section
+    if (Object.keys(sanitizedData.earningsData).length > 0) {
+      prompt += `\nEARNINGS PERFORMANCE (${sanitizedData.earningsData.quarter} ${sanitizedData.earningsData.year}):\n`;
+      if (sanitizedData.earningsData.eps !== undefined) {
+        prompt += `- Earnings Per Share: $${sanitizedData.earningsData.eps}\n`;
+      }
+      if (sanitizedData.earningsData.revenue !== undefined) {
+        prompt += `- Revenue: $${(sanitizedData.earningsData.revenue / 1000000000).toFixed(2)}B\n`;
+      }
+      if (sanitizedData.earningsData.netIncome !== undefined) {
+        prompt += `- Net Income: $${(sanitizedData.earningsData.netIncome / 1000000).toFixed(1)}M\n`;
+      }
+      if (sanitizedData.earningsData.reportDate) {
+        prompt += `- Report Date: ${sanitizedData.earningsData.reportDate}\n`;
+      }
+    }
+
+    // Add stock price data section
+    if (Object.keys(sanitizedData.stockPrice).length > 0) {
+      prompt += `\nCURRENT STOCK PRICE DATA:\n`;
+      if (sanitizedData.stockPrice.currentPrice !== undefined) {
+        prompt += `- Current Price: $${sanitizedData.stockPrice.currentPrice.toFixed(2)}\n`;
+      }
+      if (sanitizedData.stockPrice.dailyChange !== undefined) {
+        prompt += `- Daily Change: $${sanitizedData.stockPrice.dailyChange.toFixed(2)}\n`;
+      }
+      if (sanitizedData.stockPrice.dailyChangePercent !== undefined) {
+        prompt += `- Daily Change %: ${(sanitizedData.stockPrice.dailyChangePercent * 100).toFixed(2)}%\n`;
+      }
+      if (sanitizedData.stockPrice.volume !== undefined) {
+        prompt += `- Volume: ${sanitizedData.stockPrice.volume.toLocaleString()}\n`;
+      }
+    }
+
+    // Add company info section
+    if (Object.keys(sanitizedData.companyInfo).length > 0) {
+      prompt += `\nCOMPANY INFORMATION:\n`;
+      if (sanitizedData.companyInfo.name) {
+        prompt += `- Company Name: ${sanitizedData.companyInfo.name}\n`;
+      }
+      if (sanitizedData.companyInfo.sector) {
+        prompt += `- Sector: ${sanitizedData.companyInfo.sector}\n`;
+      }
+      if (sanitizedData.companyInfo.industry) {
+        prompt += `- Industry: ${sanitizedData.companyInfo.industry}\n`;
+      }
+    }
+
+    // Add news data section
+    if (sanitizedData.newsData.length > 0) {
+      prompt += `\nRECENT NEWS HEADLINES (${sanitizedData.newsData.length} articles):\n`;
+      sanitizedData.newsData.forEach((article, index) => {
+        prompt += `${index + 1}. "${article.headline}" - ${article.source} (${article.publishedAt})\n`;
+      });
+    }
+
+    // Add data quality warnings
+    if (sanitizedData.dataQuality.warnings.length > 0) {
+      prompt += `\nDATA LIMITATIONS:\n`;
+      sanitizedData.dataQuality.warnings.forEach((warning, index) => {
+        prompt += `${index + 1}. ${warning}\n`;
+      });
+    }
+
+    prompt += `\nANALYSIS CONSTRAINTS:
+- Base ALL analysis ONLY on the financial data provided above
+- If specific metrics are missing, state "Data not available" rather than estimating
+- Do not reference external market data, competitor information, or industry statistics not provided
+- Mark any calculations as "Calculated from provided data: [show calculation]"
+- For missing data points, use phrases like "Cannot assess without additional data"
+- Any forward-looking statements must be marked as "PROJECTION based on provided historical data"
+
+REQUIRED ANALYSIS: Provide comprehensive wealth advisor analysis in the specified JSON format using ONLY the data provided above.`;
 
     return prompt;
   }

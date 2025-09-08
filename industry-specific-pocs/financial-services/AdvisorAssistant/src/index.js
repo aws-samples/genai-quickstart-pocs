@@ -709,7 +709,14 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
     
     // If no stored comprehensive analysis, try to generate one
     console.log(`🔄 Generating fresh comprehensive analysis for ${ticker}...`);
-    const comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+    let comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+    
+    // If throttling error, wait and try once more
+    if (!comprehensiveResult.success && comprehensiveResult.retryable) {
+      console.log(`🔄 Comprehensive analysis throttled for ${ticker}, waiting 10 seconds before final retry...`);
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+    }
     
     if (comprehensiveResult.success) {
       console.log(`✅ Generated comprehensive multi-quarter analysis for ${ticker} (${comprehensiveResult.quartersAnalyzed} quarters)`);
@@ -727,9 +734,9 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
         }
       }
       
-      // Store it for future use
+      // Store it for future use (clean undefined values for DynamoDB)
       try {
-        await analyzer.aws.putItem('analyses', {
+        const cleanAnalysis = analyzer.removeUndefinedValues({
           id: comprehensiveKey,
           ticker: ticker,
           analysis: comprehensiveResult.analysis,
@@ -737,6 +744,8 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
           quartersAnalyzed: comprehensiveResult.quartersAnalyzed,
           createdAt: new Date().toISOString()
         });
+        
+        await analyzer.aws.putItem('analyses', cleanAnalysis);
         console.log(`💾 Stored comprehensive analysis for ${ticker}`);
       } catch (storeError) {
         console.log(`⚠️  Could not store comprehensive analysis: ${storeError.message}`);
@@ -746,7 +755,11 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
     }
     
     // Fallback to latest single-quarter analysis
-    console.log(`⚠️  Comprehensive analysis failed, falling back to latest single analysis: ${comprehensiveResult.error || comprehensiveResult.message}`);
+    if (comprehensiveResult.retryable) {
+      console.log(`⚠️  Comprehensive analysis failed due to throttling, falling back to latest single analysis: ${comprehensiveResult.error || comprehensiveResult.message}`);
+    } else {
+      console.log(`⚠️  Comprehensive analysis failed, falling back to latest single analysis: ${comprehensiveResult.error || comprehensiveResult.message}`);
+    }
     const result = await analyzer.getLatestAnalysis(ticker);
     
     if (!result.success || !result.found) {
@@ -958,7 +971,14 @@ app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req,
             console.log(`🔄 Generating comprehensive multi-quarter analysis for ${ticker}...`);
             const comprehensiveStart = Date.now();
             
-            const comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+            let comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+            
+            // If throttling error, wait and try once more
+            if (!comprehensiveResult.success && comprehensiveResult.retryable) {
+              console.log(`🔄 Comprehensive analysis throttled for ${ticker}, waiting 10 seconds before final retry...`);
+              await new Promise(resolve => setTimeout(resolve, 10000));
+              comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+            }
             
             if (comprehensiveResult.success) {
               const comprehensiveTime = ((Date.now() - comprehensiveStart) / 1000 / 60).toFixed(1);
@@ -980,6 +1000,9 @@ app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req,
               console.log(`🎉 Complete analysis pipeline finished for ${ticker}: individual quarters + comprehensive synthesis`);
             } else {
               console.log(`⚠️  Comprehensive analysis failed for ${ticker}: ${comprehensiveResult.error || comprehensiveResult.message}`);
+              if (comprehensiveResult.retryable) {
+                console.log(`🔄 Comprehensive analysis can be retried later for ${ticker} when throttling subsides`);
+              }
             }
           } catch (comprehensiveError) {
             console.error(`❌ Error generating comprehensive analysis for ${ticker}:`, comprehensiveError.message);
