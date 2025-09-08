@@ -395,6 +395,68 @@
             font-weight: bold;
         }
 
+        /* Stock Price Section Styles */
+        .stock-price-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #007bff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .stock-price-section h4 {
+            color: #007bff;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+        }
+
+        .price-display {
+            margin-bottom: 20px;
+        }
+
+        .current-price {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .price-change {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .positive-change {
+            color: #28a745;
+        }
+
+        .negative-change {
+            color: #dc3545;
+        }
+
+        .price-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .price-detail {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .price-detail span {
+            font-weight: bold;
+            color: #6c757d;
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
         /* Enhanced Advisor Assistant Styles */
         .wealth-advisor-header {
             background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
@@ -596,7 +658,6 @@
                         const company = companies[i];
                         html += '<li class="company-item">';
                         html += '<div><strong>' + company.ticker + '</strong> - ' + (company.name || 'Unknown');
-                        html += '<div style="font-size: 0.9em; color: #666;">Reports: ' + (company.earnings_count || 0) + '</div>';
                         html += '<div id="analysis-status-' + company.ticker + '" style="font-size: 0.8em; margin-top: 5px;">Checking analysis status...</div></div>';
                         html += '<div>';
                         html += '<button class="btn" onclick="fetchReports(\'' + company.ticker + '\')" style="margin-right: 5px;">Fetch Reports</button>';
@@ -1135,6 +1196,31 @@
                             portfolioMetrics += '</div>';
                         }
 
+                        // Create stock price section if available
+                        let stockPriceSection = '';
+                        if (analysis.currentPrice) {
+                            const price = analysis.currentPrice;
+                            const changeClass = price.change >= 0 ? 'positive-change' : 'negative-change';
+                            const changeSymbol = price.change >= 0 ? '+' : '';
+                            const changePercent = price.changePercent ? (price.changePercent * 100).toFixed(2) : '0.00';
+                            
+                            stockPriceSection = '<div class="stock-price-section">' +
+                                '<h4>📈 Current Stock Price</h4>' +
+                                '<div class="price-display">' +
+                                '<div class="current-price">$' + (price.price ? price.price.toFixed(2) : 'N/A') + '</div>' +
+                                '<div class="price-change ' + changeClass + '">' +
+                                changeSymbol + (price.change ? price.change.toFixed(2) : '0.00') + ' (' + changeSymbol + changePercent + '%)' +
+                                '</div>' +
+                                '</div>' +
+                                '<div class="price-details">' +
+                                '<div class="price-detail"><span>Open:</span> $' + (price.open ? price.open.toFixed(2) : 'N/A') + '</div>' +
+                                '<div class="price-detail"><span>High:</span> $' + (price.high ? price.high.toFixed(2) : 'N/A') + '</div>' +
+                                '<div class="price-detail"><span>Low:</span> $' + (price.low ? price.low.toFixed(2) : 'N/A') + '</div>' +
+                                '<div class="price-detail"><span>Volume:</span> ' + (price.volume ? parseInt(price.volume).toLocaleString() : 'N/A') + '</div>' +
+                                '</div>' +
+                                '</div>';
+                        }
+
                         content.innerHTML = wealthAdvisorHeader +
                             '<div class="analysis-summary">' +
                             '<h3>' + ticker + ' - Investment Analysis</h3>' +
@@ -1142,6 +1228,7 @@
                             '<p><strong>Overall Sentiment:</strong> ' + sentimentDisplay + '</p>' +
                             '<p><strong>Analysis Date:</strong> ' + new Date(analysis.timestamp).toLocaleDateString() + '</p>' +
                             '</div>' +
+                            stockPriceSection +
                             portfolioMetrics +
                             analysisStatusHtml +
                             enhancedSections +
@@ -1168,7 +1255,17 @@
 
         function showAnalysisInProgress(ticker, status) {
             var content = document.getElementById('analysisContent');
-            var progressPercent = Math.round((status.completedAnalyses / status.totalReports) * 100);
+            
+            // Calculate progress based on status
+            var totalSteps = status.totalReports + 1; // Individual reports + comprehensive analysis
+            var completedSteps = status.completedAnalyses;
+            
+            // Add comprehensive analysis step if individual analyses are complete
+            if (status.status === 'synthesizing' || status.status === 'complete') {
+                completedSteps += status.hasComprehensiveAnalysis ? 1 : 0;
+            }
+            
+            var progressPercent = Math.round((completedSteps / totalSteps) * 100);
             
             // Build the reports list
             var reportsHtml = '';
@@ -1183,31 +1280,82 @@
                 reportsHtml += '</div>';
             }
             
+            // Add comprehensive analysis step
+            var comprehensiveClass = 'pending';
+            var comprehensiveStatus = '⏳ Waiting for individual analyses...';
+            
+            if (status.status === 'synthesizing') {
+                comprehensiveClass = 'pending';
+                comprehensiveStatus = '🤖 Comprehensive Analysis in Progress...';
+            } else if (status.status === 'complete' && status.hasComprehensiveAnalysis) {
+                comprehensiveClass = 'completed';
+                comprehensiveStatus = '✅ Comprehensive Analysis Complete';
+            }
+            
+            reportsHtml += '<div class="report-item ' + comprehensiveClass + '" style="border-left: 4px solid #28a745; font-weight: bold;">';
+            reportsHtml += '<span class="report-quarter">📊 Comprehensive Analysis</span>';
+            reportsHtml += '<span class="report-status">' + comprehensiveStatus + '</span>';
+            reportsHtml += '</div>';
+            
+            // Determine main status message
+            var mainStatusMessage = '';
+            var timeEstimate = '';
+            
+            if (status.status === 'analyzing') {
+                mainStatusMessage = 'Analyzing individual quarterly reports (' + status.completedAnalyses + '/' + status.totalReports + ')';
+                timeEstimate = (status.pendingAnalyses * 5) + ' - ' + (status.pendingAnalyses * 30) + ' minutes remaining';
+            } else if (status.status === 'synthesizing') {
+                mainStatusMessage = 'Creating comprehensive multi-quarter analysis with AI-enhanced data integration';
+                timeEstimate = '5 - 15 minutes for comprehensive synthesis';
+            } else if (status.status === 'complete') {
+                mainStatusMessage = 'All analyses complete - ready to view results';
+                timeEstimate = 'Analysis ready';
+            } else {
+                mainStatusMessage = 'Preparing to start analysis';
+                timeEstimate = 'Starting soon...';
+            }
+            
             // Build the complete HTML
             var html = '<div class="analysis-progress">';
             html += '<h3>🤖 Comprehensive AI Analysis in Progress for ' + ticker + '</h3>';
             html += '<div class="progress-info">';
-            html += '<p><strong>Status:</strong> Comprehensive AI analysis in progress using <span id="currentAiModel">Claude 3.5 Sonnet</span></p>';
+            html += '<p><strong>Status:</strong> ' + mainStatusMessage + '</p>';
+            html += '<p><strong>AI Model:</strong> <span id="currentAiModel">Claude 3.5 Sonnet</span></p>';
             html += '<p><strong>Data Sources:</strong> Yahoo Finance (earnings, stock price), NewsAPI (market news), FRED (economic data)</p>';
             html += '<p><strong>AI Processing:</strong> News sentiment analysis, market context analysis, relevance scoring</p>';
-            html += '<p><strong>Progress:</strong> ' + status.completedAnalyses + ' of ' + status.totalReports + ' comprehensive analyses completed (' + progressPercent + '%)</p>';
-            html += '<p><strong>Remaining:</strong> ' + status.pendingAnalyses + ' comprehensive analyses</p>';
-            html += '<p><strong>Estimated time:</strong> ' + (status.pendingAnalyses * 5) + ' - ' + (status.pendingAnalyses * 30) + ' minutes (AI analysis takes time for quality)</p>';
+            html += '<p><strong>Progress:</strong> ' + completedSteps + ' of ' + totalSteps + ' steps completed (' + progressPercent + '%)</p>';
+            html += '<p><strong>Estimated time:</strong> ' + timeEstimate + '</p>';
             html += '</div>';
             html += '<div class="progress-bar">';
             html += '<div class="progress-fill" style="width: ' + progressPercent + '%"></div>';
             html += '</div>';
             html += '<div class="progress-details">';
-            html += '<h4>Report Status:</h4>';
+            html += '<h4>Analysis Steps:</h4>';
             html += '<div class="report-list">' + reportsHtml + '</div>';
             html += '</div>';
+            
+            // Only show View Analysis button if comprehensive analysis is complete
             html += '<div class="progress-actions">';
             html += '<button class="btn" onclick="refreshAnalysisProgress(\'' + ticker + '\')">🔄 Refresh Progress</button>';
             html += '<button class="btn" onclick="autoRefreshAnalysis(\'' + ticker + '\')" id="autoRefreshBtn">▶️ Auto-refresh (10s)</button>';
+            
+            if (status.status === 'complete' && status.hasComprehensiveAnalysis) {
+                html += '<button class="btn" onclick="fetchCompleteAnalysis(\'' + ticker + '\')" style="background: #28a745; margin-left: 10px;">📊 View Analysis</button>';
+            }
+            
             html += '</div>';
             html += '<div class="progress-note">';
-            html += '<p><em>💡 Claude 3.5 Sonnet is performing comprehensive analysis combining earnings data (Yahoo Finance), stock price trends, market news with AI sentiment analysis (NewsAPI), and macro economic context (FRED). ';
-            html += 'Each analysis includes AI-powered sentiment scoring, market context evaluation, news relevance assessment, and investment recommendations. This multi-source approach ensures high-quality, detailed analysis for better investment decisions.</em></p>';
+            
+            if (status.status === 'analyzing') {
+                html += '<p><em>💡 Claude 3.5 Sonnet is analyzing individual quarterly reports with comprehensive data integration including earnings data (Yahoo Finance), stock price trends, market news with AI sentiment analysis (NewsAPI), and macro economic context (FRED).</em></p>';
+            } else if (status.status === 'synthesizing') {
+                html += '<p><em>🔄 Creating comprehensive multi-quarter analysis by synthesizing all individual quarterly analyses with AI-enhanced news sentiment, market context evaluation, and macroeconomic integration. This final step combines all data sources for institutional-quality investment analysis.</em></p>';
+            } else if (status.status === 'complete') {
+                html += '<p><em>✅ Comprehensive analysis complete! The system has analyzed all quarterly reports and created a comprehensive multi-quarter investment analysis with AI-enhanced insights, market context, and institutional-quality recommendations.</em></p>';
+            } else {
+                html += '<p><em>⏳ Preparing comprehensive AI analysis pipeline with multi-source data integration and advanced sentiment analysis.</em></p>';
+            }
+            
             html += '</div>';
             html += '</div>';
             
@@ -1230,15 +1378,14 @@
                     return response.json();
                 })
                 .then(function (status) {
-                    if (status.pendingAnalyses > 0) {
-                        showAnalysisInProgress(ticker, status);
-                    } else {
-                        // Analysis complete! Show success and load results
+                    if (status.status === 'complete' && status.hasComprehensiveAnalysis) {
+                        // Analysis completely finished! Show success and load results
                         content.innerHTML = `
                         <div class="analysis-complete">
-                            <h3>✅ Analysis Complete for ${ticker}!</h3>
-                            <p>All ${status.totalReports} financial reports have been analyzed.</p>
-                            <button class="btn" onclick="fetchCompleteAnalysis('${ticker}')">📊 View Analysis Results</button>
+                            <h3>✅ Comprehensive Analysis Complete for ${ticker}!</h3>
+                            <p>All ${status.totalReports} quarterly reports have been analyzed and comprehensive multi-quarter analysis is ready.</p>
+                            <p><strong>Analysis includes:</strong> AI-enhanced news sentiment, market context evaluation, macroeconomic integration, and institutional-quality investment recommendations.</p>
+                            <button class="btn" onclick="fetchCompleteAnalysis('${ticker}')" style="background: #28a745; font-size: 1.1em; padding: 12px 24px;">📊 View Comprehensive Analysis</button>
                         </div>
                     `;
 
@@ -1247,6 +1394,9 @@
                             clearInterval(autoRefreshInterval);
                             autoRefreshInterval = null;
                         }
+                    } else {
+                        // Analysis still in progress (individual reports or comprehensive synthesis)
+                        showAnalysisInProgress(ticker, status);
                     }
                 })
                 .catch(function (error) {

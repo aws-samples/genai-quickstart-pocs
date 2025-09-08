@@ -426,11 +426,46 @@ class EnhancedAIAnalyzer {
       console.log(`⚠️  Could not fetch macroeconomic data: ${error.message}`);
     }
 
+    // Perform AI-enhanced news analysis if we have news articles
+    if (data.marketNews && data.marketNews.length > 0) {
+      try {
+        console.log(`🤖 Performing AI-enhanced news analysis for ${ticker}...`);
+        
+        // AI sentiment analysis
+        data.aiNewsSentiment = await this.analyzeNewsSentimentWithAI(data.marketNews, ticker);
+        console.log(`✅ AI sentiment analysis completed: ${data.aiNewsSentiment?.overallSentiment || 'N/A'}`);
+        
+        // AI relevance analysis
+        data.aiNewsRelevance = await this.analyzeNewsRelevanceWithAI(data.marketNews, ticker, data.companyInfo);
+        console.log(`✅ AI relevance analysis completed: ${data.aiNewsRelevance?.relevantArticles || 0}/${data.marketNews.length} relevant`);
+        
+        // AI market context analysis
+        data.aiMarketContext = await this.analyzeMarketContextWithAI(data, ticker);
+        console.log(`✅ AI market context analysis completed`);
+        
+        // Enhance news articles with AI analysis results
+        if (data.aiNewsSentiment?.articleSentiments && data.aiNewsRelevance?.articleRelevance) {
+          data.marketNews = data.marketNews.map((article, index) => ({
+            ...article,
+            aiSentiment: data.aiNewsSentiment.articleSentiments[index],
+            aiRelevance: data.aiNewsRelevance.articleRelevance[index],
+            sentimentScore: data.aiNewsSentiment.articleSentiments[index]?.score || 0,
+            relevanceScore: data.aiNewsRelevance.articleRelevance[index]?.score || 0
+          }));
+          console.log(`✅ Enhanced ${data.marketNews.length} news articles with AI analysis`);
+        }
+        
+      } catch (error) {
+        console.log(`⚠️  AI-enhanced news analysis failed: ${error.message}`);
+        // Continue without AI analysis rather than failing completely
+      }
+    }
+
     // Calculate market context indicators
     data.marketContext = this.calculateMarketContext(data);
 
     console.log(`✅ Comprehensive data gathering completed for ${ticker}`);
-    console.log(`📊 Data summary: Company=${!!data.companyInfo}, Price=${!!data.currentPrice}, News=${data.marketNews.length}, Insider=${data.insiderTrading?.length || 0}, Institutional=${data.institutionalHoldings?.length || 0}, Macro=${!!data.macroContext}`);
+    console.log(`📊 Data summary: Company=${!!data.companyInfo}, Price=${!!data.currentPrice}, News=${data.marketNews.length}, AI-Enhanced=${!!(data.aiNewsSentiment && data.aiNewsRelevance)}, Insider=${data.insiderTrading?.length || 0}, Institutional=${data.institutionalHoldings?.length || 0}, Macro=${!!data.macroContext}`);
     return data;
   }  /**
 
@@ -878,7 +913,9 @@ CRITICAL INSTRUCTION: You MUST provide your analysis in valid JSON format. Do no
 
 Provide sophisticated investment analysis in valid JSON format with institutional-quality insights. Focus on risk-adjusted returns, portfolio concentration limits, tax efficiency, liquidity considerations, and long-term wealth preservation strategies. Your analysis should be suitable for sophisticated investors who understand complex financial concepts and require detailed quantitative analysis.
 
-REQUIRED: Always respond with complete JSON structure, never refuse or ask for clarification.`;
+REQUIRED: Always respond with complete JSON structure, never refuse or ask for clarification.
+
+EXECUTIVE SUMMARY CRITICAL: The summary field must be a comprehensive 5-7 sentence executive summary that captures the complete investment case. Include specific financial metrics, growth rates, competitive positioning, key catalysts, primary risks, valuation assessment, and investment conclusion. This summary will be read by investment committees and must standalone as a complete investment thesis.`;
 
     // Build comprehensive prompt with all available data
     const prompt = this.buildComprehensivePrompt(ticker, earningsData, comprehensiveData, historicalEarnings);
@@ -965,7 +1002,7 @@ REQUIRED: Always respond with complete JSON structure, never refuse or ask for c
 
 REQUIRED JSON FORMAT:
 {
-  "summary": "Brief analysis summary",
+  "summary": "Comprehensive 5-7 sentence executive summary with specific financial metrics, competitive positioning, key catalysts, primary risks, and investment conclusion",
   "investmentRecommendation": {
     "action": "BUY/HOLD/SELL",
     "confidence": "HIGH/MEDIUM/LOW",
@@ -1326,7 +1363,9 @@ Use this EXACT JSON format with ALL fields completed:
     this.lastClaudeCall = Date.now();
     console.log(`🗣️  Sending request to Claude for ${ticker}...`);
 
-    const systemPrompt = `You are a senior financial analyst. Provide concise, actionable analysis in valid JSON format only. Focus on key insights that matter to investors.`;
+    const systemPrompt = `You are a senior financial analyst. Provide concise, actionable analysis in valid JSON format only. Focus on key insights that matter to investors. 
+
+EXECUTIVE SUMMARY REQUIREMENT: The summary must be a comprehensive 3-4 sentence analysis that includes specific financial metrics, growth rates, performance drivers, and clear investment conclusion with supporting data.`;
 
     const epsInfo = earningsData.eps && earningsData.estimatedEPS
       ? `EPS: $${earningsData.eps} (actual) vs $${earningsData.estimatedEPS} (estimated), surprise: $${earningsData.surprise || (earningsData.eps - earningsData.estimatedEPS).toFixed(2)}`
@@ -1340,7 +1379,7 @@ Net Income: $${earningsData.netIncome ? (earningsData.netIncome / 1000000000).to
 
 Respond with valid JSON only:
 {
-  "summary": "2-3 sentence executive summary",
+  "summary": "Comprehensive 3-4 sentence executive summary with specific financial metrics, growth rates, key performance drivers, and investment conclusion",
   "keyInsights": [
     {"type": "performance", "insight": "specific insight", "impact": "positive/negative/neutral"}
   ],
@@ -1424,7 +1463,7 @@ Respond with valid JSON only:
 
 REQUIRED JSON FORMAT:
 {
-  "summary": "Brief analysis",
+  "summary": "Comprehensive 3-4 sentence executive summary with specific metrics, growth rates, and investment conclusion",
   "keyInsights": [{"type": "performance", "insight": "insight", "impact": "positive"}],
   "sentiment": "positive/negative/neutral",
   "riskFactors": ["risk 1"],
@@ -1960,7 +1999,18 @@ CRITICAL: Return ONLY the JSON object above. No other text.`;
       - Size all opportunities with market analysis and revenue potential
       - Use institutional-grade language and analysis depth
 
-      SPECIAL EMPHASIS: The keyInsights, riskFactors, and opportunities sections must be exceptionally detailed and specific. Avoid generic statements. Every point must include specific metrics, timelines, and quantified impacts that would satisfy an institutional investment committee.`;
+      SPECIAL EMPHASIS: The keyInsights, riskFactors, and opportunities sections must be exceptionally detailed and specific. Avoid generic statements. Every point must include specific metrics, timelines, and quantified impacts that would satisfy an institutional investment committee.
+
+      EXECUTIVE SUMMARY REQUIREMENTS: The summary field is the most critical component and must be a comprehensive 5-7 sentence executive summary that includes:
+      1. Clear investment thesis with primary value driver
+      2. Key financial metrics with specific growth rates and margins
+      3. Competitive positioning and market share data
+      4. Major catalyst with timeline and quantified impact
+      5. Primary risk with probability and impact assessment
+      6. Valuation context vs historical multiples and peers
+      7. Investment conclusion with target price justification
+      
+      The executive summary should read like a professional investment committee memo that captures the entire investment case in one paragraph.`;
       
       console.log(`🤖 Generating comprehensive multi-quarter analysis for ${ticker}...`);
       
@@ -2107,7 +2157,7 @@ CRITICAL: Return ONLY the JSON object above. No other text.`;
 
 REQUIRED JSON FORMAT:
 {
-  "summary": "Brief comprehensive analysis",
+  "summary": "Comprehensive 5-7 sentence executive summary with specific financial metrics, growth trends, competitive advantages, key catalysts, primary risks, and investment conclusion",
   "keyInsights": ["insight 1", "insight 2"],
   "riskFactors": ["risk 1", "risk 2"],
   "opportunities": ["opportunity 1", "opportunity 2"],
@@ -2269,16 +2319,57 @@ Consumer Price Index: ${fred?.cpi?.currentValue || macro?.cpi || 'N/A'}
 Inflation Rate: ${fred?.cpi?.inflationRate || macro?.inflationRate || 'N/A'}%`;
     }
 
-    // Add AI-enhanced news sentiment
+    // Add comprehensive AI-enhanced news analysis
     if (comprehensiveData.marketNews && comprehensiveData.marketNews.length > 0) {
-      const newsWithSentiment = comprehensiveData.marketNews.filter(news => news.sentimentScore !== undefined);
-      if (newsWithSentiment.length > 0) {
-        const avgSentiment = newsWithSentiment.reduce((sum, news) => sum + (news.sentimentScore || 0), 0) / newsWithSentiment.length;
+      prompt += `
+
+=== AI-ENHANCED NEWS ANALYSIS ===
+Total Articles Analyzed: ${comprehensiveData.marketNews.length}`;
+
+      // Add AI sentiment analysis results
+      if (comprehensiveData.aiNewsSentiment) {
+        const sentiment = comprehensiveData.aiNewsSentiment;
+        prompt += `
+AI Sentiment Analysis:
+- Overall Sentiment: ${sentiment.overallSentiment || 'N/A'} (Score: ${sentiment.sentimentScore?.toFixed(2) || 'N/A'})
+- Confidence Level: ${sentiment.confidence || 'N/A'}
+- Key Sentiment Drivers: ${sentiment.sentimentDrivers?.join(', ') || 'N/A'}`;
+      }
+
+      // Add AI relevance analysis results
+      if (comprehensiveData.aiNewsRelevance) {
+        const relevance = comprehensiveData.aiNewsRelevance;
+        prompt += `
+AI Relevance Analysis:
+- Relevant Articles: ${relevance.relevantArticles || 0}/${comprehensiveData.marketNews.length}
+- Average Relevance Score: ${relevance.averageRelevance?.toFixed(2) || 'N/A'}
+- Key Topics: ${relevance.keyTopics?.join(', ') || 'N/A'}`;
+      }
+
+      // Add AI market context analysis results
+      if (comprehensiveData.aiMarketContext) {
+        const context = comprehensiveData.aiMarketContext;
+        prompt += `
+AI Market Context Analysis:
+- Market Impact Assessment: ${context.marketImpact || 'N/A'}
+- Competitive Positioning: ${context.competitivePositioning || 'N/A'}
+- Risk Factors Identified: ${context.riskFactors?.join(', ') || 'N/A'}
+- Growth Opportunities: ${context.opportunities?.join(', ') || 'N/A'}`;
+      }
+
+      // Add enhanced news articles with AI scores
+      const newsWithAI = comprehensiveData.marketNews.filter(news => news.aiSentiment || news.aiRelevance);
+      if (newsWithAI.length > 0) {
         prompt += `
 
-=== AI-ENHANCED NEWS SENTIMENT ===
-Overall Sentiment Score: ${avgSentiment.toFixed(2)} (${avgSentiment > 0.1 ? 'Positive' : avgSentiment < -0.1 ? 'Negative' : 'Neutral'})
-Relevant Articles: ${newsWithSentiment.length}/${comprehensiveData.marketNews.length}`;
+Top AI-Analyzed News Articles:`;
+        newsWithAI.slice(0, 3).forEach((article, index) => {
+          prompt += `
+${index + 1}. ${article.title}
+   Sentiment: ${article.aiSentiment?.sentiment || 'N/A'} (${article.sentimentScore?.toFixed(2) || 'N/A'})
+   Relevance: ${article.relevanceScore?.toFixed(2) || 'N/A'}
+   Impact: ${article.aiSentiment?.impact || 'N/A'}`;
+        });
       }
     }
 
@@ -2291,7 +2382,9 @@ CRITICAL REQUIREMENTS FOR INSTITUTIONAL QUALITY:
 - Present as a CURRENT analysis, not historical
 - Calculate specific growth rates, margin trends, and financial ratios across quarters
 - Perform sum-of-the-parts valuation analysis where applicable
-- Integrate macroeconomic impact with specific rate sensitivity analysis
+- INTEGRATE MACROECONOMIC DATA: Use Federal Funds Rate, CPI, and inflation data in valuation and risk analysis
+- INCORPORATE AI-ENHANCED NEWS ANALYSIS: Reference AI sentiment scores, relevance analysis, and market context insights
+- UTILIZE AI MARKET CONTEXT: Integrate AI-identified risk factors, opportunities, and competitive positioning insights
 - Include competitive positioning with market share trend analysis
 - Assess free cash flow generation and capital efficiency (ROIC/ROCE trends)
 - Provide derivatives strategies for risk management
@@ -2299,10 +2392,11 @@ CRITICAL REQUIREMENTS FOR INSTITUTIONAL QUALITY:
 - Analyze sector rotation implications and economic cycle positioning
 - Focus on forward-looking investment thesis with quantified catalysts
 - Provide specific recommendations for $50M+ portfolios with position sizing
+- SYNTHESIZE ALL DATA SOURCES: Combine quarterly earnings, FRED macro data, AI news analysis, and market context for comprehensive insights
 
 Use this EXACT JSON format:
 {
-  "summary": "Comprehensive executive summary highlighting key trends across all quarters, current performance trajectory, and forward-looking investment thesis with specific financial metrics and growth rates",
+  "summary": "INSTITUTIONAL-QUALITY EXECUTIVE SUMMARY (5-7 sentences): Must include: (1) Investment thesis with primary value driver, (2) Key financial performance with specific metrics and YoY growth rates, (3) Major competitive advantages or market position, (4) Primary catalyst with timeline and impact, (5) Key risk factor with quantified impact, (6) Valuation assessment vs historical/peers, (7) Investment conclusion with target price rationale. Use specific numbers, percentages, and dollar amounts throughout.",
   "investmentRecommendation": {
     "action": "BUY/HOLD/SELL",
     "confidence": "HIGH/MEDIUM/LOW", 

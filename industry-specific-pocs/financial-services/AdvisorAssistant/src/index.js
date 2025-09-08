@@ -687,6 +687,20 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
       const storedComprehensive = await analyzer.aws.getItem('analyses', { id: comprehensiveKey });
       if (storedComprehensive && storedComprehensive.analysis) {
         console.log(`✅ Found stored comprehensive analysis for ${ticker}`);
+        
+        // Add current stock price to the analysis if not already present
+        if (!storedComprehensive.analysis.currentPrice) {
+          try {
+            const currentPrice = await fetcher.getStockPrice(ticker);
+            if (currentPrice) {
+              storedComprehensive.analysis.currentPrice = currentPrice;
+              console.log(`📊 Added current stock price to analysis: $${currentPrice.price}`);
+            }
+          } catch (priceError) {
+            console.log(`⚠️  Could not fetch current stock price: ${priceError.message}`);
+          }
+        }
+        
         return res.json(storedComprehensive.analysis);
       }
     } catch (error) {
@@ -699,6 +713,19 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
     
     if (comprehensiveResult.success) {
       console.log(`✅ Generated comprehensive multi-quarter analysis for ${ticker} (${comprehensiveResult.quartersAnalyzed} quarters)`);
+      
+      // Add current stock price to the analysis if not already present
+      if (!comprehensiveResult.analysis.currentPrice) {
+        try {
+          const currentPrice = await fetcher.getStockPrice(ticker);
+          if (currentPrice) {
+            comprehensiveResult.analysis.currentPrice = currentPrice;
+            console.log(`📊 Added current stock price to comprehensive analysis: $${currentPrice.price}`);
+          }
+        } catch (priceError) {
+          console.log(`⚠️  Could not fetch current stock price: ${priceError.message}`);
+        }
+      }
       
       // Store it for future use
       try {
@@ -728,6 +755,19 @@ app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => 
         ticker: ticker,
         message: 'Please run financial data fetch first to generate analysis'
       });
+    }
+    
+    // Add current stock price to the analysis if not already present
+    if (!result.analysis.currentPrice) {
+      try {
+        const currentPrice = await fetcher.getStockPrice(ticker);
+        if (currentPrice) {
+          result.analysis.currentPrice = currentPrice;
+          console.log(`📊 Added current stock price to fallback analysis: $${currentPrice.price}`);
+        }
+      } catch (priceError) {
+        console.log(`⚠️  Could not fetch current stock price: ${priceError.message}`);
+      }
     }
     
     // Return the actual analysis data, not the wrapper
