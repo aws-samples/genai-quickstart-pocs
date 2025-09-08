@@ -31,7 +31,7 @@ NEWSAPI_KEY=your_key FRED_API_KEY=your_key ./deploy.sh poc us-east-1
 ./deploy.sh poc us-east-1
 ```
 
-## Test (5 minutes)
+## Test the Enhanced Analysis (5 minutes)
 ```bash
 # Create test user
 # Once created add user to admin group in Cognito to see Administrative permissions
@@ -48,6 +48,30 @@ aws cognito-idp admin-set-user-password \
   --password NewPass123! \
   --permanent
 ```
+
+### What's New in This Version
+The platform now provides **institutional-quality analysis** suitable for high-net-worth wealth management:
+
+**🆕 Fresh Analysis Button**:
+- **One-Click Comprehensive Rebuild**: Clears all cached data and generates completely fresh analysis
+- **Complete Data Refresh**: Re-fetches latest financial reports, news, and market data
+- **Enhanced User Experience**: Clear progress indicators and automatic results display
+
+**🆕 Institutional-Quality AI Analysis**:
+- **Detailed Key Insights**: 4-5 comprehensive insights with specific growth rates and margin analysis
+- **Quantified Risk Factors**: Specific risks with probability assessments and financial impact
+- **Market-Sized Opportunities**: Revenue potential, market penetration analysis, and timeline projections
+- **Investment Committee Ready**: Analysis quality suitable for institutional investment committees
+
+**🆕 Comprehensive Data Integration**:
+- **FRED Macroeconomic Data**: Federal Funds Rate, CPI, inflation trends integrated into all analyses
+- **AI-Enhanced News Analysis**: Context-aware sentiment with confidence scores and relevance filtering
+- **Market Context Analysis**: Industry-specific valuation and competitive positioning assessment
+
+**🆕 Enhanced Display Quality**:
+- **Fixed Object Display Issues**: Proper handling of complex analysis objects
+- **Better Error Messages**: Clear progress indicators instead of "Not available"
+- **Professional Presentation**: Institutional-grade formatting and data presentation
 
 ## Access
 - **App**: http://your-alb-dns-name

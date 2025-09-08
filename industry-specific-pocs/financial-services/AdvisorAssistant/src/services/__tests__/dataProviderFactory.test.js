@@ -14,7 +14,7 @@ const { DataProviderFactory, BackwardCompatibilityLayer, MigrationHelper } = req
 const originalEnv = process.env;
 
 beforeEach(() => {
-  jest.resetModules();
+  // Set environment variables BEFORE resetting modules
   process.env = {
     ...originalEnv,
     NEWSAPI_KEY: 'test_newsapi_key',
@@ -24,11 +24,20 @@ beforeEach(() => {
     ENABLE_LEGACY_PROVIDERS: 'false'
   };
   
-  // Reset static instances to pick up new environment variables
+  // Now reset modules to pick up new environment
+  jest.resetModules();
+  
+  // Clear the require cache to ensure fresh instances
+  delete require.cache[require.resolve('../dataProviderFactory')];
+  delete require.cache[require.resolve('../providers/EnvironmentConfig')];
+  delete require.cache[require.resolve('../providers/FeatureFlagManager')];
+  
+  // Force DataProviderFactory to recreate its instances with new environment
   const { DataProviderFactory } = require('../dataProviderFactory');
   const EnvironmentConfig = require('../providers/EnvironmentConfig');
   const FeatureFlagManager = require('../providers/FeatureFlagManager');
   
+  // Reset static instances
   DataProviderFactory.environmentConfig = new EnvironmentConfig();
   DataProviderFactory.featureFlagManager = new FeatureFlagManager();
 });
@@ -48,6 +57,7 @@ describe('DataProviderFactory', () => {
 
 
     test('should create NewsAPI provider', () => {
+      const { DataProviderFactory } = require('../dataProviderFactory');
       const provider = DataProviderFactory.createProvider('newsapi');
       expect(provider).toBeDefined();
       expect(provider.constructor.name).toBe('NewsAPIProvider');
@@ -60,12 +70,22 @@ describe('DataProviderFactory', () => {
     });
 
     test('should create Enhanced Multi-Provider', () => {
+      const { DataProviderFactory } = require('../dataProviderFactory');
       const provider = DataProviderFactory.createProvider('enhanced_multi_provider');
       expect(provider).toBeDefined();
       expect(provider.constructor.name).toBe('EnhancedDataAggregator');
     });
 
     test('should handle unknown provider types by defaulting to enhanced_multi_provider', () => {
+      // Set up environment for enhanced_multi_provider
+      process.env.NEWSAPI_KEY = 'test_newsapi_key';
+      process.env.FRED_API_KEY = 'test_fred_key';
+      
+      // Reset modules to pick up environment changes
+      jest.resetModules();
+      delete require.cache[require.resolve('../dataProviderFactory')];
+      const { DataProviderFactory } = require('../dataProviderFactory');
+      
       // Unknown provider types should default to enhanced_multi_provider
       const unknownProvider = DataProviderFactory.createProvider('unknown_provider');
       expect(unknownProvider).toBeDefined();
@@ -73,6 +93,15 @@ describe('DataProviderFactory', () => {
     });
 
     test('should default to enhanced_multi_provider for unknown provider types', () => {
+      // Set up environment for enhanced_multi_provider
+      process.env.NEWSAPI_KEY = 'test_newsapi_key';
+      process.env.FRED_API_KEY = 'test_fred_key';
+      
+      // Reset modules to pick up environment changes
+      jest.resetModules();
+      delete require.cache[require.resolve('../dataProviderFactory')];
+      const { DataProviderFactory } = require('../dataProviderFactory');
+      
       const provider = DataProviderFactory.createProvider('unknown_provider');
       expect(provider).toBeDefined();
       expect(provider.constructor.name).toBe('EnhancedDataAggregator');
@@ -89,6 +118,15 @@ describe('DataProviderFactory', () => {
 
 
     test('should validate enhanced_multi_provider with required keys', () => {
+      // Ensure environment variables are set
+      process.env.NEWSAPI_KEY = 'test_newsapi_key';
+      process.env.FRED_API_KEY = 'test_fred_key';
+      
+      // Reset modules to pick up environment changes
+      jest.resetModules();
+      delete require.cache[require.resolve('../dataProviderFactory')];
+      const { DataProviderFactory } = require('../dataProviderFactory');
+      
       const validation = DataProviderFactory.validateProvider('enhanced_multi_provider');
       expect(validation.valid).toBe(true);
       expect(validation.issues).toHaveLength(0);

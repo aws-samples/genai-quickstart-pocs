@@ -1,12 +1,12 @@
 /**
  * NewsAPI Provider
  * 
- * Provides news data and sentiment analysis using NewsAPI.org
+ * Provides news data using NewsAPI.org (sentiment analysis handled by AI)
  * Features:
  * - Daily quota management (1000 requests per day)
  * - Request queuing system
  * - Keyword filtering by ticker and company name
- * - Basic sentiment analysis
+ * - News article collection and formatting
  * - 30-minute caching for news data
  * 
  * @author Advisor Assistant Team
@@ -36,7 +36,7 @@ class NewsAPIProvider extends BaseProvider {
     };
 
     super('newsapi', newsApiConfig);
-    
+
     // Validate API key
     this.apiKey = this.config.getApiKey('newsapi');
     if (!this.apiKey) {
@@ -61,54 +61,10 @@ class NewsAPIProvider extends BaseProvider {
     // NewsAPI base URL
     this.baseUrl = 'https://newsapi.org/v2';
 
-    // Initialize sentiment analysis
-    this.initializeSentimentAnalysis();
-
     console.log(`✅ NewsAPIProvider initialized with API key: ${this.apiKey.substring(0, 8)}...`);
   }
 
-  /**
-   * Initialize sentiment analysis with keyword lists
-   */
-  initializeSentimentAnalysis() {
-    // Positive sentiment keywords
-    this.positiveKeywords = [
-      // Strong positive
-      'surge', 'soar', 'rally', 'boom', 'breakthrough', 'record', 'all-time high',
-      'outperform', 'beat', 'exceed', 'strong', 'robust', 'solid', 'impressive',
-      'growth', 'gain', 'rise', 'increase', 'up', 'higher', 'bullish', 'optimistic',
-      
-      // Moderate positive
-      'positive', 'good', 'better', 'improve', 'recovery', 'rebound', 'upgrade',
-      'buy', 'recommend', 'favorable', 'confident', 'promising', 'potential',
-      'success', 'profit', 'revenue growth', 'earnings beat', 'dividend increase'
-    ];
 
-    // Negative sentiment keywords
-    this.negativeKeywords = [
-      // Strong negative
-      'crash', 'plunge', 'collapse', 'tumble', 'plummet', 'dive', 'tank',
-      'worst', 'terrible', 'disaster', 'crisis', 'panic', 'fear', 'concern',
-      'decline', 'fall', 'drop', 'down', 'lower', 'bearish', 'pessimistic',
-      
-      // Moderate negative
-      'negative', 'bad', 'worse', 'weak', 'poor', 'disappointing', 'miss',
-      'downgrade', 'sell', 'avoid', 'risk', 'uncertainty', 'volatile',
-      'loss', 'deficit', 'cut', 'reduce', 'layoff', 'bankruptcy', 'debt'
-    ];
-
-    // Neutral/context keywords that modify sentiment
-    this.neutralKeywords = [
-      'stable', 'unchanged', 'flat', 'sideways', 'mixed', 'neutral',
-      'hold', 'maintain', 'steady', 'consistent', 'expected', 'forecast'
-    ];
-
-    // Financial context keywords that amplify sentiment
-    this.financialAmplifiers = [
-      'earnings', 'revenue', 'profit', 'sales', 'guidance', 'outlook',
-      'dividend', 'buyback', 'merger', 'acquisition', 'ipo', 'split'
-    ];
-  }
 
   /**
    * Get next quota reset time (midnight UTC)
@@ -131,7 +87,7 @@ class NewsAPIProvider extends BaseProvider {
       // For now, we'll start fresh each time the provider is initialized
       const today = new Date().toISOString().split('T')[0];
       const storedData = global.newsApiQuotaStorage?.[today];
-      
+
       if (storedData) {
         this.dailyQuota.used = storedData.used || 0;
         console.log(`📊 Loaded quota usage: ${this.dailyQuota.used}/${this.dailyQuota.limit}`);
@@ -148,11 +104,11 @@ class NewsAPIProvider extends BaseProvider {
     try {
       // In a real implementation, this would save to a database or file
       const today = new Date().toISOString().split('T')[0];
-      
+
       if (!global.newsApiQuotaStorage) {
         global.newsApiQuotaStorage = {};
       }
-      
+
       global.newsApiQuotaStorage[today] = {
         used: this.dailyQuota.used,
         lastUpdated: new Date().toISOString()
@@ -168,7 +124,7 @@ class NewsAPIProvider extends BaseProvider {
   setupQuotaReset() {
     const now = new Date();
     const msUntilReset = this.dailyQuota.resetTime.getTime() - now.getTime();
-    
+
     this.quotaResetTimeout = setTimeout(() => {
       this.resetDailyQuota();
       // Set up recurring daily reset
@@ -187,9 +143,9 @@ class NewsAPIProvider extends BaseProvider {
     this.dailyQuota.used = 0;
     this.dailyQuota.resetTime = this.getNextResetTime();
     this.saveQuotaUsage();
-    
+
     console.log(`🔄 Daily quota reset. Next reset: ${this.dailyQuota.resetTime.toISOString()}`);
-    
+
     // Process any queued requests
     this.processRequestQueue();
   }
@@ -242,7 +198,7 @@ class NewsAPIProvider extends BaseProvider {
     try {
       while (this.dailyQuota.requestQueue.length > 0 && this.canMakeRequest()) {
         const queuedRequest = this.dailyQuota.requestQueue.shift();
-        
+
         try {
           const result = await queuedRequest.execute();
           queuedRequest.resolve(result);
@@ -292,24 +248,24 @@ class NewsAPIProvider extends BaseProvider {
 
     try {
       const response = await this.makeRequest(`${url}?${queryParams}`);
-      
+
       // Check for NewsAPI-specific error responses
       if (response.status === 'error') {
         throw this.createNewsAPIError(response);
       }
-      
+
       // Increment quota usage on successful request
       this.dailyQuota.used++;
       this.saveQuotaUsage();
-      
+
       // Record API usage for monitoring
       this.monitor.recordApiUsage(this.providerName, endpoint, {
         quotaUsed: this.dailyQuota.used,
         quotaLimit: this.dailyQuota.limit
       });
-      
+
       console.log(`📊 NewsAPI request completed. Quota: ${this.dailyQuota.used}/${this.dailyQuota.limit}`);
-      
+
       return response;
     } catch (error) {
       // Enhance error with NewsAPI-specific categorization
@@ -326,9 +282,9 @@ class NewsAPIProvider extends BaseProvider {
   createNewsAPIError(response) {
     const errorCode = response.code;
     const errorMessage = response.message || 'Unknown NewsAPI error';
-    
+
     let enhancedError = new Error(`NewsAPI Error: ${errorMessage}`);
-    
+
     switch (errorCode) {
       case 'apiKeyDisabled':
         enhancedError.category = 'auth';
@@ -385,7 +341,7 @@ class NewsAPIProvider extends BaseProvider {
         enhancedError.severity = 'medium';
         enhancedError.isRetryable = true;
     }
-    
+
     enhancedError.newsApiCode = errorCode;
     return enhancedError;
   }
@@ -400,10 +356,10 @@ class NewsAPIProvider extends BaseProvider {
     if (error.newsApiCode) {
       return error;
     }
-    
+
     const statusCode = error.response?.status;
     let enhancedError = error;
-    
+
     if (statusCode === 429) {
       enhancedError = new Error('NewsAPI rate limit exceeded - too many requests per minute');
       enhancedError.category = 'rate_limit';
@@ -440,7 +396,7 @@ class NewsAPIProvider extends BaseProvider {
       enhancedError.severity = 'medium';
       enhancedError.isRetryable = true;
     }
-    
+
     // Handle daily quota exceeded specifically
     if (this.dailyQuota.used >= this.dailyQuota.limit) {
       enhancedError = new Error(`NewsAPI daily quota exceeded (${this.dailyQuota.used}/${this.dailyQuota.limit})`);
@@ -449,11 +405,11 @@ class NewsAPIProvider extends BaseProvider {
       enhancedError.isRetryable = true;
       enhancedError.retryAfter = this.dailyQuota.resetTime;
     }
-    
+
     // Preserve original error information
     enhancedError.originalError = error;
     enhancedError.statusCode = statusCode;
-    
+
     return enhancedError;
   }
 
@@ -464,11 +420,11 @@ class NewsAPIProvider extends BaseProvider {
    */
   async getMarketNews(ticker) {
     const cacheKey = this.generateCacheKey('getMarketNews', ticker || 'general');
-    
+
     return await this.executeWithCache('getMarketNews', ticker || 'general', async () => {
       try {
         let articles = [];
-        
+
         if (ticker) {
           // Get ticker-specific news
           articles = await this.fetchTickerNews(ticker);
@@ -476,21 +432,21 @@ class NewsAPIProvider extends BaseProvider {
           // Get general market news
           articles = await this.fetchGeneralMarketNews();
         }
-        
-        // Filter and format articles
+
+        // Filter and format articles - sentiment analysis handled by AI only
         const filteredArticles = this.filterRelevantArticles(articles, ticker);
         const formattedArticles = filteredArticles.map(article => {
           const formatted = this.formatNewsArticle(article, ticker);
-          // Add sentiment analysis
-          const sentiment = this.analyzeSentiment(article, ticker);
-          formatted.sentiment = sentiment.label;
-          formatted.sentimentScore = sentiment.score;
+          // All sentiment analysis handled by AI - no manual processing
+          formatted.sentiment = 'ai_analysis_required';
+          formatted.sentimentScore = null;
+          formatted.needsAiSentiment = true;
           return formatted;
         });
-        
+
         console.log(`📰 Retrieved ${formattedArticles.length} news articles for ${ticker || 'general market'}`);
         return formattedArticles;
-        
+
       } catch (error) {
         console.error(`❌ Error fetching news for ${ticker || 'general market'}: ${error.message}`);
         throw error;
@@ -506,7 +462,7 @@ class NewsAPIProvider extends BaseProvider {
   async fetchTickerNews(ticker) {
     // Get company name for better search results
     const companyName = this.getCompanyNameFromTicker(ticker);
-    
+
     // Build search query with ticker and company name
     const searchQueries = [
       ticker,
@@ -514,9 +470,9 @@ class NewsAPIProvider extends BaseProvider {
       companyName ? `"${companyName}"` : null,
       companyName ? `${ticker} ${companyName}` : null
     ].filter(Boolean);
-    
+
     const allArticles = [];
-    
+
     // Search with different query combinations to get comprehensive results
     for (const query of searchQueries.slice(0, 2)) { // Limit to 2 queries to preserve quota
       try {
@@ -527,7 +483,7 @@ class NewsAPIProvider extends BaseProvider {
           pageSize: 20,
           domains: 'reuters.com,bloomberg.com,cnbc.com,marketwatch.com,yahoo.com,wsj.com,ft.com'
         });
-        
+
         if (response.articles) {
           allArticles.push(...response.articles);
         }
@@ -535,7 +491,7 @@ class NewsAPIProvider extends BaseProvider {
         console.warn(`⚠️  Failed to fetch news for query "${query}": ${error.message}`);
       }
     }
-    
+
     // Remove duplicates based on URL
     const uniqueArticles = this.removeDuplicateArticles(allArticles);
     return uniqueArticles;
@@ -553,7 +509,7 @@ class NewsAPIProvider extends BaseProvider {
         country: 'us',
         pageSize: 50
       });
-      
+
       return response.articles || [];
     } catch (error) {
       console.warn(`⚠️  Failed to fetch general market news: ${error.message}`);
@@ -598,7 +554,7 @@ class NewsAPIProvider extends BaseProvider {
       'GS': 'Goldman Sachs',
       'MS': 'Morgan Stanley'
     };
-    
+
     return tickerToCompany[ticker.toUpperCase()] || null;
   }
 
@@ -635,34 +591,34 @@ class NewsAPIProvider extends BaseProvider {
           'financial', 'economy', 'economic', 'fed', 'interest rate', 'inflation',
           'nasdaq', 'dow', 's&p', 'wall street', 'nyse'
         ];
-        
+
         return marketKeywords.some(keyword => text.includes(keyword));
       });
     }
-    
+
     // For ticker-specific news, filter for ticker relevance
     const companyName = this.getCompanyNameFromTicker(ticker);
     const tickerLower = ticker.toLowerCase();
     const companyLower = companyName ? companyName.toLowerCase() : '';
-    
+
     return articles.filter(article => {
       const text = `${article.title} ${article.description || ''}`.toLowerCase();
-      
+
       // Check for ticker symbol
       if (text.includes(tickerLower) || text.includes(`$${tickerLower}`)) {
         return true;
       }
-      
+
       // Check for company name
       if (companyName && text.includes(companyLower)) {
         return true;
       }
-      
+
       // Check for ticker in parentheses (common format)
       if (text.includes(`(${tickerLower})`)) {
         return true;
       }
-      
+
       return false;
     });
   }
@@ -696,269 +652,52 @@ class NewsAPIProvider extends BaseProvider {
    */
   calculateRelevanceScore(article, ticker) {
     let score = 0.5; // Base score
-    
+
     const text = `${article.title} ${article.description || ''}`.toLowerCase();
-    
+
     if (ticker) {
       const tickerLower = ticker.toLowerCase();
       const companyName = this.getCompanyNameFromTicker(ticker);
       const companyLower = companyName ? companyName.toLowerCase() : '';
-      
+
       // Higher score for ticker mentions
       if (text.includes(`$${tickerLower}`)) score += 0.3;
       if (text.includes(`(${tickerLower})`)) score += 0.2;
       if (text.includes(tickerLower)) score += 0.1;
-      
+
       // Higher score for company name mentions
       if (companyName && text.includes(companyLower)) {
         score += 0.2;
       }
     }
-    
+
     // Higher score for financial keywords
     const financialKeywords = ['earnings', 'revenue', 'profit', 'stock', 'shares', 'dividend'];
     const keywordMatches = financialKeywords.filter(keyword => text.includes(keyword)).length;
     score += keywordMatches * 0.05;
-    
+
     // Higher score for recent articles
     if (article.publishedAt) {
       const publishedTime = new Date(article.publishedAt).getTime();
       const now = Date.now();
       const hoursAgo = (now - publishedTime) / (1000 * 60 * 60);
-      
+
       if (hoursAgo < 24) score += 0.1;
       if (hoursAgo < 6) score += 0.1;
     }
-    
+
     // Higher score for reputable sources
     const reputableSources = ['reuters', 'bloomberg', 'cnbc', 'wall street journal', 'financial times'];
     const sourceName = article.source?.name?.toLowerCase() || '';
     if (reputableSources.some(source => sourceName.includes(source))) {
       score += 0.1;
     }
-    
+
     return Math.min(1.0, score);
   }
 
-  /**
-   * Analyze sentiment of a news article
-   * @param {Object} article - Raw NewsAPI article
-   * @param {string} ticker - Stock ticker symbol (optional)
-   * @returns {Object} Sentiment analysis result
-   */
-  analyzeSentiment(article, ticker) {
-    const text = `${article.title} ${article.description || ''}`.toLowerCase();
-    
-    // Count positive and negative keywords
-    const positiveCount = this.countKeywords(text, this.positiveKeywords);
-    const negativeCount = this.countKeywords(text, this.negativeKeywords);
-    const neutralCount = this.countKeywords(text, this.neutralKeywords);
-    
-    // Check for financial context amplifiers
-    const hasFinancialContext = this.financialAmplifiers.some(keyword => 
-      text.includes(keyword.toLowerCase())
-    );
-    
-    // Calculate base sentiment score (-1 to 1)
-    let score = 0;
-    const totalKeywords = positiveCount + negativeCount + neutralCount;
-    
-    if (totalKeywords > 0) {
-      score = (positiveCount - negativeCount) / totalKeywords;
-    }
-    
-    // Apply financial context amplification
-    if (hasFinancialContext && Math.abs(score) > 0.1) {
-      score *= 1.2; // Amplify sentiment for financial news
-    }
-    
-    // Apply ticker-specific adjustments
-    if (ticker) {
-      score = this.adjustSentimentForTicker(score, text, ticker);
-    }
-    
-    // Normalize score to -1 to 1 range
-    score = Math.max(-1, Math.min(1, score));
-    
-    // Determine sentiment label
-    const label = this.getSentimentLabel(score);
-    
-    return {
-      score: Math.round(score * 100) / 100, // Round to 2 decimal places
-      label,
-      confidence: this.calculateSentimentConfidence(positiveCount, negativeCount, neutralCount),
-      keywordCounts: {
-        positive: positiveCount,
-        negative: negativeCount,
-        neutral: neutralCount
-      }
-    };
-  }
-
-  /**
-   * Count occurrences of keywords in text
-   * @param {string} text - Text to analyze
-   * @param {Array} keywords - Array of keywords to count
-   * @returns {number} Total keyword count
-   */
-  countKeywords(text, keywords) {
-    return keywords.reduce((count, keyword) => {
-      const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'g');
-      const matches = text.match(regex);
-      return count + (matches ? matches.length : 0);
-    }, 0);
-  }
-
-  /**
-   * Adjust sentiment score for ticker-specific context
-   * @param {number} score - Base sentiment score
-   * @param {string} text - Article text
-   * @param {string} ticker - Stock ticker symbol
-   * @returns {number} Adjusted sentiment score
-   */
-  adjustSentimentForTicker(score, text, ticker) {
-    const tickerLower = ticker.toLowerCase();
-    const companyName = this.getCompanyNameFromTicker(ticker);
-    const companyLower = companyName ? companyName.toLowerCase() : '';
-    
-    // Check for direct ticker mentions with sentiment context
-    const tickerMentions = [
-      `${tickerLower} surges`,
-      `${tickerLower} plunges`,
-      `${tickerLower} beats`,
-      `${tickerLower} misses`,
-      `${tickerLower} up`,
-      `${tickerLower} down`
-    ];
-    
-    for (const mention of tickerMentions) {
-      if (text.includes(mention)) {
-        // Amplify sentiment for direct ticker mentions
-        if (mention.includes('surges') || mention.includes('beats') || mention.includes('up')) {
-          score = Math.max(score, 0.3);
-        } else if (mention.includes('plunges') || mention.includes('misses') || mention.includes('down')) {
-          score = Math.min(score, -0.3);
-        }
-      }
-    }
-    
-    // Check for company-specific sentiment patterns
-    if (companyName) {
-      const companyPatterns = [
-        `${companyLower} reports strong`,
-        `${companyLower} disappoints`,
-        `${companyLower} exceeds`,
-        `${companyLower} falls short`
-      ];
-      
-      for (const pattern of companyPatterns) {
-        if (text.includes(pattern)) {
-          if (pattern.includes('strong') || pattern.includes('exceeds')) {
-            score = Math.max(score, 0.4);
-          } else if (pattern.includes('disappoints') || pattern.includes('falls short')) {
-            score = Math.min(score, -0.4);
-          }
-        }
-      }
-    }
-    
-    return score;
-  }
-
-  /**
-   * Get sentiment label from score
-   * @param {number} score - Sentiment score (-1 to 1)
-   * @returns {string} Sentiment label
-   */
-  getSentimentLabel(score) {
-    if (score >= 0.3) return 'positive';
-    if (score <= -0.3) return 'negative';
-    if (score >= 0.1) return 'slightly positive';
-    if (score <= -0.1) return 'slightly negative';
-    return 'neutral';
-  }
-
-  /**
-   * Calculate confidence level for sentiment analysis
-   * @param {number} positiveCount - Number of positive keywords
-   * @param {number} negativeCount - Number of negative keywords
-   * @param {number} neutralCount - Number of neutral keywords
-   * @returns {number} Confidence score (0-1)
-   */
-  calculateSentimentConfidence(positiveCount, negativeCount, neutralCount) {
-    const totalKeywords = positiveCount + negativeCount + neutralCount;
-    
-    if (totalKeywords === 0) return 0.1; // Low confidence with no keywords
-    
-    // Higher confidence with more keywords and clear sentiment direction
-    const sentimentClarity = Math.abs(positiveCount - negativeCount) / totalKeywords;
-    const keywordDensity = Math.min(totalKeywords / 10, 1); // Normalize to 0-1
-    
-    return Math.min(0.9, 0.3 + (sentimentClarity * 0.4) + (keywordDensity * 0.3));
-  }
-
-  /**
-   * Get sentiment statistics for a collection of articles
-   * @param {Array} articles - Array of articles with sentiment
-   * @returns {Object} Sentiment statistics
-   */
-  getSentimentStatistics(articles) {
-    if (!articles || articles.length === 0) {
-      return {
-        averageScore: 0,
-        distribution: { positive: 0, negative: 0, neutral: 0 },
-        totalArticles: 0,
-        sentimentTrend: 'unknown'
-      };
-    }
-    
-    const scores = articles.map(article => article.sentimentScore || 0);
-    const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    
-    const distribution = articles.reduce((dist, article) => {
-      const sentiment = article.sentiment || 'neutral';
-      if (sentiment.includes('positive')) {
-        dist.positive++;
-      } else if (sentiment.includes('negative')) {
-        dist.negative++;
-      } else {
-        dist.neutral++;
-      }
-      return dist;
-    }, { positive: 0, negative: 0, neutral: 0 });
-    
-    const sentimentTrend = articles.length > 0 ? 
-      this.determineSentimentTrend(averageScore, distribution) : 'unknown';
-
-    return {
-      averageScore: Math.round(averageScore * 100) / 100,
-      distribution,
-      totalArticles: articles.length,
-      sentimentTrend
-    };
-  }
-
-  /**
-   * Determine overall sentiment trend
-   * @param {number} averageScore - Average sentiment score
-   * @param {Object} distribution - Sentiment distribution
-   * @returns {string} Sentiment trend
-   */
-  determineSentimentTrend(averageScore, distribution) {
-    const total = distribution.positive + distribution.negative + distribution.neutral;
-    
-    if (total === 0) return 'unknown';
-    
-    const positiveRatio = distribution.positive / total;
-    const negativeRatio = distribution.negative / total;
-    
-    if (averageScore > 0.2 && positiveRatio > 0.6) return 'strongly positive';
-    if (averageScore < -0.2 && negativeRatio > 0.6) return 'strongly negative';
-    if (averageScore > 0.1) return 'positive';
-    if (averageScore < -0.1) return 'negative';
-    
-    return 'mixed';
-  }
+  // All sentiment analysis now handled by AI in EnhancedAIAnalyzer
+  // Manual sentiment methods removed to ensure AI-only approach
 
   /**
    * Get stock price (not supported by NewsAPI)
@@ -1005,7 +744,7 @@ class NewsAPIProvider extends BaseProvider {
    */
   getStats() {
     const baseStats = super.getStats();
-    
+
     return {
       ...baseStats,
       quota: {
@@ -1038,7 +777,7 @@ class NewsAPIProvider extends BaseProvider {
    */
   cleanup() {
     super.cleanup();
-    
+
     // Clear timers
     if (this.quotaResetTimeout) {
       clearTimeout(this.quotaResetTimeout);
@@ -1046,13 +785,13 @@ class NewsAPIProvider extends BaseProvider {
     if (this.quotaResetInterval) {
       clearInterval(this.quotaResetInterval);
     }
-    
+
     // Clear request queue
     this.dailyQuota.requestQueue.forEach(request => {
       request.reject(new Error('Provider is being cleaned up'));
     });
     this.dailyQuota.requestQueue = [];
-    
+
     // Save final quota usage
     this.saveQuotaUsage();
   }

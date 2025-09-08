@@ -600,8 +600,8 @@
                         html += '<div id="analysis-status-' + company.ticker + '" style="font-size: 0.8em; margin-top: 5px;">Checking analysis status...</div></div>';
                         html += '<div>';
                         html += '<button class="btn" onclick="fetchReports(\'' + company.ticker + '\')" style="margin-right: 5px;">Fetch Reports</button>';
+                        html += '<button class="btn" onclick="freshAnalysis(\'' + company.ticker + '\')" style="margin-right: 5px; background: #28a745; color: white;" title="Clear cache, re-fetch data, and generate fresh comprehensive analysis">🔄 Fresh Analysis</button>';
                         html += '<button class="btn" onclick="viewAnalysis(\'' + company.ticker + '\')" style="margin-right: 5px;">View Analysis</button>';
-                        html += '<button class="btn" onclick="showRerunOptions(\'' + company.ticker + '\')" style="margin-right: 5px; background: #ffc107; color: #000;">Rerun AI</button>';
                         html += '<button class="btn" onclick="deleteCompany(\'' + company.ticker + '\')" style="background: #dc3545;">Delete</button>';
                         html += '</div></li>';
                     }
@@ -618,10 +618,11 @@
                 });
         }
 
-        function fetchReports(ticker) {
+        function fetchReports(ticker, clearCache = false) {
             const button = event.target;
             button.disabled = true;
-            button.textContent = 'Fetching...';
+            const originalText = button.textContent;
+            button.textContent = clearCache ? 'Generating Fresh Analysis...' : 'Fetching...';
 
             // Add timeout and better progress indication
             const controller = new AbortController();
@@ -633,7 +634,8 @@
             let progressDots = 0;
             const progressInterval = setInterval(() => {
                 progressDots = (progressDots + 1) % 4;
-                button.textContent = 'Fetching' + '.'.repeat(progressDots) + ' (this may take 1-2 minutes)';
+                const baseText = clearCache ? 'Generating Fresh Analysis' : 'Fetching';
+                button.textContent = baseText + '.'.repeat(progressDots) + ' (this may take 1-2 minutes)';
             }, 500);
 
             fetch('/api/fetch-financials/' + ticker, {
@@ -641,7 +643,11 @@
                 signal: controller.signal,
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    forceAnalysis: clearCache,
+                    clearCache: clearCache
+                })
             })
                 .then(function (response) {
                     clearTimeout(timeoutId);
@@ -661,8 +667,9 @@
                         let message = result.message;
 
                         if (result.status === 'analyzing') {
-                            message += '\n\nAI analysis is running in the background for ' + result.analysesToGenerate + ' reports.';
-                            message += '\nThis may take a few minutes. You can check progress by viewing analysis.';
+                            message += '\n\nComprehensive AI analysis is running in the background for ' + result.analysesToGenerate + ' reports.';
+                            message += '\nClaude 3.5 Sonnet is analyzing earnings data, stock price, news sentiment, and macro economic factors.';
+                            message += '\nThis may take 5-30 minutes per analysis. You can check progress by viewing analysis.';
 
                             // Start checking analysis progress
                             setTimeout(() => checkAnalysisProgress(ticker), 5000);
@@ -701,8 +708,92 @@
                     clearTimeout(timeoutId);
                     clearInterval(progressInterval);
                     button.disabled = false;
-                    button.textContent = 'Fetch Reports';
+                    // Reset to original text or default based on button type
+                    if (originalText.includes('Fresh Analysis')) {
+                        button.textContent = '🔄 Fresh Analysis';
+                    } else {
+                        button.textContent = 'Fetch Reports';
+                    }
                 });
+        }
+
+        // New comprehensive Fresh Analysis function
+        function freshAnalysis(ticker) {
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            // Show confirmation dialog
+            const confirmed = confirm(
+                `🔄 Fresh Analysis for ${ticker}\n\n` +
+                `This will:\n` +
+                `• Clear all cached analysis data\n` +
+                `• Re-fetch latest financial reports\n` +
+                `• Generate completely fresh AI analysis\n\n` +
+                `This process may take 15-60 minutes depending on the number of reports.\n\n` +
+                `Continue with fresh analysis?`
+            );
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Starting Fresh Analysis...';
+            
+            // Step 1: Delete existing analyses
+            fetch('/api/delete-analyses/' + ticker, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to clear existing analyses');
+                }
+                button.textContent = 'Cleared cache, fetching fresh data...';
+                
+                // Step 2: Fetch fresh reports with comprehensive analysis
+                return fetch('/api/fetch-financials/' + ticker, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        forceAnalysis: true,
+                        clearCache: true,
+                        comprehensiveRebuild: true
+                    })
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to generate fresh analysis');
+                }
+                return response.json();
+            })
+            .then(data => {
+                button.textContent = '✅ Fresh Analysis Complete!';
+                
+                // Show success message
+                alert(`✅ Fresh Analysis Complete for ${ticker}!\n\n${data.message || 'Analysis generated successfully'}`);
+                
+                // Refresh the company list and analysis status
+                loadCompanies();
+                
+                // Auto-open analysis if available
+                setTimeout(() => {
+                    viewAnalysis(ticker);
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Fresh analysis error:', error);
+                alert(`❌ Fresh Analysis Failed for ${ticker}:\n\n${error.message}`);
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.textContent = originalText;
+            });
         }
 
         function viewAnalysis(ticker) {
@@ -759,12 +850,12 @@
                                 const insight = analysis.keyInsights[i];
                                 if (typeof insight === 'string') {
                                     insightsHtml += '<li>' + insight + '</li>';
-                                } else if (insight.insight) {
+                                } else if (insight && insight.insight) {
                                     insightsHtml += '<li><strong>' + (insight.type || 'Insight') + ':</strong> ' + insight.insight + '</li>';
                                 }
                             }
                         } else {
-                            insightsHtml = '<li>AI analysis not available</li>';
+                            insightsHtml = '<li style="color: #6c757d; font-style: italic;">Analysis in progress - insights will appear when AI analysis completes</li>';
                         }
 
                         let riskFactorsHtml = '';
@@ -773,7 +864,7 @@
                                 riskFactorsHtml += '<li>' + analysis.riskFactors[i] + '</li>';
                             }
                         } else {
-                            riskFactorsHtml = '<li>AI analysis not available</li>';
+                            riskFactorsHtml = '<li style="color: #6c757d; font-style: italic;">Risk analysis in progress - factors will appear when AI analysis completes</li>';
                         }
 
                         let opportunitiesHtml = '';
@@ -782,7 +873,7 @@
                                 opportunitiesHtml += '<li>' + analysis.opportunities[i] + '</li>';
                             }
                         } else {
-                            opportunitiesHtml = '<li>AI analysis not available</li>';
+                            opportunitiesHtml = '<li style="color: #6c757d; font-style: italic;">Opportunity analysis in progress - insights will appear when AI analysis completes</li>';
                         }
 
                         // Performance metrics removed - AI analysis only
@@ -871,8 +962,8 @@
                                 '<p><strong>Suitable For:</strong> ' + (Array.isArray(portfolio.suitableFor) ? portfolio.suitableFor.join(', ') : (portfolio.suitableFor || 'Growth and Quality-focused investors')) + '</p>' +
                                 '<p><strong>Recommended Allocation:</strong> ' + (portfolio.recommendedAllocation || '2-5% of portfolio') + '</p>' +
                                 '<p><strong>Diversification Benefit:</strong> ' + (portfolio.diversificationBenefit || 'Provides exposure to large-cap growth with strong fundamentals and market leadership position') + '</p>' +
-                                '<p><strong>Tax Considerations:</strong> ' + (portfolio.taxConsiderations || 'Consider tax-loss harvesting opportunities and long-term capital gains treatment for positions held over one year') + '</p>' +
-                                '<p><strong>Liquidity Profile:</strong> ' + (portfolio.liquidityProfile || 'High liquidity with strong daily trading volume suitable for large position management') + '</p>' +
+                                '<p><strong>Tax Considerations:</strong> ' + (typeof portfolio.taxConsiderations === 'string' ? portfolio.taxConsiderations : (portfolio.taxConsiderations?.summary || 'Consider tax-loss harvesting opportunities and long-term capital gains treatment for positions held over one year')) + '</p>' +
+                                '<p><strong>Liquidity Profile:</strong> ' + (typeof portfolio.liquidityProfile === 'string' ? portfolio.liquidityProfile : (portfolio.liquidityProfile?.summary || 'High liquidity with strong daily trading volume suitable for large position management')) + '</p>' +
                                 '</div></div>';
                         }
                         
@@ -886,8 +977,8 @@
                                 (valuation.currentValuation ? valuation.currentValuation.replace('_', ' ') : 'Fairly Valued') + '</span></p>' +
                                 '<p><strong>Fair Value Estimate:</strong> $' + (valuation.fairValue || 'Based on DCF and comparable analysis') + '</p>';
                             
-                            if (valuation.valuationRange) {
-                                enhancedSections += '<p><strong>Valuation Range:</strong> $' + (valuation.valuationRange.low || 'Conservative estimate') + ' - $' + (valuation.valuationRange.high || 'Optimistic estimate') + '</p>';
+                            if (valuation.valuationRange && valuation.valuationRange.low && valuation.valuationRange.high) {
+                                enhancedSections += '<p><strong>Valuation Range:</strong> $' + valuation.valuationRange.low + ' - $' + valuation.valuationRange.high + '</p>';
                             } else {
                                 enhancedSections += '<p><strong>Valuation Range:</strong> Based on multiple valuation methodologies including DCF, P/E multiples, and peer comparison</p>';
                             }
@@ -1047,7 +1138,7 @@
                         content.innerHTML = wealthAdvisorHeader +
                             '<div class="analysis-summary">' +
                             '<h3>' + ticker + ' - Investment Analysis</h3>' +
-                            '<p><strong>Executive Summary:</strong> ' + (analysis.summary || 'AI analysis not available') + '</p>' +
+                            '<p><strong>Executive Summary:</strong> ' + (analysis.summary || 'Not available') + '</p>' +
                             '<p><strong>Overall Sentiment:</strong> ' + sentimentDisplay + '</p>' +
                             '<p><strong>Analysis Date:</strong> ' + new Date(analysis.timestamp).toLocaleDateString() + '</p>' +
                             '</div>' +
@@ -1084,7 +1175,7 @@
             for (var i = 0; i < status.reports.length; i++) {
                 var report = status.reports[i];
                 var itemClass = report.hasAnalysis ? 'completed' : 'pending';
-                var statusText = report.hasAnalysis ? '✅ Complete' : '⏳ Analyzing...';
+                var statusText = report.hasAnalysis ? '✅ AI Analysis Complete' : '🤖 AI Analysis in Progress...';
                 
                 reportsHtml += '<div class="report-item ' + itemClass + '">';
                 reportsHtml += '<span class="report-quarter">' + report.quarter + ' ' + report.year + '</span>';
@@ -1094,12 +1185,14 @@
             
             // Build the complete HTML
             var html = '<div class="analysis-progress">';
-            html += '<h3>🤖 AI Analysis in Progress for ' + ticker + '</h3>';
+            html += '<h3>🤖 Comprehensive AI Analysis in Progress for ' + ticker + '</h3>';
             html += '<div class="progress-info">';
-            html += '<p><strong>Status:</strong> Analyzing financial reports with <span id="currentAiModel">Claude AI</span></p>';
-            html += '<p><strong>Progress:</strong> ' + status.completedAnalyses + ' of ' + status.totalReports + ' reports analyzed (' + progressPercent + '%)</p>';
-            html += '<p><strong>Remaining:</strong> ' + status.pendingAnalyses + ' reports</p>';
-            html += '<p><strong>Estimated time:</strong> ' + (status.pendingAnalyses * 3) + ' - ' + (status.pendingAnalyses * 5) + ' seconds</p>';
+            html += '<p><strong>Status:</strong> Comprehensive AI analysis in progress using <span id="currentAiModel">Claude 3.5 Sonnet</span></p>';
+            html += '<p><strong>Data Sources:</strong> Yahoo Finance (earnings, stock price), NewsAPI (market news), FRED (economic data)</p>';
+            html += '<p><strong>AI Processing:</strong> News sentiment analysis, market context analysis, relevance scoring</p>';
+            html += '<p><strong>Progress:</strong> ' + status.completedAnalyses + ' of ' + status.totalReports + ' comprehensive analyses completed (' + progressPercent + '%)</p>';
+            html += '<p><strong>Remaining:</strong> ' + status.pendingAnalyses + ' comprehensive analyses</p>';
+            html += '<p><strong>Estimated time:</strong> ' + (status.pendingAnalyses * 5) + ' - ' + (status.pendingAnalyses * 30) + ' minutes (AI analysis takes time for quality)</p>';
             html += '</div>';
             html += '<div class="progress-bar">';
             html += '<div class="progress-fill" style="width: ' + progressPercent + '%"></div>';
@@ -1113,8 +1206,8 @@
             html += '<button class="btn" onclick="autoRefreshAnalysis(\'' + ticker + '\')" id="autoRefreshBtn">▶️ Auto-refresh (10s)</button>';
             html += '</div>';
             html += '<div class="progress-note">';
-            html += '<p><em>💡 The AI is analyzing each financial report for sentiment, key insights, risk factors, and opportunities. ';
-            html += 'This process ensures high-quality, detailed analysis for better investment decisions.</em></p>';
+            html += '<p><em>💡 Claude 3.5 Sonnet is performing comprehensive analysis combining earnings data (Yahoo Finance), stock price trends, market news with AI sentiment analysis (NewsAPI), and macro economic context (FRED). ';
+            html += 'Each analysis includes AI-powered sentiment scoring, market context evaluation, news relevance assessment, and investment recommendations. This multi-source approach ensures high-quality, detailed analysis for better investment decisions.</em></p>';
             html += '</div>';
             html += '</div>';
             
@@ -1556,23 +1649,31 @@
                         return;
                     }
 
-                    // Create options for each quarter
-                    let options = 'Select which quarter to rerun AI analysis for ' + ticker + ':\n\n';
-                    for (let i = 0; i < reports.length; i++) {
+                    // Show comprehensive rerun options
+                    let message = 'Rerun comprehensive AI analysis for ' + ticker + '?\n\n';
+                    message += 'This will:\n';
+                    message += '• Delete ALL existing AI analyses for ' + ticker + '\n';
+                    message += '• Generate fresh comprehensive analysis for all ' + reports.length + ' available reports:\n';
+                    
+                    for (let i = 0; i < Math.min(reports.length, 5); i++) {
                         const report = reports[i];
-                        options += (i + 1) + '. ' + report.quarter + ' ' + report.year + '\n';
+                        message += '  - ' + report.quarter + ' ' + report.year + '\n';
                     }
+                    
+                    if (reports.length > 5) {
+                        message += '  - ... and ' + (reports.length - 5) + ' more reports\n';
+                    }
+                    
+                    message += '\n• Use latest AI enhancements (Claude 3.5 Sonnet)\n';
+                    message += '• Include AI-powered news sentiment analysis\n';
+                    message += '• Include AI-powered market context analysis\n';
+                    message += '• Process may take 15-60 minutes depending on number of reports\n\n';
+                    message += 'Continue with comprehensive rerun?';
 
-                    const choice = prompt(options + '\nEnter the number (1-' + reports.length + '):');
+                    const confirmed = confirm(message);
 
-                    if (choice && !isNaN(choice)) {
-                        const index = parseInt(choice) - 1;
-                        if (index >= 0 && index < reports.length) {
-                            const selectedReport = reports[index];
-                            rerunAnalysis(ticker, selectedReport.quarter, selectedReport.year);
-                        } else {
-                            alert('Invalid selection. Please try again.');
-                        }
+                    if (confirmed) {
+                        rerunComprehensiveAnalysis(ticker, reports);
                     }
                 })
                 .catch(function (error) {
@@ -1580,32 +1681,22 @@
                 });
         }
 
-        function rerunAnalysis(ticker, quarter, year) {
-            const confirmed = confirm(
-                'This will delete the existing AI analysis for ' + ticker + ' ' + quarter + ' ' + year +
-                ' and generate a fresh analysis.\n\n' +
-                'This process may take 5-30 minutes depending on AI service availability.\n\n' +
-                'Continue?'
-            );
-
-            if (!confirmed) {
-                return;
-            }
-
-            // Show progress message
+        function rerunComprehensiveAnalysis(ticker, reports) {
+            // Show progress message immediately
             const statusElement = document.getElementById('analysis-status-' + ticker);
             if (statusElement) {
-                statusElement.innerHTML = '<span style="color: #ffc107;">🔄 Rerunning AI analysis...</span>';
+                statusElement.innerHTML = '<span style="color: #ffc107;">🔄 Rerunning comprehensive AI analysis for all ' + reports.length + ' reports...</span>';
             }
 
-            fetch('/api/rerun-analysis/' + ticker, {
+            // Call the comprehensive rerun endpoint
+            fetch('/api/rerun-comprehensive-analysis/' + ticker, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    quarter: quarter,
-                    year: year
+                    forceRerun: true,
+                    includeAllReports: true
                 })
             })
                 .then(function (response) {
@@ -1613,28 +1704,47 @@
                 })
                 .then(function (result) {
                     if (result.message) {
-                        alert('Success!\n' + result.message + '\n\nEstimated time: ' + result.estimatedTime);
+                        let successMessage = 'Comprehensive AI Analysis Started!\n\n';
+                        successMessage += result.message + '\n\n';
+                        successMessage += 'Processing Details:\n';
+                        successMessage += '• Reports to analyze: ' + result.totalReports + '\n';
+                        successMessage += '• AI model: Claude 3.5 Sonnet\n';
+                        successMessage += '• Enhanced features: News sentiment, market context\n';
+                        successMessage += '• Estimated time: ' + result.estimatedTime + '\n\n';
+                        successMessage += 'You can check progress by clicking "View Analysis" or the page will auto-refresh.';
 
-                        // Start checking status periodically
+                        alert(successMessage);
+
+                        // Start checking status more frequently for comprehensive analysis
                         const statusInterval = setInterval(() => {
                             checkCompanyAnalysisStatus(ticker);
-                        }, 30000); // Check every 30 seconds
+                        }, 15000); // Check every 15 seconds
 
-                        // Stop checking after 45 minutes
+                        // Stop checking after 90 minutes (comprehensive analysis takes longer)
                         setTimeout(() => {
                             clearInterval(statusInterval);
-                        }, 45 * 60 * 1000);
+                        }, 90 * 60 * 1000);
+
+                        // Also refresh the company list to show updated status
+                        setTimeout(() => {
+                            loadCompanies();
+                        }, 5000);
 
                     } else {
-                        alert('Error: ' + (result.error || 'Unknown error'));
+                        alert('Error: ' + (result.error || 'Unknown error occurred while starting comprehensive analysis'));
+                        
+                        // Reset status on error
+                        if (statusElement) {
+                            statusElement.innerHTML = '<span style="color: #dc3545;">❌ Comprehensive rerun failed</span>';
+                        }
                     }
                 })
                 .catch(function (error) {
-                    alert('Error rerunning analysis: ' + error.message);
+                    alert('Error starting comprehensive analysis: ' + error.message);
 
                     // Reset status on error
                     if (statusElement) {
-                        statusElement.innerHTML = '<span style="color: #dc3545;">❌ Rerun failed</span>';
+                        statusElement.innerHTML = '<span style="color: #dc3545;">❌ Comprehensive rerun failed</span>';
                     }
                 });
         }

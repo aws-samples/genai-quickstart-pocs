@@ -678,9 +678,62 @@ app.get('/api/financials/:ticker', cognitoAuth.requireAuth(), async (req, res) =
 app.get('/api/analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
   try {
     const { ticker } = req.params;
-    const analysis = await analyzer.getLatestAnalysis(ticker);
-    res.json(analysis);
+    
+    // First try to get stored comprehensive analysis
+    console.log(`🔍 Checking for stored comprehensive analysis for ${ticker}...`);
+    const comprehensiveKey = `${ticker}-comprehensive-analysis`;
+    
+    try {
+      const storedComprehensive = await analyzer.aws.getItem('analyses', { id: comprehensiveKey });
+      if (storedComprehensive && storedComprehensive.analysis) {
+        console.log(`✅ Found stored comprehensive analysis for ${ticker}`);
+        return res.json(storedComprehensive.analysis);
+      }
+    } catch (error) {
+      console.log(`📭 No stored comprehensive analysis found for ${ticker}`);
+    }
+    
+    // If no stored comprehensive analysis, try to generate one
+    console.log(`🔄 Generating fresh comprehensive analysis for ${ticker}...`);
+    const comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+    
+    if (comprehensiveResult.success) {
+      console.log(`✅ Generated comprehensive multi-quarter analysis for ${ticker} (${comprehensiveResult.quartersAnalyzed} quarters)`);
+      
+      // Store it for future use
+      try {
+        await analyzer.aws.putItem('analyses', {
+          id: comprehensiveKey,
+          ticker: ticker,
+          analysis: comprehensiveResult.analysis,
+          analysisType: 'comprehensive-multi-quarter',
+          quartersAnalyzed: comprehensiveResult.quartersAnalyzed,
+          createdAt: new Date().toISOString()
+        });
+        console.log(`💾 Stored comprehensive analysis for ${ticker}`);
+      } catch (storeError) {
+        console.log(`⚠️  Could not store comprehensive analysis: ${storeError.message}`);
+      }
+      
+      return res.json(comprehensiveResult.analysis);
+    }
+    
+    // Fallback to latest single-quarter analysis
+    console.log(`⚠️  Comprehensive analysis failed, falling back to latest single analysis: ${comprehensiveResult.error || comprehensiveResult.message}`);
+    const result = await analyzer.getLatestAnalysis(ticker);
+    
+    if (!result.success || !result.found) {
+      return res.status(404).json({
+        error: result.error || 'No analysis available',
+        ticker: ticker,
+        message: 'Please run financial data fetch first to generate analysis'
+      });
+    }
+    
+    // Return the actual analysis data, not the wrapper
+    res.json(result.analysis);
   } catch (error) {
+    console.error(`Error getting analysis for ${ticker}:`, error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -708,7 +761,7 @@ app.get('/api/reports/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
   }
 });
 
-// New endpoint to fetch and analyze financial data with enhanced timeout handling
+// Comprehensive data endpoint: fetches earnings, stock price, news, fundamentals, macro data, and runs AI analysis
 app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
   console.log(`🚀 FETCH FINANCIALS ENDPOINT HIT - Ticker: ${req.params.ticker}`);
   console.log(`🚀 Request method: ${req.method}`);
@@ -717,14 +770,28 @@ app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req,
   
   try {
     const { ticker } = req.params;
-    const { forceAnalysis } = req.query; // Option to force fresh analysis
-    console.log(`Starting financial data fetch for ${ticker} (force analysis: ${forceAnalysis === 'true'})`);
+    const { forceAnalysis, clearCache, comprehensiveRebuild } = req.body || {}; // Get from request body
+    console.log(`Starting financial data fetch for ${ticker} (force analysis: ${forceAnalysis === true}, clear cache: ${clearCache === true}, comprehensive rebuild: ${comprehensiveRebuild === true})`);
     
-    // Fetch financial data from configured provider
-    console.log(`📊 Fetching financial data for ${ticker} from ${process.env.DATA_PROVIDER || 'enhanced_multi_provider'}...`);
+    // Clear analysis cache if requested
+    if (clearCache === true || forceAnalysis === true) {
+      console.log(`🧹 Clearing analysis cache for ${ticker} to ensure fresh analysis with latest enhancements`);
+      if (analyzer && analyzer.clearAnalysisCache) {
+        analyzer.clearAnalysisCache(ticker);
+      }
+    }
+    
+    // For comprehensive rebuild, also clear financial data cache
+    if (comprehensiveRebuild === true) {
+      console.log(`🔄 Comprehensive rebuild requested for ${ticker} - will re-fetch all data`);
+    }
+    
+    // Fetch comprehensive financial data from configured provider
+    console.log(`📊 Fetching comprehensive data for ${ticker} from ${process.env.DATA_PROVIDER || 'enhanced_multi_provider'}...`);
+    console.log(`🔍 Collecting: earnings reports, stock price, news articles, company fundamentals, and macro data`);
     const financialData = await fetcher.getFinancialData(ticker);
     
-    console.log(`📊 Data provider returned ${financialData.length} financial reports for ${ticker}`);
+    console.log(`📊 Data provider returned ${financialData.length} earnings reports for ${ticker}`);
     
     if (financialData.length === 0) {
       console.log(`⚠️  No financial data found for ${ticker} - this could be:`);
@@ -790,20 +857,34 @@ app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req,
       }
     }
     
-    // Respond immediately with financial data
+    // Respond immediately with comprehensive data summary
     res.json({
-      message: `Fetched ${financialData.length} financial reports for ${ticker}, ${newReportsCount} new reports added`,
+      message: `Successfully fetched comprehensive data for ${ticker}: ${financialData.length} earnings reports, stock price, news articles, company fundamentals, and macro economic data. ${newReportsCount} new reports added.`,
+      dataCollected: {
+        earningsReports: financialData.length,
+        stockPrice: 'current price and technical indicators',
+        newsArticles: 'recent market news with AI sentiment analysis',
+        companyFundamentals: 'financial ratios, growth metrics, and valuation data',
+        macroEconomicData: 'interest rates, CPI, and economic indicators',
+        aiEnhancements: 'sentiment analysis, relevance scoring, and market context'
+      },
       totalFinancialCount: financialData.length,
       newReportsCount: newReportsCount,
       analysesToGenerate: financialsToAnalyze.length,
-      status: financialsToAnalyze.length > 0 ? 'analyzing' : 'complete',
+      status: financialsToAnalyze.length > 0 ? 'analyzing' : 'pending-comprehensive',
+      statusMessage: financialsToAnalyze.length > 0 
+        ? `Analyzing ${financialsToAnalyze.length} quarters individually, then creating comprehensive analysis`
+        : 'Individual analyses complete, generating comprehensive multi-quarter analysis',
       forceAnalysis: forceAnalysis === 'true',
-      estimatedTime: `${financialsToAnalyze.length * 5} minutes (up to 30 min per analysis due to throttling)`
+      estimatedTime: financialsToAnalyze.length > 0 
+        ? `${financialsToAnalyze.length * 5} minutes for individual analyses + 2-3 minutes for comprehensive synthesis`
+        : '2-3 minutes for comprehensive analysis'
     });
     
     // Process analysis asynchronously (don't wait for response)
     if (financialsToAnalyze.length > 0) {
-      console.log(`🚀 Starting async analysis of ${financialsToAnalyze.length} financial reports for ${ticker}`);
+      console.log(`🚀 Starting comprehensive AI analysis of ${financialsToAnalyze.length} earnings reports for ${ticker}`);
+      console.log(`📊 AI will analyze: earnings data, stock price, news sentiment, market context, and macro economic factors`);
       console.log(`⏰ Estimated completion time: ${financialsToAnalyze.length * 5} minutes (may take longer due to throttling)`);
       
       // Process analysis in background
@@ -830,6 +911,40 @@ app.post('/api/fetch-financials/:ticker', cognitoAuth.requireAuth(), async (req,
         
         const totalTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
         console.log(`🏁 Completed all ${analysisCount}/${financialsToAnalyze.length} analyses for ${ticker} in ${totalTime} minutes`);
+        
+        // Generate comprehensive multi-quarter analysis after all individual analyses are complete
+        if (analysisCount > 0) {
+          try {
+            console.log(`🔄 Generating comprehensive multi-quarter analysis for ${ticker}...`);
+            const comprehensiveStart = Date.now();
+            
+            const comprehensiveResult = await analyzer.generateComprehensiveMultiQuarterAnalysis(ticker);
+            
+            if (comprehensiveResult.success) {
+              const comprehensiveTime = ((Date.now() - comprehensiveStart) / 1000 / 60).toFixed(1);
+              console.log(`✅ Comprehensive multi-quarter analysis completed for ${ticker} in ${comprehensiveTime} minutes`);
+              console.log(`📊 Analysis synthesized ${comprehensiveResult.quartersAnalyzed} quarters of data`);
+              
+              // Store the comprehensive analysis with a special key for easy retrieval
+              const comprehensiveKey = `${ticker}-comprehensive-analysis`;
+              await analyzer.aws.putItem('analyses', {
+                id: comprehensiveKey,
+                ticker: ticker,
+                analysis: comprehensiveResult.analysis,
+                analysisType: 'comprehensive-multi-quarter',
+                quartersAnalyzed: comprehensiveResult.quartersAnalyzed,
+                createdAt: new Date().toISOString()
+              });
+              
+              console.log(`💾 Comprehensive analysis stored for ${ticker}`);
+              console.log(`🎉 Complete analysis pipeline finished for ${ticker}: individual quarters + comprehensive synthesis`);
+            } else {
+              console.log(`⚠️  Comprehensive analysis failed for ${ticker}: ${comprehensiveResult.error || comprehensiveResult.message}`);
+            }
+          } catch (comprehensiveError) {
+            console.error(`❌ Error generating comprehensive analysis for ${ticker}:`, comprehensiveError.message);
+          }
+        }
       });
     }
     
@@ -902,6 +1017,33 @@ app.get('/api/analysis-status/:ticker', cognitoAuth.requireAuth(), async (req, r
     const aiAnalyses = analysisStatus.filter(s => s.analysisType === 'ai').length;
     const fallbackAnalyses = analysisStatus.filter(s => s.analysisType === 'fallback').length;
     
+    // Check if comprehensive analysis exists
+    let hasComprehensiveAnalysis = false;
+    let comprehensiveAnalysisDate = null;
+    
+    try {
+      const comprehensiveKey = `${ticker}-comprehensive-analysis`;
+      const storedComprehensive = await analyzer.aws.getItem('analyses', { id: comprehensiveKey });
+      if (storedComprehensive && storedComprehensive.analysis) {
+        hasComprehensiveAnalysis = true;
+        comprehensiveAnalysisDate = storedComprehensive.createdAt || storedComprehensive.analysis.timestamp;
+      }
+    } catch (error) {
+      // No comprehensive analysis found
+    }
+    
+    // Determine overall status
+    let overallStatus = 'pending';
+    if (completedAnalyses === totalReports && totalReports > 0) {
+      if (hasComprehensiveAnalysis) {
+        overallStatus = 'complete'; // All individual analyses + comprehensive analysis done
+      } else {
+        overallStatus = 'synthesizing'; // Individual analyses done, comprehensive analysis in progress
+      }
+    } else if (completedAnalyses > 0) {
+      overallStatus = 'analyzing'; // Some individual analyses done
+    }
+    
     res.json({
       ticker,
       totalReports,
@@ -909,7 +1051,15 @@ app.get('/api/analysis-status/:ticker', cognitoAuth.requireAuth(), async (req, r
       aiAnalyses,
       fallbackAnalyses,
       pendingAnalyses: totalReports - completedAnalyses,
-      status: completedAnalyses === totalReports ? 'complete' : 'pending',
+      status: overallStatus,
+      hasComprehensiveAnalysis,
+      comprehensiveAnalysisDate,
+      statusDescription: {
+        'pending': 'Waiting to start analysis',
+        'analyzing': 'Analyzing individual quarters',
+        'synthesizing': 'Creating comprehensive multi-quarter analysis',
+        'complete': 'Comprehensive analysis ready'
+      }[overallStatus],
       reports: analysisStatus,
       analyzerStatus: analyzer.getAnalysisStatus()
     });
@@ -923,14 +1073,29 @@ app.get('/api/analysis-status/:ticker', cognitoAuth.requireAuth(), async (req, r
 // New endpoint to get AI analyzer status
 app.get('/api/ai-status', cognitoAuth.requireAuth(), async (req, res) => {
   try {
-    const status = analyzer.getAnalysisStatus();
+    const status = analyzer.getAnalysisStatus ? analyzer.getAnalysisStatus() : {
+      isThrottled: false,
+      throttleUntil: 0,
+      consecutiveThrottles: 0,
+      processingLocks: [],
+      cacheSize: 0,
+      methodThrottles: {},
+      lastClaudeCall: 0,
+      minClaudeInterval: 15000
+    };
+    
     res.json({
       ...status,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      analyzerReady: true
     });
   } catch (error) {
     console.error('Error getting AI status:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      analyzerReady: false
+    });
   }
 });
 
@@ -1064,6 +1229,112 @@ app.post('/api/rerun-analysis/:ticker', cognitoAuth.requireAuth(), async (req, r
   }
 });
 
+// New endpoint to rerun comprehensive AI analysis for all reports of a company
+app.post('/api/rerun-comprehensive-analysis/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
+  try {
+    const { ticker } = req.params;
+    const { forceRerun, includeAllReports } = req.body;
+    
+    console.log(`🔄 Starting comprehensive AI analysis rerun for ${ticker}`);
+    
+    // Get all financial data for this ticker
+    const financials = await assistant.getFinancialHistory(ticker);
+    
+    if (financials.length === 0) {
+      return res.status(404).json({ 
+        error: `No financial data found for ${ticker}. Please fetch reports first.` 
+      });
+    }
+    
+    // Sort by year and quarter (most recent first)
+    const sortedFinancials = financials.sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      const quarterOrder = { 'Q1': 1, 'Q2': 2, 'Q3': 3, 'Q4': 4 };
+      return (quarterOrder[b.quarter] || 0) - (quarterOrder[a.quarter] || 0);
+    });
+    
+    const totalReports = sortedFinancials.length;
+    const estimatedMinutes = totalReports * 10; // More conservative estimate for comprehensive analysis
+    
+    // Respond immediately with comprehensive details
+    res.json({
+      message: `Comprehensive AI analysis started for ${ticker}`,
+      status: 'analyzing',
+      totalReports: totalReports,
+      reportsToAnalyze: sortedFinancials.map(f => `${f.quarter} ${f.year}`),
+      estimatedTime: `${estimatedMinutes}-${estimatedMinutes * 3} minutes (${totalReports} reports with AI enhancements)`,
+      features: [
+        'Claude 3.5 Sonnet AI analysis',
+        'AI-powered news sentiment analysis', 
+        'AI-powered market context analysis',
+        'Multi-source data integration (Yahoo Finance, NewsAPI, FRED)',
+        'Comprehensive investment recommendations'
+      ]
+    });
+    
+    // Start comprehensive analysis in background
+    setImmediate(async () => {
+      try {
+        console.log(`🚀 Starting comprehensive AI analysis for ${ticker} - ${totalReports} reports`);
+        
+        // Delete existing analyses if force rerun
+        if (forceRerun) {
+          console.log(`🗑️  Clearing existing analyses and company AI insights for ${ticker}`);
+          try {
+            // Clear company-level AI insights to force fresh analysis
+            const companyInsightsCacheKey = `company_ai_insights_${ticker}`;
+            try {
+              await aws.deleteItem('company_ai_insights', { id: companyInsightsCacheKey });
+              console.log(`✅ Cleared company AI insights for ${ticker}`);
+            } catch (deleteError) {
+              console.log(`⚠️  Could not delete company AI insights: ${deleteError.message}`);
+            }
+            
+            // Clear cache for all reports
+            for (const financial of sortedFinancials) {
+              const cacheKey = `${ticker}-${financial.quarter}-${financial.year}`;
+              analyzer.analysisCache.delete(cacheKey);
+              
+              // Delete from database
+              try {
+                await aws.deleteItem('analyses', { id: cacheKey });
+              } catch (deleteError) {
+                console.log(`⚠️  Could not delete analysis ${cacheKey}: ${deleteError.message}`);
+              }
+            }
+            console.log(`✅ Cleared existing analyses for ${ticker}`);
+          } catch (clearError) {
+            console.error(`⚠️  Error clearing existing analyses: ${clearError.message}`);
+          }
+        }
+        
+        // Process each financial report with comprehensive analysis
+        let completedCount = 0;
+        for (const financial of sortedFinancials) {
+          try {
+            console.log(`📊 Processing ${ticker} ${financial.quarter} ${financial.year} (${completedCount + 1}/${totalReports})`);
+            await analyzer.analyzeEarningsReport(ticker, financial);
+            completedCount++;
+            console.log(`✅ Completed ${ticker} ${financial.quarter} ${financial.year} (${completedCount}/${totalReports})`);
+          } catch (reportError) {
+            console.error(`❌ Failed to analyze ${ticker} ${financial.quarter} ${financial.year}: ${reportError.message}`);
+            // Continue with other reports even if one fails
+          }
+        }
+        
+        console.log(`🎉 Comprehensive analysis completed for ${ticker}: ${completedCount}/${totalReports} reports processed`);
+        
+      } catch (error) {
+        console.error(`❌ Comprehensive analysis failed for ${ticker}:`, error.message);
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error starting comprehensive analysis:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Clear AI cache endpoint (cache remains enabled)
 app.post('/api/ai-cache/clear', cognitoAuth.requireAuth(), async (req, res) => {
   try {
@@ -1072,6 +1343,47 @@ app.post('/api/ai-cache/clear', cognitoAuth.requireAuth(), async (req, res) => {
   } catch (error) {
     console.error('Error clearing AI cache:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete all analyses for a specific ticker (for fresh analysis)
+app.delete('/api/delete-analyses/:ticker', cognitoAuth.requireAuth(), async (req, res) => {
+  try {
+    const { ticker } = req.params;
+    console.log(`🗑️  Deleting all analyses for ${ticker} for fresh analysis`);
+    
+    // Get all analyses for this ticker
+    const analyses = await aws.scanTable('analyses', {
+      expression: 'ticker = :ticker',
+      values: { ':ticker': ticker }
+    });
+    
+    // Delete each analysis
+    let deletedCount = 0;
+    for (const analysis of analyses) {
+      try {
+        await aws.deleteItem('analyses', { id: analysis.id });
+        deletedCount++;
+        console.log(`🗑️  Deleted analysis: ${analysis.id}`);
+      } catch (error) {
+        console.error(`❌ Failed to delete analysis ${analysis.id}:`, error);
+      }
+    }
+    
+    // Clear AI analysis cache
+    if (analyzer && analyzer.clearAnalysisCache) {
+      analyzer.clearAnalysisCache(ticker);
+    }
+    
+    console.log(`✅ Deleted ${deletedCount} analyses for ${ticker}`);
+    res.json({ 
+      message: `Successfully deleted ${deletedCount} analyses for ${ticker}`,
+      deletedCount 
+    });
+    
+  } catch (error) {
+    console.error('Error deleting analyses:', error);
+    res.status(500).json({ error: 'Failed to delete analyses: ' + error.message });
   }
 });
 

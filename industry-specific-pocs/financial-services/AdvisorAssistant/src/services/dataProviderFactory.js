@@ -27,18 +27,28 @@ const FeatureFlagManager = require('./providers/FeatureFlagManager');
 /**
  * Data Provider Factory
  * Creates appropriate data provider based on configuration
+ * Uses singleton pattern to prevent multiple provider initializations
  */
 class DataProviderFactory {
   static environmentConfig = new EnvironmentConfig();
   static featureFlagManager = new FeatureFlagManager();
+  static providerInstances = new Map(); // Singleton cache
 
   /**
-   * Create data provider instance
+   * Create data provider instance (singleton)
    * @param {string} providerType - Type of provider to create
    * @param {string} userId - Optional user ID for feature flag evaluation
    * @returns {Object} Data provider instance
    */
   static createProvider(providerType = process.env.DATA_PROVIDER || 'enhanced_multi_provider', userId = null) {
+    const cacheKey = `${providerType}-${userId || 'default'}`;
+    
+    // Return existing instance if available
+    if (this.providerInstances.has(cacheKey)) {
+      console.log(`🔄 Reusing existing provider instance: ${providerType}`);
+      return this.providerInstances.get(cacheKey);
+    }
+    
     console.log(`🏭 DataProviderFactory: Creating provider type '${providerType}'`);
     
     // Check if provider is enabled via feature flags
@@ -55,11 +65,11 @@ class DataProviderFactory {
       throw new Error(`Provider '${providerType}' is disabled and no alternative is available`);
     }
     
-    // Validate configuration before creating provider
-    const validation = this.environmentConfig.validateConfiguration();
-    if (!validation.valid) {
-      console.error('❌ Configuration validation failed:', validation.errors);
-      throw new Error(`Configuration validation failed: ${validation.errors.join(', ')}`);
+    // Validate configuration for the specific provider being created
+    const providerValidation = this.environmentConfig.validateProvider(providerType);
+    if (!providerValidation.valid) {
+      console.error(`❌ Provider validation failed for ${providerType}:`, providerValidation.errors);
+      throw new Error(`Provider validation failed for ${providerType}: ${providerValidation.errors.join(', ')}`);
     }
     
     switch (providerType.toLowerCase()) {
@@ -67,28 +77,34 @@ class DataProviderFactory {
       case 'yahoo':
       case 'yahoo_finance':
         console.log('📊 Using Yahoo Finance data provider');
-        return new YahooFinanceProvider({
+        const yahooProvider = new YahooFinanceProvider({
           ...this.environmentConfig.getProviderConfig('yahoo'),
           features: this.featureFlagManager.getProviderFeatures('yahoo', userId)
         });
+        this.providerInstances.set(cacheKey, yahooProvider);
+        return yahooProvider;
         
       case 'newsapi':
         console.log('📊 Using NewsAPI data provider');
-        return new NewsAPIProvider({
+        const newsProvider = new NewsAPIProvider({
           ...this.environmentConfig.getProviderConfig('newsapi'),
           features: this.featureFlagManager.getProviderFeatures('newsapi', userId)
         });
+        this.providerInstances.set(cacheKey, newsProvider);
+        return newsProvider;
         
       case 'fred':
         console.log('📊 Using FRED data provider');
-        return new FREDProvider({
+        const fredProvider = new FREDProvider({
           ...this.environmentConfig.getProviderConfig('fred'),
           features: this.featureFlagManager.getProviderFeatures('fred', userId)
         });
+        this.providerInstances.set(cacheKey, fredProvider);
+        return fredProvider;
         
       case 'enhanced_multi_provider':
         console.log('📊 Using Enhanced Multi-Provider (Yahoo + NewsAPI + FRED)');
-        return new EnhancedDataAggregator({
+        const enhancedProvider = new EnhancedDataAggregator({
           yahoo: {
             ...this.environmentConfig.getProviderConfig('yahoo'),
             features: this.featureFlagManager.getProviderFeatures('yahoo', userId)
@@ -102,10 +118,12 @@ class DataProviderFactory {
             features: this.featureFlagManager.getProviderFeatures('fred', userId)
           }
         });
+        this.providerInstances.set(cacheKey, enhancedProvider);
+        return enhancedProvider;
         
       default:
         console.log(`⚠️  Unknown provider type '${providerType}', defaulting to enhanced_multi_provider`);
-        return new EnhancedDataAggregator({
+        const defaultProvider = new EnhancedDataAggregator({
           yahoo: {
             ...this.environmentConfig.getProviderConfig('yahoo'),
             features: this.featureFlagManager.getProviderFeatures('yahoo', userId)
@@ -119,6 +137,8 @@ class DataProviderFactory {
             features: this.featureFlagManager.getProviderFeatures('fred', userId)
           }
         });
+        this.providerInstances.set(cacheKey, defaultProvider);
+        return defaultProvider;
     }
   }
 

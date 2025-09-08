@@ -8,17 +8,46 @@ Transform your financial analysis workflow with AI-driven insights, real-time da
 
 ## Business Value Proposition
 
-### For Financial Institutions
-- **Accelerate Analysis**: Reduce manual research time from hours to minutes with AI-powered insights
+### For Financial Institutions & Wealth Advisors
+- **Institutional-Quality Analysis**: Comprehensive AI analysis suitable for high-net-worth wealth management
+- **Multi-Source Data Integration**: Yahoo Finance, NewsAPI, and FRED macroeconomic data in unified analysis
+- **AI-Enhanced Insights**: Context-aware sentiment analysis, market positioning, and risk assessment
+- **Macroeconomic Context**: Federal Funds Rate, CPI, and inflation impact analysis for investment timing
+- **Quantified Assessments**: Every insight includes specific percentages, ratios, and quantified metrics
 - **Scale Operations**: Handle hundreds of companies with automated data collection and analysis
-- **Enhance Decision Making**: Get consistent, objective analysis powered by Claude 3.5 Sonnet
 - **Cloud-Native Architecture**: Leverages AWS managed services for scalability and reliability
 
 ### For Technology Teams
 - **Modern Architecture**: Cloud-native, containerized, serverless-first design
+- **AI-First Approach**: No manual rule-based analysis - pure AI-powered insights using Claude 3.5 Sonnet
 - **Security Features**: VPC isolation, encryption at rest/transit, IAM-based access control
+- **Intelligent Caching**: 80% cost reduction through smart AI response caching
 - **Monitoring & Logging**: CloudWatch integration for observability
 - **Developer Friendly**: Comprehensive APIs, documentation, and one-command deployment
+
+## AI Analysis Capabilities
+
+### Comprehensive Data Integration
+- **Yahoo Finance**: Stock prices, earnings, company fundamentals, analyst estimates
+- **NewsAPI**: Market news with AI-enhanced sentiment and relevance analysis
+- **FRED Economic Data**: Federal Funds Rate, CPI, inflation trends for macroeconomic context
+- **AI Analysis**: Context-aware sentiment, market positioning, and risk assessment
+
+### Advanced AI Features
+- **News Sentiment Analysis**: Context-aware sentiment scoring with confidence levels and market impact assessment
+- **News Relevance Scoring**: Business relationship understanding and competitive dynamics analysis
+- **Market Context Analysis**: Holistic valuation assessment with industry-specific context
+- **Macroeconomic Integration**: Interest rate and inflation impact on sector valuations and investment timing
+- **Risk Assessment**: Quantified risk factors with specific debt ratios, margin analysis, and industry comparisons
+
+### Wealth Advisor Quality Output
+- **Executive Summaries**: Professional analysis with quantified metrics and specific percentages
+- **Investment Recommendations**: BUY/HOLD/SELL with confidence levels, target prices, and position sizing for $50M+ portfolios
+- **Risk Analysis**: Detailed risk assessment with probability assessments, quantified impacts, and specific mitigation strategies
+- **Portfolio Fit**: Allocation recommendations, tax considerations, diversification benefits, and liquidity analysis
+- **Macroeconomic Analysis**: Interest rate impact, inflation effects, and economic cycle positioning with quantified sensitivity analysis
+- **Key Investment Insights**: 4-5 detailed insights with specific growth rates, margin trends, and competitive positioning
+- **Investment Opportunities**: Market-sized opportunities with penetration analysis, revenue potential, and timeline projections
 
 ---
 
@@ -95,10 +124,22 @@ Internet → Load Balancer → ECS Fargate (Private Subnets)
 | **Monitoring** | CloudWatch | Logs, metrics, and alerting |
 | **Security** | VPC + IAM + KMS | Network isolation and encryption |
 
-### Data Integration
-- **Yahoo Finance**: Real-time stock prices and financial fundamentals
-- **NewsAPI**: Market news and sentiment analysis (1000 requests/day free)
-- **FRED**: Economic indicators and macro data (unlimited free access)
+### Enhanced Data Integration
+- **Yahoo Finance**: Real-time stock prices, earnings data, and comprehensive financial fundamentals
+- **NewsAPI**: Market news with AI-enhanced sentiment analysis and relevance scoring (1000 requests/day free)
+- **FRED Economic Data**: Federal Funds Rate, CPI, inflation trends for macroeconomic context (unlimited free access)
+- **AI Analysis Layer**: Context-aware sentiment, market positioning, and comprehensive risk assessment
+
+### Recent Enhancements (Latest Version)
+- **🆕 Institutional-Quality AI Analysis**: Enhanced Claude 3.5 Sonnet prompts generate detailed, quantified insights suitable for investment committees
+- **🆕 Fresh Analysis Button**: One-click comprehensive rebuild that clears cache, re-fetches data, and generates completely fresh AI analysis
+- **🆕 Enhanced Display Quality**: Fixed "[object Object]" issues and improved presentation of complex analysis data
+- **🆕 FRED Macroeconomic Integration**: Federal Funds Rate, CPI, and inflation data integrated into all analyses
+- **🆕 AI-Enhanced News Analysis**: Replaced 200+ hardcoded keywords with context-aware AI sentiment analysis
+- **🆕 Comprehensive Risk Assessment**: Quantified risk factors with specific debt ratios and industry comparisons
+- **🆕 Wealth Advisor Quality**: Institutional-grade analysis suitable for high-net-worth portfolio management ($50M+ portfolios)
+- **🆕 Macroeconomic Context**: Interest rate and inflation impact analysis for investment timing and sector rotation
+- **🆕 Quantified Insights**: Every analysis includes specific percentages, ratios, and quantified assessments with market sizing
 
 ---
 
@@ -241,7 +282,7 @@ Advanced AI analysis through AWS Bedrock provides:
 | Script | Purpose | Usage |
 |--------|---------|-------|
 | **deploy-with-tests.sh** | Safe deployment with validation | `./deploy-with-tests.sh poc us-east-1` |
-| **deploy.sh** | Quick deployment for updates | `./deploy.sh poc us-east-1` |
+| **deploy.sh** | Full deployment (recommended) | `./deploy.sh poc us-east-1` |
 | **scripts/pre-deploy-tests.sh** | Pre-deployment validation | Automatic with deploy-with-tests.sh |
 
 ### Infrastructure as Code

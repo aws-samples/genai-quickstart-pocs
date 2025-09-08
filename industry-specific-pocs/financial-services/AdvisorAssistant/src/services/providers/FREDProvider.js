@@ -357,6 +357,9 @@ class FREDProvider extends BaseProvider {
         };
 
         console.log(`✅ Successfully fetched CPI data - All Items: ${allItemsData?.currentValue || 'N/A'}, Core: ${coreData?.currentValue || 'N/A'}`);
+        if (allItemsInflation?.currentRate) {
+          console.log(`📈 Calculated inflation rate: ${allItemsInflation.currentRate}% (${allItemsInflation.comparisonPeriod} to ${allItemsInflation.currentPeriod})`);
+        }
         return result;
 
       } catch (error) {

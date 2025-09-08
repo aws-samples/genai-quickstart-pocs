@@ -16,6 +16,7 @@ const NewsAPIProvider = require('../NewsAPIProvider');
 // Mock axios to avoid real API calls
 jest.mock('axios');
 const axios = require('axios');
+const mockAxios = axios;
 
 describe('NewsAPIProvider', () => {
   let provider;
@@ -506,118 +507,70 @@ describe('NewsAPIProvider', () => {
     });
   });
 
-  describe('Sentiment Analysis', () => {
+  describe('AI-Only Sentiment Analysis', () => {
     beforeEach(() => {
       provider = new NewsAPIProvider();
     });
 
-    test('should analyze positive sentiment', () => {
-      const article = {
-        title: 'Apple (AAPL) Surges on Strong Earnings Beat',
-        description: 'Apple reports impressive revenue growth and beats expectations'
-      };
+    test('should mark articles for AI sentiment analysis', async () => {
+      // Mock successful API response
+      mockAxios.mockResolvedValueOnce({
+        data: {
+          status: 'ok',
+          articles: [
+            {
+              title: 'Apple (AAPL) Surges on Strong Earnings Beat',
+              description: 'Apple reports impressive revenue growth and beats expectations',
+              url: 'https://example.com/apple-earnings',
+              source: { name: 'Reuters' },
+              publishedAt: '2024-01-15T10:00:00Z'
+            }
+          ]
+        }
+      });
+
+      const articles = await provider.getMarketNews('AAPL');
       
-      const sentiment = provider.analyzeSentiment(article, 'AAPL');
-      
-      expect(sentiment.score).toBeGreaterThan(0);
-      expect(sentiment.label).toMatch(/positive/);
-      expect(sentiment.confidence).toBeGreaterThan(0.3);
-      expect(sentiment.keywordCounts.positive).toBeGreaterThan(0);
+      expect(articles).toHaveLength(1);
+      expect(articles[0].sentiment).toBe('ai_analysis_required');
+      expect(articles[0].sentimentScore).toBeNull();
+      expect(articles[0].needsAiSentiment).toBe(true);
     });
 
-    test('should analyze negative sentiment', () => {
-      const article = {
-        title: 'Tesla (TSLA) Plunges After Disappointing Results',
-        description: 'Tesla misses revenue expectations and cuts guidance'
-      };
-      
-      const sentiment = provider.analyzeSentiment(article, 'TSLA');
-      
-      expect(sentiment.score).toBeLessThan(0);
-      expect(sentiment.label).toMatch(/negative/);
-      expect(sentiment.confidence).toBeGreaterThan(0.3);
-      expect(sentiment.keywordCounts.negative).toBeGreaterThan(0);
+    test('should not provide manual sentiment analysis methods', () => {
+      // Verify that manual sentiment methods have been removed
+      expect(provider.analyzeSentiment).toBeUndefined();
+      expect(provider.countKeywords).toBeUndefined();
+      expect(provider.adjustSentimentForTicker).toBeUndefined();
+      expect(provider.getSentimentLabel).toBeUndefined();
+      expect(provider.calculateSentimentConfidence).toBeUndefined();
+      expect(provider.getSentimentStatistics).toBeUndefined();
+      expect(provider.determineSentimentTrend).toBeUndefined();
     });
 
-    test('should analyze neutral sentiment', () => {
-      const article = {
-        title: 'Microsoft Maintains Steady Performance',
-        description: 'Microsoft reports stable results in line with expectations'
-      };
-      
-      const sentiment = provider.analyzeSentiment(article, 'MSFT');
-      
-      expect(Math.abs(sentiment.score)).toBeLessThan(0.3);
-      expect(sentiment.label).toMatch(/neutral|slightly/);
-    });
+    test('should format articles for AI processing', async () => {
+      // Mock successful API response
+      mockAxios.mockResolvedValueOnce({
+        data: {
+          status: 'ok',
+          articles: [
+            {
+              title: 'Tesla Reports Q4 Results',
+              description: 'Tesla announces quarterly earnings',
+              url: 'https://example.com/tesla-earnings',
+              source: { name: 'Bloomberg' },
+              publishedAt: '2024-01-15T10:00:00Z'
+            }
+          ]
+        }
+      });
 
-    test('should count keywords correctly', () => {
-      const text = 'strong growth and impressive gains beat expectations';
-      const positiveCount = provider.countKeywords(text, provider.positiveKeywords);
+      const articles = await provider.getMarketNews('TSLA');
       
-      expect(positiveCount).toBeGreaterThan(0);
-    });
-
-    test('should adjust sentiment for ticker mentions', () => {
-      const baseScore = 0.1;
-      const text = 'aapl surges after earnings beat';
-      
-      const adjustedScore = provider.adjustSentimentForTicker(baseScore, text, 'AAPL');
-      
-      expect(adjustedScore).toBeGreaterThan(baseScore);
-    });
-
-    test('should get correct sentiment label', () => {
-      expect(provider.getSentimentLabel(0.5)).toBe('positive');
-      expect(provider.getSentimentLabel(-0.5)).toBe('negative');
-      expect(provider.getSentimentLabel(0.2)).toBe('slightly positive');
-      expect(provider.getSentimentLabel(-0.2)).toBe('slightly negative');
-      expect(provider.getSentimentLabel(0.05)).toBe('neutral');
-    });
-
-    test('should calculate sentiment confidence', () => {
-      const highConfidence = provider.calculateSentimentConfidence(5, 0, 1);
-      const lowConfidence = provider.calculateSentimentConfidence(0, 0, 0);
-      const mixedConfidence = provider.calculateSentimentConfidence(2, 2, 1);
-      
-      expect(highConfidence).toBeGreaterThan(lowConfidence);
-      expect(highConfidence).toBeGreaterThan(mixedConfidence);
-      expect(lowConfidence).toBe(0.1);
-    });
-
-    test('should get sentiment statistics for articles', () => {
-      const articles = [
-        { sentiment: 'positive', sentimentScore: 0.6 },
-        { sentiment: 'negative', sentimentScore: -0.4 },
-        { sentiment: 'neutral', sentimentScore: 0.1 }
-      ];
-      
-      const stats = provider.getSentimentStatistics(articles);
-      
-      expect(stats.totalArticles).toBe(3);
-      expect(stats.distribution.positive).toBe(1);
-      expect(stats.distribution.negative).toBe(1);
-      expect(stats.distribution.neutral).toBe(1);
-      expect(typeof stats.averageScore).toBe('number');
-      expect(stats.sentimentTrend).toBeDefined();
-    });
-
-    test('should handle empty articles for sentiment statistics', () => {
-      const stats = provider.getSentimentStatistics([]);
-      
-      expect(stats.totalArticles).toBe(0);
-      expect(stats.averageScore).toBe(0);
-      expect(stats.sentimentTrend).toBe('unknown');
-    });
-
-    test('should determine sentiment trend correctly', () => {
-      const strongPositive = provider.determineSentimentTrend(0.5, { positive: 8, negative: 1, neutral: 1 });
-      const strongNegative = provider.determineSentimentTrend(-0.5, { positive: 1, negative: 8, neutral: 1 });
-      const mixed = provider.determineSentimentTrend(0.05, { positive: 3, negative: 3, neutral: 4 });
-      
-      expect(strongPositive).toBe('strongly positive');
-      expect(strongNegative).toBe('strongly negative');
-      expect(mixed).toBe('mixed');
+      expect(articles[0]).toHaveProperty('headline');
+      expect(articles[0]).toHaveProperty('summary');
+      expect(articles[0]).toHaveProperty('needsAiSentiment', true);
+      expect(articles[0]).toHaveProperty('sentiment', 'ai_analysis_required');
     });
   });
 

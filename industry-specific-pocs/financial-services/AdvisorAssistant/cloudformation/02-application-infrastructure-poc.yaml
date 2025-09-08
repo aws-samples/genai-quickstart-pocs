@@ -286,6 +286,30 @@ Resources:
         - Key: Purpose
           Value: SystemConfiguration
 
+  CompanyAIInsightsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApplicationName}-${Environment}-company-ai-insights'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: 
+          Fn::ImportValue: !Sub '${SecurityStackName}-KMSKey'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ApplicationName
+        - Key: Purpose
+          Value: CompanyAIInsights
+
   # S3 Bucket for document storage
   AdvisorDataBucket:
     Type: AWS::S3::Bucket
@@ -621,6 +645,7 @@ Resources:
                   - !GetAtt SessionsTable.Arn
                   - !GetAtt UserConfigTable.Arn
                   - !GetAtt SystemConfigTable.Arn
+                  - !GetAtt CompanyAIInsightsTable.Arn
                   - !Sub '${CompaniesTable.Arn}/index/*'
                   - !Sub '${FinancialsTable.Arn}/index/*'
                   - !Sub '${AnalysisDataTable.Arn}/index/*'

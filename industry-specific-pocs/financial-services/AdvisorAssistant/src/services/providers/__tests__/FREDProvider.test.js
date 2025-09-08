@@ -10,8 +10,17 @@
 
 const FREDProvider = require('../FREDProvider');
 
-// Mock axios to control HTTP responses
-jest.mock('axios');
+// Mock axios completely to prevent any real HTTP requests
+jest.mock('axios', () => {
+  const mockAxios = jest.fn(() => Promise.resolve({ data: { observations: [] } }));
+  mockAxios.get = jest.fn(() => Promise.resolve({ data: { observations: [] } }));
+  mockAxios.post = jest.fn(() => Promise.resolve({ data: { observations: [] } }));
+  mockAxios.put = jest.fn(() => Promise.resolve({ data: { observations: [] } }));
+  mockAxios.delete = jest.fn(() => Promise.resolve({ data: { observations: [] } }));
+  mockAxios.create = jest.fn(() => mockAxios);
+  return mockAxios;
+});
+
 const axios = require('axios');
 
 describe('FREDProvider', () => {
@@ -22,11 +31,16 @@ describe('FREDProvider', () => {
     // Save original environment
     originalEnv = process.env.FRED_API_KEY;
     
+    // Set test API key
+    process.env.FRED_API_KEY = 'test-api-key';
+    
     // Clear all mocks
     jest.clearAllMocks();
     
-    // Reset axios mock
-    axios.mockReset();
+    // Reset axios to default behavior
+    axios.mockImplementation(() => Promise.resolve({
+      data: { observations: [] }
+    }));
   });
 
   afterEach(() => {
@@ -87,7 +101,7 @@ describe('FREDProvider', () => {
         ]
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       const result = await provider.getInterestRateData();
 
@@ -110,7 +124,7 @@ describe('FREDProvider', () => {
         ]
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       const result = await provider.getInterestRateData();
 
@@ -125,7 +139,7 @@ describe('FREDProvider', () => {
         observations: []
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       const result = await provider.getInterestRateData();
 
@@ -133,7 +147,7 @@ describe('FREDProvider', () => {
     });
 
     test('should handle API errors gracefully', async () => {
-      axios.mockRejectedValue(new Error('Network error'));
+      axios.mockImplementation(() => Promise.reject(new Error('Network error')));
 
       const result = await provider.getInterestRateData();
 
@@ -156,7 +170,7 @@ describe('FREDProvider', () => {
         ]
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       // First request
       const result1 = await provider.getInterestRateData();
@@ -178,7 +192,7 @@ describe('FREDProvider', () => {
         ]
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       const result = await provider.getInterestRateData();
 
@@ -198,7 +212,7 @@ describe('FREDProvider', () => {
         ]
       };
 
-      axios.mockResolvedValue({ data: mockResponse });
+      axios.mockImplementation(() => Promise.resolve({ data: mockResponse }));
 
       const result = await provider.getInterestRateData();
 
@@ -219,7 +233,7 @@ describe('FREDProvider', () => {
       const authError = new Error('Unauthorized');
       authError.response = { status: 401 };
       
-      axios.mockRejectedValue(authError);
+      axios.mockImplementation(() => Promise.reject(authError));
 
       const result = await provider.getInterestRateData();
 
@@ -284,14 +298,15 @@ describe('FREDProvider', () => {
       const timeoutError = new Error('timeout');
       timeoutError.code = 'ECONNABORTED';
       
-      axios.mockRejectedValue(timeoutError);
+      // Mock axios to reject with timeout error - no real API calls
+      axios.mockImplementation(() => Promise.reject(timeoutError));
 
       const result = await provider.getInterestRateData();
       expect(result).toBeNull();
     });
 
     test('should handle invalid JSON responses', async () => {
-      axios.mockResolvedValue({ data: 'invalid json' });
+      axios.mockImplementation(() => Promise.resolve({ data: 'invalid json' }));
 
       const result = await provider.getInterestRateData();
       expect(result).toBeNull();
@@ -301,7 +316,8 @@ describe('FREDProvider', () => {
       const rateLimitError = new Error('Too Many Requests');
       rateLimitError.response = { status: 429 };
       
-      axios.mockRejectedValue(rateLimitError);
+      // Mock axios to reject with rate limit error - no real API calls
+      axios.mockImplementation(() => Promise.reject(rateLimitError));
 
       const result = await provider.getInterestRateData();
       expect(result).toBeNull();
@@ -427,7 +443,8 @@ describe('FREDProvider', () => {
     });
 
     test('should handle CPI API errors gracefully', async () => {
-      axios.mockRejectedValue(new Error('CPI API error'));
+      // Mock axios to reject with CPI API error - no real API calls
+      axios.mockImplementation(() => Promise.reject(new Error('CPI API error')));
 
       const result = await provider.getCPIData();
 

@@ -178,6 +178,8 @@ class AWSServices {
       return process.env.FINANCIALS_TABLE_NAME;
     } else if (tableName === 'user-config') {
       return `${this.tablePrefix}-user-config`;
+    } else if (tableName === 'company_ai_insights') {
+      return `${this.tablePrefix}-company-ai-insights`;
     } else {
       return `${this.tablePrefix}-${tableName}`;
     }

@@ -44,6 +44,9 @@ class EnhancedDataAggregator extends BaseProvider {
     this.providers = {};
     this.providerStatus = {};
     
+    // Initialize AI analyzer once and reuse
+    this.aiAnalyzer = null;
+    
     this.initializeProviders(config);
     
     console.log(`🔄 EnhancedDataAggregator initialized with providers: ${Object.keys(this.providers).join(', ')}`);
@@ -177,6 +180,28 @@ class EnhancedDataAggregator extends BaseProvider {
       // Add macro economic context
       const macroContext = await this.getMacroContext();
 
+      // Add AI-enhanced market context analysis
+      let aiMarketContext = null;
+      try {
+        console.log(`🤖 Getting AI market context for ${normalizedTicker}...`);
+        const EnhancedAIAnalyzer = require('../enhancedAiAnalyzer');
+        const aiAnalyzer = new EnhancedAIAnalyzer();
+        
+        // Prepare comprehensive data for AI analysis
+        const contextData = {
+          companyInfo: yahooData,
+          currentPrice: yahooData,
+          fundamentals: this.extractKeyFundamentals(yahooData),
+          marketNews: [], // Will be populated if news sentiment was analyzed
+          macroContext: macroContext
+        };
+        
+        aiMarketContext = await aiAnalyzer.analyzeMarketContextWithAI(contextData, normalizedTicker);
+        console.log(`✅ AI market context completed: ${aiMarketContext.valuationAssessment.level} valuation`);
+      } catch (aiError) {
+        console.error(`⚠️  AI market context analysis failed: ${aiError.message}`);
+      }
+
       // Combine all data sources
       const enhancedData = {
         ...yahooData,
@@ -184,6 +209,8 @@ class EnhancedDataAggregator extends BaseProvider {
         sentiment: newsSentiment,
         // Macro context
         macroContext: macroContext,
+        // AI-enhanced market context
+        aiMarketContext: aiMarketContext,
         // Metadata
         dataSource: 'enhanced_multi_provider',
         providersUsed: this.getActiveProviders(),
@@ -202,9 +229,9 @@ class EnhancedDataAggregator extends BaseProvider {
 
 
   /**
-   * Get news sentiment for a ticker
+   * Get news sentiment for a ticker using AI analysis ONLY
    * @param {string} ticker - Stock ticker symbol
-   * @returns {Promise<Object|null>} News sentiment data
+   * @returns {Promise<Object|null>} AI-generated news sentiment data
    */
   async getNewsSentiment(ticker) {
     try {
@@ -217,86 +244,98 @@ class EnhancedDataAggregator extends BaseProvider {
           newsCount: 0,
           articles: [],
           confidence: 0,
-          distribution: { positive: 0, neutral: 0, negative: 0 }
+          distribution: { positive: 0, neutral: 0, negative: 0 },
+          analysisMethod: 'no_data'
         };
       }
 
-      // Calculate comprehensive sentiment analysis
-      let totalScore = 0;
-      let scoredArticles = 0;
-      let positiveCount = 0;
-      let neutralCount = 0;
-      let negativeCount = 0;
+      // ALWAYS use AI sentiment analysis - no fallback to manual methods
+      console.log(`🤖 Using AI sentiment analysis for ${ticker} news (${newsData.length} articles)`);
       
-      // Process each article for sentiment
-      const processedArticles = [];
-      for (const article of newsData) {
-        let articleSentiment = 0;
-        
-        if (article.sentimentScore !== null && article.sentimentScore !== undefined) {
-          articleSentiment = article.sentimentScore;
-          totalScore += articleSentiment;
-          scoredArticles++;
-        }
-        
-        // Categorize sentiment
-        if (articleSentiment > 0.1) positiveCount++;
-        else if (articleSentiment < -0.1) negativeCount++;
-        else neutralCount++;
-        
-        // Add processed article data
-        processedArticles.push({
-          ...article,
-          sentimentLabel: this.getSentimentLabel(articleSentiment),
-          relevanceScore: article.relevanceScore || 1.0
-        });
-      }
-
-      const averageScore = scoredArticles > 0 ? totalScore / scoredArticles : 0;
+      // Use AI analyzer for sentiment analysis
+      const EnhancedAIAnalyzer = require('../enhancedAiAnalyzer');
+      const aiAnalyzer = new EnhancedAIAnalyzer();
       
-      // Calculate confidence based on number of articles and score consistency
-      const confidence = this.calculateSentimentConfidence(scoredArticles, newsData.length, {
-        positive: positiveCount,
-        neutral: neutralCount,
-        negative: negativeCount
-      });
-
-      // Sort articles by relevance and sentiment strength
-      processedArticles.sort((a, b) => {
-        const aRelevance = a.relevanceScore || 1.0;
-        const bRelevance = b.relevanceScore || 1.0;
-        const aSentimentStrength = Math.abs(a.sentimentScore || 0);
-        const bSentimentStrength = Math.abs(b.sentimentScore || 0);
-        
-        // Prioritize by relevance first, then sentiment strength
-        return (bRelevance * bSentimentStrength) - (aRelevance * aSentimentStrength);
-      });
+      const aiSentiment = await aiAnalyzer.analyzeNewsSentimentWithAI(newsData, ticker);
       
       return {
-        score: parseFloat(averageScore.toFixed(3)),
-        label: this.getSentimentLabel(averageScore),
+        score: aiSentiment.sentimentScore || 0,
+        label: aiSentiment.overallSentiment || 'neutral',
         newsCount: newsData.length,
-        scoredArticles: scoredArticles,
-        confidence: confidence,
-        distribution: {
-          positive: positiveCount,
-          neutral: neutralCount,
-          negative: negativeCount
-        },
-        articles: processedArticles.slice(0, 5), // Top 5 most relevant articles
+        scoredArticles: aiSentiment.articles?.length || 0,
+        confidence: aiSentiment.confidence || 0,
+        distribution: this.calculateDistributionFromAI(aiSentiment.articles || []),
+        articles: aiSentiment.articles?.slice(0, 5) || [],
+        summary: aiSentiment.summary,
+        analysisMethod: 'ai_powered',
         lastUpdated: new Date().toISOString()
       };
+      
     } catch (error) {
-      console.error(`⚠️  Failed to get news sentiment for ${ticker}:`, error.message);
-      return {
-        score: 0,
-        label: 'neutral',
-        newsCount: 0,
-        articles: [],
-        confidence: 0,
-        distribution: { positive: 0, neutral: 0, negative: 0 }
-      };
+      console.error(`❌ AI sentiment analysis failed for ${ticker}: ${error.message}`);
+      // If AI fails, return error state - no fallback to manual methods
+      throw new Error(`AI sentiment analysis failed for ${ticker}: ${error.message}`);
     }
+  }
+
+  /**
+   * Calculate sentiment distribution from AI analysis results
+   * @param {Array} aiArticles - AI-analyzed articles
+   * @returns {Object} Sentiment distribution
+   */
+  calculateDistributionFromAI(aiArticles) {
+    const distribution = { positive: 0, neutral: 0, negative: 0 };
+    
+    aiArticles.forEach(article => {
+      if (article.sentiment === 'positive') distribution.positive++;
+      else if (article.sentiment === 'negative') distribution.negative++;
+      else distribution.neutral++;
+    });
+    
+    return distribution;
+  }
+
+  /**
+   * Extract key fundamental metrics for AI analysis
+   * @param {Object} companyData - Company data from Yahoo Finance
+   * @returns {Object} Key fundamental metrics
+   */
+  extractKeyFundamentals(companyData) {
+    return {
+      // Core valuation metrics
+      marketCap: companyData.marketCap,
+      peRatio: companyData.pe || companyData.trailingPE,
+      pegRatio: companyData.pegRatio,
+      priceToBook: companyData.priceToBookRatio,
+      priceToSales: companyData.priceToSalesRatioTTM,
+      
+      // Profitability metrics
+      profitMargin: companyData.profitMargin,
+      operatingMargin: companyData.operatingMarginTTM,
+      
+      // Financial health metrics
+      currentRatio: companyData.currentRatio,
+      quickRatio: companyData.quickRatio,
+      debtToEquity: companyData.debtToEquityRatio,
+      
+      // Growth metrics
+      revenueGrowth: companyData.quarterlyRevenueGrowthYOY,
+      earningsGrowth: companyData.quarterlyEarningsGrowthYOY,
+      
+      // Per-share metrics
+      eps: companyData.eps || companyData.trailingEps,
+      bookValue: companyData.bookValue,
+      dividendYield: companyData.dividendYield,
+      
+      // Risk metrics
+      beta: companyData.beta,
+      
+      // Technical indicators
+      day50MovingAverage: companyData.day50MovingAverage,
+      day200MovingAverage: companyData.day200MovingAverage,
+      week52High: companyData.week52High,
+      week52Low: companyData.week52Low
+    };
   }
 
   /**
@@ -352,12 +391,16 @@ class EnhancedDataAggregator extends BaseProvider {
         return null;
       }
 
-      return {
+      const macroContext = {
         fedRate: interestRateData?.currentValue || null,
         cpi: cpiData?.allItems?.currentValue || null,
-        inflationRate: cpiData?.allItemsInflation?.currentRate || null,
+        inflationRate: cpiData?.inflation?.allItems?.currentRate || null,
+        coreInflationRate: cpiData?.inflation?.core?.currentRate || null,
         lastUpdated: new Date().toISOString()
       };
+      
+      console.log(`📊 Macro context assembled: Fed Rate=${macroContext.fedRate}%, CPI=${macroContext.cpi}, Inflation=${macroContext.inflationRate}%`);
+      return macroContext;
     } catch (error) {
       console.error('⚠️  Failed to get macro context:', error.message);
       return null;
@@ -520,13 +563,56 @@ class EnhancedDataAggregator extends BaseProvider {
   }
 
   /**
-   * Get market news for a stock
+   * Get market news for a stock with AI-enhanced relevance analysis
    * @param {string} ticker - Stock ticker symbol (optional)
-   * @returns {Promise<Array>} Array of news articles or empty array
+   * @returns {Promise<Array>} Array of AI-enhanced news articles or empty array
    */
   async getMarketNews(ticker) {
-    console.log(`🔄 EnhancedDataAggregator: Fetching market news for ${ticker || 'general market'}`);
-    return await this.executeProviderMethod('newsapi', 'getMarketNews', [ticker]) || [];
+    console.log(`🔄 EnhancedDataAggregator: Fetching enhanced market news for ${ticker || 'general market'}`);
+    
+    try {
+      const newsData = await this.executeProviderMethod('newsapi', 'getMarketNews', [ticker]);
+      
+      if (!newsData || !Array.isArray(newsData) || newsData.length === 0) {
+        return [];
+      }
+
+      // Check if we should enhance with AI relevance analysis
+      if (ticker && newsData.length > 0) {
+        console.log(`🤖 Enhancing news relevance with AI for ${ticker}...`);
+        
+        try {
+          // Get company info for context
+          const companyInfo = await this.executeProviderMethod('yahoo', 'getCompanyInfo', [ticker]);
+          
+          // Initialize AI analyzer once and reuse
+          if (!this.aiAnalyzer) {
+            const EnhancedAIAnalyzer = require('../enhancedAiAnalyzer');
+            this.aiAnalyzer = new EnhancedAIAnalyzer();
+            console.log('🤖 AI analyzer initialized for news enhancement');
+          }
+          
+          const aiRelevance = await this.aiAnalyzer.analyzeNewsRelevanceWithAI(newsData, ticker, companyInfo);
+          
+          // Return AI-enhanced articles sorted by relevance
+          const enhancedArticles = aiRelevance.allArticles.sort((a, b) => b.relevanceScore - a.relevanceScore);
+          
+          console.log(`✅ AI-enhanced news: ${aiRelevance.relevantCount}/${aiRelevance.totalArticles} relevant articles`);
+          return enhancedArticles;
+          
+        } catch (aiError) {
+          console.error(`❌ AI news relevance enhancement failed for ${ticker}: ${aiError.message}`);
+          // Return original news data as fallback
+          return newsData;
+        }
+      }
+      
+      return newsData;
+      
+    } catch (error) {
+      console.error(`❌ Failed to fetch market news for ${ticker}: ${error.message}`);
+      return [];
+    }
   }
 
   /**

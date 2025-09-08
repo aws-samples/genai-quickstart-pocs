@@ -6,11 +6,13 @@ AI-powered financial analysis platform that tracks company earnings and provides
 
 ## Key Features
 
-- **AI Analysis** - Claude 3.5 Sonnet analyzes earnings reports
-- **Enhanced Data** - Multi-provider system with Yahoo Finance, NewsAPI, and FRED for comprehensive data
+- **Institutional-Quality AI Analysis** - Claude 3.5 Sonnet generates detailed, quantified insights suitable for investment committees
+- **Fresh Analysis Button** - One-click comprehensive rebuild that clears cache and generates completely fresh analysis
+- **Enhanced Data Integration** - Multi-provider system with Yahoo Finance, NewsAPI, and FRED macroeconomic data
+- **Wealth Advisor Quality** - Analysis suitable for high-net-worth portfolio management ($50M+ portfolios)
 - **Multi-user** - AWS Cognito authentication with personal watchlists
 - **Smart Alerts** - Automated notifications for significant events
-- **Cloud Native** - 100% AWS serverless architecture
+- **Cloud Native** - 100% AWS serverless architecture with intelligent caching
 
 ## Perfect For
 
@@ -82,10 +84,15 @@ Users → Load Balancer → ECS Fargate → DynamoDB
 ### Financial Analyst Workflow
 
 1. Add companies to track (AAPL, TSLA, etc.)
-2. System fetches latest earnings automatically
-3. AI analyzes performance vs estimates
-4. Receive alerts for significant events
-5. Review trends and insights
+2. System fetches latest earnings, news, and macroeconomic data automatically
+3. AI analyzes performance with institutional-quality insights including:
+   - Detailed key insights with specific growth rates and margin analysis
+   - Quantified risk factors with probability assessments
+   - Market-sized opportunities with revenue potential
+   - Macroeconomic context with interest rate and inflation impact
+4. Use "Fresh Analysis" button for comprehensive data refresh and new AI analysis
+5. Receive alerts for significant events
+6. Review trends and insights with professional-grade presentation
 
 ### Demo Scenarios
 

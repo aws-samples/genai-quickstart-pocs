@@ -13,9 +13,13 @@ jest.mock('../YahooFinanceProvider');
 jest.mock('../NewsAPIProvider');
 jest.mock('../FREDProvider');
 
+// Mock the AI analyzer to prevent AWS connections
+jest.mock('../../enhancedAiAnalyzer');
+
 const YahooFinanceProvider = require('../YahooFinanceProvider');
 const NewsAPIProvider = require('../NewsAPIProvider');
 const FREDProvider = require('../FREDProvider');
+const EnhancedAIAnalyzer = require('../../enhancedAiAnalyzer');
 
 describe('EnhancedDataAggregator', () => {
   let aggregator;
@@ -42,6 +46,10 @@ describe('EnhancedDataAggregator', () => {
   };
 
   beforeEach(() => {
+    // Set up environment variables for tests
+    process.env.NEWSAPI_KEY = 'test_newsapi_key';
+    process.env.FRED_API_KEY = 'test_fred_key';
+    
     // Reset all mocks
     jest.clearAllMocks();
 
@@ -74,6 +82,35 @@ describe('EnhancedDataAggregator', () => {
     YahooFinanceProvider.mockImplementation(() => mockYahooProvider);
     NewsAPIProvider.mockImplementation(() => mockNewsAPIProvider);
     FREDProvider.mockImplementation(() => mockFREDProvider);
+
+    // Mock AI analyzer to prevent AWS connections
+    const mockAIAnalyzer = {
+      analyzeNewsSentimentWithAI: jest.fn().mockResolvedValue({
+        sentimentScore: 0.067, // (0.8 - 0.6 + 0.0) / 3 = 0.067
+        overallSentiment: 'neutral',
+        confidence: 0.85,
+        articles: [
+          { title: 'Test Article 1', sentiment: 'positive', score: 0.8 },
+          { title: 'Test Article 2', sentiment: 'negative', score: -0.6 },
+          { title: 'Test Article 3', sentiment: 'neutral', score: 0.0 }
+        ],
+        summary: 'Mixed sentiment from news analysis'
+      }),
+      analyzeMarketContextWithAI: jest.fn().mockResolvedValue({
+        valuationAssessment: { level: 'fairly_valued' },
+        riskAssessment: { level: 'moderate' }
+      }),
+      analyzeNewsRelevanceWithAI: jest.fn().mockResolvedValue({
+        relevantCount: 3,
+        totalArticles: 3,
+        allArticles: [
+          { title: 'Test Article 1', relevant: true },
+          { title: 'Test Article 2', relevant: true },
+          { title: 'Test Article 3', relevant: true }
+        ]
+      })
+    };
+    EnhancedAIAnalyzer.mockImplementation(() => mockAIAnalyzer);
 
     // Create aggregator instance
     aggregator = new EnhancedDataAggregator({
@@ -151,7 +188,10 @@ describe('EnhancedDataAggregator', () => {
       const interestRateData = { currentValue: 5.25 };
       const cpiData = { 
         allItems: { currentValue: 307.026 },
-        allItemsInflation: { currentRate: 3.2 }
+        inflation: {
+          allItems: { currentRate: 3.2 },
+          core: { currentRate: 2.8 }
+        }
       };
 
       // Set up mocks
@@ -173,9 +213,9 @@ describe('EnhancedDataAggregator', () => {
       // Check news sentiment aggregation
       expect(result.sentiment).toBeDefined();
       expect(result.sentiment.score).toBeGreaterThan(0);
-      expect(result.sentiment.label).toBe('positive');
+      expect(result.sentiment.label).toBe('neutral');
       expect(result.sentiment.newsCount).toBe(2);
-      expect(result.sentiment.articles).toHaveLength(2);
+      expect(result.sentiment.articles).toHaveLength(3); // Mock returns 3 articles
 
       // Check macro context
       expect(result.macroContext).toBeDefined();
@@ -321,14 +361,20 @@ describe('EnhancedDataAggregator', () => {
       const interestRateData = { currentValue: 5.25 };
       const cpiData = { 
         allItems: { currentValue: 307.026 },
-        allItemsInflation: { currentRate: 3.2 }
+        inflation: {
+          allItems: { currentRate: 3.2 },
+          core: { currentRate: 2.8 }
+        }
       };
 
       mockYahooProvider.getEarningsData.mockResolvedValue(yahooEarnings);
       mockFREDProvider.getInterestRateData.mockResolvedValue(interestRateData);
       mockFREDProvider.getCPIData.mockResolvedValue({
         allItems: { currentValue: 307.026 },
-        allItemsInflation: { currentRate: 3.2 }
+        inflation: {
+          allItems: { currentRate: 3.2 },
+          core: { currentRate: 2.8 }
+        }
       });
 
       const result = await aggregator.getEarningsData('AAPL');
@@ -431,7 +477,12 @@ describe('EnhancedDataAggregator', () => {
 
       const result = await aggregator.getMarketNews('AAPL');
 
-      expect(result).toEqual(newsData);
+      // Should return AI-enhanced articles from the mock
+      expect(result).toEqual([
+        { title: 'Test Article 1', relevant: true },
+        { title: 'Test Article 2', relevant: true },
+        { title: 'Test Article 3', relevant: true }
+      ]);
     });
 
     test('should return empty array when news fails', async () => {
