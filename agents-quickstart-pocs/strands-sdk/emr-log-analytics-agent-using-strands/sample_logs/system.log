@@ -1,0 +1,13 @@
+2024-01-15 10:20:00,000 INFO  [main] NodeManager: Starting NodeManager
+2024-01-15 10:20:01,111 INFO  [main] NodeManager: NodeManager with id ip-10-0-1-101.ec2.internal:8041 started
+2024-01-15 10:20:02,222 INFO  [Node Status Updater] NodeStatusUpdaterImpl: Sending heartbeat to ResourceManager
+2024-01-15 10:20:10,333 INFO  [ContainerManager dispatcher] ContainerManagerImpl: Starting container container_1705312500000_0001_01_000001
+2024-01-15 10:20:15,444 WARN  [ContainerManager dispatcher] ContainerManagerImpl: Container container_1705312500000_0001_01_000001 is using 85% of allocated memory
+2024-01-15 10:20:20,555 WARN  [ContainerManager dispatcher] ContainerManagerImpl: Container container_1705312500000_0001_01_000001 is using 95% of allocated memory
+2024-01-15 10:20:25,666 ERROR [ContainerManager dispatcher] ContainerManagerImpl: Container container_1705312500000_0001_01_000001 exceeded memory limits. Current usage: 2.1 GB of 2 GB physical memory used; 4.3 GB of 4.2 GB virtual memory used. Killing container.
+2024-01-15 10:20:26,777 INFO  [ContainerManager dispatcher] ContainerManagerImpl: Killing container container_1705312500000_0001_01_000001
+2024-01-15 10:20:27,888 INFO  [AsyncDispatcher event handler] ContainerImpl: Container container_1705312500000_0001_01_000001 transitioned from RUNNING to KILLING
+2024-01-15 10:20:28,999 INFO  [AsyncDispatcher event handler] ContainerImpl: Container container_1705312500000_0001_01_000001 transitioned from KILLING to CONTAINER_CLEANEDUP_AFTER_KILL
+2024-01-15 10:20:30,000 WARN  [Node Status Updater] NodeStatusUpdaterImpl: Node health status changed to unhealthy due to high memory usage
+2024-01-15 10:20:35,111 INFO  [Node Status Updater] NodeStatusUpdaterImpl: Reporting unhealthy node to ResourceManager
+2024-01-15 10:20:40,222 ERROR [main] NodeManager: Node marked as unhealthy by ResourceManager. Reason: Node has exceeded memory thresholds
