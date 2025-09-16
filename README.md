@@ -224,18 +224,6 @@ This repository contains sample code demonstrating various use cases leveraging 
     ![Screen Recording of Amazon Bedrock Video Chapter Creator POC](genai-quickstart-pocs-python/amazon-bedrock-video-chapter-creator-poc/images/demo.gif)
     
 
-1. **Sales Analyst Bedrock Databricks POC**
-    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create an intelligent sales data analyst that uses natural language questions to query relational data stores, specifically Databricks. This example leverages the complete Northwind sample database with realistic sales scenarios containing customers, orders, and order details.
-    
-    ![Screen Recording of Sales Analyst Bedrock Databricks POC](Sales-Analyst-Bedrock-Databricks/images/demo.gif)
-    
-
-1. **Sales Analyst Bedrock Snowflake POC**
-    This is sample code demonstrating the use of Amazon Bedrock and Generative AI to create an intelligent sales data analyst that uses natural language questions to query relational data stores, specifically Snowflake. This example leverages the complete Northwind sample database with realistic sales scenarios and includes automatic database setup.
-    
-    ![Screen Recording of Sales Analyst Bedrock Snowflake POC](Sales-Analyst-Bedrock-Snowflake/images/demo.gif)
-    
-
 
 
 ## Sample Proof of Concepts - .NET
