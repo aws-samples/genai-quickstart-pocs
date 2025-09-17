@@ -1,0 +1,107 @@
+{
+  "name": "advisor-assistant-poc",
+  "version": "1.0.0",
+  "description": "Enterprise-grade AI-powered advisor assistance platform with AWS Cognito authentication, Claude 3.5 Sonnet integration, and real-time financial data processing. Perfect for POC deployments with cost optimization and security best practices.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js --watch src",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:unit": "jest --testPathPattern='__tests__' --testNamePattern='(YahooFinanceProvider|NewsAPIProvider|FREDProvider|EnhancedDataAggregator|ErrorHandler|EnvironmentConfig|FeatureFlagManager|ProviderMonitor|dataProviderFactory)'",
+    "test:integration": "jest --testPathPattern='integration.test.js'",
+    "test:performance": "jest --testPathPattern='performance.test.js' --testTimeout=60000",
+    "test:providers": "npm run test:unit && npm run test:integration",
+    "test:pre-deploy": "./scripts/pre-deploy-tests.sh",
+    "deploy": "./deploy-with-tests.sh poc us-east-1",
+    "deploy:safe": "./deploy-with-tests.sh poc us-east-1",
+    "deploy:dev": "./deploy-with-tests.sh dev us-east-1",
+    "deploy:unsafe": "./deploy.sh poc us-east-1",
+    "setup:local": "docker-compose up -d",
+    "lint": "echo 'Linting not configured yet'",
+    "build": "echo 'Build step - Docker handles compilation'"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock": "^3.839.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.490.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.490.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.490.0",
+    "@aws-sdk/client-dynamodb": "^3.490.0",
+    "@aws-sdk/client-eventbridge": "^3.490.0",
+    "@aws-sdk/client-s3": "^3.490.0",
+    "@aws-sdk/client-sns": "^3.490.0",
+    "@aws-sdk/client-sqs": "^3.490.0",
+    "@aws-sdk/lib-dynamodb": "^3.490.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "connect-dynamodb": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-cache": "^5.1.2",
+    "node-cron": "^3.0.3",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "advisor-assistance",
+    "financial-data",
+    "ai-powered",
+    "aws-bedrock",
+    "claude-3.5-sonnet",
+    "real-time-analysis",
+    "aws-cognito",
+    "multi-user",
+    "poc-deployment",
+    "enterprise-ready",
+    "cost-optimized",
+    "serverless",
+    "containerized",
+    "alpha-vantage"
+  ],
+  "author": "Advisor Assistant Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/advisor-assistant-poc"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/advisor-assistant-poc/issues"
+  },
+  "homepage": "https://github.com/your-org/advisor-assistant-poc#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/__tests__/**",
+      "!src/index.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "setupFilesAfterEnv": [],
+    "testTimeout": 30000,
+    "verbose": false,
+    "forceExit": true,
+    "detectOpenHandles": false
+  }
+}
