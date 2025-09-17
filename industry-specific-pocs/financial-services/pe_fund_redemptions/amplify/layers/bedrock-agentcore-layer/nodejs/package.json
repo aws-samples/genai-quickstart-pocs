@@ -1,0 +1,8 @@
+{
+  "name": "bedrock-agentcore-layer",
+  "version": "1.0.0",
+  "description": "Lambda layer for Bedrock Agent Core SDK",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "^3.864.0"
+  }
+}

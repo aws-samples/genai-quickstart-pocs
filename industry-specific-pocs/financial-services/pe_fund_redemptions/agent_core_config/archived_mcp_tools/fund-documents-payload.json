@@ -1,0 +1,25 @@
+{
+    "lambdaArn": "arn:aws:lambda:us-east-1:782319166618:function:fund-documents",
+    "toolSchema": {
+        "inlinePayload": [
+            {
+                "name": "get_fund_document",
+                "description": "Get the full text document for a specific fund and investor class",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "fund_name": {
+                            "type": "string",
+                            "description": "Fund identifier (e.g., FUND001, FUND015)"
+                        },
+                        "investor_class": {
+                            "type": "string",
+                            "description": "Investor class type: ClassA, ClassB, or Institutional"
+                        }
+                    },
+                    "required": ["fund_name", "investor_class"]
+                }
+            }
+        ]
+    }
+}
