@@ -5,3 +5,5 @@ langfuse
 opensearch-py
 requests_aws4auth
 sec-api
+ragas
+langchain_aws

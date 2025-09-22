@@ -11,6 +11,13 @@ from typing import Dict, List
 from datetime import datetime, timedelta
 from pathlib import Path
 from sec_api import QueryApi, RenderApi
+from ragas.dataset_schema import (
+    SingleTurnSample,
+    MultiTurnSample,
+    EvaluationDataset
+)
+
+from ragas import evaluate
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -679,3 +686,157 @@ def upload_companies(bucket_name: str, preloaded_path: str = "./preloaded_10k") 
     
     return results
 
+### FUNCTIONS TO INTERACT WITH LANGFUSE ###
+def fetch_traces(langfuse=None, batch_size=10, lookback_hours=24,  tags=None,):
+    """Fetch traces from Langfuse based on specified criteria"""
+    # Calculate time range
+    end_time = datetime.now()
+    start_time = end_time - timedelta(hours=lookback_hours)
+    print(f"Fetching traces from {start_time} to {end_time}")
+    # Fetch traces
+    if tags:
+        traces = langfuse.api.trace.list(
+            limit=batch_size,
+            tags=tags,
+            from_timestamp=start_time,
+            to_timestamp=end_time
+        ).data
+    else:
+        traces = langfuse.api.trace.list(
+            limit=batch_size,
+            from_timestamp=start_time,
+            to_timestamp=end_time
+        ).data
+    
+    print(f"Fetched {len(traces)} traces")
+    return traces
+
+def process_traces(langfuse, traces):
+    """Process traces into samples for RAGAS evaluation"""
+    single_turn_samples = []
+    multi_turn_samples = []
+    trace_sample_mapping = []
+    
+    for trace in traces:
+        # Extract components
+        components = extract_span_components(langfuse,trace)
+        
+        # Add tool usage information to the trace for evaluation
+        tool_info = ""
+        if components["tool_usages"]:
+            tool_info = "Tools used: " + ", ".join([t["name"] for t in components["tool_usages"] if "name" in t])
+            
+        # Convert to RAGAS samples
+        if components["user_inputs"]:
+            messages = []
+            for i in range(max(len(components["user_inputs"]), len(components["agent_responses"]))):
+                if i < len(components["user_inputs"]):
+                    messages.append({"role": "user", "content": components["user_inputs"][i]})
+                if i < len(components["agent_responses"]):
+                    messages.append({
+                        "role": "assistant", 
+                        "content": components["agent_responses"][i] + "\n\n" + tool_info
+                    })
+            
+            multi_turn_samples.append(
+                MultiTurnSample(
+                    user_input=messages,
+                    metadata={
+                        "tool_usages": components["tool_usages"],
+                        "available_tools": components["available_tools"]
+                    }
+                )
+            )
+            trace_sample_mapping.append({
+                "trace_id": trace.id, 
+                "type": "multi_turn", 
+                "index": len(multi_turn_samples)-1
+            })
+    
+    return {
+        "single_turn_samples": single_turn_samples,
+        "multi_turn_samples": multi_turn_samples,
+        "trace_sample_mapping": trace_sample_mapping
+    }
+
+def extract_span_components(langfuse, trace):
+    """Extract user queries, agent responses, retrieved contexts 
+    and tool usage from a Langfuse trace"""
+    user_inputs = []
+    agent_responses = []
+    retrieved_contexts = []
+    tool_usages = []
+
+    # Get basic information from trace
+    if hasattr(trace, 'input') and trace.input is not None:
+        if isinstance(trace.input, dict) and 'args' in trace.input:
+            if trace.input['args'] and len(trace.input['args']) > 0:
+                user_inputs.append(str(trace.input['args'][0]))
+        elif isinstance(trace.input, str):
+            user_inputs.append(trace.input)
+        else:
+            user_inputs.append(str(trace.input))
+
+    if hasattr(trace, 'output') and trace.output is not None:
+        if isinstance(trace.output, str):
+            agent_responses.append(trace.output)
+        else:
+            agent_responses.append(str(trace.output))
+
+    # Try to get contexts from observations and tool usage details
+    try:
+        for obsID in trace.observations:
+            print (f"Getting Observation {obsID}")
+            observations = langfuse.api.observations.get(obsID)
+
+            for obs in observations:
+                # Extract tool usage information
+                if hasattr(obs, 'name') and obs.name:
+                    tool_name = str(obs.name)
+                    tool_input = obs.input if hasattr(obs, 'input') and obs.input else None
+                    tool_output = obs.output if hasattr(obs, 'output') and obs.output else None
+                    tool_usages.append({
+                        "name": tool_name,
+                        "input": tool_input,
+                        "output": tool_output
+                    })
+                    # Specifically capture retrieved contexts
+                    if 'retrieve' in tool_name.lower() and tool_output:
+                        retrieved_contexts.append(str(tool_output))
+    except Exception as e:
+        print(f"Error fetching observations: {e}")
+
+    # Extract tool names from metadata if available
+    if hasattr(trace, 'metadata') and trace.metadata:
+        if 'attributes' in trace.metadata:
+            attributes = trace.metadata['attributes']
+            if 'agent.tools' in attributes:
+                available_tools = attributes['agent.tools']
+    return {
+        "user_inputs": user_inputs,
+        "agent_responses": agent_responses,
+        "retrieved_contexts": retrieved_contexts,
+        "tool_usages": tool_usages,
+        "available_tools": available_tools if 'available_tools' in locals() else []
+    }
+
+def save_results_to_csv(rag_df=None, conv_df=None, output_dir="evaluation_results"):
+    """Save evaluation results to CSV files"""
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    results = {}
+    
+    if rag_df is not None and not rag_df.empty:
+        rag_file = os.path.join(output_dir, f"rag_evaluation_{timestamp}.csv")
+        rag_df.to_csv(rag_file, index=False)
+        print(f"RAG evaluation results saved to {rag_file}")
+        results["rag_file"] = rag_file
+    
+    if conv_df is not None and not conv_df.empty:
+        conv_file = os.path.join(output_dir, f"conversation_evaluation_{timestamp}.csv")
+        conv_df.to_csv(conv_file, index=False)
+        print(f"Conversation evaluation results saved to {conv_file}")
+        results["conv_file"] = conv_file
+    
+    return results
