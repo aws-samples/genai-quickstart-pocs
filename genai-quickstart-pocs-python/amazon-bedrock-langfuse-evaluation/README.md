@@ -71,17 +71,6 @@ The architecture consists of three main components:
 
 ## Usage
 
-### Quick Start with Preloaded Data
-
-If you want to skip SEC data download, use the preloaded 10-K documents:
-
-```python
-from utils import upload_companies
-
-# Upload preloaded documents to S3
-results = upload_companies("your-s3-bucket-name")
-```
-
 ### Custom Evaluation
 
 Modify `test_cases.json` to add your own evaluation scenarios:
