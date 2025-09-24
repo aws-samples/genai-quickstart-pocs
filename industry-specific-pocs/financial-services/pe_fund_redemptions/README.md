@@ -2,6 +2,8 @@
 
 This POC demonstrates how to enhance the [Strands AgentCore React starter template](https://github.com/altanalytics/strands-agentcore-react) with custom tools and capabilities for a specific finance use case. 
 
+*** PLEASE NOTE: Following this README and setting up this POC will require you to deploy infrastrucure into an AWS Account. This will incur costs based on usage of AWS services ***
+
 **Key Enhancements Demonstrated:**
 - Custom tools in [Strands-Agents](https://strandsagents.com/latest/)
 - AgentCore Gateway integration with MCP (Model Context Protocol)
