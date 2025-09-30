@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFP Processing Platform | Enterprise Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-light: #2d5a87;
+            --primary-dark: #0f2a44;
+            --secondary-color: #3182ce;
+            --accent-color: #4299e1;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --error-color: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .upload-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .upload-card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .upload-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-card-subtitle {
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .upload-area {
+            padding: 3rem 2rem;
+            text-align: center;
+            border: 2px dashed var(--gray-300);
+            margin: 2rem;
+            border-radius: 12px;
+            background: var(--gray-50);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--secondary-color);
+            background: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--secondary-color);
+            background: linear-gradient(135deg, rgba(65, 153, 225, 0.05), rgba(66, 153, 225, 0.1));
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+
+        .upload-text {
+            font-size: 1.125rem;
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .status-card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-top: 2rem;
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .status {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .success {
+            background: rgba(56, 161, 105, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(56, 161, 105, 0.2);
+        }
+
+        .error {
+            background: rgba(229, 62, 62, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(229, 62, 62, 0.2);
+        }
+
+        .info {
+            background: rgba(49, 130, 206, 0.1);
+            color: var(--secondary-color);
+            border: 1px solid rgba(49, 130, 206, 0.2);
+        }
+
+        .processing-section {
+            margin-top: 2rem;
+        }
+
+        .processing-header {
+            background: var(--gray-50);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .processing-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .processing-content {
+            padding: 2rem;
+        }
+
+        .stage {
+            margin: 1rem 0;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--gray-300);
+            background: var(--gray-50);
+            transition: all 0.3s ease;
+        }
+
+        .stage.completed {
+            border-left-color: var(--success-color);
+            background: rgba(56, 161, 105, 0.05);
+        }
+
+        .stage.processing {
+            border-left-color: var(--warning-color);
+            background: rgba(214, 158, 46, 0.05);
+            animation: pulse 2s infinite;
+        }
+
+        .stage.pending {
+            border-left-color: var(--gray-400);
+            background: var(--gray-50);
+        }
+
+        .stage.error {
+            border-left-color: var(--error-color);
+            background: rgba(229, 62, 62, 0.05);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stage-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .stage.completed .stage-icon {
+            background: var(--success-color);
+            color: var(--white);
+        }
+
+        .stage.processing .stage-icon {
+            background: var(--warning-color);
+            color: var(--white);
+        }
+
+        .stage.pending .stage-icon {
+            background: var(--gray-400);
+            color: var(--white);
+        }
+
+        .stage.error .stage-icon {
+            background: var(--error-color);
+            color: var(--white);
+        }
+
+        .stage-title {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .stage-status {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            text-transform: capitalize;
+            background: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .download-link:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .upload-area {
+                margin: 1rem;
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">RP</div>
+                <div class="logo-text">RFP Platform</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">
+                    <span>📤</span>
+                    Upload Portal
+                </a>
+                <a href="downloads.html" class="nav-link">
+                    <span>📥</span>
+                    Download Center
+                </a>
+                <a href="status.html" class="nav-link">
+                    <span>📊</span>
+                    Job Status
+                </a>
+                <a href="json-explorer.html" class="nav-link">
+                    <span>🔍</span>
+                    JSON Explorer
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Enterprise RFP Processing</h1>
+                <p class="hero-subtitle">Streamline your proposal workflow with intelligent automation</p>
+            </div>
+
+            <div class="upload-card">
+                <div class="upload-card-header">
+                    <h2 class="upload-card-title">Upload RFP Document</h2>
+                    <p class="upload-card-subtitle">Secure document processing with real-time status tracking</p>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p class="upload-text">Drag and drop your RFP file here</p>
+                    <p class="upload-subtext">Supports .txt and .pdf files - click to browse and select</p>
+                    <input type="file" id="fileInput" accept=".txt,.pdf" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <span>📁</span>
+                        Select File
+                    </button>
+                </div>
+
+                <div id="status"></div>
+            </div>
+
+            <div id="processingStatus" class="status-card" style="display: none;">
+                <div class="processing-header">
+                    <h2 class="processing-title">Processing Status</h2>
+                    <button class="btn btn-secondary" onclick="refreshStatus()">
+                        <span>🔄</span>
+                        Refresh Status
+                    </button>
+                </div>
+                <div class="processing-content">
+                    <div id="statusDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        let currentFileName = null;
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleFile(e.target.files[0]);
+        });
+
+        async function handleFile(file) {
+            if (!file.name.endsWith('.txt') && !file.name.endsWith('.pdf')) {
+                showStatus('Only .txt and .pdf files are supported', 'error');
+                return;
+            }
+
+            // Check file size (limit to 10MB for now)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                showStatus('File too large. Maximum size is 10MB.', 'error');
+                return;
+            }
+
+            showStatus('Uploading...', 'info');
+
+            try {
+                let fileContent;
+                if (file.name.endsWith('.pdf')) {
+                    // For PDF files, convert to base64 using FileReader (more reliable for large files)
+                    fileContent = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            // Remove the data URL prefix (data:application/pdf;base64,)
+                            const base64 = reader.result.split(',')[1];
+                            resolve(base64);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    // For text files, read as text
+                    fileContent = await file.text();
+                }
+
+                const response = await fetch('{{API_GATEWAY_URL}}/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileName: file.name,
+                        fileContent: fileContent
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Use the timestamped filename for tracking
+                    currentFileName = result.timestamped_filename || file.name;
+                    showStatus(`File uploaded successfully as ${result.timestamped_filename}! Processing will begin automatically.`, 'success');
+                    document.getElementById('processingStatus').style.display = 'block';
+                    startStatusTracking();
+
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus(`Upload failed: ${error.message}. Please try again.`, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+
+
+        async function startStatusTracking() {
+            if (!currentFileName) return;
+
+            // Start polling for status updates
+            const statusInterval = setInterval(async () => {
+                const statusData = await checkProcessingStatus(currentFileName);
+                if (statusData) {
+                    displayProcessingStatus(statusData);
+
+                    // Stop polling if completed or error
+                    if (statusData.overall_status === 'completed' || statusData.overall_status === 'error') {
+                        clearInterval(statusInterval);
+                        // Processing completed - user can check downloads page
+                    }
+                }
+            }, 5000); // Check every 5 seconds
+
+            // Initial status check
+            const initialStatus = await checkProcessingStatus(currentFileName);
+            if (initialStatus) {
+                displayProcessingStatus(initialStatus);
+            }
+        }
+
+        async function checkProcessingStatus(fileName) {
+            try {
+                const response = await fetch(`{{API_GATEWAY_URL}}/status?fileName=${encodeURIComponent(fileName)}`);
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (error) {
+                console.error('Failed to check status:', error);
+            }
+            return null;
+        }
+
+        function displayProcessingStatus(statusData) {
+            const statusDetails = document.getElementById('statusDetails');
+
+            // Use original filename if available, otherwise extract from timestamped filename
+            const displayName = statusData.original_filename || statusData.file_name.replace(/_\d{8}_\d{6}\.(txt|pdf)$/, '.$1');
+
+            let html = `<div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--gray-800); margin-bottom: 1rem;">Processing: ${displayName}</h3>`;
+
+            if (statusData.original_filename && statusData.original_filename !== statusData.file_name) {
+                html += `<p style="color: var(--gray-600); font-size: 0.875rem;"><strong>Tracking ID:</strong> ${statusData.file_name}</p>`;
+            }
+
+            html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">Overall Status</div>
+                    <div style="font-weight: 600; color: var(--gray-800); text-transform: uppercase;">${statusData.overall_status}</div>
+                </div>
+                <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">Current Stage</div>
+                    <div style="font-weight: 600; color: var(--gray-800);">${statusData.current_stage}</div>
+                </div>
+                <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">Last Updated</div>
+                    <div style="font-weight: 600; color: var(--gray-800);">${new Date(statusData.last_updated).toLocaleString()}</div>
+                </div>
+            </div></div>`;
+
+            const stageDescriptions = {
+                'uploaded': 'File uploaded successfully',
+                'questions_extracted': 'Questions extracted from RFP',
+                'questions_answered': 'Questions answered using knowledge base',
+                'compliance_reviewed': 'Responses reviewed for compliance',
+                'final_document': 'Final RFP response document created'
+            };
+
+            const stageIcons = {
+                'uploaded': '📤',
+                'questions_extracted': '❓',
+                'questions_answered': '💡',
+                'compliance_reviewed': '✅',
+                'final_document': '📋'
+            };
+
+            // Show all stages with their status
+            const allStages = ['uploaded', 'questions_extracted', 'questions_answered', 'compliance_reviewed', 'final_document'];
+
+            allStages.forEach(stageName => {
+                const stage = statusData.stages?.find(s => s.name === stageName);
+                const stageStatus = stage ? stage.status : 'pending';
+                const timestamp = stage ? stage.timestamp : null;
+                const error = stage ? stage.error : null;
+                const downloadLink = stage ? stage.download_link : null;
+                const downloadName = stage ? stage.download_name : null;
+
+                html += `<div class="stage ${stageStatus}">
+                    <div class="stage-header">
+                        <div class="stage-icon">${stageIcons[stageName] || '⚪'}</div>
+                        <div class="stage-title">${stageDescriptions[stageName] || stageName}</div>
+                        <div class="stage-status">${stageStatus}</div>
+                    </div>`;
+
+                if (timestamp) {
+                    html += `<div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.5rem;">
+                        Completed: ${new Date(timestamp).toLocaleString()}
+                    </div>`;
+                }
+
+                // Add download link if file is completed
+                if (stageStatus === 'completed' && downloadLink && downloadName) {
+                    html += `<div style="margin-top: 0.75rem;">
+                        <a href="{{API_GATEWAY_URL}}${downloadLink}" download class="download-link">
+                            <span>⬇</span>
+                            Download ${downloadName}
+                        </a>`;
+                    
+                    // Add JSON explorer link for final JSON files
+                    if (downloadName.includes('final.json')) {
+                        const jsonFileName = downloadLink.split('/').pop();
+                        html += `<a href="json-explorer.html?file=${encodeURIComponent(jsonFileName)}" class="download-link" style="margin-left: 0.5rem; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));">
+                            <span>🔍</span>
+                            Explore JSON
+                        </a>`;
+                    }
+                    
+                    // Add additional download links if they exist
+                    const additionalDownloads = stage.additional_downloads;
+                    if (additionalDownloads && additionalDownloads.length > 0) {
+                        additionalDownloads.forEach(additional => {
+                            html += `<a href="{{API_GATEWAY_URL}}${additional.download_link}" download class="download-link" style="margin-left: 0.5rem;">
+                                <span>⬇</span>
+                                Download ${additional.download_name}
+                            </a>`;
+                        });
+                    }
+                    
+                    html += `</div>`;
+                }
+
+                if (error) {
+                    html += `<div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(229, 62, 62, 0.1); border-radius: 6px; color: var(--error-color); font-size: 0.875rem;">
+                        <strong>Error:</strong> ${error}
+                    </div>`;
+                }
+
+                html += '</div>';
+            });
+
+            statusDetails.innerHTML = html;
+        }
+
+        async function refreshStatus() {
+            if (currentFileName) {
+                const statusData = await checkProcessingStatus(currentFileName);
+                if (statusData) {
+                    displayProcessingStatus(statusData);
+                }
+            }
+        }
+
+        // Check for tracking parameter on page load
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackFile = urlParams.get('track');
+            if (trackFile) {
+                currentFileName = trackFile;
+                document.getElementById('processingStatus').style.display = 'block';
+                startStatusTracking();
+                showStatus(`Tracking job: ${trackFile}`, 'info');
+            }
+        });
+
+    </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

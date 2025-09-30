@@ -1,0 +1,227 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RFP Processing System with Knowledge Base Integration'
+
+Parameters:
+  KnowledgeBaseId:
+    Type: String
+    Description: 'The ID of the Amazon Bedrock Knowledge Base to use for RFP response generation'
+    AllowedPattern: '^[A-Z0-9]{10}$'$'$'
+    ConstraintDescription: 'Knowledge Base ID must be exactly 10 alphanumeric characters (e.g., ABC123DEF4)'
+
+Resources:
+  DeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'terminal-deploy-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'terminal-upload-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      # Note: S3 event notifications are configured by the deployment script
+      # to avoid circular dependency issues in CloudFormation
+
+  ProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-processor-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.11
+      Handler: rfp_question_extractor.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 900
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'terminal-lambda-role-${AWS::AccountId}-${AWS::Region}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Policies:
+        - PolicyName: BedrockAgentRuntimeAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agent-runtime:RetrieveAndGenerate
+                  - bedrock-agent-runtime:Retrieve
+                Resource: '*'
+
+  QuestionProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'question-processor-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.11
+      Handler: question_processor.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 900
+      Environment:
+        Variables:
+          KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt UploadBucket.Arn
+
+  ComplianceAgentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'compliance-agent-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.11
+      Handler: compliance_agent.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 900
+
+  QuestionProcessorInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref QuestionProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt UploadBucket.Arn
+
+  DraftingAgentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'drafting-agent-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.11
+      Handler: drafting_agent.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 900
+
+  ComplianceAgentInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ComplianceAgentFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt UploadBucket.Arn
+
+  DraftingAgentInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DraftingAgentFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt UploadBucket.Arn
+
+  ProcessingStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: rfp-processing-status
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: file_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: file_name
+          KeyType: HASH
+
+  StatusApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'status-api-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.11
+      Handler: status_api.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+
+Outputs:
+  BucketName:
+    Description: 'Name of the S3 bucket for uploads'
+    Value: !Ref UploadBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  
+  DeploymentBucket:
+    Description: 'Name of the S3 bucket for Lambda deployment'
+    Value: !Ref DeploymentBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-DeploymentBucket'
+  
+  FunctionName:
+    Description: 'Name of the RFP processor Lambda function'
+    Value: !Ref ProcessorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+  
+  QuestionProcessorFunctionName:
+    Description: 'Name of the question processor Lambda function'
+    Value: !Ref QuestionProcessorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-QuestionProcessorFunctionName'
+  
+  ComplianceAgentFunctionName:
+    Description: 'Name of the compliance agent Lambda function'
+    Value: !Ref ComplianceAgentFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-ComplianceAgentFunctionName'
+  
+  DraftingAgentFunctionName:
+    Description: 'Name of the drafting agent Lambda function'
+    Value: !Ref DraftingAgentFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-DraftingAgentFunctionName'
+  
+  StatusApiFunctionName:
+    Description: 'Name of the status API Lambda function'
+    Value: !Ref StatusApiFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-StatusApiFunctionName'
+  
+  ProcessingStatusTableName:
+    Description: 'Name of the DynamoDB table for processing status'
+    Value: !Ref ProcessingStatusTable
+    Export:
+      Name: !Sub '${AWS::StackName}-ProcessingStatusTableName'
