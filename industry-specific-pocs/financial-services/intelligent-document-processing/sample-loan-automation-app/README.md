@@ -40,11 +40,11 @@ By experiencing this end-to-end workflow, developers gain practical understandin
 
 ![Application Architecture](images/arch1.png)
 
-**Processing Overview:** Document extraction can take up to a minute per document depending on page count. The application processes multiple documents in parallel, completing all extractions within a few minutes. Live progress tracking shows real-time status updates.
-
 The application is built with four progressive steps that demonstrate document classification, extraction, and validation using Amazon Bedrock Data Automation.
 
-**Note:** While this demo currently uses four document types, the POC can be easily expanded to handle additional document types using pre-built or custom blueprints as needed.
+> **Note:** 
+> - While this demo currently uses four document types, the POC can be easily expanded to handle additional document types using pre-built or custom blueprints as needed.
+> - Document extraction can take up to a minute per document depending on page count. The application processes multiple documents in parallel, completing all extractions within a few minutes. Live progress tracking shows real-time status updates.
 
 ---
 
