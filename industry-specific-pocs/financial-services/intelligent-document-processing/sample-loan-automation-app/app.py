@@ -70,7 +70,7 @@ def handle_configuration_error(config_message):
     **To fix this issue:**
     
     1. **Stop the app** (Ctrl+C in terminal)
-    2. Create a .env file with your AWS configuration (refer to [HowTO.md](HowTO.md) for details)
+    2. Create a .env file with your AWS configuration (refer to [HowTO.md](https://github.com/aws-samples/genai-quickstart-pocs/blob/main/industry-specific-pocs/financial-services/intelligent-document-processing/sample-loan-automation-app/HowTO.md) for details)
     3. **Start the app again:** `streamlit run app.py`
     """)
     

@@ -10,8 +10,7 @@
                 "bedrock:UpdateDataAutomationProject",
                 "bedrock:DeleteDataAutomationProject",
                 "bedrock:InvokeDataAutomationAsync",
-                "bedrock:GetDataAutomationStatus",
-                "bedrock:ListDataAutomationJobs"
+                "bedrock:GetDataAutomationStatus"
             ],
             "Resource": "*"
         },
@@ -24,8 +23,8 @@
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::<your-document-storage-bucket>",
-                "arn:aws:s3:::<your-document-storage-bucket>/*"
+                "arn:aws:s3:::your-bucket-name",
+                "arn:aws:s3:::your-bucket-name/*"
             ]
         },
         {

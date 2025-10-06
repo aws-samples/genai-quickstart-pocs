@@ -1,8 +1,10 @@
 # Loan Application Document Verification - Usage Guide
+This POC demonstrates how developers can leverage [Amazon Bedrock Data Automation](https://docs.aws.amazon.com/bedrock/latest/userguide/bda.html) to build loan automation applications. The application showcases automated document classification, extraction, and validation with immediate feedback and status tracking.
 
- Purpose of this POC is to help developers learn how they can leverage Amazon Bedrock Data Automation to build loan automation applications. The application showcases automated document classification, extraction, and validation with immediate feedback and status tracking.
+This application intentionally uses the minimum AWS services required to maintain focus on Bedrock Data Automation capabilities.
 
-This application purposely uses minimum AWS services needed to keep focus on BDA capabilities.
+
+For detailed architecture information and additional context, please refer to the [README.md](README.md) file.
 
 
 ## Prerequisites
@@ -24,7 +26,7 @@ sample-loan-automation-app/
 ├── config.py                 # Configuration and constants
 ├── requirements.txt          # Python dependencies
 ├── env.example              # Environment configuration template
-
+├── iam-policy.json          # IAM policy template
 ├── backend/
 │   ├── bedrock_processor.py # Core processing engine
 │   └── document_validator.py # Document validation logic
@@ -47,7 +49,7 @@ sample-loan-automation-app/
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git  
 
 # Navigate to the loan processing directory
-cd genai-quickstart-pocs/genai-quickstart-pocs-python/sample-loan-automation-app
+cd genai-quickstart-pocs/industry-specific-pocs/financial-services/intelligent-document-processing/sample-loan-automation-app
 
 # Create and activate virtual environment
 python3 -m venv venv
@@ -60,7 +62,7 @@ source venv/bin/activate
 git clone https://github.com/aws-samples/genai-quickstart-pocs.git  
 
 # Navigate to the loan processing directory
-cd genai-quickstart-pocs\genai-quickstart-pocs-python\sample-loan-automation-app
+cd genai-quickstart-pocs\industry-specific-pocs\financial-services\intelligent-document-processing\sample-loan-automation-app
 
 # Create and activate virtual environment
 python -m venv venv
@@ -81,31 +83,9 @@ pip install -r requirements.txt
 
 ### Step 3: AWS IAM Permissions Setup
 
-Ensure your AWS user or role has the required permissions by attaching this IAM policy:
+Ensure your AWS user or role has the required permissions by attaching the IAM policy provided in [iam-policy.json](iam-policy.json).
 
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "bedrock-data-automation:*",
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::your-bucket-name",
-                "arn:aws:s3:::your-bucket-name/*"
-            ]
-        }
-    ]
-}
-```
-
-**Important**: Replace `your-bucket-name` with your actual S3 bucket name in the policy above.
+**Important**: Replace `your-bucket-name` with your actual S3 bucket name in the policy file.
 
 ### Step 4: Environment Configuration
 
@@ -163,7 +143,7 @@ streamlit run app.py
 
 2. **Process Loan Application**:
    - **Step 1**: Enter applicant information (name, SSN, date of birth, loan amount) and press "Continue to Document Upload"
-   - **Step 2**: Upload required documents (Driver License, W2 Form, Bank Statement, Payslip). You can drag/drop or browse multiple documents of the same document type. Choose to verify individually or defer to next step
+   - **Step 2**: Upload required documents (Driver License, W2 Form, Bank Statement, Payslip). Use drag-and-drop or file browser to upload multiple files per document type. Sample documents are available in the [samples/](samples/) folder for testing. Choose to verify specific document or go to next step to verify all documents in parallel (recommended).
    - **Step 3**: Click "Verify Documents" to start processing all pending documents not verified during previous step
    - **Step 4**: Review cross-verification results comparing applicant information against extracted document data
 
@@ -186,9 +166,9 @@ streamlit run app.py
 
 **Solution**:
 1. Verify your `.env` file contains valid AWS credentials
-2. Ensure your AWS account has the required IAM permissions (see Step 3 above)
-3. Attach the IAM policy to your AWS user or role
-4. Update the S3 bucket ARN in the policy to match your actual bucket
+2. Ensure your AWS account has the required IAM permissions
+3. Attach the IAM policy from [iam-policy.json](iam-policy.json) to your AWS user or role
+4. Update the S3 bucket name in the policy to match your actual bucket
 
 #### Project or Blueprint Not Found
 **Symptoms**: "Project not found" or "Blueprint not found" errors
