@@ -1,0 +1,27 @@
+# Loan Application Document Verification v4 - Requirements
+
+# Core Framework
+streamlit>=1.28.0
+
+# Data Processing
+pandas>=2.0.0
+
+# AWS Services
+boto3>=1.28.0
+botocore>=1.31.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Standard Library (included with Python)
+# - uuid
+# - time
+# - datetime
+# - os
+# - hashlib
+# - typing
+
+# Development Dependencies (optional)
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0
