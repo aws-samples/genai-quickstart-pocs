@@ -1,0 +1,7 @@
+table_name,column_name,foreign_table_name,foreign_column_name
+equipment,equiptypeid,equipmenttypes,equiptypeid
+maintenance,mainttypeid,mainttypes,mainttypeid
+maintenance,statusid,statustypes,statusid
+locations,loctypeid,locationtypes,loctypeid
+locations,businessunit,businessunits,buid
+locations,facility,locations,locationid
