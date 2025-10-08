@@ -70,7 +70,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "aws-cdk": "^2.175.1",
-    "aws-cdk-lib": "^2.177.0",
+    "aws-cdk-lib": "^2.219.0",
     "aws-sdk": "^2.1691.0",
     "constructs": "^10.4.2",
     "esbuild": "^0.25.2",
