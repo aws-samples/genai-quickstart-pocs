@@ -1,6 +1,0 @@
-black
-flake8
-docformatter
-pylint
-twine
-coverage

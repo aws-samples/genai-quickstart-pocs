@@ -1,1 +1,0 @@
-# Vector store package

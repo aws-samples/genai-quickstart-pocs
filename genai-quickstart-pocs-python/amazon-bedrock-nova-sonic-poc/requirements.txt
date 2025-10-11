@@ -1,8 +1,0 @@
-pyaudio>=0.2.13
-rx>=3.2.0
-smithy-aws-core>=0.0.1
-pytz>=2025.2
-faker>=37.1.0
-jsonpickle>=4.0.2
-dateutils>=0.6.12
-aws-sdk-bedrock-runtime>=0.0.1
