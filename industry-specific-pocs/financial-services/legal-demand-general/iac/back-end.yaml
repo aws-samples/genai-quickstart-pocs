@@ -1,0 +1,353 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Legal Demand Document Processing System'
+
+Parameters:
+  AppName:
+    Type: String
+    Default: legal-demand-general
+    Description: Application name
+  
+  AdminEmail:
+    Type: String
+    Description: Admin email address for sending SNS notifications
+    NoEcho: false
+    
+  LogLevel:
+    Type: String
+    Default: INFO
+    AllowedValues:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+    Description: Log level for Lambda functions
+  
+  ModelId:
+    Type: String
+    Default: us.anthropic.claude-3-5-sonnet-20241022-v2:0
+    Description: Bedrock model ID to use for document classification
+  
+  S3CodeBucket:
+    Type: String
+    Description: Bucket where your Lambda .zip files are located for deployment
+    NoEcho: false
+  
+  S3TextractCodeKey:
+    Type: String
+    Description: Key where your Textract lambda.zip file is located for deployment
+
+  S3BedrockCodeKey:
+    Type: String
+    Description: Key where your Bedrock lambda.zip file is located for deployment
+
+
+Resources:
+  # S3 Buckets
+  DocumentInputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "input"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:Put'
+            Function: !GetAtt TextractProcessorFunction.Arn
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3000
+  
+  DocumentOutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "output"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+  
+  # DynamoDB Table
+  DocumentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "table"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: job_id
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+        - AttributeName: result
+          AttributeType: S
+        - AttributeName: Object
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_id
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ResultIndex
+          KeySchema:
+            - AttributeName: result
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ObjectIndex
+          KeySchema:
+            - AttributeName: Object
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+  
+  # SNS Topics
+  TextractNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "textract"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      DisplayName: 'Textract Job Notifications'
+  
+  EmailNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "llm"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      DisplayName: 'Document Analysis Results'
+  
+  # IAM Roles
+  TextractServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "textractService"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: textract.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonTextractServiceRole'
+      Policies:
+        - PolicyName: TextractSNSPublishPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 'sns:Publish'
+                Resource: !Ref TextractNotificationTopic
+              - Effect: Allow
+                Action:
+                  - 's3:*'
+                  - "s3-object-lambda:*"
+                Resource: "*"
+  
+  TextractProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "textractLambda"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/AmazonTextractFullAccess'
+      Policies:
+        - PolicyName: TextractProcessorPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:*'
+                  - "s3-object-lambda:*"
+                Resource: "*"
+  
+  BedrockProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "bedrockLambda"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/AmazonTextractFullAccess'
+      Policies:
+        - PolicyName: BedrockProcessorPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'bedrock:InvokeModel'
+                  - 'bedrock:Converse'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                Resource: !GetAtt DocumentsTable.Arn
+              - Effect: Allow
+                Action:
+                  - 'sns:Publish'
+                Resource: !Ref EmailNotificationTopic
+              - Effect: Allow
+                Action:
+                  - 's3:*'
+                  - "s3-object-lambda:*"
+                Resource: "*"
+  
+  # Lambda Functions
+  TextractProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "textractProcessor"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt TextractProcessorRole.Arn
+      Runtime: python3.12
+      Timeout: 60
+      MemorySize: 128
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          TOPIC_ARN: !Ref TextractNotificationTopic
+          TOPIC_ROLE_ARN: !GetAtt TextractServiceRole.Arn
+          OUT_BUCKET: !Ref DocumentOutputBucket
+      Code:
+        S3Bucket: !Ref S3CodeBucket
+        S3Key: !Ref S3TextractCodeKey
+  
+  BedrockProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join 
+      - "-"
+      - - !Ref AWS::AccountId
+        - !Ref AppName
+        - "llmProcessor"
+        - !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt BedrockProcessorRole.Arn
+      Runtime: python3.12
+      Timeout: 360
+      MemorySize: 128
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          SNS_ARN: !Ref EmailNotificationTopic
+          MODEL_ID: !Ref ModelId
+          DYNAMODB_TABLE: !Ref DocumentsTable
+          RUN_ID: "-1"
+      Code:
+        S3Bucket: !Ref S3CodeBucket
+        S3Key: !Ref S3BedrockCodeKey
+    
+  # Lambda Permissions
+  TextractProcessorS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref TextractProcessorFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !GetAtt DocumentInputBucket.Arn
+  
+  BedrockProcessorSNSPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref BedrockProcessorFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref TextractNotificationTopic
+  
+  # SNS Subscription for Bedrock Processor
+  BedrockProcessorSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref TextractNotificationTopic
+      Protocol: lambda
+      Endpoint: !GetAtt BedrockProcessorFunction.Arn
+  
+  BedrockProcessorNotification:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref EmailNotificationTopic
+      Protocol: email
+      Endpoint: !Ref AdminEmail
+
+Outputs:  
+  DocumentInputBucketName:
+    Description: 'S3 bucket for document uploads'
+    Value: !Ref DocumentInputBucket
+  
+  DocumentOutputBucketName:
+    Description: 'S3 bucket for Textract output'
+    Value: !Ref DocumentOutputBucket
+  
+  DynamoDBTableName:
+    Description: 'DynamoDB table name'
+    Value: !Ref DocumentsTable
+  
+  EmailNotificationTopicArn:
+    Description: 'SNS topic ARN for email notifications'
+    Value: !Ref EmailNotificationTopic
