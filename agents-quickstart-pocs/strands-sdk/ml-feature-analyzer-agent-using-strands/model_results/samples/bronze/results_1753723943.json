@@ -1,0 +1,52 @@
+{
+  "model_type": "bronze",
+  "sdk_used": "SageMaker Core",
+  "configuration": {
+    "max_candidates": 1,
+    "max_runtime_per_job": 180,
+    "max_total_runtime": 360,
+    "objective_metric": "AUC",
+    "problem_type": "BinaryClassification"
+  },
+  "attributes": {
+    "basic": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status"
+    ],
+    "premium": [
+      "checking_account_status",
+      "credit_history",
+      "savings_account_status",
+      "personal_status_sex",
+      "other_debtors"
+    ],
+    "all_used": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status",
+      "checking_account_status",
+      "credit_history",
+      "savings_account_status",
+      "personal_status_sex",
+      "other_debtors"
+    ],
+    "basic_count": 5,
+    "premium_count": 5,
+    "total_count": 10
+  },
+  "job_name": "bronze-credit-model-1753722495",
+  "metrics": {
+    "auc": 0.8566666841506958
+  },
+  "training_time": 1753723943.4690628,
+  "infrastructure": {
+    "bucket": "ml-feature-analyzer-1234567891112-us-west-1",
+    "role": "arn:aws:iam::1234567891112:role/MLFeatureAnalyzer-SageMaker-us-west-1",
+    "region": "us-west-1"
+  }
+}
