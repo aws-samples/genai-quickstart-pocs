@@ -1,0 +1,17 @@
+"use strict";
+/**
+ * Global setup for integration tests
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+async function globalSetup() {
+    console.log('🚀 Starting integration test environment...');
+    // Set global test environment variables
+    process.env.NODE_ENV = 'integration-test';
+    process.env.AWS_REGION = 'us-east-1';
+    process.env.BEDROCK_REGION = 'us-east-1';
+    process.env.JWT_SECRET = 'integration-test-jwt-secret-key';
+    // Initialize any global test resources
+    console.log('✅ Integration test environment ready');
+}
+exports.default = globalSetup;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2xvYmFsLXNldHVwLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vc3JjL19fdGVzdHNfXy9pbnRlZ3JhdGlvbi9nbG9iYWwtc2V0dXAudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IjtBQUFBOztHQUVHOztBQUVZLEtBQUssVUFBVSxXQUFXO0lBQ3ZDLE9BQU8sQ0FBQyxHQUFHLENBQUMsNkNBQTZDLENBQUMsQ0FBQztJQUUzRCx3Q0FBd0M7SUFDeEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxRQUFRLEdBQUcsa0JBQWtCLENBQUM7SUFDMUMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxVQUFVLEdBQUcsV0FBVyxDQUFDO0lBQ3JDLE9BQU8sQ0FBQyxHQUFHLENBQUMsY0FBYyxHQUFHLFdBQVcsQ0FBQztJQUN6QyxPQUFPLENBQUMsR0FBRyxDQUFDLFVBQVUsR0FBRyxpQ0FBaUMsQ0FBQztJQUUzRCx1Q0FBdUM7SUFDdkMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxzQ0FBc0MsQ0FBQyxDQUFDO0FBQ3RELENBQUM7QUFYRCw4QkFXQyIsInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogR2xvYmFsIHNldHVwIGZvciBpbnRlZ3JhdGlvbiB0ZXN0c1xuICovXG5cbmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIGdsb2JhbFNldHVwKCkge1xuICBjb25zb2xlLmxvZygn8J+agCBTdGFydGluZyBpbnRlZ3JhdGlvbiB0ZXN0IGVudmlyb25tZW50Li4uJyk7XG4gIFxuICAvLyBTZXQgZ2xvYmFsIHRlc3QgZW52aXJvbm1lbnQgdmFyaWFibGVzXG4gIHByb2Nlc3MuZW52Lk5PREVfRU5WID0gJ2ludGVncmF0aW9uLXRlc3QnO1xuICBwcm9jZXNzLmVudi5BV1NfUkVHSU9OID0gJ3VzLWVhc3QtMSc7XG4gIHByb2Nlc3MuZW52LkJFRFJPQ0tfUkVHSU9OID0gJ3VzLWVhc3QtMSc7XG4gIHByb2Nlc3MuZW52LkpXVF9TRUNSRVQgPSAnaW50ZWdyYXRpb24tdGVzdC1qd3Qtc2VjcmV0LWtleSc7XG4gIFxuICAvLyBJbml0aWFsaXplIGFueSBnbG9iYWwgdGVzdCByZXNvdXJjZXNcbiAgY29uc29sZS5sb2coJ+KchSBJbnRlZ3JhdGlvbiB0ZXN0IGVudmlyb25tZW50IHJlYWR5Jyk7XG59Il19
