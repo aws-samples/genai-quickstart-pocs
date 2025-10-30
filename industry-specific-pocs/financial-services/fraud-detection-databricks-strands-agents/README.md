@@ -47,7 +47,8 @@ The system consists of four main components:
 
 ### Configuration
 
-Update the `AWS_CONFIG` dictionary with your AWS region and S3 bucket name:
+- Add a valid email address for Send Alert agent to send email notifications
+- Update the `AWS_CONFIG` dictionary with your AWS region and S3 bucket name:
 
 ```python
 AWS_CONFIG = {
