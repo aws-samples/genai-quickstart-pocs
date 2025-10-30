@@ -26,18 +26,24 @@ The system consists of four main components:
 
 ### Prerequisites
 
-- Python 3.8+
-- AWS account with access to S3, SES, and Bedrock
-- Strands SDK and Boto3 installed
+- Access to a Databricks workspace (You can also use SageMaker Notebook for testing)
+- Access to an AWS account
+- Strands Agents and Boto3 installed
 
 ### Installation
 
-1. Clone this repository
-2. Install required packages:
-   ```
-   pip install strands-agents strands-agents-tools boto3
-   ```
-3. Provide valid email address for SES to send emails
+1. **Import Notebook**
+   - In your Databricks workspace, click "Import"
+   - Select `fraud_detection_strands.ipynb`
+   - Choose your target folder
+
+2. **Configure Environment**
+   - Attach the notebook to a cluster
+   - Ensure the cluster has:
+     - Databricks Runtime: 13.3 LTS or higher
+     - Python 3.9+
+
+3. **Run Notebook**
 
 ### Configuration
 
