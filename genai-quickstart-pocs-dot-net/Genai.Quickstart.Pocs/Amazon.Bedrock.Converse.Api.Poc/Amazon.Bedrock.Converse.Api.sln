@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34928.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amazon.Bedrock.Converse.Api.Poc", "Amazon.Bedrock.Converse.Api\Amazon.Bedrock.Converse.Api.Poc.csproj", "{DB2DEFF7-D84D-4B83-82B0-84FAB3F2639C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB2DEFF7-D84D-4B83-82B0-84FAB3F2639C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB2DEFF7-D84D-4B83-82B0-84FAB3F2639C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB2DEFF7-D84D-4B83-82B0-84FAB3F2639C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB2DEFF7-D84D-4B83-82B0-84FAB3F2639C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3A09292E-28E5-4CFF-AA87-4968D0803147}
+	EndGlobalSection
+EndGlobal

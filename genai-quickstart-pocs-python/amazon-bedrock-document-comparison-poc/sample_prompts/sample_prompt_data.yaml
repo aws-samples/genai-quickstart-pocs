@@ -1,0 +1,183 @@
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      Document A is the first provided document.
+      It contains multiple sentences.
+      This is a sample comparison.
+    Document B: |
+      Document B is the second provided document.
+      It also contains multiple sentences.
+      This is a sample comparison.
+  assistant: |
+    - Sentence 1 in Document A: "Document A" => "Document B"
+    - Sentence 1 in Document B: "Document B" => "Document A"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The quick brown fox jumps over the lazy dog.
+      This is sentence two in Document A.
+    Document B: |
+      The quick brown fox leaped over the lazy dog.
+      This is sentence two in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "jumps" => "leaped"
+    - Sentence 1 in Document B: "leaped" => "jumps"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      There are five apples on the tree.
+      Sentence two in Document A.
+    Document B: |
+      There are seven apples on the tree.
+      Sentence two in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "five" => "seven"
+    - Sentence 1 in Document B: "seven" => "five"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The sun rises in the east.
+      Another sentence in Document A.
+    Document B: |
+      The sun sets in the east.
+      Another sentence in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "rises" => "sets"
+    - Sentence 1 in Document B: "sets" => "rises"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The cake is chocolate.
+      Sentence two is here in Document A.
+    Document B: |
+      The cake is vanilla.
+      Sentence two is here in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "chocolate" => "vanilla"
+    - Sentence 1 in Document B: "vanilla" => "chocolate"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      Alice visited the zoo yesterday.
+      Sentence two follows in Document A.
+    Document B: |
+      Alice went to the zoo yesterday.
+      Sentence two follows in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "visited" => "went to"
+    - Sentence 1 in Document B: "went to" => "visited"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The conference is on November 10th.
+      Another sentence here in Document A.
+    Document B: |
+      The conference is on December 5th.
+      Another sentence here in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "November" => "December"
+    - Sentence 1 in Document B: "December" => "November"
+    - Sentence 1 in Document A: "10th" => "5th"
+    - Sentence 1 in Document B: "5th" => "10th"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      It's a beautiful day in Document A.
+      More sentences for comparison.
+    Document B: |
+      It's a rainy day in Document B.
+      More sentences for comparison.
+  assistant: |
+    - Sentence 1 in Document A: "beautiful" => "rainy"
+    - Sentence 1 in Document B: "rainy" => "beautiful"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      John likes pizza and pasta.
+      More sentences for comparison in Document A.
+    Document B: |
+      John likes pizza but not pasta.
+      More sentences for comparison in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "and" => "but not"
+    - Sentence 1 in Document B: "but not" => "and"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The cat chased the mouse in Document A.
+      The second sentence follows in Document A.
+    Document B: |
+      The cat chased the mouse away in Document B.
+      The second sentence follows in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "away" => ""
+    - Sentence 1 in Document B: "" => "away"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      We will meet at 3:00 PM in Document A.
+      Another sentence here in Document A.
+    Document B: |
+      We will meet at 3:30 PM in Document B.
+      Another sentence here in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "3:00" => "3:30"
+    - Sentence 1 in Document B: "3:30" => "3:00"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The book is on the table in Document A.
+      Additional sentence in Document A.
+    Document B: |
+      The book is under the table in Document B.
+      Additional sentence in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "on" => "under"
+    - Sentence 1 in Document B: "under" => "on"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The movie was entertaining in Document A.
+      More sentences to compare in Document A.
+    Document B: |
+      The movie was boring in Document B.
+      More sentences to compare in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "entertaining" => "boring"
+    - Sentence 1 in Document B: "boring" => "entertaining"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      She wore a red dress in Document A.
+      Additional sentences in Document A.
+    Document B: |
+      She wore a blue dress in Document B.
+      Additional sentences in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "red" => "blue"
+    - Sentence 1 in Document B: "blue" => "red"
+
+- prompt: |
+    Please compare Document A and Document B sentence by sentence, listing every change that took place.
+    Document A: |
+      The car is parked in the garage in Document A.
+      Further sentences in Document A.
+    Document B: |
+      The car is parked outside the garage in Document B.
+      Further sentences in Document B.
+  assistant: |
+    - Sentence 1 in Document A: "in" => "outside"
+    - Sentence 1 in Document B: "outside" => "in"
