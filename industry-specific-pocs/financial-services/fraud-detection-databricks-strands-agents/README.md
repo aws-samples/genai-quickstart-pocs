@@ -1,6 +1,6 @@
 # 🛡️ Fraud Detection System using Databricks & Strands Agents
 
-This project demonstrates a fraud detection system using AWS Strands SDK. It leverages a multi-agent approach to process transactions, analyze risks, detect patterns, and generate alerts in real-time.
+This project demonstrates a fraud detection system using AWS Strands SDK. It leverages a multi-agent approach to process transactions, analyze risks, detect patterns and generate alerts in real-time.
 
 ![Architecture](images/architecture.png)
 
