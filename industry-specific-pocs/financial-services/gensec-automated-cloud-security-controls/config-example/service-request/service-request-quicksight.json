@@ -1,0 +1,15 @@
+{
+      "requestId": "REQ-2025-027",
+      "serviceId": "QuickSight",
+      "timestamp": "2024-05-20T12:00:00Z",
+      "requestor": {
+        "id": "user789",
+        "role": "Security Engineer",
+        "team": "Cloud Security"
+      },
+      "services": [
+        {
+          "serviceName": "Amazon QuickSight"
+        }
+      ]
+    }
