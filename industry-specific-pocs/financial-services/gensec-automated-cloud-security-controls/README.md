@@ -32,54 +32,7 @@ By using pre-approved services with associated controls and threat vectors, cust
 
 ## Architecture Overview
 
-```mermaid
-graph LR
-    subgraph Input
-        S3Input["S3 Input Bucket"]
-        ProfileProcessor["Profile Processor"]
-        S3Input --> ProfileProcessor
-    end
-
-    subgraph Orchestration
-        StepFunc["Step Functions Workflow"]
-    end
-
-    subgraph Functions[Processing Functions]
-        DocLambda["Documentation Manager"]
-        AnalyzeLambda["Security Requirements Analyzer"]
-        ControlsLambda["Security Controls Generator"]
-        IaCLambda["Infrastructure Template Generator"]
-        IAMLambda["IAM Model Generator"]
-        ProfileLambda["Service Profile Generator"]
-        
-        DocLambda --> AnalyzeLambda
-        AnalyzeLambda --> ControlsLambda
-        ControlsLambda --> IaCLambda
-        IaCLambda --> IAMLambda
-        IAMLambda --> ProfileLambda
-    end
-
-    subgraph Storage[Storage & AI]
-        Bedrock["Amazon Bedrock"]
-        DDB[("DynamoDB Tables")]
-        S3Output["S3 Output Bucket"]
-        
-        Bedrock ~~~ DDB
-        DDB ~~~ S3Output
-    end
-    
-    Input --> Orchestration
-    Orchestration --> Functions
-    Functions --> Storage
-
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:white
-    classDef lambda fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:white
-    classDef storage fill:#3F8624,stroke:#232F3E,stroke-width:2px,color:white
-    
-    class S3Input,S3Output,DDB storage
-    class DocLambda,AnalyzeLambda,ControlsLambda,IaCLambda,IAMLambda,ProfileLambda,ProfileProcessor lambda
-    class StepFunc,Bedrock aws
-```
+![GenSec System Architecture](docs/blog/GenSec.png)
 
 ## Core Components
 
