@@ -1,0 +1,46 @@
+# Patch for security-system-stack.ts
+# Update Lambda functions with better timeout and memory settings
+
+# For SecurityConfigurationHandler (line ~584):
+const securityConfigHandler = new lambda.Function(this, 'SecurityConfigurationHandler', {
+  functionName: 'gensec-SecurityConfigurationHandler',
+  runtime: lambda.Runtime.PYTHON_3_9,
+  handler: 'lambda_function.lambda_handler',
+  code: lambda.Code.fromAsset('../lambda/2SecurityConfigurationHandler'),
+  timeout: cdk.Duration.minutes(15),        # Keep existing
+  memorySize: 3008,                         # Increase from 1024 to 3008 MB
+  reservedConcurrentExecutions: 5,          # Limit concurrency to avoid throttling
+  environment: {
+    BEDROCK_MAX_RETRIES: '5',
+    CHUNK_SIZE: '200000',
+    ENABLE_PARAMETER_FILTERING: 'true'
+  },
+  vpc,
+  vpcSubnets: {
+    subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+  },
+  securityGroups: [lambdaSecurityGroup],
+  role: securityConfigHandlerRole,
+});
+
+# For DocumentationManager (line ~427):
+const documentationManager = new lambda.Function(this, 'DocumentationManager', {
+  functionName: 'gensec-AWSServiceDocumentationManager',
+  runtime: lambda.Runtime.PYTHON_3_9,
+  handler: 'lambda_function.lambda_handler',
+  code: lambda.Code.fromAsset('../lambda/AWSServiceDocumentationManager'),
+  timeout: cdk.Duration.minutes(15),        # Keep existing
+  memorySize: 2048,                         # Increase from 1024 to 2048 MB
+  reservedConcurrentExecutions: 3,          # Limit concurrency
+  environment: {
+    MAX_PARAMETERS_PER_SERVICE: '200',
+    MAX_ACTIONS_PER_SERVICE: '300',
+    ENABLE_SECURITY_FILTERING: 'true'
+  },
+  vpc,
+  vpcSubnets: {
+    subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+  },
+  securityGroups: [lambdaSecurityGroup],
+  role: documentationManagerRole,
+});
