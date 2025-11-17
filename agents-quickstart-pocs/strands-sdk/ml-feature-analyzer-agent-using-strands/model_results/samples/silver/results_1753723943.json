@@ -1,0 +1,62 @@
+{
+  "model_type": "silver",
+  "sdk_used": "SageMaker Core",
+  "configuration": {
+    "max_candidates": 1,
+    "max_runtime_per_job": 180,
+    "max_total_runtime": 360,
+    "objective_metric": "AUC",
+    "problem_type": "BinaryClassification"
+  },
+  "attributes": {
+    "basic": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status"
+    ],
+    "premium": [
+      "checking_account_status",
+      "credit_history",
+      "savings_account_status",
+      "personal_status_sex",
+      "other_debtors",
+      "present_residence_since",
+      "property",
+      "other_installment_plans",
+      "housing",
+      "existing_credits_count"
+    ],
+    "all_used": [
+      "age",
+      "duration_months",
+      "credit_amount",
+      "installment_rate",
+      "employment_status",
+      "checking_account_status",
+      "credit_history",
+      "savings_account_status",
+      "personal_status_sex",
+      "other_debtors",
+      "present_residence_since",
+      "property",
+      "other_installment_plans",
+      "housing",
+      "existing_credits_count"
+    ],
+    "basic_count": 5,
+    "premium_count": 10,
+    "total_count": 15
+  },
+  "job_name": "silver-credit-model-1753723278",
+  "metrics": {
+    "auc": 0.8566666841506958
+  },
+  "training_time": 1753723943.438632,
+  "infrastructure": {
+    "bucket": "ml-feature-analyzer-1234567891112-us-west-1",
+    "role": "arn:aws:iam::1234567891112:role/MLFeatureAnalyzer-SageMaker-us-west-1",
+    "region": "us-west-1"
+  }
+}

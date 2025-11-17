@@ -1,0 +1,16 @@
+{
+  "metrics": {
+    "auc": 0.682619035243988
+  },
+  "job_name": "baseline-credit-model-1753721783",
+  "model_type": "baseline",
+  "attributes_used": [
+    "age",
+    "duration_months",
+    "credit_amount",
+    "installment_rate",
+    "employment_status"
+  ],
+  "extraction_method": "sagemaker_automl",
+  "note": "Only AUC from SageMaker AutoML - no estimated metrics"
+}
