@@ -21,7 +21,7 @@ dependencies = [
   "pydantic-settings == 2.8.1",
   "wrapt == 1.17.2",
   "botocore == 1.37.23",
-  "mcp == 1.6.0",
+  "mcp == 1.23.0",
   "loguru == 0.7.3",
   # Data handling and analysis
   "pandas == 2.2.2",
