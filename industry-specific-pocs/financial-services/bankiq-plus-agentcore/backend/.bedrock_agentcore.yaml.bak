@@ -1,0 +1,38 @@
+default_agent: bank_iq_agent_v1
+agents:
+  bank_iq_agent_v1:
+    name: bank_iq_agent_v1
+    entrypoint: bank_iq_agent_v1.py
+    platform: linux/arm64
+    container_runtime: none
+    aws:
+      execution_role: arn:aws:iam::164543933824:role/AmazonBedrockAgentCoreSDKRuntime-us-east-1-bankiq
+      execution_role_auto_create: true
+      account: '164543933824'
+      region: us-east-1
+      ecr_repository: null
+      ecr_auto_create: true
+      network_configuration:
+        network_mode: PUBLIC
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+    bedrock_agentcore:
+      agent_id: null
+      agent_arn: null
+      agent_session_id: null
+    codebuild:
+      project_name: null
+      execution_role: null
+      source_bucket: null
+    memory:
+      mode: STM_ONLY
+      memory_id: null
+      memory_arn: null
+      memory_name: bank_iq_agent_v1_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
