@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-.env
-=======
-# Environment variables (contains secrets)
-.env
-
 # Python
 __pycache__/
 *.py[cod]
@@ -25,32 +19,36 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
+# Virtual Environment
+.venv/
 venv/
-env/
 ENV/
+env/
+
+# Environment variables
+.env
+.env.backup
+*.backup
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Streamlit
-.streamlit/
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
+# Application specific
+*.db
+*.sqlite
+*.sqlite3
+faiss_index/
+generated-diagrams/
 
 # Logs
 *.log
-logs/
->>>>>>> 3f9252b (✅ Complete private Redshift setup with bastion host)

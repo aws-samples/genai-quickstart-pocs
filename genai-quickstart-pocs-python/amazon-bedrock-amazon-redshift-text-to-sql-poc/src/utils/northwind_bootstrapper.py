@@ -9,7 +9,7 @@ import sqlite3
 import streamlit as st
 import traceback
 import psycopg2
-from .redshift_connector import get_redshift_connection
+from .redshift_connector_iam import get_redshift_connection
 
 DATABASE_NAME = "SALES_ANALYST"
 NORTHWIND_SCHEMA = "NORTHWIND"
@@ -61,15 +61,37 @@ def create_northwind_schema():
         conn = get_redshift_connection()
         cursor = conn.cursor()
         
+        # Check if schema already exists
+        cursor.execute("""
+            SELECT schema_name 
+            FROM information_schema.schemata 
+            WHERE schema_name = 'northwind'
+        """)
+        exists = cursor.fetchone()
+        
+        if exists:
+            print(f"Schema {NORTHWIND_SCHEMA} already exists")
+            conn.close()
+            return True
+        
         # Create schema
         cursor.execute(f"CREATE SCHEMA IF NOT EXISTS {NORTHWIND_SCHEMA.lower()}")
         conn.commit()
         print(f"Created schema {NORTHWIND_SCHEMA}")
+        cursor.close()
         conn.close()
         return True
     except Exception as e:
         print(f"Error creating schema: {str(e)}")
         traceback.print_exc()
+        # Try to close connection
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
         return False
 
 def download_northwind_data():

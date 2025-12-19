@@ -16,9 +16,7 @@ def cleanup_redshift():
     """Delete all sales-analyst Redshift clusters."""
     redshift = boto3.client(
         'redshift', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     
     deleted_count = 0
@@ -45,9 +43,7 @@ def cleanup_ec2():
     """Delete all sales-analyst bastion hosts."""
     ec2 = boto3.client(
         'ec2', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     
     terminated_count = 0
@@ -77,9 +73,7 @@ def cleanup_iam():
     """Delete IAM role and instance profile."""
     iam = boto3.client(
         'iam', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     
     try:

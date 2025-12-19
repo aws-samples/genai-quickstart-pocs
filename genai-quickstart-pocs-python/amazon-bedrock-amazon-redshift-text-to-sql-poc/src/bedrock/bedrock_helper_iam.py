@@ -1,29 +1,32 @@
 """
-Amazon Bedrock helper for the GenAI Sales Analyst application.
+Amazon Bedrock helper with IAM role authentication.
 """
 import boto3
 import json
+import os
 from typing import List, Dict, Any, Optional
 
 
 class BedrockHelper:
     """
-    Helper class for Amazon Bedrock operations.
+    Helper class for Amazon Bedrock operations using IAM role.
     """
     
-    def __init__(self, region_name: str = 'us-east-1'):
+    def __init__(self, region_name: str = None):
         """
-        Initialize the Bedrock helper.
+        Initialize the Bedrock helper with IAM role authentication.
         
         Args:
-            region_name: AWS region name
+            region_name: AWS region name (defaults to instance metadata or us-east-1)
         """
-        import os
+        # Get region from environment or instance metadata
+        if not region_name:
+            region_name = os.getenv('AWS_REGION') or os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
+        
+        # Use default credentials (IAM role from EC2 instance)
         self.bedrock_runtime = boto3.client(
             service_name='bedrock-runtime',
-            region_name=region_name,
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+            region_name=region_name
         )
     
     def invoke_model(self, 
@@ -43,12 +46,6 @@ class BedrockHelper:
         Returns:
             Model response text
         """
-        # Format prompt for Claude models
-        if "anthropic" in model_id:
-            formatted_prompt = f"Human: {prompt}\n\nAssistant:"
-        else:
-            formatted_prompt = prompt
-            
         body = json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
