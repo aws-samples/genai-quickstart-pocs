@@ -15,9 +15,7 @@ def create_ssm_role():
     """Create IAM role for SSM access."""
     iam = boto3.client(
         'iam', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     
     try:
@@ -70,9 +68,7 @@ def create_bastion_host():
     """Create EC2 bastion host for SSH tunnel."""
     ec2 = boto3.client(
         'ec2', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     
     try:
@@ -175,9 +171,7 @@ sleep 30
         # Wait for SSM agent to be ready (silent)
         ssm = boto3.client(
             'ssm', 
-            region_name=os.getenv('AWS_REGION', 'us-east-1'),
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+            region_name=os.getenv('AWS_REGION', 'us-east-1')
         )
         
         # Wait up to 10 minutes for SSM agent to connect (silent)
@@ -300,9 +294,7 @@ def create_ssm_tunnel(instance_id, redshift_host):
     # Test SSM connectivity
     ssm = boto3.client(
         'ssm', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     try:
         response = ssm.describe_instance_information(
@@ -409,17 +401,15 @@ def create_redshift_cluster():
     
     redshift = boto3.client(
         'redshift', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
     ec2 = boto3.client(
         'ec2', 
-        region_name=os.getenv('AWS_REGION', 'us-east-1'),
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
     )
-    cluster_id = 'sales-analyst-cluster'
+    
+    # Get cluster ID from .env or use default
+    cluster_id = os.getenv('OPTION1_CLUSTER_ID', 'sales-analyst-cluster')
     
     # Start data download in background
     download_result = {'path': None}
@@ -556,12 +546,16 @@ def create_redshift_cluster():
                 return cluster_endpoint
     except redshift.exceptions.ClusterNotFoundFault:
         # Create cluster in PRIVATE subnet (no public access)
+        password = os.getenv('OPTION1_PASSWORD')
+        if not password:
+            raise ValueError("OPTION1_PASSWORD must be set in .env file")
+            
         redshift.create_cluster(
             ClusterIdentifier=cluster_id,
             NodeType='ra3.xlplus',
-            MasterUsername='admin',
-            MasterUserPassword='Awsuser123$',
-            DBName='sales_analyst',
+            MasterUsername=os.getenv('OPTION1_USER', 'admin'),
+            MasterUserPassword=password,
+            DBName=os.getenv('OPTION1_DATABASE', 'sales_analyst'),
             ClusterType='single-node',
             PubliclyAccessible=False,  # PRIVATE SUBNET
             Port=5439,
