@@ -1,0 +1,33 @@
+{
+  "_meta": { "format": "synthetic_mib_v1", "generated_from": "mock_mib_response.xml" },
+  "transaction": {
+    "ref_guid": "MIB_REQ_2024_031601",
+    "type": "MIB Inquiry",
+    "executed": { "date": "2024-03-16", "time": "11:01:15Z" },
+    "mode": "ORIGINAL",
+    "result": { "code": "Success", "records_found": 2 }
+  },
+  "service": {
+    "priority": "STANDARD",
+    "search_depth": "STANDARD",
+    "service": "CHECKING SERVICE",
+    "vendor_alias": "INS_BUREAU"
+  },
+  "party": {
+    "applicant_party_key": "MER_24_987654_001",
+    "subject": {
+      "ssn": "555667777",
+      "residence": { "state": "OH", "country": "USA", "zip": "43215" },
+      "name": { "first": "Robert", "last": "Franklin" },
+      "gender": "Male",
+      "dob": "1969-05-12"
+    }
+  },
+  "records": [
+    { "submitted": "2021-08-20", "code": "503D", "text": "ENDOCRINE - DIABETES, TREATED" },
+    { "submitted": "2019-11-05", "code": "311C", "text": "CARDIOVASCULAR - HYPERTENSION TREATED" }
+  ]
+}
+
+
+

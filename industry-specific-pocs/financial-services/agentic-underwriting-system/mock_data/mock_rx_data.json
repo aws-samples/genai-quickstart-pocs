@@ -1,0 +1,29 @@
+{
+  "_meta": { "format": "synthetic_rx_csv_v1", "generated_from": "mock_rx_data.csv" },
+  "orders": [
+    {
+      "order_reference": "ORD_785432_001",
+      "hit_status": "HIT",
+      "applicant_status": "H",
+      "flagged_for_audit": 0,
+      "eligibility_count": 1,
+      "rx_count": 3,
+      "max_priority": "MEDIUM",
+      "applicant": {
+        "ssn": 456789123,
+        "name": { "first": "Michael", "middle": "James", "last": "Thompson" },
+        "sex": "M",
+        "dob": "1982-07-23 00:00:00",
+        "residence": { "state": "TX", "zip": 75201 }
+      },
+      "fills": [
+        { "rx_number": "RX587452", "fill_date": "2024-01-10 00:00:00", "quantity": 90, "days_supply": 90, "refill_number": 3, "total_refills": 3, "provider": { "name": "PHARMACY_TX_DALLAS_4587", "address": "789 Pharmacy Road", "city": "Dallas", "state": "TX", "zip": 75201, "phone": 2145559876 }, "prescriber": { "first_name": "Dr. Alan", "last_name": "Grant", "title": "MD", "address_1": "123 Medical Center Drive", "city": "Dallas", "state": "TX", "zip": 75204, "phone": 2145551212 }, "ndc": "00185-0020-30", "drug_label": "Lisinopril 10mg Tablet", "brand_name": "Lisinopril", "generic_name": "Lisinopril", "priority": "MEDIUM", "dosage_form": "TABLET", "strength": "10mg", "route": "ORAL", "therapeutic_class": "ACE INHIBITORS", "drug_code_type": "NDC", "specialty": "Internal Medicine", "disease_indication": "Hypertension", "icd_code": "I10" },
+        { "rx_number": "RX587451", "fill_date": "2023-10-12 00:00:00", "quantity": 90, "days_supply": 90, "refill_number": 2, "total_refills": 3, "provider": { "name": "PHARMACY_TX_DALLAS_4587", "address": "789 Pharmacy Road", "city": "Dallas", "state": "TX", "zip": 75201, "phone": 2145559876 }, "prescriber": { "first_name": "Dr. Alan", "last_name": "Grant", "title": "MD", "address_1": "123 Medical Center Drive", "city": "Dallas", "state": "TX", "zip": 75204, "phone": 2145551212 }, "ndc": "00185-0020-30", "drug_label": "Lisinopril 10mg Tablet", "brand_name": "Lisinopril", "generic_name": "Lisinopril", "priority": "MEDIUM", "dosage_form": "TABLET", "strength": "10mg", "route": "ORAL", "therapeutic_class": "ACE INHIBITORS", "drug_code_type": "NDC", "specialty": "Internal Medicine", "disease_indication": "Hypertension", "icd_code": "I10" },
+        { "rx_number": "RX998341", "fill_date": "2023-08-21 00:00:00", "quantity": 21, "days_supply": 7, "refill_number": 0, "total_refills": 0, "provider": { "name": "PHARMACY_TX_DALLAS_1122", "address": "321 Health St", "city": "Dallas", "state": "TX", "zip": 75201, "phone": 2145554433 }, "prescriber": { "first_name": "Dr. Ellie", "last_name": "Sattler", "title": "MD", "address_1": "456 Urgent Care Way", "city": "Dallas", "state": "TX", "zip": 75201, "phone": 2145558888 }, "ndc": "00591-2401-30", "drug_label": "Amoxicillin 500mg Capsule", "brand_name": "Amoxicillin", "generic_name": "Amoxicillin", "priority": "LOW", "dosage_form": "CAPSULE", "strength": "500mg", "route": "ORAL", "therapeutic_class": "PENICILLINS", "drug_code_type": "NDC", "specialty": "Urgent Care", "disease_indication": "Sinus Infection", "icd_code": "J01.90" }
+      ]
+    }
+  ]
+}
+
+
+

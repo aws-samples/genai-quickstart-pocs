@@ -1,0 +1,49 @@
+{
+  "_meta": { "format": "synthetic_lab_v1", "generated_from": "mock_lab_results.xml" },
+  "header": {
+    "request_id": "LAB_REQ_2024_031603",
+    "applicant_id": "MER_24_987654_001",
+    "patient": { "name": "Robert Allen Franklin", "dob": "1969-05-12", "sex": "Male" },
+    "collected_at": "2024-03-15T09:00:00Z",
+    "reported_at": "2024-03-15T18:30:00Z",
+    "lab_vendor": "APEX_LABS",
+    "ordering_physician": "Dr. Eleanor Vance"
+  },
+  "panels": [
+    {
+      "name": "Comprehensive Metabolic Panel (CMP)",
+      "tests": [
+        { "name": "Glucose", "value": 145, "units": "mg/dL", "reference": "65-99", "flag": "HIGH" },
+        { "name": "BUN (Urea Nitrogen)", "value": 22, "units": "mg/dL", "reference": "7-25" },
+        { "name": "Creatinine", "value": 1.2, "units": "mg/dL", "reference": "0.7-1.3" },
+        { "name": "eGFR", "value": 75, "units": "mL/min/1.73m²", "reference": ">60" }
+      ]
+    },
+    {
+      "name": "Lipid Panel",
+      "tests": [
+        { "name": "Cholesterol, Total", "value": 225, "units": "mg/dL", "reference": "125-200", "flag": "HIGH" },
+        { "name": "HDL Cholesterol", "value": 35, "units": "mg/dL", "reference": ">40", "flag": "LOW" },
+        { "name": "Triglycerides", "value": 210, "units": "mg/dL", "reference": "<150", "flag": "HIGH" },
+        { "name": "LDL Cholesterol, Calculated", "value": 148, "units": "mg/dL", "reference": "<100", "flag": "HIGH" }
+      ]
+    },
+    {
+      "name": "Diabetes Markers",
+      "tests": [
+        { "name": "Hemoglobin A1c (HbA1c)", "value": 7.2, "units": "%", "reference": "4.8-5.6", "flag": "HIGH" },
+        { "name": "Insulin", "value": 25.5, "units": "uIU/mL", "reference": "2.6-24.9", "flag": "HIGH" }
+      ]
+    },
+    {
+      "name": "Urinalysis",
+      "tests": [
+        { "name": "Glucose", "value": "Trace", "reference": "Negative", "flag": "PRESENT" },
+        { "name": "Protein (Microalbumin)", "value": 35, "units": "mg/L", "reference": "<30", "flag": "HIGH" }
+      ]
+    }
+  ]
+}
+
+
+

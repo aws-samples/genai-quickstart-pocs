@@ -1,0 +1,27 @@
+{
+  "_meta": { "format": "synthetic_mib_v1", "generated_from": "mock_mib_response.xml" },
+  "transaction": {
+    "ref_guid": "MIB_REQ_2024_031501",
+    "type": "MIB Inquiry",
+    "executed": { "date": "2024-03-15", "time": "10:31:05Z" },
+    "mode": "ORIGINAL",
+    "result": { "code": "Success", "records_found": 1 }
+  },
+  "service": { "priority": "STANDARD", "search_depth": "STANDARD", "service": "CHECKING SERVICE", "vendor_alias": "INS_BUREAU" },
+  "party": {
+    "applicant_party_key": "MER_24_785432_001",
+    "subject": {
+      "ssn": "456789123",
+      "residence": { "state": "TX", "country": "USA", "zip": "75201" },
+      "name": { "first": "Michael", "middle": "James", "last": "Thompson" },
+      "gender": "Male",
+      "dob": "1982-07-23"
+    }
+  },
+  "records": [
+    { "submitted": "2022-04-18", "code": "311C", "text": "CARDIOVASCULAR - HYPERTENSION TREATED", "extra": { "place_residence": "TX" } }
+  ]
+}
+
+
+
