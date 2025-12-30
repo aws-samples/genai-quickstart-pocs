@@ -56,10 +56,14 @@ def generate_security_controls(input_data):
 
         if not request_id or not service_id:
             raise ValueError("Missing required input parameters: requestId or serviceId")
+        
+        # Normalize service_id to lowercase for DynamoDB queries
+        service_id_normalized = service_id.lower()
+        logger.info(f"Processing service_id: {service_id} (normalized: {service_id_normalized})")
 
         # Query DynamoDB for service actions and parameters
-        validated_actions = get_service_actions_from_dynamodb(service_id, SERVICE_ACTIONS_TABLE)
-        validated_parameters = get_service_parameters_from_dynamodb(service_id, SERVICE_PARAMETERS_TABLE)
+        validated_actions = get_service_actions_from_dynamodb(service_id_normalized, SERVICE_ACTIONS_TABLE)
+        validated_parameters = get_service_parameters_from_dynamodb(service_id_normalized, SERVICE_PARAMETERS_TABLE)
         
         # Create comprehensive action validation sets
         valid_action_names = build_action_validation_set(validated_actions)
@@ -67,7 +71,7 @@ def generate_security_controls(input_data):
         
         logger.info(f"Found {len(valid_action_names)} valid actions and {len(valid_parameter_names)} valid parameters")
 
-        configurations = get_configurations_from_dynamodb(request_id, service_id, CONTROL_LIBRARY_TABLE)
+        configurations = get_configurations_from_dynamodb(request_id, service_id_normalized, CONTROL_LIBRARY_TABLE)
         
         # Convert configurations to list if it's a dict
         if isinstance(configurations, dict):

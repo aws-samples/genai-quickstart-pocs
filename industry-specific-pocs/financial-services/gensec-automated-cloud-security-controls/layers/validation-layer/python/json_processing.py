@@ -74,8 +74,19 @@ def _format_value(value, indent_level=0):
                     if k not in all_keys:
                         all_keys.append(k)
             
-            # Create table if keys are reasonable for table format
-            if len(all_keys) <= 6:  # Reasonable number of columns
+            # Check if any lists are too long for table format
+            has_long_lists = False
+            for item in value:
+                for k in all_keys:
+                    cell_value = item.get(k, "")
+                    if isinstance(cell_value, list) and len(cell_value) > 5:
+                        has_long_lists = True
+                        break
+                if has_long_lists:
+                    break
+            
+            # Create table if keys are reasonable for table format AND no long lists
+            if len(all_keys) <= 6 and not has_long_lists:  # Reasonable number of columns and no long lists
                 result = ""
                 
                 # Create table header
@@ -88,15 +99,21 @@ def _format_value(value, indent_level=0):
                     for k in all_keys:
                         cell_value = item.get(k, "")
                         if isinstance(cell_value, list):
-                            # Join list items with <br> for table cells
-                            cell_value = "<br>".join(str(v) for v in cell_value[:3])  # Limit to first 3 items
-                            if len(item.get(k, [])) > 3:
-                                cell_value += "<br>..."
+                            # Join ALL list items with <br> for table cells (no truncation)
+                            cell_value = "<br>".join(str(v) for v in cell_value)
                         elif isinstance(cell_value, dict):
                             cell_value = json.dumps(cell_value, separators=(',', ':'))
                         row.append(str(cell_value).replace('\n', ' ').replace('|', '\\|'))
                     result += f"{indent}| " + " | ".join(row) + " |\n"
                 result += "\n"
+                return result
+            else:
+                # Use detailed format for complex data with long lists
+                result = ""
+                for i, item in enumerate(value):
+                    result += f"{indent}### {camel_to_title(all_keys[0]) if all_keys else 'Item'} {i+1}\n\n"
+                    result += _format_value(item, indent_level + 1)
+                    result += "\n"
                 return result
         
         # Complex list items (not suitable for table)

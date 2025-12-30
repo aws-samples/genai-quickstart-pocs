@@ -63,7 +63,7 @@ export class SecuritySystemStack extends cdk.Stack {
 
     // Deploy service mappings configuration file to input bucket
     new s3deploy.BucketDeployment(this, 'ServiceMappingsDeployment', {
-      sources: [s3deploy.Source.asset('../config-example')],
+      sources: [s3deploy.Source.asset('../configuration')],
       destinationBucket: inputBucket,
       destinationKeyPrefix: 'configuration/',
       include: ['service-mappings.json'],
@@ -565,7 +565,7 @@ Always return responses in valid JSON format when requested.`,
       ],
       environment: {
         // Strands Agent Configuration
-        USE_STRANDS_AGENT: 'false', // Set to 'true' to enable Strands Agent
+        USE_STRANDS_AGENT: 'false', // Set to 'true' to enable Strands Agent (has 6-7K output limit)
         STRANDS_AGENT_ID: strandsAgent.attrAgentId,
         STRANDS_AGENT_ALIAS_ID: strandsAgentAlias.attrAgentAliasId,
         
@@ -592,6 +592,9 @@ Always return responses in valid JSON format when requested.`,
         
         // Logging level
         LOG_LEVEL: 'INFO',
+        
+        // Force container refresh for service mappings update
+        SERVICE_MAPPINGS_VERSION: '2025-12-22-quicksuite',
       },
     });
     cdk.Tags.of(documentationManager).add('gensec', 'true');
@@ -982,18 +985,7 @@ Always return responses in valid JSON format when requested.`,
       payload: stepfunctions.TaskInput.fromObject({
         'securityProfile.$': '$.securityProfile',
         'serviceRequest.$': '$.serviceRequest',
-        serviceDocumentation: {
-          'statusCode.$': '$.serviceDocumentation.Payload.statusCode',
-          body: {
-            'service_id.$': '$.serviceDocumentation.Payload.body.service_id',
-            'actions_count.$': '$.serviceDocumentation.Payload.body.actions_count',
-            'parameters_count.$': '$.serviceDocumentation.Payload.body.parameters_count',
-            'message.$': '$.serviceDocumentation.Payload.body.message',
-            'warnings.$': '$.serviceDocumentation.Payload.body.warnings',
-            's3_locations.$': '$.serviceDocumentation.Payload.body.s3_locations',
-            'status.$': '$.serviceDocumentation.Payload.body.status',
-          },
-        },
+        'serviceDocumentation.$': '$.serviceDocumentation.Payload',
       }),
     });
 
@@ -1004,16 +996,7 @@ Always return responses in valid JSON format when requested.`,
         'requestId.$': '$.serviceRequest.requestId',
         'serviceId.$': '$.serviceRequest.serviceId',
         'analysisResult.$': '$.analysisResult',
-        serviceDocumentation: {
-          'statusCode.$': '$.serviceDocumentation.Payload.statusCode',
-          body: {
-            'service_id.$': '$.serviceDocumentation.Payload.body.service_id',
-            'actions_count.$': '$.serviceDocumentation.Payload.body.actions_count',
-            'parameters_count.$': '$.serviceDocumentation.Payload.body.parameters_count',
-            's3_locations.$': '$.serviceDocumentation.Payload.body.s3_locations',
-            'status.$': '$.serviceDocumentation.Payload.body.status',
-          },
-        },
+        'serviceDocumentation.$': '$.serviceDocumentation.Payload',
       }),
     });
 
@@ -1025,16 +1008,7 @@ Always return responses in valid JSON format when requested.`,
         'serviceId.$': '$.serviceRequest.serviceId',
         'analysisResult.$': '$.analysisResult',
         'controlsResult.$': '$.controlsResult',
-        serviceDocumentation: {
-          'statusCode.$': '$.serviceDocumentation.Payload.statusCode',
-          body: {
-            'service_id.$': '$.serviceDocumentation.Payload.body.service_id',
-            'actions_count.$': '$.serviceDocumentation.Payload.body.actions_count',
-            'parameters_count.$': '$.serviceDocumentation.Payload.body.parameters_count',
-            's3_locations.$': '$.serviceDocumentation.Payload.body.s3_locations',
-            'status.$': '$.serviceDocumentation.Payload.body.status',
-          },
-        },
+        'serviceDocumentation.$': '$.serviceDocumentation.Payload',
       }),
     });
 
@@ -1044,16 +1018,7 @@ Always return responses in valid JSON format when requested.`,
       payload: stepfunctions.TaskInput.fromObject({
         'requestId.$': '$.serviceRequest.requestId',
         'serviceId.$': '$.serviceRequest.serviceId',
-        serviceDocumentation: {
-          'statusCode.$': '$.serviceDocumentation.Payload.statusCode',
-          body: {
-            'service_id.$': '$.serviceDocumentation.Payload.body.service_id',
-            'actions_count.$': '$.serviceDocumentation.Payload.body.actions_count',
-            'parameters_count.$': '$.serviceDocumentation.Payload.body.parameters_count',
-            's3_locations.$': '$.serviceDocumentation.Payload.body.s3_locations',
-            'status.$': '$.serviceDocumentation.Payload.body.status',
-          },
-        },
+        'serviceDocumentation.$': '$.serviceDocumentation.Payload',
       }),
     });
 
@@ -1063,16 +1028,7 @@ Always return responses in valid JSON format when requested.`,
       payload: stepfunctions.TaskInput.fromObject({
         'requestId.$': '$.serviceRequest.requestId',
         'serviceId.$': '$.serviceRequest.serviceId',
-        serviceDocumentation: {
-          'statusCode.$': '$.serviceDocumentation.Payload.statusCode',
-          body: {
-            'service_id.$': '$.serviceDocumentation.Payload.body.service_id',
-            'actions_count.$': '$.serviceDocumentation.Payload.body.actions_count',
-            'parameters_count.$': '$.serviceDocumentation.Payload.body.parameters_count',
-            's3_locations.$': '$.serviceDocumentation.Payload.body.s3_locations',
-            'status.$': '$.serviceDocumentation.Payload.body.status',
-          },
-        },
+        'serviceDocumentation.$': '$.serviceDocumentation.Payload',
       }),
     });
 
@@ -1099,19 +1055,37 @@ Always return responses in valid JSON format when requested.`,
           'service.$': '$.serviceRequest.services[0].serviceName',
         },
       }),
+      taskTimeout: stepfunctions.Timeout.duration(cdk.Duration.minutes(15)),
     });
 
     // Create Choice state for service documentation check (reuse existing logic)
     const checkServiceDocumentation = new stepfunctions.Choice(this, 'CheckServiceDocumentation')
       .when(stepfunctions.Condition.or(
+        // Single service with actions
         stepfunctions.Condition.and(
           stepfunctions.Condition.numberEquals('$.serviceDocumentation.Payload.statusCode', 200),
+          stepfunctions.Condition.isPresent('$.serviceDocumentation.Payload.body.actions_count'),
           stepfunctions.Condition.numberGreaterThan('$.serviceDocumentation.Payload.body.actions_count', 0)
         ),
+        // Parent service with total actions
         stepfunctions.Condition.and(
           stepfunctions.Condition.numberEquals('$.serviceDocumentation.Payload.statusCode', 200),
+          stepfunctions.Condition.isPresent('$.serviceDocumentation.Payload.body.total_actions_count'),
+          stepfunctions.Condition.numberGreaterThan('$.serviceDocumentation.Payload.body.total_actions_count', 0)
+        ),
+        // Single service with parameters
+        stepfunctions.Condition.and(
+          stepfunctions.Condition.numberEquals('$.serviceDocumentation.Payload.statusCode', 200),
+          stepfunctions.Condition.isPresent('$.serviceDocumentation.Payload.body.parameters_count'),
           stepfunctions.Condition.numberGreaterThan('$.serviceDocumentation.Payload.body.parameters_count', 0)
         ),
+        // Parent service with total parameters
+        stepfunctions.Condition.and(
+          stepfunctions.Condition.numberEquals('$.serviceDocumentation.Payload.statusCode', 200),
+          stepfunctions.Condition.isPresent('$.serviceDocumentation.Payload.body.total_parameters_count'),
+          stepfunctions.Condition.numberGreaterThan('$.serviceDocumentation.Payload.body.total_parameters_count', 0)
+        ),
+        // Any successful status
         stepfunctions.Condition.and(
           stepfunctions.Condition.numberEquals('$.serviceDocumentation.Payload.statusCode', 200),
           stepfunctions.Condition.stringEquals('$.serviceDocumentation.Payload.body.status', 'SUCCESS')
@@ -1175,15 +1149,15 @@ Always return responses in valid JSON format when requested.`,
     analyzeRequirements
       .next(generateSecurityControls)
       .next(generateIaCTemplate)
-      .next(generateServiceProfile)
       .next(generateIAMModel)
+      .next(generateServiceProfile)
       .next(workflowSucceeded);
 
     // Create Step Functions state machine
     const stateMachine = new stepfunctions.StateMachine(this, 'SecurityConfigWorkflow', {
       stateMachineName: 'gensec-SecurityConfigWorkflow',
       definition: definition,
-      timeout: cdk.Duration.minutes(30),
+      timeout: cdk.Duration.hours(2), // Increased from 30 minutes to handle parent service processing
       tracingEnabled: true,
       role: stepFunctionsRole,  // Reuse existing role with updated permissions
       logs: {

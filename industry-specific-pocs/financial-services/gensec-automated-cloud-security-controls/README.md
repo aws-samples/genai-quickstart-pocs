@@ -32,11 +32,57 @@ By using pre-approved services with associated controls and threat vectors, cust
 
 ## Architecture Overview
 
-![GenSec System Architecture](docs/blog/GenSec.png)
+```mermaid
+graph LR
+    subgraph Input
+        S3Input["S3 Input Bucket"]
+        ProfileProcessor["Profile Processor"]
+        S3Input --> ProfileProcessor
+    end
+
+    subgraph Orchestration
+        StepFunc["Step Functions Workflow"]
+    end
+
+    subgraph Functions[Processing Functions]
+        DocLambda["Documentation Manager"]
+        AnalyzeLambda["Security Requirements Analyzer"]
+        ControlsLambda["Security Controls Generator"]
+        IaCLambda["Infrastructure Template Generator"]
+        IAMLambda["IAM Model Generator"]
+        ProfileLambda["Service Profile Generator"]
+        
+        DocLambda --> AnalyzeLambda
+        AnalyzeLambda --> ControlsLambda
+        ControlsLambda --> IaCLambda
+        IaCLambda --> IAMLambda
+        IAMLambda --> ProfileLambda
+    end
+
+    subgraph Storage[Storage & AI]
+        Bedrock["Amazon Bedrock"]
+        DDB[("DynamoDB Tables")]
+        S3Output["S3 Output Bucket"]
+        
+        Bedrock ~~~ DDB
+        DDB ~~~ S3Output
+    end
+    
+    Input --> Orchestration
+    Orchestration --> Functions
+    Functions --> Storage
+
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:white
+    classDef lambda fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:white
+    classDef storage fill:#3F8624,stroke:#232F3E,stroke-width:2px,color:white
+    
+    class S3Input,S3Output,DDB storage
+    class DocLambda,AnalyzeLambda,ControlsLambda,IaCLambda,IAMLambda,ProfileLambda,ProfileProcessor lambda
+    class StepFunc,Bedrock aws
+```
 
 ## Core Components
 
-### Step Functions Workflow (gensec-SecurityConfigWorkflow)
 1. **ValidateAndCollectServiceData**
    - Collects AWS service documentation
    - Validates service capabilities
@@ -58,8 +104,9 @@ By using pre-approved services with associated controls and threat vectors, cust
    - Supports multiple IaC formats
 
 5. **GenerateServiceProfile**
-   - Documents service capabilities
-   - Maps security features
+   - Generates service capability profiles (JSON + Markdown)
+   - Generates Security Research Profiles for security evaluation (comprehensive Q&A)
+   - Leverages IAM models and business use cases for both outputs
    - Provides configuration guidance
 
 6. **GenerateIAMModel**
@@ -79,54 +126,43 @@ The system uses 7 Lambda functions in a decomposed architecture. For detailed do
 | GenerateSecurityControls | Security control generation | 1024 MB | 15 min | [Details](docs/lambda-functions/GenerateSecurityControls.md) |
 | GenerateIaCTemplate | Infrastructure template generation | 1024 MB | 15 min | [Details](docs/lambda-functions/GenerateIaCTemplate.md) |
 | GenerateIAMModel | IAM permission model generation | 1024 MB | 15 min | [Details](docs/lambda-functions/GenerateIAMModel.md) |
-| GenerateServiceProfile | Service capability documentation | 1024 MB | 15 min | [Details](docs/lambda-functions/GenerateServiceProfile.md) |
+| GenerateServiceProfile | Security Research Profile generation | 1024 MB | 15 min | [Details](docs/lambda-functions/GenerateServiceProfile.md) |
 
 ### Storage Resources
 
 #### DynamoDB Tables
-1. **Security Control Library** (gensec-SecurityControlLibrary)
    - Stores security control definitions
    - Maps compliance requirements
    - Tracks implementation status
 
-2. **Service Request Tracking** (gensec-ServiceRequestTracking)
    - Tracks processing requests
    - Maintains audit history
    - Enables request tracing
 
-3. **AWS Service Actions** (gensec-AWSServiceActions)
    - AWS service action definitions
    - IAM permission mappings
 
-4. **AWS Service Parameters** (gensec-AWSServiceParameters)
    - Service parameter documentation
    - Configuration validation
 
-5. **AWS Service Inventory** (gensec-AWSServiceInventory)
    - Service metadata and capabilities
 
-6. **AWS Service Resources** (gensec-AWSServiceResources)
    - Resource type definitions
 
-7. **Security Standards Library** (gensec-SecurityStandardsLibrary)
    - Compliance framework mappings
 
-8. **Service Profile Library** (gensec-ServiceProfileLibrary)
    - Service capability templates
 
-9. **AWS Config Managed Rules** (gensec-AWSConfigManagedRules)
    - AWS Config managed rule definitions
    - Service-based rule categorization
    - Security compliance rule mappings
 
 #### S3 Buckets
-1. **Input Profiles** (gensec-security-input-profiles-${account}-${region})
    - Stores service configurations
    - Triggers processing workflow via S3 events
    - Maintains version history
    - Supports security-profile/ and service-request/ prefixes
 
-2. **Configuration Outputs** (gensec-security-config-outputs-${account}-${region})
    - Stores processing results
    - Maintains documentation
    - Stores generated artifacts
@@ -154,14 +190,67 @@ cat aws_config_manage_rules_baseline.json
 - Service-based categorization via GSI
 - Fallback to baseline file if documentation unavailable
 
+### Service Name Resolution
+
+The system includes intelligent service name resolution with 200+ aliases for seamless service identification:
+
+**Features:**
+- Resolves common service names to canonical IDs (e.g., "ELB" → "elasticloadbalancing")
+- Handles complex aliases (e.g., "Gateway Load Balancer" → "elasticloadbalancingv2")
+- Fuzzy matching with suggestions for typos and misspellings
+- Integrated into all service processing workflows
+- Automatic - no configuration required
+
+**Location:** `layers/common-layer/python/service_name_resolver.py`
+
+**Examples:**
+- "EC2" → "ec2"
+- "DynamoDB" → "dynamodb"
+- "Application Load Balancer" → "elasticloadbalancingv2"
+- "Gateway Load Balancer" → "elasticloadbalancingv2"
+- "Lambda Functions" → "lambda"
+
+### Performance Optimizations
+
+The system includes several performance optimizations for faster processing and lower costs:
+
+#### 1. Build-Time Resource Curation
+- CloudFormation resources curated during configuration generation (not at runtime)
+- Pre-filtered to core resources only (excludes sub-resources, associations, niche features)
+- **70% reduction** in resources processed (e.g., EC2: 50+ → 15 core resources)
+- Eliminates runtime discovery and filtering overhead
+- Faster Lambda execution, lower Bedrock costs
+
+**Curated Services (26 total):**
+- **Compute:** ec2 (15 resources), lambda (6), ecs (5), eks (5)
+- **Storage:** s3 (5), dynamodb (2), rds (7)
+- **Networking:** elasticloadbalancingv2 (4), apigateway (8), cloudfront (6)
+- **Security:** iam (7), kms (3), secretsmanager (3)
+- **Messaging:** sns (3), sqs (2), eventbridge (5)
+- **Monitoring:** cloudwatch (4), logs (5)
+- **DevOps:** codepipeline (3), codebuild (3), codecommit (1), codedeploy (3)
+- **Orchestration:** stepfunctions (2), cloudformation (4)
+
+#### 2. Intelligent Content Processing
+- Smart content chunking for AI processing
+- Preserves complete entries across chunks
+- Handles large documentation pages efficiently
+- Truncation recovery for partial JSON responses
+
+#### 3. Centralized Bedrock Client
+- Shared AI client across all Lambda functions
+- Consistent error handling and logging
+- Configurable model selection (Nova Pro, Claude)
+- Comprehensive request/response logging
+
 ## System Outputs
 
 The security configuration system generates comprehensive outputs tailored for different teams and use cases:
 
 | Output Type | Format | Purpose & Description | Primary Users |
 |-------------|--------|----------------------|---------------|
-| **Service Research Profile** (customer form) | Markdown | • Comprehensive security documentation of AWS service<br>• Details on data protection, network/access controls, compliance<br>• Operational guidelines and best practices | • Security Architects<br>• Cloud Teams<br>• Compliance Teams |
-| **IAM Review Module** (customer request) | JSON/Markdown | • Detailed IAM configurations and policies<br>• Permission sets and role analysis<br>• Best practices and implementation guidance<br>• Approval requirements and workflows | • IAM Team<br>• Security Team<br>• Cloud Platform Team |
+| **Service Research Profile** (Customer form) | Markdown | • Comprehensive security documentation of AWS service<br>• Details on data protection, network/access controls, compliance<br>• Operational guidelines and best practices | • Security Architects<br>• Cloud Teams<br>• Compliance Teams |
+| **IAM Review Module** (Customer request) | JSON/Markdown | • Detailed IAM configurations and policies<br>• Permission sets and role analysis<br>• Best practices and implementation guidance<br>• Approval requirements and workflows | • IAM Team<br>• Security Team<br>• Cloud Platform Team |
 | **AWS Service Configuration Recommendations** | JSON | • Security configuration guidance<br>• Service-specific security parameters<br>• Compliance mappings<br>• Implementation considerations | • Security Architects<br>• Cloud Teams<br>• Implementation Teams |
 | **Security Controls** (checks) | JSON | • Proactive controls (CI/CD pipeline checks)<br>• Preventive (SCPs IAM policy at the Org level)<br>• Detective controls (Custom AWS Config rules) | • Security Teams<br>• Compliance Teams<br>• Operations Teams |
 | **IaC Templates** | YAML/JSON | • CloudFormation / Terraform templates<br>• Pre-configured security settings<br>• Resource and parameters definitions | • DevOps Teams<br>• Cloud Engineers<br>• Implementation Teams |
@@ -202,23 +291,30 @@ cdk deploy
 ### Testing the System
 ```bash
 # Upload service mappings configuration (required for documentation collection)
-aws s3 cp config-example/service-mappings.json s3://gensec-security-input-profiles-${ACCOUNT}-${REGION}/configuration/
+# This file contains pre-curated core CloudFormation resources for 26 AWS services
+# Curated at build-time for optimal performance (70% reduction in resources processed)
 
-# To update service mappings with latest AWS services, run:
+# To regenerate service mappings with latest AWS services:
+# This script curates core resources at build-time (not runtime) for better performance
 cd scripts/service-mapping && python3 extract_service_mappings.py
 
+# The curation process:
+# - Discovers all CloudFormation resources for each service
+# - Filters to core resources only (excludes sub-resources, associations, niche features)
+# - EC2: 15 core resources (from 50+ total)
+# - Lambda: 6 core resources
+# - S3: 5 core resources
+# - 26 services with curated resources
+# - Result: Faster Lambda execution, lower costs, consistent behavior
+
 # Upload test security profile
-aws s3 cp security-profile.json s3://gensec-security-input-profiles-${ACCOUNT}-${REGION}/security-profile/
 
 # Upload test service request
-aws s3 cp service-request.json s3://gensec-security-input-profiles-${ACCOUNT}-${REGION}/service-request/
 
 # Monitor execution (decomposed workflow)
 aws stepfunctions list-executions \
-  --state-machine-arn arn:aws:states:${REGION}:${ACCOUNT}:stateMachine:gensec-SecurityConfigWorkflow
 
 # Check results
-aws s3 ls s3://gensec-security-config-outputs-${ACCOUNT}-${REGION}/
 
 # Download outputs locally
 ./scripts/download_outputs.py
@@ -269,11 +365,12 @@ security-project/
 │       └── requirements.txt
 ├── layers/              # Lambda layers for shared code
 │   ├── bedrock-layer/   # Bedrock AI client with comprehensive logging
-│   ├── common-layer/    # boto3, botocore, s3_operations
+│   ├── common-layer/    # boto3, botocore, s3_operations, service_name_resolver
 │   ├── dynamodb-operations-layer/  # DynamoDB operations
+│   ├── mcp-tools-layer/ # MCP documentation collector
 │   ├── requests-layer/  # HTTP operations
 │   ├── validation-layer/  # validation, json_processing, yaml
-│   └── web-scraping-layer/  # beautifulsoup4, lxml
+│   └── web-scraping-layer/  # beautifulsoup4, lxml, content_processor
 ├── scripts/             # Supporting utility scripts
 │   ├── download_outputs.py      # Download S3 outputs locally
 │   ├── output-validation/       # Validation automation
@@ -291,11 +388,19 @@ security-project/
 
 ## Documentation
 
+### Core Documentation
 - [Business Value & Impact](docs/BUSINESS_VALUE.md) - Executive summary and ROI analysis
 - [Architecture Details](docs/ARCHITECTURE.md) - Detailed system architecture
 - [Lambda Functions](docs/lambda-functions/) - Individual function documentation
 - [Deployment Guide](docs/DEPLOYMENT.md) - Deployment instructions
 - [Development Guide](docs/DEVELOPMENT.md) - Development guidelines
+- [Documentation Guidelines](docs/DOCUMENTATION_GUIDELINES.md) - Standards for maintaining documentation
+
+### Technical Deep Dives
+- [Service Name Resolution](docs/SERVICE_NAME_RESOLUTION.md) - Alias mapping and intelligent resolution
+- [Build-Time Resource Curation](docs/BUILD_TIME_RESOURCE_CURATION.md) - Performance optimization architecture
+- [Architecture Refactoring Summary](docs/ARCHITECTURE_REFACTORING_SUMMARY.md) - Recent architectural improvements
+- [Resource Type Filtering](docs/RESOURCE_TYPE_FILTERING.md) - Core resource filtering approach
 
 ## IAM Permissions Architecture
 
@@ -383,9 +488,16 @@ This dual approach ensures compatibility with models like Nova Pro that require 
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## Documentation
 
-For detailed information about:
-- System architecture: See [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Deployment process: See [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-- Development guidelines: See [DEVELOPMENT.md](docs/DEVELOPMENT.md)
+### Core Documentation
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture and component overview
+- **[EXTRACTION_METHODS.md](docs/EXTRACTION_METHODS.md)** - AI extraction methods, chunking, and pagination strategies
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment procedures and configuration
+- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development guidelines and local testing
+
+### Technical Guides
+- **[SERVICE_NAME_RESOLUTION.md](docs/SERVICE_NAME_RESOLUTION.md)** - Service identification and mapping
+- **[RESOURCE_TYPE_FILTERING.md](docs/RESOURCE_TYPE_FILTERING.md)** - Build-time resource curation
+- **[BUILD_TIME_RESOURCE_CURATION.md](docs/BUILD_TIME_RESOURCE_CURATION.md)** - Resource type validation
+- **[BUSINESS_VALUE.md](docs/BUSINESS_VALUE.md)** - System benefits and ROI

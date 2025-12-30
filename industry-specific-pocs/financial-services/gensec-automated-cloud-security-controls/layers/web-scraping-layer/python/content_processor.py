@@ -1,34 +1,55 @@
 """
-Generic content processing utilities for AWS documentation extraction
+Content Processor
+Utilities for processing and chunking AWS documentation content
 """
-from bs4 import BeautifulSoup
+
+import re
 import logging
+from bs4 import BeautifulSoup
+from typing import List
 
 logger = logging.getLogger(__name__)
 
+
 class ContentProcessor:
-    """Generic content processing for AWS documentation"""
+    """Utilities for processing AWS documentation content"""
     
     @staticmethod
-    def extract_section_content(html_content, section_type='actions'):
-        """Extract complete sections from HTML without truncation"""
-        soup = BeautifulSoup(html_content, 'html.parser')
+    def extract_section_content(html_content: str, section_type: str) -> str:
+        """
+        Extract specific section content from HTML with smart DOM-based extraction
         
-        # Remove unnecessary elements
-        for element in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'button', 'input']):
-            element.decompose()
-        
-        if section_type == 'actions':
-            return ContentProcessor._extract_actions_section(soup)
-        elif section_type == 'parameters':
-            return ContentProcessor._extract_parameters_section(soup, html_content)
-        else:
-            return soup.get_text(separator=' ', strip=True)
+        Args:
+            html_content: Raw HTML content
+            section_type: Type of section to extract ('actions' or 'parameters')
+            
+        Returns:
+            Cleaned text content from the section
+        """
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Remove unnecessary elements
+            for element in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'button', 'input']):
+                element.decompose()
+            
+            # Extract relevant section based on type using DOM structure
+            if section_type == 'actions':
+                return ContentProcessor._extract_actions_section(soup)
+            elif section_type == 'parameters':
+                return ContentProcessor._extract_parameters_section(soup, html_content)
+            else:
+                return soup.get_text(separator=' ', strip=True)
+            
+        except Exception as e:
+            logger.error(f"Error extracting section content: {str(e)}")
+            # Return original content if extraction fails
+            return html_content
     
     @staticmethod
     def _extract_actions_section(soup):
-        """Extract complete actions table or section"""
-        # Find actions table
+        """Extract complete actions table or section using DOM structure"""
+        # Find actions table by analyzing table headers
         actions_table = None
         tables = soup.find_all('table')
         
@@ -98,8 +119,8 @@ class ContentProcessor:
                 current = current.next_sibling
                 if hasattr(current, 'name'):
                     # Stop at See Also or Return Values (end of properties)
-                    if current == see_also_heading or (current.name in ['h1', 'h2'] and 
-                        any(term in current.get_text().lower() for term in ['see also', 'return values', 'examples']) and 
+                    if current == see_also_heading or (current.name in ['h1', 'h2'] and
+                        any(term in current.get_text().lower() for term in ['see also', 'return values', 'examples']) and
                         current != syntax_heading):
                         break
                     content_elements.append(current)
@@ -122,16 +143,31 @@ class ContentProcessor:
         return soup.get_text(separator=' ', strip=True)
     
     @staticmethod
-    def smart_chunk_content(content, max_size, split_patterns):
-        """Split content at logical boundaries, never truncating mid-sentence"""
-        if len(content) <= max_size:
+    def smart_chunk_content(
+        content: str,
+        max_chunk_size: int,
+        split_markers: List[str]
+    ) -> List[str]:
+        """
+        Split content into chunks intelligently, preserving logical boundaries
+        Never truncates mid-sentence or mid-entry
+        
+        Args:
+            content: Text content to chunk
+            max_chunk_size: Maximum size of each chunk in characters
+            split_markers: List of markers to use as split points (in priority order)
+            
+        Returns:
+            List of content chunks
+        """
+        if len(content) <= max_chunk_size:
             return [content]
         
         chunks = []
         current_pos = 0
         
         while current_pos < len(content):
-            end_pos = min(current_pos + max_size, len(content))
+            end_pos = min(current_pos + max_chunk_size, len(content))
             
             if end_pos >= len(content):
                 chunks.append(content[current_pos:])
@@ -139,7 +175,7 @@ class ContentProcessor:
             
             # Find best split point before end_pos
             best_split = end_pos
-            for pattern in split_patterns:
+            for pattern in split_markers:
                 split_pos = content.rfind(pattern, current_pos, end_pos)
                 if split_pos > current_pos:
                     best_split = min(best_split, split_pos + len(pattern))
@@ -153,4 +189,80 @@ class ContentProcessor:
             chunks.append(content[current_pos:best_split])
             current_pos = best_split
         
+        logger.info(f"Split content into {len(chunks)} chunks")
         return chunks
+    
+    @staticmethod
+    def _split_long_line(
+        line: str,
+        max_size: int,
+        split_markers: List[str]
+    ) -> List[str]:
+        """
+        Split a long line using split markers
+        
+        Args:
+            line: Line to split
+            max_size: Maximum size per chunk
+            split_markers: Markers to use for splitting
+            
+        Returns:
+            List of line chunks
+        """
+        if len(line) <= max_size:
+            return [line]
+        
+        chunks = []
+        remaining = line
+        
+        while len(remaining) > max_size:
+            # Try each split marker in order
+            split_pos = -1
+            
+            for marker in split_markers:
+                # Find the last occurrence of the marker within max_size
+                search_text = remaining[:max_size]
+                pos = search_text.rfind(marker)
+                
+                if pos > 0:
+                    split_pos = pos + len(marker)
+                    break
+            
+            # If no marker found, split at max_size
+            if split_pos == -1:
+                split_pos = max_size
+            
+            # Add chunk and continue with remainder
+            chunks.append(remaining[:split_pos])
+            remaining = remaining[split_pos:].lstrip()
+        
+        # Add the last piece
+        if remaining:
+            chunks.append(remaining)
+        
+        return chunks
+    
+    @staticmethod
+    def clean_text(text: str) -> str:
+        """
+        Clean and normalize text content
+        
+        Args:
+            text: Text to clean
+            
+        Returns:
+            Cleaned text
+        """
+        # Remove excessive whitespace
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove special characters that might cause issues
+        text = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f-\x9f]', '', text)
+        
+        # Normalize line endings
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # Remove excessive newlines
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()

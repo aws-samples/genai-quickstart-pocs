@@ -55,7 +55,8 @@ layers/**/dist/
 .aws/
 *.pem
 *.key
-.kiro/
+!.kiro/
+!.amazonq/
 
 # IDE
 .vscode/
@@ -93,3 +94,12 @@ cdk/cdk.out/
 # Working scripts (not part of solution)
 tests/output/
 lambda-legacy/
+docs/temp-fixes/
+docs/fixes/
+docs/analysis/
+scripts/*/__pycache__/
+tests/sample/AWS Research Profile - AWS Gateway Load Balancer.docx
+tests/sample/AWS Research Profile - AWS Network Load Balancer.docx
+
+# Temporary sync workspace
+tmp-sync-repo/

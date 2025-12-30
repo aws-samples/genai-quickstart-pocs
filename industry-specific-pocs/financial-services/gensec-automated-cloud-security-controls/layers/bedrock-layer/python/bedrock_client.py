@@ -20,7 +20,7 @@ class BedrockClient:
         config = boto3.session.Config(
             read_timeout=840,  # 14 minutes (leave 1 min buffer for Lambda)
             connect_timeout=60,  # 1 minute
-            retries={'max_attempts': 3}
+            retries={'max_attempts': 3}  # Let boto3 handle retries with its built-in logic
         )
         self.bedrock_client = boto3.client('bedrock-runtime', config=config)
         
@@ -47,8 +47,23 @@ class BedrockClient:
         except ImportError:
             logger.info("MCP tools not available - using direct model calls only")
         
-    def invoke(self, prompt, use_mcp_tools=False, max_retries=5, initial_delay=2):
-        """Invoke Bedrock model with retry logic and timeout handling"""
+    def invoke(self, prompt, use_mcp_tools=False, max_retries=8, initial_delay=3):
+        """
+        Invoke Bedrock model with retry logic and timeout handling
+        
+        Args:
+            prompt: The prompt to send to the model
+            use_mcp_tools: Whether to use MCP tools (not implemented yet)
+            max_retries: Maximum number of retry attempts (default: 8)
+            initial_delay: Initial delay in seconds for exponential backoff (default: 3)
+        
+        Returns:
+            Model response text
+            
+        Raises:
+            ClientError: If max retries exceeded or non-retryable error
+            ValueError: If prompt validation fails
+        """
         try:
             # Handle both string and dict prompt formats
             if isinstance(prompt, dict):
@@ -126,12 +141,16 @@ class BedrockClient:
                     
                 except ClientError as e:
                     error_code = e.response['Error']['Code']
-                    if error_code == 'ThrottlingException':
+                    # Handle throttling and service unavailable errors
+                    if error_code in ['ThrottlingException', 'ServiceUnavailableException', 'TooManyRequestsException']:
                         if attempt < max_retries - 1:
                             delay = initial_delay * (2 ** attempt) + random.uniform(0, 1)
-                            logger.warning(f"Throttled, retrying in {delay:.2f}s (attempt {attempt + 1})")
+                            logger.warning(f"{error_code}: retrying in {delay:.2f}s (attempt {attempt + 1}/{max_retries})")
                             time.sleep(delay)
                             continue
+                        else:
+                            logger.error(f"Max retries ({max_retries}) exceeded for {error_code}")
+                            raise
                     elif error_code == 'ValidationException':
                         logger.error(f"Validation error: {str(e)} - prompt may be too large")
                         raise ValueError(f"Prompt validation failed: {str(e)}")
@@ -252,16 +271,28 @@ class BedrockAgentClient:
                             chunk_text = chunk['bytes'].decode('utf-8')
                             full_response += chunk_text
                 
-                return full_response.strip()
+                if full_response:
+                    return full_response.strip()
+                else:
+                    # Empty response from EventStream - this is an error
+                    logger.error("EventStream completed but no content received")
+                    raise ValueError("Empty response from Bedrock Agent EventStream")
             
-            # Fallback to string representation if structure is different
-            return str(response)
+            # No 'completion' key - invalid response structure
+            logger.error(f"Invalid response structure - missing 'completion' key: {response}")
+            raise ValueError("Invalid Bedrock Agent response structure")
             
+        except ClientError as e:
+            # Re-raise ClientError (like internalServerException) so retry logic can handle it
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            logger.error(f"Bedrock Agent error during EventStream processing: {error_code} - {error_message}")
+            raise
         except Exception as e:
             logger.error(f"Error extracting agent response: {str(e)}")
             logger.error(f"Response structure: {response}")
-            # Return the string representation as fallback
-            return str(response)
+            # Re-raise the exception instead of returning garbage data
+            raise
 
 def get_bedrock_client(model_type='claude-4'):
     """Factory function - transparent agent integration"""

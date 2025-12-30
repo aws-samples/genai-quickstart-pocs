@@ -3,6 +3,7 @@ import boto3
 import os
 import logging
 from botocore.exceptions import ClientError
+from service_name_resolver import create_resolver_from_s3
 
 # Set up logging
 logger = logging.getLogger()
@@ -14,6 +15,27 @@ sfn_client = boto3.client('stepfunctions')
 
 # Environment variables
 STATE_MACHINE_ARN = os.environ['STATE_MACHINE_ARN']
+INPUT_BUCKET = os.environ.get('S3_INPUT_BUCKET')
+
+# Initialize service name resolver (lazy loaded)
+_service_resolver = None
+
+
+def get_service_resolver():
+    """Get or create the service name resolver"""
+    global _service_resolver
+    if _service_resolver is None:
+        try:
+            _service_resolver = create_resolver_from_s3(
+                s3_client,
+                INPUT_BUCKET,
+                'configuration/service-mappings.json'
+            )
+            logger.info("Service name resolver initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize service name resolver: {str(e)}")
+            # Continue without resolver - will use service IDs as-is
+    return _service_resolver
 
 def lambda_handler(event, context):
     """
@@ -136,10 +158,66 @@ def check_for_service_request(bucket):
         logger.error(f"Error checking for service request: {str(e)}")
     return None
 
+def resolve_service_name(service_request):
+    """
+    Resolve service name to service ID using the resolver
+    
+    Args:
+        service_request: Service request dictionary
+        
+    Returns:
+        Updated service request with resolved service ID
+    """
+    resolver = get_service_resolver()
+    if not resolver:
+        logger.warning("Service resolver not available, using service ID as-is")
+        return service_request
+    
+    original_service_id = service_request.get('serviceId', '')
+    
+    # Try to resolve the service name
+    resolved_service_id = resolver.resolve(original_service_id)
+    
+    if resolved_service_id:
+        if resolved_service_id != original_service_id:
+            logger.info(
+                f"Resolved service name '{original_service_id}' to "
+                f"service ID '{resolved_service_id}'"
+            )
+            service_request['serviceId'] = resolved_service_id
+            service_request['originalServiceName'] = original_service_id
+        else:
+            logger.info(f"Service ID '{original_service_id}' is already valid")
+    else:
+        # Service name could not be resolved
+        error_message = resolver.format_error_message(original_service_id)
+        logger.error(error_message)
+        
+        # Add suggestions to the service request for error reporting
+        suggestions = resolver.get_suggestions(original_service_id, limit=5)
+        service_request['resolutionError'] = error_message
+        service_request['suggestions'] = [
+            {'serviceId': sid, 'alias': alias, 'confidence': conf}
+            for sid, alias, conf in suggestions
+        ]
+    
+    return service_request
+
+
 def trigger_step_functions(security_profile, service_request):
     """
     Trigger the Step Functions state machine with the combined input.
     """
+    # Resolve service name to service ID
+    service_request = resolve_service_name(service_request)
+    
+    # Check if resolution failed
+    if 'resolutionError' in service_request:
+        logger.error(
+            f"Cannot start workflow: {service_request['resolutionError']}"
+        )
+        raise ValueError(service_request['resolutionError'])
+    
     input_data = {
         'securityProfile': security_profile,
         'serviceRequest': service_request

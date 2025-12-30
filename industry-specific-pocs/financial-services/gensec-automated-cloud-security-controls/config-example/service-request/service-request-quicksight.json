@@ -1,6 +1,6 @@
 {
       "requestId": "REQ-2025-027",
-      "serviceId": "QuickSight",
+      "serviceId": "quicksight",
       "timestamp": "2024-05-20T12:00:00Z",
       "requestor": {
         "id": "user789",

@@ -45,8 +45,12 @@ def generate_iac_template(input_data):
         if not service_id:
             raise ValueError("serviceId is required")
         
+        # Normalize service_id to lowercase for DynamoDB queries
+        service_id_normalized = service_id.lower()
+        logger.info(f"Processing service_id: {service_id} (normalized: {service_id_normalized})")
+        
         # Query DynamoDB for validated parameters
-        validated_parameters = get_service_parameters_from_dynamodb(service_id, SERVICE_PARAMETERS_TABLE)
+        validated_parameters = get_service_parameters_from_dynamodb(service_id_normalized, SERVICE_PARAMETERS_TABLE)
         
         if not validated_parameters:
             logger.warning("No valid parameters found in service documentation")
@@ -54,7 +58,7 @@ def generate_iac_template(input_data):
         # Get configurations
         configurations = get_configurations_from_dynamodb(
             input_data.get('requestId'),
-            input_data.get('serviceId'),
+            service_id_normalized,
             CONTROL_LIBRARY_TABLE
         )
         
@@ -120,8 +124,9 @@ def generate_iac_template(input_data):
                     
                     if is_valid:
                         try:
+                            # Use normalized service_id for S3 paths
                             output_key = store_output_in_s3(
-                                f'{service_id}/iac-templates/{template_type}',
+                                f'{service_id_normalized}/iac-templates/{template_type}',
                                 template_data,
                                 os.environ['S3_OUTPUT_BUCKET']
                             )
