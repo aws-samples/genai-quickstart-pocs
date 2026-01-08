@@ -3,6 +3,7 @@ LangGraph workflow for the GenAI Sales Analyst application.
 """
 from typing import Dict, Any, List, Tuple
 import json
+import os
 from datetime import datetime
 
 
@@ -23,6 +24,8 @@ class AnalysisWorkflow:
         self.bedrock = bedrock_helper
         self.vector_store = vector_store
         self.monitor = monitor
+        # Get schema from environment
+        self.schema = os.getenv('REDSHIFT_SCHEMA', 'northwind')
     
     def understand_query(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -104,16 +107,16 @@ Return as JSON with these fields.
                     # Special case for schema queries
                     return {
                         **state,
-                        "generated_sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'northwind' AND table_name = 'customers';",
+                        "generated_sql": f"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = '{self.schema}' AND table_name = 'customers';",
                         "skip_context": True,
                         "steps_completed": state.get("steps_completed", []) + ["retrieve_context", "direct_sql"]
                     }
                 else:
-                    # For other queries with no context, force SQL generation with Northwind schema
+                    # For other queries with no context, use configured schema
                     return {
                         **state,
                         "relevant_context": [{
-                            "text": "Use northwind schema with tables: customers, orders, order_details, products, categories, suppliers, employees, shippers"
+                            "text": f"Use {self.schema} schema. Query information_schema to discover available tables and columns."
                         }],
                         "steps_completed": state.get("steps_completed", []) + ["retrieve_context", "fallback_context"]
                     }
@@ -155,42 +158,25 @@ Return as JSON with these fields.
         # Create context string from relevant documents
         context_str = "\n".join([f"- {doc['text']}" for doc in context])
         
-        # If no context is available, use Northwind schema
+        # Get schema from environment
+        schema = self.schema
+        
+        # If no context is available, use generic prompt
         if not context_str:
             prompt = f"""Generate a SQL query to answer this question:
             
 Question: {query}
 
-Use the Northwind database with these tables:
-- northwind.customers: customerid, companyname, contactname, country
-- northwind.orders: orderid, customerid, orderdate, freight, shipcountry
-- northwind.order_details: orderid, productid, unitprice, quantity
-- northwind.products: productid, productname, categoryid, unitprice
-- northwind.categories: categoryid, categoryname, description
-- northwind.suppliers: supplierid, companyname, country
-- northwind.employees: employeeid, lastname, firstname, title
-- northwind.shippers: shipperid, companyname, phone
+Use the database schema: {schema}
 
 IMPORTANT SQL RULES: 
 1. Do NOT use 'USE DATABASE' statements
-2. Always use schema.table format (e.g., northwind.customers)
+2. Always use schema.table format (e.g., {schema}.tablename)
 3. Use lowercase table and column names
 4. Do NOT nest aggregate functions (AVG, SUM, COUNT, etc.)
 5. Use subqueries or CTEs for complex calculations
-6. For order value calculations: use (unitprice * quantity) from order_details
-7. Generate valid Redshift SQL syntax
-
-For "average order value by customer" type queries, use this pattern:
-SELECT customerid, companyname, AVG(order_total) as avg_order_value
-FROM (
-  SELECT c.customerid, c.companyname, o.orderid, SUM(od.unitprice * od.quantity) as order_total
-  FROM northwind.customers c
-  JOIN northwind.orders o ON c.customerid = o.customerid
-  JOIN northwind.order_details od ON o.orderid = od.orderid
-  GROUP BY c.customerid, c.companyname, o.orderid
-) subquery
-GROUP BY customerid, companyname
-ORDER BY avg_order_value DESC;
+6. Generate valid Redshift SQL syntax
+7. If you don't know the exact table names, use information_schema to discover them first
 
 Generate ONLY the SQL query without any explanation.
 """
@@ -204,12 +190,11 @@ Relevant context:
 
 IMPORTANT SQL RULES: 
 1. Do NOT use 'USE DATABASE' statements
-2. Always use schema.table format (e.g., northwind.customers)
+2. Always use schema.table format from the context provided
 3. Use lowercase table and column names
 4. Do NOT nest aggregate functions (AVG, SUM, COUNT, etc.)
 5. Use subqueries or CTEs for complex calculations
-6. For order value calculations: use (unitprice * quantity) from order_details
-7. Generate valid Redshift SQL syntax
+6. Generate valid Redshift SQL syntax
 
 Generate ONLY the SQL query without any explanation.
 """
