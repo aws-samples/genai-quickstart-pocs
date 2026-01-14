@@ -1,0 +1,132 @@
+{
+  "_meta": {
+    "format": "synthetic_application_v1",
+    "generated_from": "mock_application.xml",
+    "generated_at": "2024-03-16T11:00:00.000-05:00"
+  },
+  "request": {
+    "id": "99887766",
+    "timestamp": "2024-03-16T11:00:00.000-05:00",
+    "issuer": {
+      "name": "NORTHRIDGE_ASSURANCE_GROUP",
+      "code": "NORTHRIDGE_ASSURANCE",
+      "deal": "STANDARD_TERM_20",
+      "password": "XXXXXXXXXXXXXX"
+    }
+  },
+  "application": {
+    "policy": {
+      "number": "MER_24_987654_001",
+      "accept_ts": "2024-03-16T11:00:00.000-05:00",
+      "state_of_issue": "OH",
+      "coverage": {
+        "base": {
+          "amount": 250000,
+          "term_years": 20,
+          "conditional_receipt_amount": 250000,
+          "replacement": false,
+          "smoker": "NS",
+          "risk": "ST"
+        }
+      },
+      "product": {
+        "code": "STANDARD_TERM_20",
+        "batch": "UW_BATCH_2024_Q1_999"
+      }
+    },
+    "people": {
+      "primary": {
+        "identifier": "MainApplicant_DF",
+        "person_ref": "Person02",
+        "demographics": {
+          "sex": "MALE",
+          "dob": "1969-05-12",
+          "citizenship": "US",
+          "birth_state": "OH"
+        },
+        "contact": {
+          "home": "614-555-1234",
+          "work": "614-555-5678"
+        },
+        "biometrics": {
+          "height_in": 70.0,
+          "weight_lb": 215.0
+        },
+        "occupation": {
+          "title": "PROJECT_MANAGER",
+          "description": "PROJECT MANAGER - CONSTRUCTION",
+          "annual_income": 95000
+        },
+        "drivers_license": {
+          "status": "ACTIVE",
+          "number": "OH123456789",
+          "state": "OH"
+        },
+        "authorizations": {
+          "medical_release_signed": true,
+          "auth_signed_date": "2024-03-14"
+        },
+        "signature": {
+          "date": "2024-03-14",
+          "city": "Columbus",
+          "state": "OH"
+        },
+        "tags": [
+          { "key": "MIB_REQUEST_ID", "value": "MIB_REQ_2024_031601" },
+          { "key": "RX_HISTORY_REQUEST_ID", "value": "RX_REQ_2024_031602" },
+          { "key": "UNDERWRITING_CLASS", "value": "STANDARD" }
+        ]
+      },
+      "insured_profile": {
+        "id": "Person02",
+        "identifier": "MainApplicant_DF",
+        "name": { "first": "Robert", "middle": "Allen", "last": "Franklin" },
+        "address": {
+          "line1": "789 Willow Ridge Dr",
+          "city": "Columbus",
+          "state": "OH",
+          "postal_code": "43215",
+          "country": "US"
+        },
+        "ssn": "555667777"
+      },
+      "writing_agent": {
+        "id": "Agent02",
+        "name": { "first": "Susan", "middle": "B", "last": "Miller" },
+        "agent_number": "AG987654",
+        "license": { "number": "OH-LIFE-54321", "state": "OH" },
+        "commission_pct": 90,
+        "signed_on": "2024-03-14"
+      }
+    },
+    "questionnaire": [
+      {
+        "qid": "Q001",
+        "prompt": "Have you used tobacco, nicotine products, or e-cigarettes in the past 12 months?",
+        "answer": "No, quit 10 years ago"
+      },
+      {
+        "qid": "Q003",
+        "prompt": "Have you been diagnosed with or treated for diabetes, hypertension, or high cholesterol?",
+        "answer": "Yes, for all three. Diagnosed with Type 2 Diabetes in 2020. Hypertension since 2018."
+      },
+      {
+        "qid": "Q004",
+        "prompt": "Are you currently taking any prescription medications?",
+        "answer": "Yes - Metformin, Ozempic, Lisinopril, Atorvastatin."
+      },
+      {
+        "qid": "Q005",
+        "prompt": "Has any blood relative died before age 60 from heart disease, cancer, or stroke?",
+        "answer": "Yes - Father died of a heart attack at 55. Mother has Type 2 Diabetes."
+      },
+      {
+        "qid": "Q010",
+        "prompt": "Do you have any other known health impairments?",
+        "answer": "No"
+      }
+    ]
+  }
+}
+
+

@@ -1,0 +1,70 @@
+{
+  "_meta": { "format": "synthetic_lab_v1", "generated_from": "mock_lab_results.xml" },
+  "header": {
+    "request_id": "LAB_REQ_2024_031503",
+    "applicant_id": "MER_24_785432_001",
+    "patient": { "name": "Michael James Thompson", "dob": "1982-07-23", "sex": "Male" },
+    "collected_at": "2024-03-14T08:30:00Z",
+    "reported_at": "2024-03-14T17:00:00Z",
+    "lab_vendor": "APEX_LABS",
+    "ordering_physician": "Dr. Alan Grant"
+  },
+  "panels": [
+    {
+      "name": "Comprehensive Metabolic Panel (CMP)",
+      "tests": [
+        { "name": "Glucose", "value": 92, "units": "mg/dL", "reference": "65-99" },
+        { "name": "BUN (Urea Nitrogen)", "value": 18, "units": "mg/dL", "reference": "7-25" },
+        { "name": "Creatinine", "value": 1.0, "units": "mg/dL", "reference": "0.7-1.3" },
+        { "name": "eGFR", "value": 85, "units": "mL/min/1.73m²", "reference": ">60" },
+        { "name": "Sodium", "value": 140, "units": "mmol/L", "reference": "135-145" },
+        { "name": "Potassium", "value": 4.1, "units": "mmol/L", "reference": "3.5-5.3" },
+        { "name": "Chloride", "value": 102, "units": "mmol/L", "reference": "98-107" },
+        { "name": "Carbon Dioxide (CO2)", "value": 26, "units": "mmol/L", "reference": "20-32" },
+        { "name": "Calcium", "value": 9.5, "units": "mg/dL", "reference": "8.6-10.3" },
+        { "name": "Protein, Total", "value": 7.2, "units": "g/dL", "reference": "6.1-8.1" },
+        { "name": "Albumin", "value": 4.5, "units": "g/dL", "reference": "3.6-5.1" },
+        { "name": "ALT (Alanine Aminotransferase)", "value": 30, "units": "U/L", "reference": "9-46" },
+        { "name": "AST (Aspartate Aminotransferase)", "value": 25, "units": "U/L", "reference": "10-40" }
+      ]
+    },
+    {
+      "name": "Lipid Panel",
+      "tests": [
+        { "name": "Cholesterol, Total", "value": 198, "units": "mg/dL", "reference": "125-200" },
+        { "name": "HDL Cholesterol", "value": 52, "units": "mg/dL", "reference": ">40" },
+        { "name": "Triglycerides", "value": 145, "units": "mg/dL", "reference": "<150" },
+        { "name": "LDL Cholesterol, Calculated", "value": 128, "units": "mg/dL", "reference": "<130", "flag": "BORDERLINE_HIGH" },
+        { "name": "Chol/HDL Ratio", "value": 3.8, "reference": "<5.0" }
+      ]
+    },
+    {
+      "name": "Diabetes Markers",
+      "tests": [ { "name": "Hemoglobin A1c (HbA1c)", "value": 5.4, "units": "%", "reference": "4.8-5.6" } ]
+    },
+    {
+      "name": "Prostate Specific Antigen (PSA)",
+      "tests": [ { "name": "PSA, Total", "value": 1.2, "units": "ng/mL", "reference": "0.0-4.0" } ]
+    },
+    {
+      "name": "Complete Blood Count (CBC) with Differential",
+      "tests": [
+        { "name": "White Blood Cell Count (WBC)", "value": 6.8, "units": "x10³/μL", "reference": "3.8-10.8" },
+        { "name": "Red Blood Cell Count (RBC)", "value": 5.1, "units": "x10⁶/μL", "reference": "4.20-5.80" },
+        { "name": "Hemoglobin", "value": 15.5, "units": "g/dL", "reference": "13.2-17.1" },
+        { "name": "Hematocrit", "value": 45, "units": "%", "reference": "38.5-50.0" },
+        { "name": "Platelet Count", "value": 250, "units": "x10³/μL", "reference": "140-400" }
+      ]
+    },
+    {
+      "name": "Urinalysis",
+      "tests": [
+        { "name": "Protein", "value": "Negative", "reference": "Negative" },
+        { "name": "Glucose", "value": "Negative", "reference": "Negative" }
+      ]
+    }
+  ]
+}
+
+
+
