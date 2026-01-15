@@ -8,7 +8,7 @@ import os
 import logging
 from datetime import datetime
 from bedrock_client import get_bedrock_client
-from dynamodb_operations import get_service_actions_from_dynamodb
+from dynamodb_operations import get_service_actions_from_dynamodb, get_service_actions_with_parent_support
 from s3_operations import store_output_in_s3
 from validation import (
     build_action_validation_set,
@@ -23,11 +23,15 @@ logger.setLevel(logging.INFO)
 # Environment variables
 SERVICE_ACTIONS_TABLE = os.environ.get('DYNAMODB_TABLE_SERVICE_ACTIONS', 'gensec-AWSServiceActions')
 OUTPUT_BUCKET = os.environ.get('S3_OUTPUT_BUCKET', os.environ.get('S3_DOCUMENTATION_BUCKET'))
+INPUT_BUCKET = os.environ.get('S3_INPUT_BUCKET')
 
 # Initialize Bedrock client
 bedrock_client = get_bedrock_client('claude-4')
 
 # Initialize S3 client
+s3_client = boto3.client('s3')
+
+# No longer needed - using centralized functions from DynamoDB layer
 s3_client = boto3.client('s3')
 
 def generate_iam_model(input_data):
@@ -39,10 +43,27 @@ def generate_iam_model(input_data):
         service_id = input_data.get('serviceId')
         if not service_id:
             raise ValueError("serviceId is required in input")
+        
+        # Normalize service_id to lowercase for DynamoDB queries
+        service_id_normalized = service_id.lower()
+        logger.info(f"Processing service_id: {service_id} (normalized: {service_id_normalized})")
             
-        # Query DynamoDB for validated actions
-        validated_actions = get_service_actions_from_dynamodb(service_id, SERVICE_ACTIONS_TABLE)
+        # Query DynamoDB for validated actions, handling parent services
+        logger.info(f"Querying DynamoDB for service: {service_id} (normalized: {service_id_normalized})")
+        validated_actions = get_service_actions_with_parent_support(
+            service_id, SERVICE_ACTIONS_TABLE, INPUT_BUCKET
+        )
+        
+        logger.info(f"DynamoDB query result: {len(validated_actions) if validated_actions else 0} actions found")
+        
         if not validated_actions:
+            # Additional debugging - check if the service exists in DynamoDB at all
+            logger.error(f"No validated actions found for service '{service_id}'")
+            logger.error(f"This could indicate:")
+            logger.error(f"  1. Service data not yet processed by AWSServiceDocumentationManager")
+            logger.error(f"  2. Service ID mismatch between request and stored data")
+            logger.error(f"  3. DynamoDB table '{SERVICE_ACTIONS_TABLE}' is empty or inaccessible")
+            logger.error(f"  4. Parent service sub-services not properly stored")
             raise ValueError("No validated actions found in service documentation")
             
         # Limit actions to prevent Bedrock timeouts (max 30 actions per request)
@@ -65,8 +86,8 @@ def generate_iam_model(input_data):
             } for action in validated_actions
         }
             
-        # Map service ID to full name
-        service_name = get_service_full_name(service_id)
+        # Map service ID to full name (use normalized service_id)
+        service_name = get_service_full_name(service_id_normalized)
         logger.info(f"Generating validated IAM model for service: {service_name}")
         
         # Create enhanced prompt with validated actions
@@ -103,8 +124,8 @@ def generate_iam_model(input_data):
         # Generate markdown version with validated content
         markdown_content = convert_iam_model_to_markdown(validated_model)
         
-        # Store both JSON and markdown versions
-        store_iam_model_outputs(service_id, validated_model, markdown_content)
+        # Store both JSON and markdown versions (use normalized service_id for S3 paths)
+        store_iam_model_outputs(service_id_normalized, validated_model, markdown_content)
         
         # Create business use cases prompt
         business_prompt = create_bedrock_prompt(service_name, validated_actions)
@@ -124,20 +145,20 @@ def generate_iam_model(input_data):
             
         logger.info(f"Successfully generated business use cases for {service_name}")
         
-        # Store business use cases
+        # Store business use cases (use normalized service_id for S3 paths)
         business_markdown = convert_json_to_markdown(business_json, f"{service_name} Business Use Cases")
-        store_business_use_cases(service_id, business_json, business_markdown)
+        store_business_use_cases(service_id_normalized, business_json, business_markdown)
         
         return {
             "statusCode": 200,
             "body": {
-                "serviceId": service_id,
+                "serviceId": service_id_normalized,  # Return normalized service_id
                 "serviceName": service_name,
                 "outputs": {
-                    "json": f"{service_id}/iam-models/iam_model.json",
-                    "markdown": f"{service_id}/iam-models/iam_model.md",
-                    "business_use_cases": f"{service_id}/iam-models/business_use_cases.json",
-                    "business_use_cases_md": f"{service_id}/iam-models/business_use_cases.md"
+                    "json": f"{service_id_normalized}/iam-models/iam_model.json",
+                    "markdown": f"{service_id_normalized}/iam-models/iam_model.md",
+                    "business_use_cases": f"{service_id_normalized}/iam-models/business_use_cases.json",
+                    "business_use_cases_md": f"{service_id_normalized}/iam-models/business_use_cases.md"
                 },
                 "statistics": {
                     "total_actions": len(validated_model['actions']),
@@ -206,12 +227,25 @@ def create_bedrock_prompt(service_name, validated_actions):
     """Create intelligent prompt for Bedrock with validated actions"""
     
     service_display = service_name.replace('-', ' ').title()
-    actions_list = ", ".join([action['action_name'] for action in validated_actions])
+    
+    # Group actions by access level for better context
+    actions_by_level = {}
+    for action in validated_actions:
+        level = action.get('accessLevel', 'Unknown')
+        if level not in actions_by_level:
+            actions_by_level[level] = []
+        actions_by_level[level].append(action['action_name'])
+    
+    # Format actions list with access levels for better AI understanding
+    actions_context = ""
+    for level, actions in sorted(actions_by_level.items()):
+        actions_context += f"\n{level} Actions ({len(actions)}): {', '.join(actions)}"
     
     return f"""
-You are an AWS IAM expert. Generate comprehensive, business-ready IAM use cases for {service_display} using ONLY these validated actions:
+You are an AWS IAM expert. Generate comprehensive, production-ready IAM use cases for {service_display}.
 
-{actions_list}
+AVAILABLE ACTIONS ({len(validated_actions)} total):
+{actions_context}
 
 Generate a JSON response with this exact structure:
 {{
@@ -222,42 +256,58 @@ Generate a JSON response with this exact structure:
             "identity_type": "TF Service Account",
             "persona": "Terraform Automation",
             "activities": ["List 4-5 specific {service_display} infrastructure automation activities"],
-            "iam_permissions": ["List specific IAM permissions from the documentation with proper resource scoping"],
+            "iam_permissions": ["List ALL necessary IAM permissions for complete CRUD operations with proper resource scoping"],
             "notes": "Implementation notes and considerations"
         }},
         {{
             "identity_type": "Application Service Account", 
             "persona": "{service_display} Application",
             "activities": ["List 4-5 specific {service_display} application activities"],
-            "iam_permissions": ["List specific IAM permissions for application access with resource scoping"],
+            "iam_permissions": ["List ALL necessary IAM permissions for application runtime operations with resource scoping"],
             "notes": "Application-specific considerations"
         }},
         {{
             "identity_type": "Application Service Account",
             "persona": "{service_display} Power User", 
             "activities": ["List 4-5 advanced {service_display} power user activities"],
-            "iam_permissions": ["List extended IAM permissions for power users"],
+            "iam_permissions": ["List ALL necessary IAM permissions for advanced operations including execution control"],
             "notes": "Power user considerations"
         }},
         {{
             "identity_type": "Human",
             "persona": "Operations Team",
             "activities": ["List 4-5 operational {service_display} monitoring/troubleshooting activities"],
-            "iam_permissions": ["List operational IAM permissions (read-only focus)"],
+            "iam_permissions": ["List ALL necessary read-only IAM permissions for comprehensive monitoring"],
             "notes": "Operational considerations"
         }},
         {{
             "identity_type": "Human", 
             "persona": "Developer",
             "activities": ["List 4-5 development {service_display} activities"],
-            "iam_permissions": ["List development IAM permissions (limited scope)"],
-            "notes": "Development considerations"
+            "iam_permissions": ["CRITICAL: If this service has different permission requirements based on access method (CLI/IDE vs Console), list ONLY the most common/minimal permissions here. Use access_scenarios for variations."],
+            "notes": "Development considerations. IMPORTANT: For services like Amazon Q Developer where IDE/CLI requires NO IAM permissions, state this clearly in notes and use access_scenarios to show Console-specific permissions.",
+            "access_scenarios": [
+                "CRITICAL: Analyze if this service has different permission requirements based on access method.",
+                "For services with service-managed authentication (e.g., Amazon Q Developer, AWS Toolkit):",
+                "- Main iam_permissions should be empty array or minimal",
+                "- Create 'IDE/CLI Access' scenario with empty permissions and note about service-managed auth",
+                "- Create 'Console Access' scenario with required console permissions",
+                "For traditional services:",
+                "- Main iam_permissions should list standard CLI/SDK permissions",
+                "- Create 'Console Access' scenario if console needs additional List*/Describe*",
+                "Common scenarios to consider (include only if relevant):",
+                "- Service-managed authentication (no IAM permissions required)",
+                "- Console vs CLI/SDK access differences",
+                "- Feature-specific permissions (e.g., RAM for VPC Lattice)",
+                "- Integration-specific permissions",
+                "Each scenario: scenario name, description, iam_permissions array (can be empty), notes explaining when/why"
+            ]
         }},
         {{
             "identity_type": "Human",
             "persona": "{service_display} Administrator", 
             "activities": ["List 4-5 administrative {service_display} activities"],
-            "iam_permissions": ["List administrative IAM permissions"],
+            "iam_permissions": ["List ALL necessary IAM permissions for full administrative control including cleanup and policy management"],
             "notes": "Administrative considerations"
         }}
     ],
@@ -266,14 +316,91 @@ Generate a JSON response with this exact structure:
     ]
 }}
 
-CRITICAL Requirements:
+CRITICAL Requirements for COMPLETE Permission Sets:
 1. Use ONLY the {len(validated_actions)} validated {service_display} IAM actions listed above
-2. Include proper resource ARN patterns where applicable (e.g., arn:aws:{service_name}:region:account:resource/*)
-3. Base all activities on actual {service_display} capabilities from the action list
-4. Include realistic business use cases that organizations actually implement
-5. Provide specific, actionable IAM permissions with proper resource-level scoping
-6. Return ONLY valid JSON, no additional text or explanations
-7. Use the exact IAM action names from the validated actions list
+2. Include proper resource ARN patterns where applicable (e.g., arn:aws:{service_name}:*:*:resource/*)
+3. For each persona, include ALL necessary permissions to complete their activities:
+   - Terraform: Create*, Update*, Delete*, Describe*, List*, Tag* operations
+   - Application: Runtime operations plus Describe* for configuration discovery
+   - Power User: Execution control (Cancel*, Stop*) plus monitoring (Describe*, List*)
+   - Operations: ALL Describe*, List*, Get* actions for comprehensive visibility
+   - Developer: Create*, Update*, Delete*, Describe* scoped to dev-* resources
+   - Administrator: ALL Delete*, Deregister*, Remove* plus policy management
+4. Think through complete workflows - if a persona Creates something, they likely need Update, Describe, Delete, and List
+5. Include supporting actions like tagging (AddTagsToResource, RemoveTagsFromResource) where relevant
+6. Base all activities on actual {service_display} capabilities from the action list
+7. Return ONLY valid JSON, no additional text or explanations
+8. Use the exact IAM action names from the validated actions list
+
+CRITICAL: Access Scenario Differentiation for Developer Persona
+9. For the Developer persona, FIRST determine if the service has different permission requirements based on access method
+10. For services with service-managed authentication (Amazon Q Developer, AWS Toolkit, etc.):
+    - Main iam_permissions should be EMPTY ARRAY or minimal
+    - State clearly in notes: "Most developers use IDE/CLI which requires no IAM permissions"
+    - Use access_scenarios to show Console-specific permissions
+11. For traditional services:
+    - Main iam_permissions should list standard CLI/SDK permissions
+    - Use access_scenarios ONLY if Console needs additional permissions or there are feature-specific variations
+12. Common scenarios to consider (include only if relevant):
+    - Service-managed authentication (no IAM permissions required) - ALWAYS mention if applicable
+    - Console vs CLI/SDK access differences
+    - Feature-specific permissions (e.g., RAM permissions only if using VPC Lattice)
+    - Integration-specific permissions (e.g., additional permissions for cross-service integrations)
+13. For each scenario, specify:
+    - scenario: Short name (e.g., "IDE/CLI Access - No IAM Required", "Console Access", "VPC Lattice Integration")
+    - description: When this scenario applies
+    - iam_permissions: Required permissions (can be EMPTY ARRAY for service-managed auth)
+    - notes: Why permissions differ or when to use this scenario
+
+EXAMPLE of COMPLETE permissions (not just samples):
+Instead of: ["ssm:CreateDocument", "ssm:CreatePatchBaseline", "ssm:CreateMaintenanceWindow"]
+Provide: ["ssm:CreateDocument", "ssm:UpdateDocument", "ssm:DeleteDocument", "ssm:DescribeDocument", "ssm:ListDocuments", "ssm:CreatePatchBaseline", "ssm:UpdatePatchBaseline", "ssm:DeletePatchBaseline", "ssm:DescribePatchBaselines", "ssm:CreateMaintenanceWindow", "ssm:UpdateMaintenanceWindow", "ssm:DeleteMaintenanceWindow", "ssm:DescribeMaintenanceWindows", "ssm:AddTagsToResource"]
+
+EXAMPLE 1 - Service with service-managed authentication (Amazon Q Developer):
+{{
+    "identity_type": "Human",
+    "persona": "Developer",
+    "activities": ["Use AI code suggestions in IDE", "Generate code from natural language", "Get troubleshooting help"],
+    "iam_permissions": [],
+    "notes": "Most developers use Amazon Q Developer IDE plugin or CLI which requires NO IAM permissions. Service uses AWS Builder ID or SSO for authentication. Console access requires permissions - see access_scenarios.",
+    "access_scenarios": [
+        {{
+            "scenario": "IDE/CLI Access - No IAM Required",
+            "description": "Using Amazon Q Developer in IDE (VS Code, IntelliJ) or CLI",
+            "iam_permissions": [],
+            "notes": "Amazon Q Developer uses service-managed authentication (AWS Builder ID or SSO). No IAM permissions required for developers."
+        }},
+        {{
+            "scenario": "Console Access",
+            "description": "Using AWS Management Console to manage Amazon Q applications and settings",
+            "iam_permissions": ["amazonq:GetPlugin", "amazonq:ListPlugins", "amazonq:ListConversations", "amazonq:GetConversation"],
+            "notes": "Console access requires IAM permissions to view and manage Amazon Q resources"
+        }}
+    ]
+}}
+
+EXAMPLE 2 - Traditional service with feature-specific permissions (PrivateLink):
+{{
+    "identity_type": "Human",
+    "persona": "Developer",
+    "activities": ["Create VPC endpoints", "Configure PrivateLink", "Test connectivity"],
+    "iam_permissions": ["ec2:CreateVpcEndpoint", "ec2:DescribeVpcEndpoints", "ec2:DeleteVpcEndpoint"],
+    "notes": "Base permissions for PrivateLink development via CLI/SDK",
+    "access_scenarios": [
+        {{
+            "scenario": "Console Access",
+            "description": "Using AWS Management Console to manage VPC endpoints",
+            "iam_permissions": ["ec2:CreateVpcEndpoint", "ec2:DescribeVpcEndpoints", "ec2:DeleteVpcEndpoint", "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups"],
+            "notes": "Console requires additional Describe actions to populate dropdown menus"
+        }},
+        {{
+            "scenario": "VPC Lattice Integration",
+            "description": "When using VPC Lattice with PrivateLink endpoints",
+            "iam_permissions": ["ec2:CreateVpcEndpoint", "ec2:DescribeVpcEndpoints", "ram:AcceptResourceShareInvitation", "ram:GetResourceShares", "ram:ListResources"],
+            "notes": "VPC Lattice requires RAM permissions for cross-account resource sharing"
+        }}
+    ]
+}}
 """
 
 def validate_iam_model_actions(model, valid_action_names, valid_action_details):

@@ -90,8 +90,8 @@ class MCPDocumentationCollector:
             # Convert MCP docs to text for AI processing
             docs_text = self._mcp_docs_to_text(mcp_docs)
             
-            if len(docs_text) > 150000:
-                # Use chunking for large documents (>150K chars)
+            if len(docs_text) > 80000:
+                # Use chunking for large documents
                 return self._extract_actions_with_chunking_mcp(service_id, docs_text)
             else:
                 # Single AI call for smaller documents
@@ -109,8 +109,8 @@ class MCPDocumentationCollector:
             for doc in mcp_docs:
                 docs_text += self._mcp_docs_to_text(doc) + "\\n\\n"
             
-            if len(docs_text) > 200000:
-                # Use chunking for large documents (>200K chars)
+            if len(docs_text) > 80000:
+                # Use chunking for large documents
                 return self._extract_parameters_with_chunking_mcp(service_id, docs_text)
             else:
                 # Single AI call for smaller documents
@@ -199,8 +199,7 @@ MCP Documentation:
         """Extract actions using chunking from MCP docs"""
         from content_processor import ContentProcessor
         
-        # Chunk size: 100K chars (~25K tokens) - consistent with web scraping approach
-        chunks = ContentProcessor.smart_chunk_content(docs_text, 100000, ['Action:', 'action:', '\\n\\n', '. '])
+        chunks = ContentProcessor.smart_chunk_content(docs_text, 40000, ['Action:', 'action:', '\\n\\n', '. '])
         all_actions = []
         
         logger.info(f"Processing {len(chunks)} MCP chunks for {service_id} actions")
@@ -252,8 +251,7 @@ MCP Documentation chunk:
         """Extract parameters using chunking from MCP docs"""
         from content_processor import ContentProcessor
         
-        # Chunk size: 150K chars (~37K tokens) - parameters have more descriptive text
-        chunks = ContentProcessor.smart_chunk_content(docs_text, 150000, ['Type:', 'Required:', 'Properties', '\\n\\n', '. '])
+        chunks = ContentProcessor.smart_chunk_content(docs_text, 60000, ['Type:', 'Required:', 'Properties', '\\n\\n', '. '])
         all_parameters = []
         
         logger.info(f"Processing {len(chunks)} MCP chunks for {service_id} parameters")
@@ -302,34 +300,11 @@ MCP Documentation chunk:
         return unique_parameters
     
     def _parse_ai_json_response(self, ai_response: str, context: str = "response") -> Optional[List[Dict[str, Any]]]:
-        """Parse AI JSON response with handling for extra data"""
+        """Parse AI JSON response"""
         try:
             cleaned = ai_response.strip()
             return json.loads(cleaned)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI {context} as JSON: {str(e)}")
-            
-            # Handle "Extra data" error - AI added content after valid JSON
-            if "Extra data" in str(e):
-                logger.warning(f"AI added extra content after JSON. Extracting first valid JSON array...")
-                try:
-                    cleaned = ai_response.strip()
-                    if cleaned.startswith('['):
-                        # Find the closing bracket of the first complete array
-                        bracket_count = 0
-                        for i, char in enumerate(cleaned):
-                            if char == '[':
-                                bracket_count += 1
-                            elif char == ']':
-                                bracket_count -= 1
-                                if bracket_count == 0:
-                                    # Found the end of the first complete array
-                                    valid_json = cleaned[:i+1]
-                                    result = json.loads(valid_json)
-                                    logger.info(f"Successfully extracted {len(result)} items from first JSON array (ignored extra content)")
-                                    return result
-                except Exception as extract_error:
-                    logger.error(f"Failed to extract first JSON array: {str(extract_error)}")
-            
             logger.error(f"Response was: \\n{ai_response}")
             return None

@@ -12,7 +12,8 @@ from dynamodb_operations import (
     get_service_actions_from_dynamodb,
     get_service_parameters_from_dynamodb,
     store_control_library,
-    update_service_tracking
+    update_service_tracking,
+    get_service_data_with_parent_support
 )
 from json_processing import clean_and_extract_json
 from validation import validate_input
@@ -28,6 +29,9 @@ SERVICE_TRACKING_TABLE = os.environ['DYNAMODB_TABLE_SERVICE_TRACKING']
 SERVICE_ACTIONS_TABLE = os.environ.get('DYNAMODB_TABLE_SERVICE_ACTIONS', 'gensec-AWSServiceActions')
 SERVICE_PARAMETERS_TABLE = os.environ.get('DYNAMODB_TABLE_SERVICE_PARAMETERS', 'gensec-AWSServiceParameters')
 CONFIG_MANAGED_RULES_TABLE = os.environ.get('DYNAMODB_TABLE_CONFIG_MANAGED_RULES', 'gensec-AWSConfigManagedRules')
+INPUT_BUCKET = os.environ.get('S3_INPUT_BUCKET')
+
+# No longer needed - using centralized functions from DynamoDB layer
 
 # Initialize Bedrock client
 bedrock_client = get_bedrock_client('claude-4')
@@ -81,16 +85,20 @@ def analyze_security_requirements(input_data):
         if not service_id:
             raise ValueError("serviceId is required")
         
-        logger.info(f"Processing service_id: {service_id}")
+        # Normalize service_id to lowercase for DynamoDB queries
+        # Service IDs are stored in lowercase in DynamoDB (e.g., "ec2", "s3")
+        service_id_normalized = service_id.lower()
+        logger.info(f"Processing service_id: {service_id} (normalized: {service_id_normalized})")
         
-        # Query DynamoDB for service actions and parameters
-        validated_actions = get_service_actions_from_dynamodb(service_id, SERVICE_ACTIONS_TABLE)
-        validated_parameters = get_service_parameters_from_dynamodb(service_id, SERVICE_PARAMETERS_TABLE)
+        # Query DynamoDB for service actions and parameters, handling parent services
+        validated_actions, validated_parameters = get_service_data_with_parent_support(
+            service_id, SERVICE_ACTIONS_TABLE, SERVICE_PARAMETERS_TABLE, INPUT_BUCKET
+        )
         
-        logger.info(f"Found {len(validated_parameters)} parameters and {len(validated_actions)} actions for {service_id}")
+        logger.info(f"Found {len(validated_parameters)} parameters and {len(validated_actions)} actions for {service_id_normalized}")
 
         if not validated_parameters and not validated_actions:
-            logger.error(f"No validated parameters or actions found for service_id: {service_id}")
+            logger.error(f"No validated parameters or actions found for service_id: {service_id_normalized} (original: {service_id})")
             logger.info(f"Available tables: Actions={SERVICE_ACTIONS_TABLE}, Parameters={SERVICE_PARAMETERS_TABLE}")
             raise ValueError(f"No validated parameters or actions available for service {service_id}")
         
