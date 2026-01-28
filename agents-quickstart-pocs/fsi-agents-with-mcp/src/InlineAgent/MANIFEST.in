@@ -1,2 +1,0 @@
-include versioneer.py
-include src/bedrock_agents/_version.py
