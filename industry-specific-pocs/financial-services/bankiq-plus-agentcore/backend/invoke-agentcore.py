@@ -2,7 +2,7 @@
 """Python bridge to invoke AgentCore CLI"""
 import json
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import uuid
 
 def invoke_agent(prompt, session_id=None):
@@ -16,7 +16,7 @@ def invoke_agent(prompt, session_id=None):
         cmd = ['agentcore', 'invoke', json.dumps({'prompt': prompt})]
         cmd.extend(['--session-id', session_id])
         
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 - subprocess needed for system commands
             cmd,
             capture_output=True,
             text=True,

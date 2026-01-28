@@ -1,5 +1,8 @@
 """
 Test Security Research Profile Generation
+
+Note: This test file uses assert statements for test validation, which is appropriate
+and safe in testing contexts. # nosec B101
 """
 import json
 import sys
@@ -49,13 +52,13 @@ def test_prompt_structure():
     )
     
     # Verify prompt structure
-    assert "prompt" in prompt
-    assert "Security Research Profile" in prompt["prompt"]
-    assert service_name in prompt["prompt"]
-    assert "Q1:" in prompt["prompt"]
-    assert "Data Protection" in prompt["prompt"]
-    assert "Network Controls" in prompt["prompt"]
-    assert "Access Controls" in prompt["prompt"]
+    assert "prompt" in prompt  # nosec B101 - assert statements are appropriate in test files
+    assert "Security Research Profile" in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
+    assert service_name in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
+    assert "Q1:" in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
+    assert "Data Protection" in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
+    assert "Network Controls" in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
+    assert "Access Controls" in prompt["prompt"]  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ Prompt structure test passed")
     print(f"\nPrompt length: {len(prompt['prompt'])} characters")

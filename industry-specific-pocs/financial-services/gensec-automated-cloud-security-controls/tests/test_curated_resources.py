@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 Test that curated resources are properly loaded and used by the Lambda function
+
+Note: This test file uses assert statements for test validation, which is appropriate
+and safe in testing contexts. # nosec B101
 """
 
 import json
@@ -18,45 +21,45 @@ def test_service_mappings_have_curated_resources():
     services = mappings['services']
     
     # Test EC2 has curated resources
-    assert 'ec2' in services, "EC2 service not found in mappings"
+    assert 'ec2' in services, "EC2 service not found in mappings"  # nosec B101 - assert statements are appropriate in test files
     ec2_resources = services['ec2']['resource_types']
-    assert len(ec2_resources) > 0, "EC2 should have curated resources"
-    assert len(ec2_resources) == 15, f"EC2 should have 15 curated resources, got {len(ec2_resources)}"
+    assert len(ec2_resources) > 0, "EC2 should have curated resources"  # nosec B101 - assert statements are appropriate in test files
+    assert len(ec2_resources) == 15, f"EC2 should have 15 curated resources, got {len(ec2_resources)}"  # nosec B101 - assert statements are appropriate in test files
     
     # Verify core resources are included
-    assert 'ec2-instance' in ec2_resources, "ec2-instance should be in curated resources"
-    assert 'ec2-vpc' in ec2_resources, "ec2-vpc should be in curated resources"
-    assert 'ec2-securitygroup' in ec2_resources, "ec2-securitygroup should be in curated resources"
+    assert 'ec2-instance' in ec2_resources, "ec2-instance should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
+    assert 'ec2-vpc' in ec2_resources, "ec2-vpc should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
+    assert 'ec2-securitygroup' in ec2_resources, "ec2-securitygroup should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
     
     # Verify sub-resources are NOT included
-    assert 'ec2-securitygroupingress' not in ec2_resources, "Sub-resources should be filtered out"
-    assert 'ec2-securitygroupegress' not in ec2_resources, "Sub-resources should be filtered out"
+    assert 'ec2-securitygroupingress' not in ec2_resources, "Sub-resources should be filtered out"  # nosec B101 - assert statements are appropriate in test files
+    assert 'ec2-securitygroupegress' not in ec2_resources, "Sub-resources should be filtered out"  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ EC2 has 15 curated core resources")
     
     # Test Lambda has curated resources
-    assert 'lambda' in services, "Lambda service not found in mappings"
+    assert 'lambda' in services, "Lambda service not found in mappings"  # nosec B101 - assert statements are appropriate in test files
     lambda_resources = services['lambda']['resource_types']
-    assert len(lambda_resources) > 0, "Lambda should have curated resources"
-    assert len(lambda_resources) == 6, f"Lambda should have 6 curated resources, got {len(lambda_resources)}"
-    assert 'lambda-function' in lambda_resources, "lambda-function should be in curated resources"
+    assert len(lambda_resources) > 0, "Lambda should have curated resources"  # nosec B101 - assert statements are appropriate in test files
+    assert len(lambda_resources) == 6, f"Lambda should have 6 curated resources, got {len(lambda_resources)}"  # nosec B101 - assert statements are appropriate in test files
+    assert 'lambda-function' in lambda_resources, "lambda-function should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ Lambda has 6 curated core resources")
     
     # Test S3 has curated resources
-    assert 's3' in services, "S3 service not found in mappings"
+    assert 's3' in services, "S3 service not found in mappings"  # nosec B101 - assert statements are appropriate in test files
     s3_resources = services['s3']['resource_types']
-    assert len(s3_resources) > 0, "S3 should have curated resources"
-    assert len(s3_resources) == 5, f"S3 should have 5 curated resources, got {len(s3_resources)}"
-    assert 's3-bucket' in s3_resources, "s3-bucket should be in curated resources"
+    assert len(s3_resources) > 0, "S3 should have curated resources"  # nosec B101 - assert statements are appropriate in test files
+    assert len(s3_resources) == 5, f"S3 should have 5 curated resources, got {len(s3_resources)}"  # nosec B101 - assert statements are appropriate in test files
+    assert 's3-bucket' in s3_resources, "s3-bucket should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ S3 has 5 curated core resources")
     
     # Test DynamoDB has curated resources
-    assert 'dynamodb' in services, "DynamoDB service not found in mappings"
+    assert 'dynamodb' in services, "DynamoDB service not found in mappings"  # nosec B101 - assert statements are appropriate in test files
     dynamodb_resources = services['dynamodb']['resource_types']
-    assert len(dynamodb_resources) == 2, f"DynamoDB should have 2 curated resources, got {len(dynamodb_resources)}"
-    assert 'dynamodb-table' in dynamodb_resources, "dynamodb-table should be in curated resources"
+    assert len(dynamodb_resources) == 2, f"DynamoDB should have 2 curated resources, got {len(dynamodb_resources)}"  # nosec B101 - assert statements are appropriate in test files
+    assert 'dynamodb-table' in dynamodb_resources, "dynamodb-table should be in curated resources"  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ DynamoDB has 2 curated core resources")
     
@@ -66,8 +69,8 @@ def test_service_mappings_have_curated_resources():
     
     # Verify services without curated resources have empty arrays (not missing)
     for service_id, service_data in services.items():
-        assert 'resource_types' in service_data, f"{service_id} missing resource_types field"
-        assert isinstance(service_data['resource_types'], list), f"{service_id} resource_types should be a list"
+        assert 'resource_types' in service_data, f"{service_id} missing resource_types field"  # nosec B101 - assert statements are appropriate in test files
+        assert isinstance(service_data['resource_types'], list), f"{service_id} resource_types should be a list"  # nosec B101 - assert statements are appropriate in test files
     
     print("✓ All services have resource_types field (array)")
 
@@ -88,8 +91,8 @@ def test_lambda_uses_curated_resources():
     resource_types = service_config.get('resource_types', [])
     
     # Lambda should get curated resources directly
-    assert len(resource_types) == 15, "Lambda should get 15 curated EC2 resources"
-    assert 'ec2-instance' in resource_types, "Lambda should get ec2-instance"
+    assert len(resource_types) == 15, "Lambda should get 15 curated EC2 resources"  # nosec B101 - assert statements are appropriate in test files
+    assert 'ec2-instance' in resource_types, "Lambda should get ec2-instance"  # nosec B101 - assert statements are appropriate in test files
     
     # Lambda should NOT need to filter or discover
     # (no _should_include_resource_type or _discover_resource_types calls)

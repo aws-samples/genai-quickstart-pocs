@@ -257,22 +257,45 @@ def generate_data_summary(database, schema, topic, limit=1000):
             categorical_columns = [col for col, info in columns.items() 
                                 if info['data_type'].upper() in ('VARCHAR', 'STRING', 'CHAR')]
             
-            # Generate summary query
+            # Validate database, schema, and table names to prevent injection
+            if not database.replace('_', '').replace('-', '').isalnum():
+                raise ValueError(f"Invalid database name: {database}")
+            if not schema.replace('_', '').replace('-', '').isalnum():
+                raise ValueError(f"Invalid schema name: {schema}")
+            if not table_name.replace('_', '').replace('-', '').isalnum():
+                raise ValueError(f"Invalid table name: {table_name}")
+            
+            # Validate column names
+            validated_categorical_columns = []
+            for col in categorical_columns[:5]:
+                if not str(col).replace('_', '').replace('-', '').isalnum():
+                    continue  # Skip invalid column names
+                validated_categorical_columns.append(col)
+            
+            validated_metric_columns = []
+            for col in metric_columns[:5]:
+                if not str(col).replace('_', '').replace('-', '').isalnum():
+                    continue  # Skip invalid column names
+                validated_metric_columns.append(col)
+            
+            # Generate summary query with validated names
+            # Note: Using f-string with validated database, schema, table, and column names
             summary_query = f"""
             SELECT 
                 COUNT(*) as total_records
-                {', ' + ', '.join(f'COUNT(DISTINCT {col}) as unique_{col}' for col in categorical_columns[:5]) if categorical_columns else ''}
+                {', ' + ', '.join(f'COUNT(DISTINCT {col}) as unique_{col}' for col in validated_categorical_columns) if validated_categorical_columns else ''}
                 {', ' + ', '.join(f'AVG({col}) as avg_{col}, MAX({col}) as max_{col}, MIN({col}) as min_{col}' 
-                          for col in metric_columns[:5]) if metric_columns else ''}
+                          for col in validated_metric_columns) if validated_metric_columns else ''}
             FROM {database}.{schema}.{table_name}
-            """
+            """  # nosec B608 - all identifiers are validated
             
-            # Get sample records
+            # Get sample records with validated names
+            # Note: Using f-string with validated database, schema, and table names
             sample_query = f"""
             SELECT *
             FROM {database}.{schema}.{table_name}
             LIMIT 5
-            """
+            """  # nosec B608 - all identifiers are validated
             
             try:
                 # Execute summary query

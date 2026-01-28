@@ -48,8 +48,14 @@ def check_northwind_exists():
                 print(f"Table {NORTHWIND_SCHEMA}.{table} does not exist")
                 return False
                 
-        # Check if data exists (sample count from ORDERS table)
-        cursor.execute(f"SELECT COUNT(*) AS COUNT FROM {NORTHWIND_SCHEMA}.ORDERS")
+        # Validate schema name to prevent injection
+        if not NORTHWIND_SCHEMA.replace('_', '').isalnum():
+            raise ValueError("Invalid schema name")
+            
+        # Check if data exists (sample count from ORDERS table) - using validated schema
+        validated_schema = NORTHWIND_SCHEMA
+        # Note: Using f-string with validated schema name
+        cursor.execute(f"SELECT COUNT(*) AS COUNT FROM {validated_schema}.ORDERS")  # nosec B608 - schema name is validated constant
         result = cursor.fetchone()
         if not result or result[0] < 1:
             print(f"No data in {NORTHWIND_SCHEMA}.ORDERS")
@@ -96,20 +102,20 @@ def download_northwind_data():
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        response = requests.get(NORTHWIND_DATA_URL, headers=headers, stream=True)
+        response = requests.get(NORTHWIND_DATA_URL, headers=headers, stream=True, timeout=30)
         
         if response.status_code != 200:
             print(f"Failed to download: HTTP {response.status_code}")
             # Try alternative URL
             alt_url = "https://github.com/jpwhite3/northwind-SQLite3/raw/master/northwind.db"
             print(f"Trying alternative URL: {alt_url}")
-            response = requests.get(alt_url, headers=headers, stream=True)
+            response = requests.get(alt_url, headers=headers, stream=True, timeout=30)
             if response.status_code != 200:
                 print(f"Failed to download from alternative URL: HTTP {response.status_code}")
                 # Try another alternative URL
                 alt_url2 = "https://github.com/Microsoft/sql-server-samples/raw/master/samples/databases/northwind-pubs/instnwnd.sql"
                 print(f"Trying another alternative URL: {alt_url2}")
-                response = requests.get(alt_url2, headers=headers)
+                response = requests.get(alt_url2, headers=headers, timeout=30)
                 if response.status_code != 200:
                     print(f"Failed to download from all URLs: HTTP {response.status_code}")
                     return None
@@ -352,8 +358,14 @@ def extract_data_from_sqlite(sqlite_path):
         
         # Extract data from each table
         for table in tables:
+            # Validate table name to prevent injection
+            if not table.replace('_', '').replace('-', '').isalnum():
+                print(f"Skipping invalid table name: {table}")
+                continue
+                
             print(f"Extracting data from {table}")
-            tables_data[table] = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+            # Note: Using string concatenation with validated table name
+            tables_data[table] = pd.read_sql_query("SELECT * FROM " + table, conn)  # nosec B608 - table name is validated
         
         conn.close()
         return tables_data
@@ -433,10 +445,23 @@ def load_data_to_snowflake(tables_data):
                 row_tuple = tuple(None if pd.isna(val) else val for val in row)
                 data_tuples.append(row_tuple)
             
-            # Create INSERT statement
+            # Validate table and schema names to prevent injection
+            if not table_name.replace('_', '').isalnum():
+                raise ValueError(f"Invalid table name: {table_name}")
+            if not NORTHWIND_SCHEMA.replace('_', '').isalnum():
+                raise ValueError("Invalid schema name")
+            
+            # Create INSERT statement with validated names
             placeholders = ','.join(['%s'] * len(df.columns))
-            columns = ','.join([f'"{col}"' for col in df.columns])
-            insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA}.{table_name.upper()} ({columns}) VALUES ({placeholders})"
+            # Validate column names
+            validated_columns = []
+            for col in df.columns:
+                if not str(col).replace('_', '').replace('-', '').isalnum():
+                    raise ValueError(f"Invalid column name: {col}")
+                validated_columns.append(f'"{col}"')
+            columns = ','.join(validated_columns)
+            # Note: Using f-string with validated schema, table, and column names
+            insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA}.{table_name.upper()} ({columns}) VALUES ({placeholders})"  # nosec B608 - all identifiers are validated
             
             # Execute batch insert
             cursor.executemany(insert_sql, data_tuples)

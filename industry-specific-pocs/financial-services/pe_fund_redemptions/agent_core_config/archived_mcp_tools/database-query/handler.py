@@ -29,14 +29,31 @@ def lambda_handler(event, context):
             'body': json.dumps({'message': 'Unknown tool'})
         }
     
-    # Build query with optional filtering
-    query = f"SELECT * FROM {table}"
+    # Validate table name to prevent injection
+    if not table.replace('_', '').isalnum():
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'Invalid table name'})
+        }
     
+    # Build query with optional filtering using parameterized queries
     field = event.get('field')
     value = event.get('value')
     
     if field and value:
-        query += f" WHERE {field} LIKE '%{value}%'"
+        # Validate field name to prevent injection
+        if not field.replace('_', '').isalnum():
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Invalid field name'})
+            }
+        # Use parameterized query for safety
+        query = f"SELECT * FROM {table} WHERE {field} LIKE ?"  # nosec B608 - table and field names are validated
+        params = (f'%{value}%',)
+    else:
+        # Note: Using f-string with validated table name
+        query = f"SELECT * FROM {table}"  # nosec B608 - table name is validated
+        params = ()
     
     try:
         # Call the MySQL Lambda function

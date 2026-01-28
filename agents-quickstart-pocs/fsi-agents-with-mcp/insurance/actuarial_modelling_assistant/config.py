@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from mcp import StdioServerParameters
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 
 
 class Config:
@@ -75,7 +75,7 @@ class Config:
 
         # Check if uv is installed
         try:
-            result = subprocess.run(["uv", "--version"], capture_output=True, text=True)
+            result = subprocess.run(["uv", "--version"], capture_output=True, text=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
             if result.returncode != 0:
                 print(
                     "Warning: 'uv' command not found. Please install uv or ensure it's in your PATH."

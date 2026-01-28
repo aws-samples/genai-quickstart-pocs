@@ -4,7 +4,7 @@ This frame work is very simple happy path testing. Not intended to demonstrate c
 or other complex reservation tasks.
 """
 from datetime import datetime, timedelta
-import random
+import random  # nosec B311 - random used for test/sample data generation
 from typing import List, Optional
 
 from faker import Faker
@@ -49,8 +49,8 @@ class HotelTestDataGenerator:
             )
             
             # Create a reservation starting 30-90 days in the future
-            future_days = random.randint(30, 90)
-            stay_length = random.randint(1, 7)
+            future_days = random.randint(30, 90)  # nosec B311 - used for test/sample data generation
+            stay_length = random.randint(1, 7)  # nosec B311 - used for test/sample data generation
             
             check_in = datetime.now() + timedelta(days=future_days)
             check_out = check_in + timedelta(days=stay_length)
@@ -58,8 +58,8 @@ class HotelTestDataGenerator:
             try:
                 reservation = self.reservation_manager.create_reservation(
                     guest=guest,
-                    city=random.choice(cities),
-                    room_type=random.choice(room_types),
+                    city=random.choice(cities),  # nosec B311 - used for test/sample data generation
+                    room_type=random.choice(room_types),  # nosec B311 - used for test/sample data generation
                     check_in=check_in,
                     check_out=check_out
                 )

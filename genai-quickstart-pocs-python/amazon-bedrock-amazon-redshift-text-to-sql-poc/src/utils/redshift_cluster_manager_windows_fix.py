@@ -4,7 +4,7 @@ Windows-compatible Redshift cluster manager for automatic cluster creation.
 import boto3
 import time
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import platform
 import socket
 from dotenv import load_dotenv
@@ -22,16 +22,16 @@ def kill_existing_sessions():
     if system == 'windows':
         # Windows: Use taskkill to terminate AWS CLI processes
         try:
-            subprocess.run(['taskkill', '/F', '/IM', 'aws.exe'], 
+            subprocess.run(['taskkill', '/F', '/IM', 'aws.exe'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                          capture_output=True, check=False)
-        except Exception:
+        except Exception:  # nosec B110 - intentional pass for error handling
             pass
     else:
         # Unix/Mac: Use pkill
         try:
-            subprocess.run(['pkill', '-f', 'aws ssm start-session'], 
+            subprocess.run(['pkill', '-f', 'aws ssm start-session'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                          stderr=subprocess.DEVNULL, check=False)
-        except Exception:
+        except Exception:  # nosec B110 - intentional pass when session manager plugin not found
             pass
     
     time.sleep(2)
@@ -42,7 +42,7 @@ def install_session_manager_plugin():
     
     try:
         # Test if plugin is already installed
-        result = subprocess.run(['session-manager-plugin'], 
+        result = subprocess.run(['session-manager-plugin'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                               capture_output=True, timeout=5)
         return True  # Already installed
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -53,7 +53,7 @@ def install_session_manager_plugin():
     if system == 'windows':
         # Windows installation
         try:
-            import urllib.request
+            import requests
             import zipfile
             import tempfile
             
@@ -61,10 +61,16 @@ def install_session_manager_plugin():
             url = 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/windows/SessionManagerPluginSetup.exe'
             
             with tempfile.NamedTemporaryFile(suffix='.exe', delete=False) as tmp_file:
-                urllib.request.urlretrieve(url, tmp_file.name)
+                # Use requests instead of urllib for better security
+                response = requests.get(url, timeout=30, stream=True)
+                response.raise_for_status()
+                
+                for chunk in response.iter_content(chunk_size=8192):
+                    tmp_file.write(chunk)
+                tmp_file.flush()
                 
                 # Run installer silently
-                subprocess.run([tmp_file.name, '/S'], check=True)
+                subprocess.run([tmp_file.name, '/S'], check=True)  # nosec B603 - subprocess needed for system commands
                 
                 # Clean up
                 os.unlink(tmp_file.name)
@@ -81,13 +87,18 @@ def install_session_manager_plugin():
     elif system == 'darwin':  # macOS
         try:
             # Download and install for macOS
-            subprocess.run(['curl', '-o', '/tmp/sessionmanager-bundle.zip', 
-                          'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac/sessionmanager-bundle.zip'], 
-                          check=True)
-            subprocess.run(['unzip', '-o', '/tmp/sessionmanager-bundle.zip', '-d', '/tmp/'], check=True)
-            subprocess.run(['sudo', '/tmp/sessionmanager-bundle/install', 
-                          '-i', '/usr/local/sessionmanagerplugin', 
-                          '-b', '/usr/local/bin/session-manager-plugin'], check=True)
+            import tempfile
+            with tempfile.TemporaryDirectory() as temp_dir:
+                bundle_path = os.path.join(temp_dir, 'sessionmanager-bundle.zip')
+                extract_path = temp_dir
+                
+                subprocess.run(['curl', '-o', bundle_path,  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                              'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac/sessionmanager-bundle.zip'], 
+                              check=True)
+                subprocess.run(['unzip', '-o', bundle_path, '-d', extract_path], check=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                subprocess.run(['sudo', os.path.join(extract_path, 'sessionmanager-bundle', 'install'),  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                              '-i', '/usr/local/sessionmanagerplugin', 
+                              '-b', '/usr/local/bin/session-manager-plugin'], check=True)
             print("Session Manager plugin installed successfully")
             return True
         except subprocess.CalledProcessError as e:
@@ -97,10 +108,14 @@ def install_session_manager_plugin():
     else:  # Linux
         try:
             # Download and install for Linux
-            subprocess.run(['curl', '-o', '/tmp/session-manager-plugin.rpm',
-                          'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm'],
-                          check=True)
-            subprocess.run(['sudo', 'yum', 'install', '-y', '/tmp/session-manager-plugin.rpm'], check=True)
+            import tempfile
+            with tempfile.TemporaryDirectory() as temp_dir:
+                rpm_path = os.path.join(temp_dir, 'session-manager-plugin.rpm')
+                
+                subprocess.run(['curl', '-o', rpm_path,  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                              'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm'],
+                              check=True)
+                subprocess.run(['sudo', 'yum', 'install', '-y', rpm_path], check=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
             print("Session Manager plugin installed successfully")
             return True
         except subprocess.CalledProcessError as e:
@@ -121,11 +136,11 @@ def test_port_connection(host='localhost', port=5439, timeout=3):
         if sock:
             try:
                 sock.shutdown(socket.SHUT_RDWR)  # Proper shutdown before close
-            except Exception:
+            except Exception:  # nosec B110 - intentional pass for socket cleanup
                 pass
             try:
                 sock.close()
-            except Exception:
+            except Exception:  # nosec B110 - intentional pass for cleanup operations
                 pass
 
 def create_ssm_tunnel(instance_id, redshift_host):
@@ -181,7 +196,7 @@ def create_ssm_tunnel(instance_id, redshift_host):
         # Start session in background
         if get_platform() == 'windows':
             # Windows: Use CREATE_NEW_PROCESS_GROUP to allow background execution
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -190,7 +205,7 @@ def create_ssm_tunnel(instance_id, redshift_host):
             )
         else:
             # Unix/Mac
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

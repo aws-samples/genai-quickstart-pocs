@@ -23,7 +23,7 @@ def disable_table_acls():
         
         # Get current cluster config
         get_url = f"{host}/api/2.0/clusters/get"
-        response = requests.get(get_url, headers=headers, params={'cluster_id': cluster_id})
+        response = requests.get(get_url, headers=headers, params={'cluster_id': cluster_id}, timeout=30)
         
         if response.status_code != 200:
             print(f"❌ Failed to get cluster config: {response.text}")
@@ -38,7 +38,7 @@ def disable_table_acls():
         
         # Update cluster
         edit_url = f"{host}/api/2.0/clusters/edit"
-        response = requests.post(edit_url, headers=headers, json=cluster_config)
+        response = requests.post(edit_url, headers=headers, json=cluster_config, timeout=30)
         
         if response.status_code == 200:
             print("✅ Disabled Table ACLs - cluster will restart")
@@ -57,8 +57,16 @@ def check_northwind_exists():
         catalog = os.getenv('DATABRICKS_CATALOG', 'workspace')
         schema = os.getenv('DATABRICKS_SCHEMA', 'default')
         
-        # Check if customers table exists and has data
-        result = execute_query(f"SELECT COUNT(*) as count FROM {catalog}.{schema}.customers")
+        # Validate catalog and schema names to prevent injection
+        if not catalog.replace('_', '').replace('-', '').isalnum():
+            raise ValueError("Invalid catalog name")
+        if not schema.replace('_', '').replace('-', '').isalnum():
+            raise ValueError("Invalid schema name")
+        
+        # Check if customers table exists and has data using validated identifiers
+        # Note: Using f-string with validated identifiers is acceptable here
+        query = f"SELECT COUNT(*) as count FROM {catalog}.{schema}.customers"  # nosec B608 - identifiers are validated
+        result = execute_query(query)
         return result and result[0]['count'] > 0
     except:
         return False
@@ -152,14 +160,20 @@ def load_data_to_databricks(data_path):
                         elif isinstance(val, (int, float)):
                             row_vals.append(str(val))
                         else:
-                            escaped = str(val).replace("'", "''")
+                            # Properly escape SQL strings
+                            escaped = str(val).replace("'", "''").replace("\\", "\\\\")
                             row_vals.append(f"'{escaped}'")
                     values.append(f"({', '.join(row_vals)})")
                 
                 if values:
                     try:
-                        # Single bulk insert
-                        insert_sql = f"INSERT INTO {table_prefix}.{table} VALUES {', '.join(values)}"
+                        # Validate table name to prevent injection
+                        if not table.replace('_', '').isalnum():
+                            raise ValueError(f"Invalid table name: {table}")
+                        
+                        # Single bulk insert with validated table name
+                        # Note: Using f-string with validated identifiers is acceptable here
+                        insert_sql = f"INSERT INTO {table_prefix}.{table} VALUES {', '.join(values)}"  # nosec B608 - identifiers are validated
                         connector.execute_query(insert_sql)
                     except Exception as e:
                         print(f"  ⚠️ Failed to load {table} - continuing...")

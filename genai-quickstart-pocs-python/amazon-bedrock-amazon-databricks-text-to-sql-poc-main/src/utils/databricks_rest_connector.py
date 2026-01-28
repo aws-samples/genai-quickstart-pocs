@@ -29,7 +29,8 @@ class DatabricksRestConnector:
             # Check for existing warehouses
             response = requests.get(
                 f"{self.host}/api/2.0/sql/warehouses",
-                headers=self.headers
+                headers=self.headers,
+                timeout=30
             )
             
             if response.status_code == 200:
@@ -59,7 +60,8 @@ class DatabricksRestConnector:
                     "enable_photon": True,
                     "warehouse_type": "PRO",
                     "enable_serverless_compute": False
-                }
+                },
+                timeout=30
             )
             
             if response.status_code == 200:
@@ -86,7 +88,8 @@ class DatabricksRestConnector:
             try:
                 response = requests.get(
                     f"{self.host}/api/2.0/sql/warehouses/{warehouse_id}",
-                    headers=self.headers
+                    headers=self.headers,
+                    timeout=30
                 )
                 
                 if response.status_code == 200:
@@ -98,7 +101,8 @@ class DatabricksRestConnector:
                         # Start the warehouse if stopped
                         requests.post(
                             f"{self.host}/api/2.0/sql/warehouses/{warehouse_id}/start",
-                            headers=self.headers
+                            headers=self.headers,
+                            timeout=30
                         )
                         time.sleep(10)
                     else:
@@ -124,7 +128,8 @@ class DatabricksRestConnector:
                     "warehouse_id": self.warehouse_id,
                     "statement": query,
                     "wait_timeout": "30s"
-                }
+                },
+                timeout=30
             )
             
             if response.status_code != 200:
@@ -138,7 +143,8 @@ class DatabricksRestConnector:
                 time.sleep(2)
                 response = requests.get(
                     f"{self.host}/api/2.0/sql/statements/{statement_id}",
-                    headers=self.headers
+                    headers=self.headers,
+                    timeout=30
                 )
                 result = response.json()
             

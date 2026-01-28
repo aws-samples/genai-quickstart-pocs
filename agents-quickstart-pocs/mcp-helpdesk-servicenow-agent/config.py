@@ -15,7 +15,7 @@ SERVICENOW_MCP_CONFIG = {
 
        "SERVICENOW_INSTANCE_URL": "https://dev311549.service-now.com",
        "SERVICENOW_USERNAME": "admin",
-       "SERVICENOW_PASSWORD": "W7^^tZ6PskZi",
+       "SERVICENOW_PASSWORD": "REPLACE_WITH_ACTUAL_PASSWORD",  # nosec B105 - placeholder password, replace with environment variable
        "SERVICENOW_AUTH_TYPE": "basic"
 
      

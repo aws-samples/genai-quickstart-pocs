@@ -124,7 +124,8 @@ def get_available_tables(database, schema):
     conn = get_redshift_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute(f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{schema}'")
+        # Use parameterized query to prevent SQL injection
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s", (schema,))
         results = cursor.fetchall()
         return [row[0] for row in results]
     finally:
@@ -149,12 +150,12 @@ def get_table_columns(database, schema, table):
         cursor = conn.cursor()
         
         # Get column information using information_schema
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT column_name, data_type, is_nullable, column_default
             FROM information_schema.columns 
-            WHERE table_schema = '{schema}' AND table_name = '{table}'
+            WHERE table_schema = %s AND table_name = %s
             ORDER BY ordinal_position
-        """)
+        """, (schema, table))
         results = cursor.fetchall()
         
         # Create DataFrame

@@ -230,16 +230,26 @@ def extract_template_content(response_body):
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to parse JSON from string: {e}")
                 logger.warning(f"Error at position {e.pos}: '{response_body[max(0, e.pos-10):e.pos+10]}'")
-                # Fix by using eval() on the malformed JSON (treats it as Python dict literal)
+                # Try to fix malformed JSON structure using safer string manipulation
                 try:
+                    import ast
                     # Replace the malformed JSON structure with proper Python dict syntax
                     fixed_response = response_body.replace('": "', '": """').replace('"\n    }', '"""\n    }').replace('"\n}', '"""\n}')
-                    parsed_dict = eval(fixed_response)
+                    # Use ast.literal_eval for safer evaluation of Python literals
+                    parsed_dict = ast.literal_eval(fixed_response)  # nosec B307 - using ast.literal_eval instead of eval
                     if isinstance(parsed_dict, dict) and all(k in parsed_dict for k in ['terraform', 'cloudformation']):
-                        logger.info("Successfully parsed using eval with triple quotes")
+                        logger.info("Successfully parsed using ast.literal_eval with triple quotes")
                         return parsed_dict
                 except Exception as e2:
-                    logger.warning(f"Failed to parse with eval: {e2}")
+                    logger.warning(f"Failed to parse with ast.literal_eval: {e2}")
+                    # Last resort: try manual JSON repair
+                    try:
+                        # Simple JSON repair for common issues
+                        repaired = response_body.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+                        parsed_dict = json.loads(repaired)
+                        return parsed_dict
+                    except Exception as e3:
+                        logger.warning(f"Failed to repair JSON: {e3}")
                 return None
 
         # If response_body is dict, check for Bedrock response format

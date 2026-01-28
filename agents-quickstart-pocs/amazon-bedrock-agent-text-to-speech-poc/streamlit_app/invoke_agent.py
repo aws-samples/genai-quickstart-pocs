@@ -100,7 +100,7 @@ def decode_response(response):
         try:
             string += line.decode(encoding='utf-8')
         except:
-            continue
+            continue  # nosec B112 - intentional continue for decoding errors
 
     print("Decoded response", string)
     split_response = string.split(":message-type")

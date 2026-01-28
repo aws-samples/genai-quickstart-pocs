@@ -4,7 +4,7 @@ Setup utilities for GenAI Sales Analyst with DynamoDB
 """
 import os
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import shutil
 
 def check_python_version():
@@ -19,7 +19,7 @@ def install_requirements():
     """Install Python requirements."""
     print("📦 Installing Python dependencies...")
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])  # nosec B603 - subprocess needed for system commands
         print("✅ Dependencies installed successfully")
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to install dependencies: {e}")

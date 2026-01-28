@@ -7,7 +7,7 @@ Test script to verify UV installation and dependency checking works correctly.
 This script tests the same functions used by the launcher scripts to ensure
 they work properly across different platforms and scenarios.
 """
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 import platform
 import shutil
@@ -23,7 +23,7 @@ def test_uv_detection():
         
         # Test UV version
         try:
-            result = subprocess.run(["uv", "--version"], 
+            result = subprocess.run(["uv", "--version"],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                   capture_output=True, text=True, check=True)
             print(f"✅ UV version: {result.stdout.strip()}")
             return True
@@ -57,7 +57,7 @@ def test_uv_installation():
     try:
         # Test installing a simple package
         print("📦 Testing UV package installation...")
-        result = subprocess.run(["uv", "pip", "install", "requests", "--force-reinstall"], 
+        result = subprocess.run(["uv", "pip", "install", "requests", "--force-reinstall"],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                               capture_output=True, text=True, check=True)
         print("✅ UV package installation test successful")
         return True

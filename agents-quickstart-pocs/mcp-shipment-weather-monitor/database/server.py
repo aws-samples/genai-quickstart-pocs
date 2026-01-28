@@ -26,7 +26,7 @@ def fetch_shipments(where_clause="", params=()):
     Generic function to fetch shipments from the database with optional filtering.
     
     Args:
-        where_clause (str): Optional SQL WHERE clause to filter results
+        where_clause (str): Optional SQL WHERE clause to filter results (should use ? placeholders)
         params (tuple): Parameters to be used with the where_clause for safe SQL execution
         
     Returns:
@@ -38,12 +38,18 @@ def fetch_shipments(where_clause="", params=()):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
-        # Construct and execute the query
-        query = f"""
+        # Construct base query
+        base_query = """
             SELECT tracking_number, status, carrier, city, state_code, email, last_updated
             FROM shipments
-            {where_clause}
         """
+        
+        # Add WHERE clause if provided (should already contain proper parameterization)
+        if where_clause:
+            query = f"{base_query} {where_clause}"
+        else:
+            query = base_query
+            
         cursor.execute(query, params)
         rows = cursor.fetchall()
         conn.close()

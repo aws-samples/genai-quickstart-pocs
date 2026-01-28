@@ -6,7 +6,7 @@ import json
 import boto3
 import logging
 import time
-import random
+import random  # nosec B311 - used for retry jitter in exponential backoff
 import os
 from botocore.exceptions import ClientError
 
@@ -144,7 +144,7 @@ class BedrockClient:
                     # Handle throttling and service unavailable errors
                     if error_code in ['ThrottlingException', 'ServiceUnavailableException', 'TooManyRequestsException']:
                         if attempt < max_retries - 1:
-                            delay = initial_delay * (2 ** attempt) + random.uniform(0, 1)
+                            delay = initial_delay * (2 ** attempt) + random.uniform(0, 1)  # nosec B311 - used for retry jitter in exponential backoff
                             logger.warning(f"{error_code}: retrying in {delay:.2f}s (attempt {attempt + 1}/{max_retries})")
                             time.sleep(delay)
                             continue
@@ -196,7 +196,7 @@ class BedrockAgentClient:
             enhanced_prompt = f"{model_context} {prompt_text}"
             
             # Generate session ID
-            session_id = f"session-{int(time.time())}-{random.randint(1000, 9999)}"
+            session_id = f"session-{int(time.time())}-{random.randint(1000, 9999)}"  # nosec B311 - used for retry jitter in exponential backoff
             
             logger.info(f"GenSec Agent prompt (model: {self.model_type}, MCP: {use_mcp_tools}, length: {len(enhanced_prompt)}): {enhanced_prompt}")
             
@@ -233,7 +233,7 @@ class BedrockAgentClient:
                     elif error_code in ['ThrottlingException', 'TooManyRequestsException']:
                         if attempt < max_retries - 1:
                             # Aggressive exponential backoff for throttling
-                            delay = initial_delay * (3 ** attempt) + random.uniform(1, 5)
+                            delay = initial_delay * (3 ** attempt) + random.uniform(1, 5)  # nosec B311 - used for retry jitter in exponential backoff
                             logger.warning(f"Agent throttled, retrying in {delay:.2f}s (attempt {attempt + 1}/{max_retries})")
                             time.sleep(delay)
                             continue
@@ -244,7 +244,7 @@ class BedrockAgentClient:
                 except Exception as e:
                     # Catch any other exceptions (including from response extraction)
                     if "throttling" in str(e).lower() and attempt < max_retries - 1:
-                        delay = initial_delay * (3 ** attempt) + random.uniform(1, 5)
+                        delay = initial_delay * (3 ** attempt) + random.uniform(1, 5)  # nosec B311 - used for retry jitter in exponential backoff
                         logger.warning(f"Throttling during response processing, retrying in {delay:.2f}s (attempt {attempt + 1}/{max_retries})")
                         time.sleep(delay)
                         continue

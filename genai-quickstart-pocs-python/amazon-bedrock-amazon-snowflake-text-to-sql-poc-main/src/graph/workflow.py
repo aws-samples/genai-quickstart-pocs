@@ -412,7 +412,7 @@ Generate a user-friendly error message explaining what went wrong and suggesting
             try:
                 from uuid import uuid4
                 trace_id = f"workflow-{uuid4()}"
-            except Exception:
+            except Exception:  # nosec B110 - intentional pass for error handling
                 pass
         
         # Initialize state

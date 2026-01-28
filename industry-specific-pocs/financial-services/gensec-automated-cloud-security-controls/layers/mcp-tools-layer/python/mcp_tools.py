@@ -4,7 +4,7 @@ Provides tools for structured AWS service documentation access
 """
 import json
 import logging
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import os
 from typing import Dict, List, Any, Optional
 
@@ -114,7 +114,7 @@ class MCPDocumentationClient:
             request_json = json.dumps(request)
             
             # Execute MCP server
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 [self.server_path] + self.server_args,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,

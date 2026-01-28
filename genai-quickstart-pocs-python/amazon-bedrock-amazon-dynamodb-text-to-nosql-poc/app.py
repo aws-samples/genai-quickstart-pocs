@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import time
 import os
-import pickle
+import pickle  # nosec B403 - pickle needed for data serialization with security controls
 import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv

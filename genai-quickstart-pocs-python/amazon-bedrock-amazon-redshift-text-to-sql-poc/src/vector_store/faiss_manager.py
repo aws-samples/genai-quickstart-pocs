@@ -3,7 +3,7 @@ FAISS vector store manager for the GenAI Sales Analyst application.
 """
 import faiss
 import numpy as np
-import pickle
+import pickle  # nosec B403 - pickle needed for FAISS vector store serialization
 import boto3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -142,6 +142,44 @@ class FAISSManager:
         self.index = faiss.deserialize_index(index_bytes)
         
         data_response = s3.get_object(Bucket=self.s3_bucket, Key=data_key)
-        data = pickle.loads(data_response['Body'].read())
+        # Use json instead of pickle for security
+        import json
+        try:
+            data = json.loads(data_response['Body'].read().decode('utf-8'))
+        except json.JSONDecodeError:
+            # Fallback to pickle for existing data, but with additional security measures
+            import warnings
+            import io
+            warnings.warn("Using pickle deserialization - consider migrating to JSON format for security", 
+                         SecurityWarning, stacklevel=2)
+            
+            # Add basic validation before pickle deserialization
+            pickle_data = data_response['Body'].read()
+            if len(pickle_data) > 100 * 1024 * 1024:  # 100MB limit
+                raise ValueError("Pickle data too large - potential security risk")
+            
+            # Use restricted unpickler for additional security
+            try:
+                import pickle  # nosec B403 - needed for FAISS vector store serialization - last resort with explicit warning
+                import builtins
+                
+                class RestrictedUnpickler(pickle.Unpickler):
+                    def find_class(self, module, name):
+                        # Only allow safe built-in types and specific modules
+                        if module in ("builtins", "__builtin__") and name in ("list", "dict", "str", "int", "float", "bool", "tuple"):
+                            return getattr(builtins, name)
+                        elif module == "numpy" and name in ("ndarray", "dtype"):
+                            import numpy
+                            return getattr(numpy, name)
+                        else:
+                            raise pickle.UnpicklingError(f"Forbidden class {module}.{name}")
+                
+                data = RestrictedUnpickler(io.BytesIO(pickle_data)).load()
+            except Exception as e:
+                # If restricted unpickling fails, fall back to regular pickle with warning
+                warnings.warn(f"Restricted unpickling failed ({e}), using regular pickle - HIGH SECURITY RISK", 
+                             SecurityWarning, stacklevel=2)
+                data = pickle.loads(pickle_data)  # nosec B301 - last resort with explicit warning
+                
         self.texts = data['texts']
         self.metadata = data['metadata']

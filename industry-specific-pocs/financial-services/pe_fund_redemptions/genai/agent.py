@@ -73,7 +73,8 @@ async def agent_invocation(payload):
             response = requests.post(
                 client_info['token_endpoint'],
                 data=f"grant_type=client_credentials&client_id={client_info['client_id']}&client_secret={client_info['client_secret']}",
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=30
             )
             access_token = response.json()['access_token']
             print("🔧 Got MCP access token")

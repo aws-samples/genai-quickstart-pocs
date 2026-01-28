@@ -42,7 +42,7 @@ def cleanup_databricks_resources():
         # 2. Stop and delete custom warehouse (if created)
         print("🛑 Checking for custom warehouses to clean up...")
         try:
-            response = requests.get(f"{host}/api/2.0/sql/warehouses", headers=headers)
+            response = requests.get(f"{host}/api/2.0/sql/warehouses", headers=headers, timeout=30)
             if response.status_code == 200:
                 warehouses = response.json().get('warehouses', [])
                 for warehouse in warehouses:
@@ -51,10 +51,10 @@ def cleanup_databricks_resources():
                         print(f"🛑 Stopping warehouse: {warehouse_id}")
                         
                         # Stop warehouse
-                        requests.post(f"{host}/api/2.0/sql/warehouses/{warehouse_id}/stop", headers=headers)
+                        requests.post(f"{host}/api/2.0/sql/warehouses/{warehouse_id}/stop", headers=headers, timeout=30)
                         
                         # Delete warehouse
-                        response = requests.delete(f"{host}/api/2.0/sql/warehouses/{warehouse_id}", headers=headers)
+                        response = requests.delete(f"{host}/api/2.0/sql/warehouses/{warehouse_id}", headers=headers, timeout=30)
                         if response.status_code == 200:
                             print(f"✅ Deleted custom warehouse: {warehouse_id}")
                         else:

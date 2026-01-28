@@ -88,7 +88,7 @@ def download_document(url, start_page_index=None, end_page_index=None, output_fi
         output_file_path = filename
         
     # Download the PDF
-    response = requests.get(url)
+    response = requests.get(url, timeout=30)
     print(response)
     pdf_content = io.BytesIO(response.content)
     

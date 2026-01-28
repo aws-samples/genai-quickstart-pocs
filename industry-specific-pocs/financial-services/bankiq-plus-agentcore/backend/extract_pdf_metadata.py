@@ -27,14 +27,15 @@ def extract_metadata(pdf_base64, filename):
         for i in range(pages_to_check):
             combined_text += reader.pages[i].extract_text() + "\n\n"
         
-        # Debug: Write to a debug file
+        # Debug: Write to a debug file using secure temp file handling
         import sys
+        import tempfile
         try:
-            with open('/tmp/pdf_debug.txt', 'w') as f:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='_pdf_debug.txt', delete=False) as f:
                 f.write(f"Filename: {filename}\n")
                 f.write(f"Total pages: {len(reader.pages)}\n")
                 f.write(f"First 3000 chars from first {pages_to_check} pages:\n{combined_text[:3000]}\n")
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # Also try to get metadata

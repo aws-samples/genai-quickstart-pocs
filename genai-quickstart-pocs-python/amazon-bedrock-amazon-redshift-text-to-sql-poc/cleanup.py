@@ -4,7 +4,7 @@ Clean up all AWS infrastructure for sales analyst app.
 """
 import boto3
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import warnings
 from dotenv import load_dotenv
 
@@ -92,13 +92,13 @@ def cleanup_iam():
                 InstanceProfileName='EC2-SSM-Role',
                 RoleName='EC2-SSM-Role'
             )
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # Delete instance profile
         try:
             iam.delete_instance_profile(InstanceProfileName='EC2-SSM-Role')
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # Detach policy from role
@@ -107,7 +107,7 @@ def cleanup_iam():
                 RoleName='EC2-SSM-Role',
                 PolicyArn='arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
             )
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # Delete role
@@ -134,9 +134,9 @@ def cleanup_local():
     
     # Kill any running SSM sessions
     try:
-        subprocess.run(['pkill', '-f', 'aws ssm start-session'], stderr=subprocess.DEVNULL)
+        subprocess.run(['pkill', '-f', 'aws ssm start-session'], stderr=subprocess.DEVNULL)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
         print("✅ Killed SSM sessions")
-    except:
+    except Exception:  # nosec B110 - intentional broad exception handling
         pass
 
 def main():

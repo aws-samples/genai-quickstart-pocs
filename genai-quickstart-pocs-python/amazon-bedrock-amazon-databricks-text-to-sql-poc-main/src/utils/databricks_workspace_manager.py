@@ -94,7 +94,8 @@ def create_databricks_token(workspace_url):
         response = requests.post(
             f'https://{workspace_url}/api/2.0/token/create',
             headers=headers,
-            json=token_data
+            json=token_data,
+            timeout=30
         )
         
         if response.status_code == 200:

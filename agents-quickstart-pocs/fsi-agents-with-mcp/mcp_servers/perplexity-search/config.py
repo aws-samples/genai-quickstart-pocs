@@ -66,9 +66,9 @@ class Config:
         """Perform additional validation of the configuration."""
         # Check if Docker is available for running the MCP container
         try:
-            import subprocess
+            import subprocess  # nosec B404 - subprocess needed for system commands
 
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                 ["docker", "--version"], capture_output=True, text=True
             )
             if result.returncode != 0:

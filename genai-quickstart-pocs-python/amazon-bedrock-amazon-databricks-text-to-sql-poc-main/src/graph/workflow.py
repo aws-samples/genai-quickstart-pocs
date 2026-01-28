@@ -153,9 +153,10 @@ Return as JSON with these fields.
         context_str = "\n".join([f"- {doc['text']}" for doc in context])
         
         if not context_str:
-            prompt = f"""Generate a SQL query to answer this question for Databricks:
+            # Use template with proper escaping for user input
+            prompt_template = """Generate a SQL query to answer this question for Databricks:
             
-Question: {query}
+Question: {question}
 
 Use the workspace.northwind catalog with these Delta tables:
 - workspace.northwind.categories: categoryid (BIGINT), categoryname (STRING), description (STRING)
@@ -192,6 +193,9 @@ ORDER BY avg_order_value DESC;
 
 Generate ONLY the SQL query without any explanation.
 """
+            # Sanitize user input by escaping special characters
+            sanitized_query = query.replace("'", "''").replace('"', '""')
+            prompt = prompt_template.format(question=sanitized_query)
         else:
             prompt = f"""Generate a SQL query to answer this question for Databricks:
             
@@ -369,7 +373,7 @@ Generate a user-friendly error message explaining what went wrong and suggesting
             try:
                 from uuid import uuid4
                 trace_id = f"workflow-{uuid4()}"
-            except Exception:
+            except Exception:  # nosec B110 - intentional pass for error handling
                 pass
         
         state = {

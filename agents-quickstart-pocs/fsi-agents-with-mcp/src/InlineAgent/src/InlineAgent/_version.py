@@ -13,7 +13,7 @@
 import errno
 import os
 import re
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import functools
@@ -87,7 +87,7 @@ def run_command(
     env: Optional[Dict[str, str]] = None,
 ) -> Tuple[Optional[str], Optional[int]]:
     """Call the given command(s)."""
-    assert isinstance(commands, list)
+    assert isinstance(commands, list)  # nosec B101 - assert used for version management and validation
     process = None
 
     popen_kwargs: Dict[str, Any] = {}
@@ -101,7 +101,7 @@ def run_command(
         try:
             dispcmd = str([command] + args)
             # remember shell=False, so use git.cmd on windows, not just git
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 [command] + args,
                 cwd=cwd,
                 env=env,

@@ -297,7 +297,17 @@ class DocumentValidatorV3:
         """Parse extracted data from file"""
         try:
             data = file_data.get('extracted_data', '{}')
-            return eval(data) if isinstance(data, str) else data
+            if isinstance(data, str):
+                # Try JSON parsing first for security
+                try:
+                    import json
+                    return json.loads(data)
+                except json.JSONDecodeError:
+                    # Fallback to ast.literal_eval for Python literals
+                    import ast
+                    return ast.literal_eval(data)  # nosec B307 - using ast.literal_eval instead of eval
+            else:
+                return data
         except:
             return None
     

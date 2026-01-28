@@ -51,4 +51,7 @@ async def ping():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    import os
+    # Use environment variable for host binding, default to localhost for security
+    host = os.getenv("FASTAPI_HOST", "127.0.0.1")  # nosec B104 - host is configurable via environment
+    uvicorn.run(app, host=host, port=8080)

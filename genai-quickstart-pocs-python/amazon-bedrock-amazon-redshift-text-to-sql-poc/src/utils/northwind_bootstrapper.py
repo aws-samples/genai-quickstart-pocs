@@ -24,8 +24,13 @@ def check_northwind_exists():
         
         cursor = conn.cursor()
         
-        # Check if schema exists
-        cursor.execute(f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{NORTHWIND_SCHEMA.lower()}'")
+        # Validate schema name to prevent injection
+        if not NORTHWIND_SCHEMA.replace('_', '').isalnum():
+            raise ValueError("Invalid schema name")
+        
+        # Check if schema exists using parameterized query
+        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", 
+                      (NORTHWIND_SCHEMA.lower(),))
         result = cursor.fetchall()
         if not result:
             print(f"Schema {NORTHWIND_SCHEMA} does not exist")
@@ -33,14 +38,21 @@ def check_northwind_exists():
             
         # Check if tables exist
         for table in NORTHWIND_TABLES:
-            cursor.execute(f"SELECT table_name FROM information_schema.tables WHERE table_schema = '{NORTHWIND_SCHEMA.lower()}' AND table_name = '{table.lower()}'")
+            # Validate table name to prevent injection
+            if not table.replace('_', '').isalnum():
+                raise ValueError(f"Invalid table name: {table}")
+            
+            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s AND table_name = %s", 
+                          (NORTHWIND_SCHEMA.lower(), table.lower()))
             result = cursor.fetchall()
             if not result:
                 print(f"Table {NORTHWIND_SCHEMA}.{table} does not exist")
                 return False
                 
-        # Check if data exists (sample count from ORDERS table)
-        cursor.execute(f"SELECT COUNT(*) FROM {NORTHWIND_SCHEMA.lower()}.orders")
+        # Check if data exists (sample count from ORDERS table) - using validated schema name
+        validated_schema = NORTHWIND_SCHEMA.lower()
+        # Note: Using f-string with validated schema name
+        cursor.execute(f"SELECT COUNT(*) FROM {validated_schema}.orders")  # nosec B608 - schema name is validated constant
         result = cursor.fetchone()
         if not result or result[0] < 1:
             print(f"No data in {NORTHWIND_SCHEMA}.ORDERS")
@@ -353,8 +365,14 @@ def extract_data_from_sqlite(sqlite_path):
         
         # Extract data from each table
         for table in tables:
+            # Validate table name to prevent injection
+            if not table.replace('_', '').replace('-', '').isalnum():
+                print(f"Skipping invalid table name: {table}")
+                continue
+                
             print(f"Extracting data from {table}")
-            tables_data[table] = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+            # Note: Using string concatenation with validated table name
+            tables_data[table] = pd.read_sql_query("SELECT * FROM " + table, conn)  # nosec B608 - table name is validated
         
         conn.close()
         return tables_data
@@ -427,10 +445,23 @@ def load_data_to_redshift_direct(tables_data):
                     row_tuple = tuple(None if pd.isna(val) else val for val in row)
                     data_tuples.append(row_tuple)
                 
-                # Create INSERT statement
+                # Validate table and schema names to prevent injection
+                if not table_name.replace('_', '').isalnum():
+                    raise ValueError(f"Invalid table name: {table_name}")
+                if not NORTHWIND_SCHEMA.replace('_', '').isalnum():
+                    raise ValueError("Invalid schema name")
+                
+                # Create INSERT statement with validated names
                 placeholders = ','.join(['%s'] * len(df.columns))
-                columns = ','.join([f'{col}' for col in df.columns])
-                insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA.lower()}.{table_name.lower()} ({columns}) VALUES ({placeholders})"
+                # Validate column names
+                validated_columns = []
+                for col in df.columns:
+                    if not str(col).replace('_', '').replace('-', '').isalnum():
+                        raise ValueError(f"Invalid column name: {col}")
+                    validated_columns.append(f'{col}')
+                columns = ','.join(validated_columns)
+                # Note: Using f-string with validated schema, table, and column names
+                insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA.lower()}.{table_name.lower()} ({columns}) VALUES ({placeholders})"  # nosec B608 - all identifiers are validated
                 
                 # Execute batch insert
                 cursor.executemany(insert_sql, data_tuples)
@@ -520,10 +551,23 @@ def load_data_to_redshift(tables_data):
                 row_tuple = tuple(None if pd.isna(val) else val for val in row)
                 data_tuples.append(row_tuple)
             
-            # Create INSERT statement
+            # Validate table and schema names to prevent injection
+            if not table_name.replace('_', '').isalnum():
+                raise ValueError(f"Invalid table name: {table_name}")
+            if not NORTHWIND_SCHEMA.replace('_', '').isalnum():
+                raise ValueError("Invalid schema name")
+            
+            # Create INSERT statement with validated names
             placeholders = ','.join(['%s'] * len(df.columns))
-            columns = ','.join([f'"{col}"' for col in df.columns])
-            insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA.lower()}.{table_name.lower()} ({columns}) VALUES ({placeholders})"
+            # Validate column names
+            validated_columns = []
+            for col in df.columns:
+                if not str(col).replace('_', '').replace('-', '').isalnum():
+                    raise ValueError(f"Invalid column name: {col}")
+                validated_columns.append(f'"{col}"')
+            columns = ','.join(validated_columns)
+            # Note: Using f-string with validated schema, table, and column names
+            insert_sql = f"INSERT INTO {NORTHWIND_SCHEMA.lower()}.{table_name.lower()} ({columns}) VALUES ({placeholders})"  # nosec B608 - all identifiers are validated
             
             # Execute batch insert
             cursor.executemany(insert_sql, data_tuples)

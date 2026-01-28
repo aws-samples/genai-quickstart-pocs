@@ -64,7 +64,7 @@ def download_northwind_from_github():
                     success = True
                     break
             except:
-                continue
+                continue  # nosec B112 - intentional continue for error handling
         
         if not success:
             print(f"❌ Failed to download {table_name}, creating sample data")

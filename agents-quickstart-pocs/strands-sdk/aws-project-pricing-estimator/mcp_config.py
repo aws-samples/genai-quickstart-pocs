@@ -14,7 +14,7 @@ Usage:
 import os
 import platform
 import shutil
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 from typing import Dict, Any
 
@@ -35,7 +35,7 @@ def get_uv_command():
     
     # Check if uv is available via python -m uv
     try:
-        result = subprocess.run([sys.executable, "-c", "import uv"], 
+        result = subprocess.run([sys.executable, "-c", "import uv"],  # nosec B603 - subprocess needed for system commands
                               capture_output=True, text=True)
         if result.returncode == 0:
             return "python"
@@ -94,11 +94,11 @@ def check_uv_availability():
     try:
         if uv_cmd == "python":
             # Test python -m uv
-            result = subprocess.run([uv_cmd, "-c", "import uv"], 
+            result = subprocess.run([uv_cmd, "-c", "import uv"],  # nosec B603 - subprocess needed for system commands
                                   capture_output=True, text=True, timeout=10)
         else:
             # Test direct uv command
-            result = subprocess.run([uv_cmd, "--version"], 
+            result = subprocess.run([uv_cmd, "--version"],  # nosec B603 - subprocess needed for system commands
                                   capture_output=True, text=True, timeout=10)
         
         if result.returncode == 0:

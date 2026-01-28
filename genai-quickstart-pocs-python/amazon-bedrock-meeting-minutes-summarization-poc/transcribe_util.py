@@ -97,7 +97,7 @@ class Transcribe:
                 )
                 url = response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
                 #geth trasncript by requesting url
-                r = requests.get(url)
+                r = requests.get(url, timeout=30)
                 transcript = r.json()["results"]["transcripts"][0]["transcript"]
                 break
             # Sleep for 5 seconds before retrying

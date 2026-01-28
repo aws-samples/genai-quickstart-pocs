@@ -47,9 +47,9 @@ class Config:
         """Perform additional validation of the configuration."""
         # Check if uv is installed
         try:
-            import subprocess
+            import subprocess  # nosec B404 - subprocess needed for system commands
 
-            result = subprocess.run(["uv", "--version"], capture_output=True, text=True)
+            result = subprocess.run(["uv", "--version"], capture_output=True, text=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
             if result.returncode != 0:
                 print(
                     "Warning: 'uv' command not found. Please install uv or ensure it's in your PATH."

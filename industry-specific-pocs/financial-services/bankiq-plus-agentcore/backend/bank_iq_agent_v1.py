@@ -211,7 +211,7 @@ def compare_banks(base_bank: str, peer_banks: List[str], metric: str) -> str:
                 if bank not in bank_latest:
                     bank_latest[bank] = float(value)
         except:
-            continue
+            continue  # nosec B112 - intentional continue for data parsing errors
     
     chart_data.sort(key=lambda x: x['Quarter'])
     
@@ -432,7 +432,7 @@ def search_banks(query: str) -> str:
                         "ticker": query.upper() if len(query) <= 5 else ""
                     }]
                     return json.dumps({"success": True, "results": results})
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # If still no results, return empty with suggestion

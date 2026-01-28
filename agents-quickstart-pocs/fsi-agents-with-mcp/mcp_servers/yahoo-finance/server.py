@@ -149,7 +149,7 @@ def search_tickers(query: str) -> List[Dict[str, str]]:
             )
         except:
             # Skip tickers that return errors
-            continue
+            continue  # nosec B112 - intentional continue for error handling
 
     return results
 

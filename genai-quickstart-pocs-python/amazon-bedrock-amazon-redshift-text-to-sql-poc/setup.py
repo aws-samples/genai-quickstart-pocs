@@ -4,7 +4,7 @@ Auto-detection setup script for Sales Analyst
 Detects platform and installs appropriate dependencies
 """
 import platform
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 import os
 
@@ -28,10 +28,18 @@ def detect_platform():
     
     return system
 
-def run_command(cmd, shell=False):
+def run_command(cmd, shell=None):
     """Run a command and return success status."""
     try:
-        subprocess.run(cmd, check=True, shell=shell)
+        # Auto-detect if shell is needed based on command type
+        if shell is None:
+            shell = isinstance(cmd, str)
+        
+        if shell and isinstance(cmd, str):
+            # For shell commands, use shlex.split to safely parse the command
+            import shlex
+            cmd = shlex.split(cmd)
+        subprocess.run(cmd, check=True, shell=False)  # nosec B603 - subprocess needed for system commands
         return True
     except subprocess.CalledProcessError:
         return False
@@ -54,7 +62,7 @@ def install_amazon_linux():
     
     for cmd in commands:
         print(f"Running: {cmd}")
-        if not run_command(cmd, shell=True):
+        if not run_command(cmd):
             print(f"❌ Failed: {cmd}")
             return False
     
@@ -72,7 +80,7 @@ def install_ubuntu():
     
     for cmd in commands:
         print(f"Running: {cmd}")
-        if not run_command(cmd, shell=True):
+        if not run_command(cmd):
             print(f"❌ Failed: {cmd}")
             return False
     

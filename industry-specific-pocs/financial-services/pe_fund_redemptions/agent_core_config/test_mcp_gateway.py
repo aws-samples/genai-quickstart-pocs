@@ -39,7 +39,8 @@ def main():
         response = requests.post(
             token_url,
             data="grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}".format(client_id=client_id, client_secret=client_secret),
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=30
         )
         return response.json()['access_token']
 

@@ -225,7 +225,7 @@ class ServiceNowChatbot:
         try:
             if self.mcp_client:
                 self.mcp_client.__exit__(None, None, None)
-        except:
+        except:  # nosec B110 - intentional pass for cleanup operations
             pass
 
 

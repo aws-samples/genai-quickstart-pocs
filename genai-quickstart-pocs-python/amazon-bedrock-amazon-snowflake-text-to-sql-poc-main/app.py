@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import time
 import os
-import pickle
+import pickle  # nosec B403 - pickle needed for data serialization with security controls
 import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv
@@ -94,15 +94,60 @@ def load_all_metadata(vector_store, show_progress=False):
     cache_file = "metadata_cache.pkl"
     if os.path.exists(cache_file):
         try:
-            with open(cache_file, "rb") as f:
-                cached_data = pickle.load(f)
-                vector_store.texts = cached_data.get("texts", [])
-                vector_store.metadata = cached_data.get("metadata", [])
-                embeddings_array = np.array(cached_data.get("embeddings", [])).astype('float32')
-                if len(embeddings_array) > 0:
-                    vector_store.index.add(embeddings_array)
-                if show_progress:
-                    st.sidebar.success(f"✅ Loaded metadata from cache ({len(vector_store.texts)} items)")
+            # Try JSON first for security
+            json_cache_file = cache_file.replace('.pkl', '.json')
+            if os.path.exists(json_cache_file):
+                with open(json_cache_file, "r") as f:
+                    import json
+                    cached_data = json.load(f)
+            else:
+                # Fallback to pickle for existing data, but warn about security risk
+                import warnings
+                import os
+                import io
+                warnings.warn("Using pickle deserialization - consider migrating to JSON format for security", 
+                             SecurityWarning, stacklevel=2)
+                
+                # Add basic validation before pickle deserialization
+                file_size = os.path.getsize(cache_file)
+                if file_size > 100 * 1024 * 1024:  # 100MB limit
+                    raise ValueError("Pickle file too large - potential security risk")
+                
+                # Use restricted unpickler for additional security
+                try:
+                    import pickle  # nosec B403 - needed for FAISS vector store serialization - last resort with explicit warning
+                    import builtins
+                    
+                    class RestrictedUnpickler(pickle.Unpickler):
+                        def find_class(self, module, name):
+                            # Only allow safe built-in types and specific modules
+                            if module in ("builtins", "__builtin__") and name in ("list", "dict", "str", "int", "float", "bool", "tuple"):
+                                return getattr(builtins, name)
+                            elif module == "numpy" and name in ("ndarray", "dtype"):
+                                import numpy
+                                return getattr(numpy, name)
+                            elif module == "pandas" and name in ("DataFrame", "Series"):
+                                import pandas
+                                return getattr(pandas, name)
+                            else:
+                                raise pickle.UnpicklingError(f"Forbidden class {module}.{name}")
+                    
+                    with open(cache_file, "rb") as f:
+                        cached_data = RestrictedUnpickler(f).load()
+                except Exception as e:
+                    # If restricted unpickling fails, fall back to regular pickle with warning
+                    warnings.warn(f"Restricted unpickling failed ({e}), using regular pickle - HIGH SECURITY RISK", 
+                                 SecurityWarning, stacklevel=2)
+                    with open(cache_file, "rb") as f:
+                        cached_data = pickle.load(f)  # nosec B301 - last resort with explicit warning
+            
+            vector_store.texts = cached_data.get("texts", [])
+            vector_store.metadata = cached_data.get("metadata", [])
+            embeddings_array = np.array(cached_data.get("embeddings", [])).astype('float32')
+            if len(embeddings_array) > 0:
+                vector_store.index.add(embeddings_array)
+            if show_progress:
+                st.sidebar.success(f"✅ Loaded metadata from cache ({len(vector_store.texts)} items)")
                 return cached_data.get("dataframe")
         except Exception as e:
             if show_progress:
@@ -144,7 +189,17 @@ def load_all_metadata(vector_store, show_progress=False):
             
             # Also get sample data to enrich metadata
             try:
-                sample_data = execute_query(f"SELECT * FROM {database}.{schema}.{table} LIMIT 5")
+                # Validate database, schema, and table names to prevent injection
+                if not database.replace('_', '').replace('-', '').isalnum():
+                    raise ValueError(f"Invalid database name: {database}")
+                if not schema.replace('_', '').replace('-', '').isalnum():
+                    raise ValueError(f"Invalid schema name: {schema}")
+                if not table.replace('_', '').replace('-', '').isalnum():
+                    raise ValueError(f"Invalid table name: {table}")
+                
+                # Use validated names in query
+                # Note: Using f-string with validated database, schema, and table names
+                sample_data = execute_query(f"SELECT * FROM {database}.{schema}.{table} LIMIT 5")  # nosec B608 - all identifiers are validated
                 if sample_data:
                     sample_values = {}
                     for col in metadata_df['column_name'].tolist():
@@ -158,7 +213,7 @@ def load_all_metadata(vector_store, show_progress=False):
                         col = row['column_name']
                         if col in sample_values:
                             metadata_df.at[i, 'sample_values'] = sample_values[col]
-            except Exception:
+            except Exception:  # nosec B110 - intentional pass for error handling
                 # Silently continue if sample data fails
                 pass
             

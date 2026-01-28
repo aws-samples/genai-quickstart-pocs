@@ -117,7 +117,8 @@ def transcribe_file(object_name):
 
                 # Get the results of the transcribe job
                 job_result = requests.get(
-                    job["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
+                    job["TranscriptionJob"]["Transcript"]["TranscriptFileUri"],
+                    timeout=30
                 ).json()
 
                 # get the full transcript from the transcribe job results
@@ -126,7 +127,7 @@ def transcribe_file(object_name):
                 # get the URL for the subtitles in the transcription job
                 sub_url = job["TranscriptionJob"]["Subtitles"]["SubtitleFileUris"][0]
                 # get the srt subtitles from the subtitles URL
-                transcript_response = requests.get(sub_url)
+                transcript_response = requests.get(sub_url, timeout=30)
                 # decode the subtitles from bytes to string
                 full_subtitles = transcript_response.content.decode()
                 save_subtitles_to_s3(full_subtitles, object_name)

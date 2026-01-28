@@ -106,8 +106,8 @@ class InsuranceClaimSystem:
                     accident_details: AccidentDetails, damage_level: VehicleDamageLevel,
                     estimated_cost: float = 0.0) -> ClaimForm:
         """Create a new insurance claim"""
-        import random
-        claim_id = 'abc'+str(random.randint(10000000, 99999999))
+        import secrets  # Use cryptographically secure random for claim IDs
+        claim_id = 'abc' + str(secrets.randbelow(90000000) + 10000000)  # nosec B311 - using secrets module
         
         claim = ClaimForm(
             claim_id=claim_id,

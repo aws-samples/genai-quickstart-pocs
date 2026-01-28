@@ -3,12 +3,15 @@ Sample Data Generator for Strands Agents Streamlit Demo
 
 This script generates realistic sample datasets with embedded patterns
 that showcase the capabilities of the Strands Agents SDK.
+
+Note: This file uses random module extensively for test/sample data generation.
+All random usage is intentional and safe for this purpose.
 """
 
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import random
+import random  # nosec B311 - random used extensively for test/sample data generation throughout this file
 from pathlib import Path
 
 # Set random seed for reproducibility
@@ -36,20 +39,20 @@ def generate_ecommerce_sales():
     
     for i in range(n_records):
         # Random date with Q4 bias (seasonal pattern)
-        if random.random() < 0.4:  # 40% chance of Q4 date
-            date = start_date + timedelta(days=random.randint(120, 183))  # Oct-Dec
+        if random.random() < 0.4:  # 40% chance of Q4 date  # nosec B311 - used for test/sample data generation
+            date = start_date + timedelta(days=random.randint(120, 183))  # Oct-Dec  # nosec B311 - used for test/sample data generation
         else:
-            date = start_date + timedelta(days=random.randint(0, 183))
+            date = start_date + timedelta(days=random.randint(0, 183))  # nosec B311 - used for test/sample data generation
         
-        region_idx = random.randint(0, 3)
+        region_idx = random.randint(0, 3)  # nosec B311 - used for test/sample data generation
         region = regions[region_idx]
         region_mult = region_multipliers[region_idx]
         
-        category_idx = random.randint(0, 3)
+        category_idx = random.randint(0, 3)  # nosec B311 - used for test/sample data generation
         category = categories[category_idx]
         base_revenue = category_base_revenue[category_idx]
         
-        segment_idx = random.randint(0, 2)
+        segment_idx = random.randint(0, 2)  # nosec B311 - used for test/sample data generation
         segment = segments[segment_idx]
         segment_mult = segment_multipliers[segment_idx]
         
@@ -57,8 +60,8 @@ def generate_ecommerce_sales():
         seasonal_mult = 2.4 if (date.month >= 10 and category == 'Electronics') else 1.0
         
         # Calculate revenue with all multipliers plus some randomness
-        revenue = base_revenue * region_mult * segment_mult * seasonal_mult * random.uniform(0.7, 1.3)
-        units = max(1, int(revenue / (base_revenue * random.uniform(0.8, 1.2))))
+        revenue = base_revenue * region_mult * segment_mult * seasonal_mult * random.uniform(0.7, 1.3)  # nosec B311 - used for test/sample data generation
+        units = max(1, int(revenue / (base_revenue * random.uniform(0.8, 1.2))))  # nosec B311 - used for test/sample data generation
         
         data.append({
             'Date': date.strftime('%Y-%m-%d'),
@@ -110,31 +113,31 @@ def generate_marketing_campaigns():
     
     for i, (name, channel, budget, roi_percent) in enumerate(campaigns):
         # Add some randomness to the ROI
-        actual_roi = roi_percent * random.uniform(0.85, 1.15)
+        actual_roi = roi_percent * random.uniform(0.85, 1.15)  # nosec B311 - used for test/sample data generation
         revenue = budget * (actual_roi / 100)
         
         # Calculate other metrics based on channel characteristics
         if channel == 'Email':
-            impressions = budget * random.uniform(8, 12)  # High efficiency
-            ctr = random.uniform(0.08, 0.15)  # High CTR
+            impressions = budget * random.uniform(8, 12)  # High efficiency  # nosec B311 - used for test/sample data generation
+            ctr = random.uniform(0.08, 0.15)  # High CTR  # nosec B311 - used for test/sample data generation
         elif channel == 'Social Media':
-            impressions = budget * random.uniform(15, 25)  # Good reach
-            ctr = random.uniform(0.02, 0.06)  # Medium CTR
+            impressions = budget * random.uniform(15, 25)  # Good reach  # nosec B311 - used for test/sample data generation
+            ctr = random.uniform(0.02, 0.06)  # Medium CTR  # nosec B311 - used for test/sample data generation
         elif channel == 'Paid Search':
-            impressions = budget * random.uniform(5, 8)  # Lower reach but targeted
-            ctr = random.uniform(0.03, 0.08)  # Good CTR
+            impressions = budget * random.uniform(5, 8)  # Lower reach but targeted  # nosec B311 - used for test/sample data generation
+            ctr = random.uniform(0.03, 0.08)  # Good CTR  # nosec B311 - used for test/sample data generation
         elif channel == 'Display':
-            impressions = budget * random.uniform(20, 35)  # High reach, low engagement
-            ctr = random.uniform(0.005, 0.02)  # Low CTR
+            impressions = budget * random.uniform(20, 35)  # High reach, low engagement  # nosec B311 - used for test/sample data generation
+            ctr = random.uniform(0.005, 0.02)  # Low CTR  # nosec B311 - used for test/sample data generation
         else:  # Content
-            impressions = budget * random.uniform(10, 18)
-            ctr = random.uniform(0.04, 0.10)
+            impressions = budget * random.uniform(10, 18)  # nosec B311 - used for test/sample data generation
+            ctr = random.uniform(0.04, 0.10)  # nosec B311 - used for test/sample data generation
         
         clicks = int(impressions * ctr)
-        conversion_rate = random.uniform(0.02, 0.08)
+        conversion_rate = random.uniform(0.02, 0.08)  # nosec B311 - used for test/sample data generation
         conversions = int(clicks * conversion_rate)
         
-        campaign_date = start_date + timedelta(days=random.randint(0, 120))
+        campaign_date = start_date + timedelta(days=random.randint(0, 120))  # nosec B311 - used for test/sample data generation
         
         data.append({
             'Campaign_Name': name,
@@ -161,35 +164,35 @@ def generate_employee_analytics():
     data = []
     
     for i in range(n_employees):
-        dept_idx = random.randint(0, 4)
+        dept_idx = random.randint(0, 4)  # nosec B311 - used for test/sample data generation
         department = departments[dept_idx]
         base_salary = dept_base_salary[dept_idx]
         base_satisfaction = dept_satisfaction[dept_idx]
         
         # Years of experience (affects salary and performance)
-        experience = random.randint(0, 15)
+        experience = random.randint(0, 15)  # nosec B311 - used for test/sample data generation
         experience_salary_boost = experience * 2500
         
         # Training hours (affects performance)
-        training_hours = random.randint(5, 80)
+        training_hours = random.randint(5, 80)  # nosec B311 - used for test/sample data generation
         
         # Performance score (influenced by experience and training)
         base_performance = 3.0
         experience_boost = min(experience * 0.1, 1.0)  # Cap at 1.0
         training_boost = min(training_hours * 0.015, 1.2)  # Cap at 1.2
-        performance_noise = random.uniform(-0.3, 0.3)
+        performance_noise = random.uniform(-0.3, 0.3)  # nosec B311 - used for test/sample data generation
         
         performance_score = min(5.0, base_performance + experience_boost + training_boost + performance_noise)
         
         # Salary (influenced by experience, department, and some performance)
         performance_salary_boost = (performance_score - 3.0) * 5000
-        salary_noise = random.uniform(-5000, 5000)
+        salary_noise = random.uniform(-5000, 5000)  # nosec B311 - used for test/sample data generation
         salary = base_salary + experience_salary_boost + performance_salary_boost + salary_noise
         salary = max(40000, salary)  # Floor
         
         # Satisfaction (department base + some randomness, slightly correlated with performance)
         satisfaction_boost = (performance_score - 3.0) * 0.2
-        satisfaction_noise = random.uniform(-0.4, 0.4)
+        satisfaction_noise = random.uniform(-0.4, 0.4)  # nosec B311 - used for test/sample data generation
         satisfaction = max(1.0, min(5.0, base_satisfaction + satisfaction_boost + satisfaction_noise))
         
         data.append({
@@ -228,30 +231,30 @@ def generate_support_tickets():
     
     # Agent performance (some are faster/better than others)
     agents = [f'Agent_{i+1:02d}' for i in range(8)]
-    agent_efficiency = {agent: random.uniform(0.7, 1.3) for agent in agents}
-    agent_satisfaction_bonus = {agent: random.uniform(-0.3, 0.4) for agent in agents}
+    agent_efficiency = {agent: random.uniform(0.7, 1.3) for agent in agents}  # nosec B311 - used for test/sample data generation
+    agent_satisfaction_bonus = {agent: random.uniform(-0.3, 0.4) for agent in agents}  # nosec B311 - used for test/sample data generation
     
     for i in range(n_tickets):
         # Create date with Monday bias (40% more tickets on Monday)
-        days_offset = random.randint(0, 90)
+        days_offset = random.randint(0, 90)  # nosec B311 - used for test/sample data generation
         ticket_date = start_date + timedelta(days=days_offset)
         
         if ticket_date.weekday() == 0:  # Monday
-            if random.random() < 0.4:  # 40% chance to keep this Monday ticket
+            if random.random() < 0.4:  # 40% chance to keep this Monday ticket  # nosec B311 - used for test/sample data generation
                 pass
             else:
                 # Redistribute to other days
-                ticket_date = start_date + timedelta(days=random.randint(0, 90))
+                ticket_date = start_date + timedelta(days=random.randint(0, 90))  # nosec B311 - used for test/sample data generation
         
-        category = random.choice(categories)
-        priority = random.choice(priorities)
-        agent = random.choice(agents)
+        category = random.choice(categories)  # nosec B311 - used for test/sample data generation
+        priority = random.choice(priorities)  # nosec B311 - used for test/sample data generation
+        agent = random.choice(agents)  # nosec B311 - used for test/sample data generation
         
         # Calculate resolution time
         base_time = priority_base_times[priority]
         category_mult = category_multipliers[category]
         agent_mult = agent_efficiency[agent]
-        time_noise = random.uniform(0.5, 1.8)
+        time_noise = random.uniform(0.5, 1.8)  # nosec B311 - used for test/sample data generation
         
         resolution_time = base_time * category_mult * agent_mult * time_noise
         
@@ -267,7 +270,7 @@ def generate_support_tickets():
             time_bonus = 0
         
         agent_bonus = agent_satisfaction_bonus[agent]
-        satisfaction_noise = random.uniform(-0.3, 0.3)
+        satisfaction_noise = random.uniform(-0.3, 0.3)  # nosec B311 - used for test/sample data generation
         
         satisfaction = max(1.0, min(5.0, base_satisfaction + time_bonus + agent_bonus + satisfaction_noise))
         
