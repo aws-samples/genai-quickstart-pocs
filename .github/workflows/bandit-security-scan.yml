@@ -65,3 +65,79 @@ jobs:
       if: always()
       run: |
         python3 .github/scripts/analyze_bandit_results.py
+    
+    - name: Comment on PR with results
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Check if report exists
+          if (!fs.existsSync('bandit-report.json')) {
+            return;
+          }
+          
+          const data = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
+          const results = data.results || [];
+          
+          const high = results.filter(r => r.issue_severity === 'HIGH');
+          const medium = results.filter(r => r.issue_severity === 'MEDIUM');
+          const low = results.filter(r => r.issue_severity === 'LOW');
+          
+          const critical = high.length + medium.length;
+          
+          let comment = '## 🔒 Bandit Security Scan Results\n\n';
+          comment += `📊 **Summary:** ${results.length} total issues found\n`;
+          comment += `- 🔴 **HIGH:** ${high.length}\n`;
+          comment += `- 🟡 **MEDIUM:** ${medium.length}\n`;
+          comment += `- 🟢 **LOW:** ${low.length}\n\n`;
+          
+          if (critical > 0) {
+            comment += '---\n\n';
+            comment += '### ❌ Build Failed - Action Required\n\n';
+            comment += `Found **${critical} critical security issues** that must be fixed before merging.\n\n`;
+            
+            if (high.length > 0) {
+              comment += '#### 🔴 HIGH Severity Issues\n\n';
+              high.forEach((issue, i) => {
+                comment += `${i + 1}. **${issue.test_id}**: ${issue.issue_text}\n`;
+                comment += `   - **File:** \`${issue.filename}:${issue.line_number}\`\n`;
+                comment += `   - **Confidence:** ${issue.issue_confidence}\n`;
+                comment += `   - [Documentation](${issue.more_info})\n\n`;
+              });
+            }
+            
+            if (medium.length > 0) {
+              comment += '#### 🟡 MEDIUM Severity Issues\n\n';
+              medium.forEach((issue, i) => {
+                comment += `${i + 1}. **${issue.test_id}**: ${issue.issue_text}\n`;
+                comment += `   - **File:** \`${issue.filename}:${issue.line_number}\`\n`;
+                comment += `   - [Documentation](${issue.more_info})\n\n`;
+              });
+            }
+            
+            comment += '---\n\n';
+            comment += '### 🔧 How to Fix\n\n';
+            comment += '1. Review each issue using the documentation links above\n';
+            comment += '2. Fix the security vulnerabilities in your code\n';
+            comment += '3. If false positive, add `# nosec` comment with justification\n';
+            comment += '4. Push your changes to re-run the scan\n\n';
+            comment += '💡 **Tip:** Click on the "Files changed" tab to see inline annotations on the affected lines.\n';
+          } else {
+            comment += '---\n\n';
+            comment += '### ✅ Security Scan Passed\n\n';
+            if (results.length === 0) {
+              comment += '🎉 No security issues found!\n';
+            } else {
+              comment += `Found ${low.length} LOW severity issues (informational only).\n`;
+            }
+          }
+          
+          // Post comment
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: comment
+          });
