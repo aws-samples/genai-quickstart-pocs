@@ -7,6 +7,7 @@ It provides a simple command-line interface and can also launch the Streamlit ap
 
 import sys
 import os
+import subprocess  # nosec B404 - subprocess needed for launching streamlit
 from chatbot_agent import chatbot
 
 
@@ -77,7 +78,7 @@ def main():
             cli_interface()
         elif command == "streamlit":
             print("🚀 Launching Streamlit app...")
-            os.system("streamlit run chatbot_app.py")
+            subprocess.run(["streamlit", "run", "chatbot_app.py"], check=True)  # nosec B607, B603 - fixed command for launching streamlit
         elif command == "test":
             print("🧪 Running connection test...")
             test_connection()

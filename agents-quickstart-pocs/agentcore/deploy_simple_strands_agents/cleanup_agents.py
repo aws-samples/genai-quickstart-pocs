@@ -11,7 +11,7 @@ All operations use defaults automatically - no user input required.
 """
 
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for AWS CLI and agentcore commands
 import sys
 import json
 import boto3
@@ -24,7 +24,8 @@ def check_environment():
     
     # Check AWS CLI
     try:
-        result = subprocess.run(['aws', '--version'], 
+        # Using subprocess with fixed command list for AWS CLI version check
+        result = subprocess.run(['aws', '--version'],  # nosec B603, B607 - fixed command for AWS CLI check
                               capture_output=True, text=True, check=True)
         print("✅ AWS CLI available")
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -38,7 +39,7 @@ def check_environment():
         
         # Check if agentcore is in PATH
         try:
-            result = subprocess.run(['which', 'agentcore'], 
+            result = subprocess.run(['which', 'agentcore'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                   capture_output=True, text=True, check=True)
             agentcore_path = result.stdout.strip()
             print(f"   Found agentcore in PATH at: {agentcore_path}")
@@ -64,7 +65,7 @@ def check_environment():
                     print(f"   Path does not exist: {venv_agentcore}")
         
         if agentcore_path:
-            result = subprocess.run([agentcore_path, '--help'], 
+            result = subprocess.run([agentcore_path, '--help'],  # nosec B603 - subprocess needed for system commands
                                   capture_output=True, text=True, check=True)
             print(f"✅ AgentCore CLI available at: {agentcore_path}")
             # Store the path for later use
@@ -131,11 +132,11 @@ def delete_agent_from_runtime(agent_name: str) -> bool:
         agentcore_path = os.environ.get('AGENTCORE_PATH', 'agentcore')
         
         # Set the agent as current
-        subprocess.run([agentcore_path, 'configure', 'use', agent_name], 
+        subprocess.run([agentcore_path, 'configure', 'use', agent_name],  # nosec B603 - subprocess needed for system commands
                       capture_output=True, text=True, check=True)
         
         # Delete the agent
-        result = subprocess.run([agentcore_path, 'delete'], 
+        result = subprocess.run([agentcore_path, 'delete'],  # nosec B603 - subprocess needed for system commands
                               capture_output=True, text=True, check=True)
         
         print(f"   ✅ Successfully deleted agent '{agent_name}' from runtime")

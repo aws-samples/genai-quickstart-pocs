@@ -93,7 +93,7 @@ def bootstrap_from_northwind(show_progress=False):
             delete_table('sales_transactions')
             if show_progress:
                 progress_bar.progress(0.2, text="Deleted existing sales table...")
-        except:
+        except:  # nosec B110 - intentional pass for error handling
             pass
         
         # Create new sales table

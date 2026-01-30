@@ -17,7 +17,7 @@ Features:
 import os
 import sys
 import json
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import time
 from typing import Dict, Any, Optional
 
@@ -72,14 +72,14 @@ class StrandsAgentCoreDeployer:
         
         # Check if agentcore CLI is available
         try:
-            result = subprocess.run(['agentcore', '--version'], 
+            result = subprocess.run(['agentcore', '--version'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                   capture_output=True, text=True, check=True)
             print(f"✅ AgentCore CLI available: {result.stdout.strip()}")
         except (subprocess.CalledProcessError, FileNotFoundError):
             print("❌ AgentCore CLI not found")
             print("   Installing AgentCore CLI...")
             try:
-                subprocess.run([sys.executable, '-m', 'pip', 'install', 'agentcore'], 
+                subprocess.run([sys.executable, '-m', 'pip', 'install', 'agentcore'],  # nosec B603 - subprocess needed for system commands
                               check=True)
                 print("✅ AgentCore CLI installed")
             except subprocess.CalledProcessError as e:
@@ -284,7 +284,7 @@ if __name__ == "__main__":
                     print("-" * 60)
                     
                     # Run the configure command with required parameters but allow interactive input for choices
-                    result = subprocess.run(['agentcore', 'configure', '--entrypoint', agent_file], 
+                    result = subprocess.run(['agentcore', 'configure', '--entrypoint', agent_file],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                           capture_output=False,  # Allow interactive input
                                           text=True)
                     
@@ -318,7 +318,7 @@ if __name__ == "__main__":
                 print("   📝 Running: agentcore launch")
                 print("   💡 This may take several minutes. Please wait...")
                 
-                result = subprocess.run(['agentcore', 'launch'], 
+                result = subprocess.run(['agentcore', 'launch'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                       capture_output=True, text=True, timeout=600)  # Increased timeout for cloud deployment
                 if result.returncode == 0:
                     print("   ✅ Agent deployment completed successfully!")
@@ -378,7 +378,7 @@ if __name__ == "__main__":
                     print(f"   🔢 Testing: {user_input}")
                     
                     # Test using agentcore invoke
-                    result = subprocess.run(['agentcore', 'invoke', f'{{"prompt": "{user_input}"}}'], 
+                    result = subprocess.run(['agentcore', 'invoke', f'{{"prompt": "{user_input}"}}'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                           capture_output=True, text=True, check=True)
                     
                     results[user_input] = {"status": "success", "response": result.stdout}
@@ -409,7 +409,7 @@ if __name__ == "__main__":
             # Delete the agent using agentcore CLI
             if self.agent_id:
                 print(f"   Deleting agent: {self.agent_id}")
-                subprocess.run(['agentcore', 'delete'], check=True)
+                subprocess.run(['agentcore', 'delete'], check=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                 print("   ✅ Agent deleted")
         except Exception as e:
             print(f"   ⚠️ Cleanup warning: {e}")
@@ -467,11 +467,11 @@ def main():
         else:
             # Try to extract from status
             try:
-                result = subprocess.run(['agentcore', 'status'], 
+                result = subprocess.run(['agentcore', 'status'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                       capture_output=True, text=True, check=True)
                 if 'Agent ID:' in result.stdout:
                     agent_id = result.stdout.split('Agent ID:')[1].split()[0].strip()
-            except:
+            except:  # nosec B110 - intentional pass for error handling
                 pass
         
         if agent_id:
@@ -497,7 +497,7 @@ def main():
                 
                 # Test using agentcore invoke
                 try:
-                    result = subprocess.run(['agentcore', 'invoke', f'{{"prompt": "{user_input}"}}'], 
+                    result = subprocess.run(['agentcore', 'invoke', f'{{"prompt": "{user_input}"}}'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                                           capture_output=True, text=True, check=True)
                     
                     print("📝 Response from AgentCore:")

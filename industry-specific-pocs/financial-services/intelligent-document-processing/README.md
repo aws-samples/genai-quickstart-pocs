@@ -2,15 +2,20 @@
 
 ## Overview
 
-This POC collection demonstrates rapid document workflow automation using [Amazon Bedrock Data Automation](https://docs.aws.amazon.com/bedrock/latest/userguide/bda.html). Each document type lives in its own subdirectory as a complete, self-contained automation that deploys independently.
+This POC collection demonstrates intelligent document processing using [Amazon Bedrock Data Automation](https://docs.aws.amazon.com/bedrock/latest/userguide/bda.html). The collection includes:
+
+1. **Individual Document POCs**: Self-contained automations for specific document types (e.g., SFHDF forms)
+2. **Application-Level POCs**: Complete workflow applications demonstrating end-to-end document processing (e.g., loan automation)
 
 **Key Benefits:**
-- **Self-Contained**: Complete implementation, dependencies, and configuration per document type
+- **Self-Contained**: Complete implementation, dependencies, and configuration per POC
 - **Rapid Deployment**: From setup to processing in minutes
-- **Dual Interface**: Web UI for interactive use, CLI for automation
-- **Easy Expansion**: Add new document types using the same proven framework
+- **Flexible Architecture**: Single document processing or multi-document workflow applications
+- **Easy Expansion**: Add new document types or workflows using the same proven framework
 
-Each document automation follows a simple pattern: automated AWS resource setup → document upload → intelligent extraction → structured output with confidence scores.
+**Individual Document POCs** follow a simple pattern: automated AWS resource setup → document upload → intelligent extraction → structured output with confidence scores.
+
+**Application-Level POCs** demonstrate complete workflows: user input collection → multi-document upload → parallel extraction → cross-verification → validation results.
 
 ## Technology Stack
 
@@ -21,11 +26,21 @@ Each document automation follows a simple pattern: automated AWS resource setup 
 - **[Amazon S3](https://aws.amazon.com/s3/)**: Document storage and processing
 - **[Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)**: AWS SDK for Python
 
-## Available Document Automations
+## Available POCs
 
-### 1. Standard Flood Hazard Determination Form (SFHDF)
+### Individual Document Processing POCs
+
+#### 1. Standard Flood Hazard Determination Form (SFHDF)
 **Directory**: [standard_flood_hazard_determination_form/](./standard_flood_hazard_determination_form/)  
 **Documentation**: [HOWTO.md](./standard_flood_hazard_determination_form/HOWTO.md)  
+**Description**: Automated extraction from FEMA flood hazard determination forms
+
+### Application-Level POCs
+
+#### 1. Loan Application Document Verification
+**Directory**: [sample-loan-automation-app/](./sample-loan-automation-app/)  
+**Documentation**: [README.md](./sample-loan-automation-app/README.md) | [HowTO.md](./sample-loan-automation-app/HowTO.md)  
+**Description**: Complete loan document verification workflow demonstrating automated classification, extraction, and cross-verification of multiple document types (W2, Driver License, Bank Statement, Payslip) against applicant information  
 
 
 ## Amazon Bedrock Data Automation: Core Concepts

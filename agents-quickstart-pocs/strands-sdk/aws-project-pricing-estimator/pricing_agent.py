@@ -17,7 +17,7 @@ Usage:
 
 from strands import Agent
 import asyncio
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import time
 import os
 import platform
@@ -51,7 +51,7 @@ class PricingAgentWithMCP:
             
             if system == "Windows":
                 # Use tasklist on Windows
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                     ["tasklist", "/FI", "IMAGENAME eq python.exe", "/FO", "CSV"],
                     capture_output=True,
                     text=True
@@ -62,7 +62,7 @@ class PricingAgentWithMCP:
                 return False
             else:
                 # Use pgrep on Unix-like systems (macOS, Linux)
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                     ["pgrep", "-f", "awslabs.aws-pricing-mcp-server"],
                     capture_output=True,
                     text=True
@@ -85,7 +85,7 @@ class PricingAgentWithMCP:
             server_cwd = get_mcp_server_cwd()
             server_env = get_mcp_environment()
             # Launch the MCP server process
-            self.mcp_server_process = subprocess.Popen(
+            self.mcp_server_process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 [get_mcp_server_path()] + get_mcp_server_args(),
                 cwd=server_cwd,
                 env=server_env,
@@ -195,7 +195,7 @@ class PricingAgentWithMCP:
             try:
                 self.mcp_server_process.terminate()
                 self.mcp_server_process.wait(timeout=5)
-            except:
+            except:  # nosec B110 - intentional pass for error handling
                 pass
 
 async def main():

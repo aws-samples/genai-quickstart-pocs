@@ -13,7 +13,7 @@ Usage:
 
 import os
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 from typing import Optional, Dict, Any
 import json
 

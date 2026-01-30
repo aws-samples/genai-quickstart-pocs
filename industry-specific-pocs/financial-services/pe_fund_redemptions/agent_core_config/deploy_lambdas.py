@@ -25,7 +25,7 @@ def get_fund_documents_bucket():
                         print(f"✅ Found fund documents bucket: {bucket_name}")
                         return bucket_name
                 except Exception:
-                    continue
+                    continue  # nosec B112 - intentional continue for bucket access errors
         
         # If no bucket found with fund_documents, look for any pe-fund-documents bucket
         for bucket in response['Buckets']:

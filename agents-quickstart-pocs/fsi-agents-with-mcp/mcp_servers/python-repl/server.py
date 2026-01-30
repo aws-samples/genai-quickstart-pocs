@@ -1,6 +1,6 @@
 import asyncio
 import io
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import re
 from contextlib import redirect_stdout, redirect_stderr
 import traceback
@@ -102,9 +102,11 @@ class PythonREPLServer:
             stderr = io.StringIO()
 
             try:
+                # WARNING: This is a Python REPL that intentionally executes arbitrary code
+                # Only use in trusted environments with proper sandboxing
                 # Execute code with output redirection
                 with redirect_stdout(stdout), redirect_stderr(stderr):
-                    exec(code, self.global_namespace)
+                    exec(code, self.global_namespace)  # nosec B102 - intentional for REPL functionality
 
                 # Combine output
                 output = stdout.getvalue()
@@ -120,7 +122,8 @@ class PythonREPLServer:
                     # Try to get the value of the last expression
                     try:
                         last_line = code.strip().split("\n")[-1]
-                        last_value = eval(last_line, self.global_namespace)
+                        # WARNING: Using eval for expression evaluation in REPL context
+                        last_value = eval(last_line, self.global_namespace)  # nosec B307 - intentional for REPL functionality
                         result = f"Result: {repr(last_value)}"
                     except (SyntaxError, ValueError, NameError):
                         result = "Code executed successfully (no output)"
@@ -147,7 +150,7 @@ class PythonREPLServer:
 
             try:
                 # Install package using uv
-                process = subprocess.run(
+                process = subprocess.run(  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                     ["uv", "pip", "install", package],
                     capture_output=True,
                     text=True,
@@ -164,7 +167,15 @@ class PythonREPLServer:
 
                 # Import the package to make it available in the REPL
                 try:
-                    exec(f"import {package.split('[')[0]}", self.global_namespace)
+                    # WARNING: Using exec for package import in REPL context
+                    exec(f"import {package.split('[')[0]}", self.global_namespace)  # nosec B102 - intentional for REPL functionality
+                    return [
+                        types.TextContent(
+                            type="text",
+                            text=f"Successfully installed and imported {package}",
+                        )
+                    ]
+                except ImportError as e:
                     return [
                         types.TextContent(
                             type="text",

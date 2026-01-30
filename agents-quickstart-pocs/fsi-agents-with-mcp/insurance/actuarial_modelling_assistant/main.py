@@ -105,7 +105,7 @@ PACKAGE INSTALLATION INSTRUCTIONS:
 For required Python packages, install them using these commands:
 ```python
 # Install pandas for data manipulation
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 subprocess.run(['pip', 'install', 'pandas'])
 
 # Install matplotlib for visualizations

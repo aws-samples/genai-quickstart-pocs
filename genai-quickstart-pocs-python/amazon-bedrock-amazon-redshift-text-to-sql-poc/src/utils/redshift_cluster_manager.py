@@ -4,7 +4,7 @@ Redshift cluster manager for automatic cluster creation.
 import boto3
 import time
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import platform
 import socket
 from dotenv import load_dotenv
@@ -56,7 +56,7 @@ def create_ssm_role():
                 RoleName='EC2-SSM-Role'
             )
         except iam.exceptions.EntityAlreadyExistsException:
-            pass
+            pass  # nosec B110 - intentional pass when role already exists
         
         print("Created SSM role and instance profile")
         time.sleep(10)  # Wait for role to propagate
@@ -203,7 +203,7 @@ sleep 30
 
 def create_ssm_tunnel(instance_id, redshift_host):
     """Create SSM port forwarding session with Windows compatibility."""
-    import subprocess
+    import subprocess  # nosec B404 - subprocess needed for system commands
     import platform
     
     def get_platform():
@@ -214,23 +214,30 @@ def create_ssm_tunnel(instance_id, redshift_host):
         system = get_platform()
         
         try:
-            subprocess.run(['session-manager-plugin'], capture_output=True, timeout=5)
+            subprocess.run(['session-manager-plugin'], capture_output=True, timeout=5)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
             return True
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+            pass  # nosec B110 - intentional pass when session manager plugin not found
         
         print("Installing Session Manager plugin...")
         
         if system == 'windows':
             try:
-                import urllib.request
+                import requests
                 import tempfile
                 
                 url = 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/windows/SessionManagerPluginSetup.exe'
                 
                 with tempfile.NamedTemporaryFile(suffix='.exe', delete=False) as tmp_file:
-                    urllib.request.urlretrieve(url, tmp_file.name)
-                    subprocess.run([tmp_file.name, '/S'], check=True)
+                    # Use requests instead of urllib for better security
+                    response = requests.get(url, timeout=30, stream=True)
+                    response.raise_for_status()
+                    
+                    for chunk in response.iter_content(chunk_size=8192):
+                        tmp_file.write(chunk)
+                    tmp_file.flush()
+                    
+                    subprocess.run([tmp_file.name, '/S'], check=True)  # nosec B603 - subprocess needed for system commands
                     os.unlink(tmp_file.name)
                 
                 print("Session Manager plugin installed successfully")
@@ -243,13 +250,18 @@ def create_ssm_tunnel(instance_id, redshift_host):
         
         elif system == 'darwin':
             try:
-                subprocess.run(['curl', '-o', '/tmp/sessionmanager-bundle.zip', 
-                              'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac/sessionmanager-bundle.zip'], 
-                              check=True)
-                subprocess.run(['unzip', '-o', '/tmp/sessionmanager-bundle.zip', '-d', '/tmp/'], check=True)
-                subprocess.run(['sudo', '/tmp/sessionmanager-bundle/install', 
-                              '-i', '/usr/local/sessionmanagerplugin', 
-                              '-b', '/usr/local/bin/session-manager-plugin'], check=True)
+                import tempfile
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    bundle_path = os.path.join(temp_dir, 'sessionmanager-bundle.zip')
+                    extract_path = temp_dir
+                    
+                    subprocess.run(['curl', '-o', bundle_path,  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                                  'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac/sessionmanager-bundle.zip'], 
+                                  check=True)
+                    subprocess.run(['unzip', '-o', bundle_path, '-d', extract_path], check=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                    subprocess.run(['sudo', os.path.join(extract_path, 'sessionmanager-bundle', 'install'),  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                                  '-i', '/usr/local/sessionmanagerplugin', 
+                                  '-b', '/usr/local/bin/session-manager-plugin'], check=True)
                 print("Session Manager plugin installed successfully")
                 return True
             except subprocess.CalledProcessError as e:
@@ -258,10 +270,14 @@ def create_ssm_tunnel(instance_id, redshift_host):
         
         else:  # Linux
             try:
-                subprocess.run(['curl', '-o', '/tmp/session-manager-plugin.rpm',
-                              'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm'],
-                              check=True)
-                subprocess.run(['sudo', 'yum', 'install', '-y', '/tmp/session-manager-plugin.rpm'], check=True)
+                import tempfile
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    rpm_path = os.path.join(temp_dir, 'session-manager-plugin.rpm')
+                    
+                    subprocess.run(['curl', '-o', rpm_path,  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
+                                  'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm'],
+                                  check=True)
+                    subprocess.run(['sudo', 'yum', 'install', '-y', rpm_path], check=True)  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                 print("Session Manager plugin installed successfully")
                 return True
             except subprocess.CalledProcessError as e:
@@ -274,16 +290,16 @@ def create_ssm_tunnel(instance_id, redshift_host):
         
         if system == 'windows':
             try:
-                subprocess.run(['taskkill', '/F', '/IM', 'aws.exe'], 
+                subprocess.run(['taskkill', '/F', '/IM', 'aws.exe'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                              capture_output=True, check=False)
             except Exception:
-                pass
+                pass  # nosec B110 - intentional pass for cleanup operations
         else:
             try:
-                subprocess.run(['pkill', '-f', 'aws ssm start-session'], 
+                subprocess.run(['pkill', '-f', 'aws ssm start-session'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                              stderr=subprocess.DEVNULL, check=False)
             except Exception:
-                pass
+                pass  # nosec B110 - intentional pass for cleanup operations
         
         time.sleep(2)
     
@@ -336,7 +352,7 @@ def create_ssm_tunnel(instance_id, redshift_host):
     try:
         # Start session in background with Windows compatibility
         if get_platform() == 'windows':
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -344,7 +360,7 @@ def create_ssm_tunnel(instance_id, redshift_host):
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
             )
         else:
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -382,11 +398,11 @@ def create_ssm_tunnel(instance_id, redshift_host):
                         try:
                             sock.shutdown(socket.SHUT_RDWR)  # Proper shutdown for Windows
                         except Exception:
-                            pass
+                            pass  # nosec B110 - intentional pass for socket cleanup
                         try:
                             sock.close()
                         except Exception:
-                            pass
+                            pass  # nosec B110 - intentional pass for socket cleanup
             
             print("❌ Port forwarding test failed after 15 attempts")
             process.terminate()
@@ -458,7 +474,7 @@ def create_redshift_cluster():
                         print("✅ SSM tunnel already active")
                         return 'localhost'
                 except:
-                    pass
+                    pass  # nosec B110 - intentional pass for connection test
                 
                 # Create bastion host and SSM tunnel
                 instance_id = create_bastion_host()
@@ -527,7 +543,7 @@ def create_redshift_cluster():
                 # Public cluster - try direct connection with security group update
                 try:
                     import requests
-                    local_ip = requests.get('https://api.ipify.org').text
+                    local_ip = requests.get('https://api.ipify.org', timeout=30).text
                     
                     # Get cluster's VPC security groups
                     vpc_security_groups = cluster['VpcSecurityGroups']

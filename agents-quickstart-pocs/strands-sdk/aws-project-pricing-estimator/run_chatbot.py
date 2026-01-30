@@ -11,7 +11,7 @@ Usage:
 - Run directly: python run_chatbot.py
 - Requires: streamlit_chatbot.py and all dependencies installed
 """
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 import os
 import platform
@@ -63,7 +63,7 @@ def install_dependencies_with_uv():
     print("🚀 Installing dependencies with UV...")
     try:
         # Use UV to install dependencies with force reinstall to avoid metadata-only issues
-        result = subprocess.run(["uv", "pip", "install", "-r", "requirements.txt", "--force-reinstall"], 
+        result = subprocess.run(["uv", "pip", "install", "-r", "requirements.txt", "--force-reinstall"],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                               capture_output=True, text=True, check=True)
         print("✅ Dependencies installed successfully with UV")
         return True
@@ -81,7 +81,7 @@ def install_dependencies_with_pip():
     """
     print("📦 Installing dependencies with pip...")
     try:
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], 
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],  # nosec B603 - subprocess needed for system commands
                               capture_output=True, text=True, check=True)
         print("✅ Dependencies installed successfully with pip")
         return True
@@ -102,7 +102,7 @@ def install_streamlit_with_uv():
     
     print("🚀 Installing Streamlit with UV (force reinstall)...")
     try:
-        result = subprocess.run(["uv", "pip", "install", "streamlit", "--force-reinstall"], 
+        result = subprocess.run(["uv", "pip", "install", "streamlit", "--force-reinstall"],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                               capture_output=True, text=True, check=True)
         print("✅ Streamlit installed successfully with UV")
         return True
@@ -118,7 +118,7 @@ def install_streamlit_with_pip():
     """
     print("📦 Installing Streamlit with pip...")
     try:
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "streamlit"], 
+        result = subprocess.run([sys.executable, "-m", "pip", "install", "streamlit"],  # nosec B603 - subprocess needed for system commands
                               capture_output=True, text=True, check=True)
         print("✅ Streamlit installed successfully with pip")
         return True
@@ -207,7 +207,7 @@ def main():
             ]
         
         # Run the Streamlit app
-        subprocess.run(cmd)
+        subprocess.run(cmd)  # nosec B603 - subprocess needed for system commands
         
     except KeyboardInterrupt:
         print("\n👋 Chatbot stopped. Goodbye!")

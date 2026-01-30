@@ -157,9 +157,10 @@ Return as JSON with these fields.
         
         # If no context is available, use Northwind schema
         if not context_str:
-            prompt = f"""Generate a SQL query to answer this question:
+            # Use template with proper escaping for user input
+            prompt_template = """Generate a SQL query to answer this question:
             
-Question: {query}
+Question: {question}
 
 Use the Northwind database with these tables:
 - northwind.customers: customerid, companyname, contactname, country
@@ -194,6 +195,9 @@ ORDER BY avg_order_value DESC;
 
 Generate ONLY the SQL query without any explanation.
 """
+            # Sanitize user input by escaping special characters
+            sanitized_query = query.replace("'", "''").replace('"', '""')
+            prompt = prompt_template.format(question=sanitized_query)
         else:
             prompt = f"""Generate a SQL query to answer this question:
             

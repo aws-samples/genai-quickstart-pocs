@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import random
+import random  # nosec B311 - random used for test/sample data generation
 import math
 
 # Set seed for reproducibility
@@ -16,7 +16,7 @@ num_policies = 5000
 def generate_policy_data(num_policies):
     # Policy start dates between 2019-01-01 and 2022-12-31
     start_dates = [
-        datetime(2019, 1, 1) + timedelta(days=random.randint(0, 1460))
+        datetime(2019, 1, 1) + timedelta(days=random.randint(0, 1460))  # nosec B311 - used for test/sample data generation
         for _ in range(num_policies)
     ]
 
@@ -121,20 +121,20 @@ def generate_claims_data(policies_df):
         for _ in range(num_claims):
             # Claim date between policy start and end date
             claim_date = policy["start_date"] + timedelta(
-                days=random.randint(0, (policy["end_date"] - policy["start_date"]).days)
+                days=random.randint(0, (policy["end_date"] - policy["start_date"]).days)  # nosec B311 - used for test/sample data generation
             )
 
             # Claim amount - this will depend on product type and have a long tail
             if policy["product_type"] == "Auto":
                 # Auto claims - mixed distribution
-                if random.random() < 0.8:  # Minor claims
+                if random.random() < 0.8:  # nosec B311 - used for test/sample data generation  # Minor claims
                     amount = np.random.gamma(2, 1000)
                 else:  # Major claims
                     amount = np.random.gamma(5, 5000)
 
             elif policy["product_type"] == "Home":
                 # Home claims - higher variance
-                if random.random() < 0.9:  # Regular claims
+                if random.random() < 0.9:  # nosec B311 - used for test/sample data generation  # Regular claims
                     amount = np.random.gamma(2, 2000)
                 else:  # Catastrophic claims
                     amount = np.random.gamma(3, 15000)
@@ -147,9 +147,9 @@ def generate_claims_data(policies_df):
 
             else:  # Health
                 # Health claims - wide range
-                if random.random() < 0.7:  # Regular claims
+                if random.random() < 0.7:  # nosec B311 - used for test/sample data generation  # Regular claims
                     amount = np.random.gamma(1.5, 1000)
-                elif random.random() < 0.95:  # Serious condition
+                elif random.random() < 0.95:  # nosec B311 - used for test/sample data generation  # Serious condition
                     amount = np.random.gamma(3, 5000)
                 else:  # Critical condition
                     amount = np.random.gamma(2, 25000)
@@ -177,7 +177,7 @@ def generate_claims_data(policies_df):
             elif days_since_claim < 90:
                 status = np.random.choice(["Open", "Closed"], p=[0.3, 0.7])
             else:
-                if random.random() < 0.05:  # 5% of old claims are in litigation
+                if random.random() < 0.05:  # nosec B311 - used for test/sample data generation  # 5% of old claims are in litigation
                     status = "Litigation"
                 else:
                     status = "Closed"

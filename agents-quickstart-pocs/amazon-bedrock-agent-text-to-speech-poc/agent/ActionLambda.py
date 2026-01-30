@@ -139,10 +139,11 @@ def lambda_handler(event, context):
             s3_key = S3_OUTPUT_FOLDER + file_name 
             print("S3 key for audio file: ", s3_key)
 
-            # Save the audio stream to Lambda's temporary directory
-            temp_file_path = f"/tmp/{file_name}"
-            with open(temp_file_path, 'wb') as file:
-                file.write(response['AudioStream'].read())
+            # Save the audio stream to Lambda's temporary directory using secure temp file handling
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file_name}") as temp_file:
+                temp_file.write(response['AudioStream'].read())
+                temp_file_path = temp_file.name
 
             # Upload the audio file to S3 for persistent storage
             s3_client.upload_file(temp_file_path, S3_BUCKET_NAME, s3_key)

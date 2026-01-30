@@ -101,8 +101,8 @@ class BedrockProcessor:
             print(f"📜 Running blueprint creation script: {script_path}")
             
             # Run the blueprint creation script - same logic as app.py
-            import subprocess
-            result = subprocess.run([
+            import subprocess  # nosec B404 - subprocess needed for system commands
+            result = subprocess.run([  # nosec B603 - subprocess needed for system commands
                 sys.executable, script_path
             ], capture_output=True, text=True, cwd=os.path.dirname(script_path))
             

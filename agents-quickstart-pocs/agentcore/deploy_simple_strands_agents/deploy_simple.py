@@ -7,7 +7,7 @@ configuration step. It assumes the agent has already been configured.
 """
 
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 
 def main():
@@ -36,7 +36,7 @@ def main():
     # Deploy directly to cloud
     print("🚀 Deploying to cloud...")
     try:
-        result = subprocess.run(['agentcore', 'launch'], 
+        result = subprocess.run(['agentcore', 'launch'],  # nosec B603, B607 - subprocess needed for AWS CLI and agentcore commands
                               capture_output=True, text=True, timeout=600)
         if result.returncode == 0:
             print("✅ Agent deployment completed successfully!")

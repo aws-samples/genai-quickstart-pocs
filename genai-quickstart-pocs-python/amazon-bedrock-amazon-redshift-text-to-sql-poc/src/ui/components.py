@@ -174,7 +174,7 @@ def display_analyst_tab(handle_user_query_fn, execute_multiple_sql_queries_fn):
                                                         title=f"Visualization of {y_col} by {x_col}"
                                                     )
                                                     st.altair_chart(chart, use_container_width=True)
-                                    except Exception as e:
+                                    except Exception as e:  # nosec B110 - intentional pass for error handling
                                         pass  # Silently fail if visualization isn't possible
                             else:
                                 st.warning(f"No results for query: {query}")

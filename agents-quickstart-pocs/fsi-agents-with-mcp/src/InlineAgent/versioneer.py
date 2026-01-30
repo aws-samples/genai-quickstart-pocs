@@ -311,7 +311,7 @@ import errno
 import json
 import os
 import re
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 from pathlib import Path
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
@@ -470,7 +470,7 @@ def run_command(
     env: Optional[Dict[str, str]] = None,
 ) -> Tuple[Optional[str], Optional[int]]:
     """Call the given command(s)."""
-    assert isinstance(commands, list)
+    assert isinstance(commands, list)  # nosec B101 - assert used for version management and validation
     process = None
 
     popen_kwargs: Dict[str, Any] = {}
@@ -484,7 +484,7 @@ def run_command(
         try:
             dispcmd = str([command] + args)
             # remember shell=False, so use git.cmd on windows, not just git
-            process = subprocess.Popen(
+            process = subprocess.Popen(  # nosec B603 - subprocess needed for system commands
                 [command] + args,
                 cwd=cwd,
                 env=env,
@@ -531,7 +531,7 @@ LONG_VERSION_PY[
 import errno
 import os
 import re
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import functools
@@ -1837,14 +1837,14 @@ def get_versions(verbose: bool = False) -> Dict[str, Any]:
     root = get_root()
     cfg = get_config_from_root(root)
 
-    assert cfg.VCS is not None, "please set [versioneer]VCS= in setup.cfg"
+    assert cfg.VCS is not None, "please set [versioneer]VCS= in setup.cfg"  # nosec B101 - assert used for version management and validation
     handlers = HANDLERS.get(cfg.VCS)
-    assert handlers, "unrecognized VCS '%s'" % cfg.VCS
+    assert handlers, "unrecognized VCS '%s'" % cfg.VCS  # nosec B101 - assert used for version management and validation
     verbose = verbose or bool(cfg.verbose)  # `bool()` used to avoid `None`
-    assert (
+    assert (  # nosec B101 - assert used for version management and validation
         cfg.versionfile_source is not None
     ), "please set versioneer.versionfile_source"
-    assert cfg.tag_prefix is not None, "please set versioneer.tag_prefix"
+    assert cfg.tag_prefix is not None, "please set versioneer.tag_prefix"  # nosec B101 - assert used for version management and validation
 
     versionfile_abs = os.path.join(root, cfg.versionfile_source)
 

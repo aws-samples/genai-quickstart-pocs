@@ -4,7 +4,7 @@ from strands.tools.mcp import MCPClient
 from strands.models.bedrock import BedrockModel
 import asyncio
 import platform
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for system commands
 import shutil
 import signal
 import threading
