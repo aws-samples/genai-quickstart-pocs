@@ -1,0 +1,41 @@
+# Bandit configuration file
+# https://bandit.readthedocs.io/en/latest/config.html
+
+[bandit]
+# Exclude common directories that don't need scanning
+exclude_dirs = [
+    '/tests',
+    '/.git',
+    '/.github',
+    '/venv',
+    '/env',
+    '/.venv',
+    '/node_modules',
+    '/__pycache__',
+    '/.pytest_cache',
+    '/dist',
+    '/build',
+    '/.eggs'
+]
+
+# Scan recursively
+recursive = true
+
+# Set confidence level (LOW, MEDIUM, HIGH)
+# Only report issues with MEDIUM or HIGH confidence
+level = MEDIUM
+
+# Set severity level (LOW, MEDIUM, HIGH)
+# Only report issues with MEDIUM or HIGH severity
+severity = MEDIUM
+
+# Tests to skip (if any specific checks are too noisy)
+# Example: skips = B101,B601
+# Uncomment and modify as needed:
+# skips = B101
+
+# Tests to run (leave empty to run all)
+tests = 
+
+# Output format options: csv, custom, html, json, screen, txt, xml, yaml
+# This is overridden by CLI flags in the workflow
