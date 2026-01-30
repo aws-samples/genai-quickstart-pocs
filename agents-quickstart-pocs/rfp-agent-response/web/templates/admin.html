@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | RFP Processing Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-light: #2d5a87;
+            --primary-dark: #0f2a44;
+            --secondary-color: #3182ce;
+            --accent-color: #4299e1;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --error-color: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--error-color), #c53030);
+            color: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 0.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .admin-card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .admin-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .admin-card-content {
+            padding: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+            width: 100%;
+            justify-content: center;
+            margin: 0.5rem 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: var(--white);
+        }
+
+        .btn-warning:hover {
+            background: #b7791f;
+            transform: translateY(-1px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card.system .stat-number { color: var(--primary-color); }
+        .stat-card.storage .stat-number { color: var(--secondary-color); }
+        .stat-card.processing .stat-number { color: var(--warning-color); }
+        .stat-card.errors .stat-number { color: var(--error-color); }
+
+        .system-info {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        .system-info-header {
+            background: var(--gray-50);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .system-info-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .system-info-content {
+            padding: 2rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .info-value {
+            color: var(--gray-600);
+            font-family: monospace;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-indicator.online {
+            background: rgba(56, 161, 105, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-indicator.offline {
+            background: rgba(229, 62, 62, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-indicator.warning {
+            background: rgba(214, 158, 46, 0.1);
+            color: var(--warning-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">RP</div>
+                <div class="logo-text">RFP Platform</div>
+                <div class="admin-badge">Admin</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">
+                    <span>📤</span>
+                    Upload Portal
+                </a>
+                <a href="downloads.html" class="nav-link">
+                    <span>📥</span>
+                    Download Center
+                </a>
+                <a href="status.html" class="nav-link">
+                    <span>📊</span>
+                    Job Status
+                </a>
+                <a href="json-explorer.html" class="nav-link">
+                    <span>🔍</span>
+                    JSON Explorer
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-subtitle">System administration and management tools</p>
+        </div>
+        
+        <div class="stats-grid" id="systemStats">
+            <div class="stat-card system">
+                <div class="stat-number" id="systemUptime">-</div>
+                <div class="stat-label">System Status</div>
+            </div>
+            <div class="stat-card storage">
+                <div class="stat-number" id="storageUsed">-</div>
+                <div class="stat-label">Storage Used</div>
+            </div>
+            <div class="stat-card processing">
+                <div class="stat-number" id="activeJobs">-</div>
+                <div class="stat-label">Active Jobs</div>
+            </div>
+            <div class="stat-card errors">
+                <div class="stat-number" id="errorCount">-</div>
+                <div class="stat-label">Recent Errors</div>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">🔧</div>
+                    <div class="admin-card-title">System Management</div>
+                </div>
+                <div class="admin-card-content">
+                    <button class="btn btn-primary" onclick="refreshSystemStatus()">
+                        <span>🔄</span>
+                        Refresh System Status
+                    </button>
+                    <button class="btn btn-secondary" onclick="viewSystemLogs()">
+                        <span>📋</span>
+                        View System Logs
+                    </button>
+                    <button class="btn btn-warning" onclick="restartServices()">
+                        <span>⚡</span>
+                        Restart Services
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">📊</div>
+                    <div class="admin-card-title">Job Management</div>
+                </div>
+                <div class="admin-card-content">
+                    <button class="btn btn-primary" onclick="viewAllJobs()">
+                        <span>📋</span>
+                        View All Jobs
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJobData()">
+                        <span>📤</span>
+                        Export Job Data
+                    </button>
+                    <button class="btn btn-danger" onclick="clearFailedJobs()">
+                        <span>🗑️</span>
+                        Clear Failed Jobs
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">💾</div>
+                    <div class="admin-card-title">Storage Management</div>
+                </div>
+                <div class="admin-card-content">
+                    <button class="btn btn-primary" onclick="viewStorageUsage()">
+                        <span>📊</span>
+                        View Storage Usage
+                    </button>
+                    <button class="btn btn-secondary" onclick="cleanupOldFiles()">
+                        <span>🧹</span>
+                        Cleanup Old Files
+                    </button>
+                    <button class="btn btn-secondary" onclick="testCleanupAPI()">
+                        <span>🔍</span>
+                        Test Cleanup API
+                    </button>
+                    <button class="btn btn-danger" onclick="cleanupDemoData()">
+                        <span>🗑️</span>
+                        Clean Demo Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">⚙️</div>
+                    <div class="admin-card-title">Configuration</div>
+                </div>
+                <div class="admin-card-content">
+                    <button class="btn btn-primary" onclick="editConfiguration()">
+                        <span>✏️</span>
+                        Edit Configuration
+                    </button>
+                    <button class="btn btn-secondary" onclick="backupConfiguration()">
+                        <span>💾</span>
+                        Backup Configuration
+                    </button>
+                    <button class="btn btn-warning" onclick="resetConfiguration()">
+                        <span>🔄</span>
+                        Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="system-info">
+            <div class="system-info-header">
+                <div class="system-info-title">System Information</div>
+            </div>
+            <div class="system-info-content" id="systemInfo">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading system information...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for demonstration - replace with actual API calls
+        const mockSystemData = {
+            uptime: "Online",
+            storageUsed: "2.3GB",
+            activeJobs: "5",
+            errorCount: "0",
+            systemInfo: {
+                "Platform Version": "1.0.0",
+                "API Gateway": "Active",
+                "Lambda Functions": "6 Deployed",
+                "S3 Buckets": "2 Active",
+                "CloudFormation Stack": "Deployed",
+                "Last Deployment": new Date().toLocaleString(),
+                "Environment": "Production"
+            }
+        };
+
+        function loadSystemStats() {
+            // In a real implementation, these would be API calls
+            document.getElementById('systemUptime').textContent = mockSystemData.uptime;
+            document.getElementById('storageUsed').textContent = mockSystemData.storageUsed;
+            document.getElementById('activeJobs').textContent = mockSystemData.activeJobs;
+            document.getElementById('errorCount').textContent = mockSystemData.errorCount;
+        }
+
+        function loadSystemInfo() {
+            const systemInfoContent = document.getElementById('systemInfo');
+            let html = '';
+            
+            Object.entries(mockSystemData.systemInfo).forEach(([key, value]) => {
+                html += `<div class="info-row">
+                    <div class="info-label">${key}</div>
+                    <div class="info-value">${value}</div>
+                </div>`;
+            });
+            
+            systemInfoContent.innerHTML = html;
+        }
+
+        // Admin functions
+        function refreshSystemStatus() {
+            showNotification('Refreshing system status...', 'info');
+            // Simulate API call
+            setTimeout(() => {
+                loadSystemStats();
+                loadSystemInfo();
+                showNotification('System status refreshed successfully', 'success');
+            }, 1000);
+        }
+
+        function viewSystemLogs() {
+            showNotification('System logs functionality would be implemented here', 'info');
+        }
+
+        function restartServices() {
+            if (confirm('Are you sure you want to restart all services? This may cause temporary downtime.')) {
+                showNotification('Services restart initiated...', 'warning');
+                // In real implementation, this would trigger service restart
+            }
+        }
+
+        function viewAllJobs() {
+            window.open('status.html', '_blank');
+        }
+
+        function exportJobData() {
+            showNotification('Job data export functionality would be implemented here', 'info');
+        }
+
+        function clearFailedJobs() {
+            if (confirm('Are you sure you want to clear all failed jobs? This action cannot be undone.')) {
+                showNotification('Failed jobs cleared successfully', 'success');
+            }
+        }
+
+        function viewStorageUsage() {
+            showNotification('Storage usage details functionality would be implemented here', 'info');
+        }
+
+        function cleanupOldFiles() {
+            if (confirm('Are you sure you want to cleanup old files? Files older than 30 days will be removed.')) {
+                showNotification('File cleanup initiated...', 'info');
+            }
+        }
+
+        async function testCleanupAPI() {
+            showNotification('Testing cleanup API endpoint...', 'info');
+            
+            try {
+                // Test with OPTIONS request first
+                const response = await fetch('{{API_GATEWAY_URL}}/cleanup', {
+                    method: 'OPTIONS'
+                });
+                
+                if (response.ok) {
+                    showNotification('Cleanup API endpoint is accessible', 'success');
+                } else {
+                    showNotification(`Cleanup API returned status: ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                console.error('API test error:', error);
+                showNotification(`API test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function cleanupDemoData() {
+            const confirmation = prompt('This will delete ALL demo data from S3 and DynamoDB.\nType "CLEANUP_DEMO_DATA" to confirm:');
+            if (confirmation !== 'CLEANUP_DEMO_DATA') {
+                return;
+            }
+
+            const secondConfirmation = confirm('Are you absolutely sure? This action cannot be undone and will remove:\n\n• All files from S3 bucket\n• All job records from DynamoDB\n\nClick OK to proceed with cleanup.');
+            if (!secondConfirmation) {
+                return;
+            }
+
+            showNotification('Initiating demo data cleanup...', 'warning');
+            
+            try {
+                const response = await fetch('{{API_GATEWAY_URL}}/cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        confirmation: 'CLEANUP_DEMO_DATA'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const { results } = result;
+                    let message = `Cleanup completed successfully!\n\n`;
+                    message += `• S3 files deleted: ${results.s3_files_deleted}\n`;
+                    message += `• DynamoDB items deleted: ${results.dynamodb_items_deleted}`;
+                    
+                    if (results.errors && results.errors.length > 0) {
+                        message += `\n\nWarnings:\n${results.errors.join('\n')}`;
+                        showNotification('Demo data cleanup completed with warnings', 'warning');
+                    } else {
+                        showNotification('Demo data cleanup completed successfully', 'success');
+                    }
+                    
+                    // Show detailed results
+                    alert(message);
+                    
+                    // Refresh system stats
+                    refreshSystemStatus();
+                } else {
+                    throw new Error(result.error || 'Cleanup failed');
+                }
+            } catch (error) {
+                console.error('Cleanup error:', error);
+                showNotification(`Cleanup failed: ${error.message}`, 'error');
+            }
+        }
+
+        function editConfiguration() {
+            showNotification('Configuration editor functionality would be implemented here', 'info');
+        }
+
+        function backupConfiguration() {
+            showNotification('Configuration backup created successfully', 'success');
+        }
+
+        function resetConfiguration() {
+            if (confirm('Are you sure you want to reset configuration to defaults? Current settings will be lost.')) {
+                showNotification('Configuration reset to defaults', 'warning');
+            }
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            switch (type) {
+                case 'success':
+                    notification.style.background = 'var(--success-color)';
+                    break;
+                case 'error':
+                    notification.style.background = 'var(--error-color)';
+                    break;
+                case 'warning':
+                    notification.style.background = 'var(--warning-color)';
+                    break;
+                default:
+                    notification.style.background = 'var(--secondary-color)';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Add CSS for notification animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Load initial data
+        window.addEventListener('load', () => {
+            loadSystemStats();
+            loadSystemInfo();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
