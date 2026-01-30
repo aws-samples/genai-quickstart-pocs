@@ -1,68 +1,108 @@
-# Security Scanning with Bandit
+# Automated Security Scanning with Bandit
 
-This repository uses [Bandit](https://bandit.readthedocs.io/) to automatically scan Python code for common security issues.
+This repository uses [Bandit](https://bandit.readthedocs.io/) to automatically scan Python code for security vulnerabilities.
 
-## Automated Scanning
+## How It Works
 
-Bandit scans run automatically on:
-- Every push to `main`, `master`, or `develop` branches (when Python files change)
-- Every pull request to these branches (when Python files change)
-- Manual trigger via GitHub Actions workflow dispatch
+The security scan runs automatically on:
+- Every push to `main`, `master`, or `develop` branches
+- Every pull request to these branches
+- Manual trigger via GitHub Actions UI
 
-## Viewing Results
+## Build Failure Policy
 
-Security scan results are available in two places:
+The build will **FAIL** if any of the following are detected:
+- ❌ **HIGH severity** security issues
+- ❌ **MEDIUM severity** security issues
 
-1. **GitHub Security Tab**: Navigate to the Security tab → Code scanning alerts to view detailed findings
-2. **GitHub Actions**: Check the workflow run logs for immediate feedback
+The build will **PASS** with informational notices for:
+- ℹ️ **LOW severity** issues (informational only)
 
-## Running Bandit Locally
+## What You'll See
 
-To run Bandit on your local machine before pushing:
+### When Issues Are Found
 
-```bash
-# Install Bandit
-pip install bandit
+The workflow will display:
+1. **Summary counts** by severity level
+2. **Detailed issue reports** including:
+   - Test ID and description
+   - File location and line number
+   - Confidence level
+   - CWE reference
+   - Link to documentation
+3. **GitHub annotations** directly on the affected lines in your PR
+4. **Clear action required message** with resolution options
 
-# Run scan on entire repository
-bandit -r .
+### Example Output
 
-# Run with specific severity/confidence levels
-bandit -r . -ll  # Only show medium/high severity and confidence
-bandit -r .      # Show all severity and confidence levels (default)
+```
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║  ❌ ❌ ❌  SECURITY ISSUES DETECTED - BUILD FAILED  ❌ ❌ ❌  ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
 
-# Generate a report
-bandit -r . -f json -o bandit-report.json
+🔴 HIGH SEVERITY ISSUES (MUST FIX) 🔴
+═══════════════════════════════════════════════════════════════
+
+🔴 Issue #1: B602
+   Description: subprocess call with shell=True identified
+   Location: example.py:42
+   Confidence: HIGH
 ```
 
-## Configuration
+## How to Resolve Issues
 
-Bandit configuration is stored in `.bandit` file at the repository root. You can customize:
-- Excluded directories
-- Severity and confidence levels
-- Specific tests to skip or run
+### Option 1: Fix the Security Issue (Recommended)
 
-## Common Issues and Fixes
+Review the issue description and documentation link, then update your code to use secure alternatives.
 
-### B201: Flask app with debug=True
-**Fix**: Ensure `debug=True` is only used in development, never in production
+**Example:**
+```python
+# ❌ Insecure
+subprocess.call(f"echo {user_input}", shell=True)
 
-### B608: Possible SQL injection
-**Fix**: Use parameterized queries instead of string concatenation
+# ✅ Secure
+subprocess.call(["echo", user_input])
+```
 
-### B105: Hardcoded password
-**Fix**: Use environment variables or secrets management
+### Option 2: Mark as False Positive
 
-### B403: Import of pickle module
-**Fix**: Consider using safer alternatives like JSON for serialization
-
-## Suppressing False Positives
-
-If Bandit flags a false positive, you can suppress it with a comment:
+If you've verified the code is safe, add a `# nosec` comment with justification:
 
 ```python
-# nosec B101
-password = "test_password"  # This is a test fixture, not a real password
+# This is safe because input is validated against a whitelist
+subprocess.call(command, shell=True)  # nosec B602
 ```
 
-Use suppressions sparingly and document why the issue is not a real security concern.
+### Option 3: Configure Bandit (Not Recommended)
+
+Edit `.bandit` to skip specific tests, but document why:
+
+```ini
+[bandit]
+# Skip B101 because we use assert only in test files
+skips = B101
+```
+
+## GitHub Security Integration
+
+Security scan results are also uploaded to the **GitHub Security** tab:
+1. Go to your repository
+2. Click **Security** → **Code scanning alerts**
+3. View detailed SARIF reports
+
+## Configuration Files
+
+- `.github/workflows/bandit-security-scan.yml` - GitHub Actions workflow
+- `.bandit` - Bandit configuration (exclusions, test selection)
+
+## Testing the Scanner
+
+The `security-test/` directory contains intentional vulnerabilities for testing. Remove this directory in production.
+
+## Resources
+
+- [Bandit Documentation](https://bandit.readthedocs.io/)
+- [Common Weakness Enumeration (CWE)](https://cwe.mitre.org/)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
