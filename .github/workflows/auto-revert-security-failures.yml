@@ -1,8 +1,7 @@
-name: Auto-Revert Security Failures
+name: Auto-Create Revert PR for Security Failures
 
-# This workflow automatically reverts commits on main branch that fail security scans
-# ONLY USE THIS IF: You want automatic rollback for direct pushes to main
-# NOTE: With branch protection enabled, this should rarely be needed
+# This workflow automatically creates a revert PR when security scans fail on main
+# This respects branch protection rules and requires approval before reverting
 
 on:
   workflow_run:
@@ -13,7 +12,7 @@ on:
       - main
 
 jobs:
-  auto-revert:
+  create-revert-pr:
     runs-on: ubuntu-latest
     # Only run if the security scan failed AND it was a push to main (not a PR)
     if: |
@@ -38,74 +37,177 @@ jobs:
         COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
         COMMIT_MSG=$(git log -1 --pretty=%B $COMMIT_SHA)
         COMMIT_AUTHOR=$(git log -1 --pretty=%an $COMMIT_SHA)
+        COMMIT_EMAIL=$(git log -1 --pretty=%ae $COMMIT_SHA)
         
         echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+        echo "short_sha=${COMMIT_SHA:0:7}" >> $GITHUB_OUTPUT
         echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
         echo "author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+        echo "email=$COMMIT_EMAIL" >> $GITHUB_OUTPUT
     
-    - name: Create revert commit
+    - name: Create revert branch and commit
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         
+        # Create a new branch for the revert
+        BRANCH_NAME="auto-revert-${{ steps.commit_info.outputs.short_sha }}"
+        git checkout -b $BRANCH_NAME
+        
         # Revert the commit
         git revert --no-edit ${{ steps.commit_info.outputs.sha }}
         
-        # Push the revert
-        git push origin main
+        # Push the revert branch
+        git push origin $BRANCH_NAME
+        
+        echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
     
-    - name: Create issue to notify team
+    - name: Create revert Pull Request
       uses: actions/github-script@v7
       with:
         script: |
           const commitSha = '${{ steps.commit_info.outputs.sha }}';
+          const shortSha = '${{ steps.commit_info.outputs.short_sha }}';
+          const commitMsg = '${{ steps.commit_info.outputs.message }}';
+          const commitAuthor = '${{ steps.commit_info.outputs.author }}';
+          const branchName = process.env.BRANCH_NAME;
+          
+          const prBody = `## 🚨 Automatic Revert: Security Scan Failure
+          
+          This PR automatically reverts a commit that failed security scanning.
+          
+          ### ⚠️ URGENT: Review and Merge ASAP
+          
+          A commit was pushed to \`main\` that contains **HIGH or MEDIUM severity security vulnerabilities**.
+          This PR reverts that commit to protect the codebase.
+          
+          ---
+          
+          ### 📋 Reverted Commit Details
+          
+          - **SHA:** \`${commitSha}\` ([view commit](${context.payload.repository.html_url}/commit/${commitSha}))
+          - **Author:** @${commitAuthor}
+          - **Message:** ${commitMsg}
+          - **Security Scan:** [View failed workflow](${context.payload.workflow_run.html_url})
+          
+          ---
+          
+          ### 🔍 Security Issues Found
+          
+          The commit failed the Bandit security scan with critical vulnerabilities.
+          
+          **Click "Details" on the failed check to see:**
+          - List of HIGH severity issues
+          - List of MEDIUM severity issues  
+          - File locations and line numbers
+          - Documentation links for each issue
+          
+          ---
+          
+          ### ✅ Next Steps
+          
+          1. **Review this PR** - Verify the revert is correct
+          2. **Merge this PR** - Remove vulnerable code from main
+          3. **Fix the issues** - Create a new PR with security fixes
+          4. **Prevent recurrence** - Always use PRs, never push directly to main
+          
+          ---
+          
+          ### 🛡️ Prevention
+          
+          This happened because code was pushed directly to \`main\` branch.
+          
+          **To prevent this:**
+          - ✅ Always create Pull Requests
+          - ✅ Wait for security scans to pass
+          - ✅ Never push directly to protected branches
+          - ✅ Review branch protection settings
+          
+          ---
+          
+          ### 📚 Resources
+          
+          - [Security Scan Guide](.github/SECURITY_SCAN_GUIDE.md)
+          - [Rollback Guide](.github/ROLLBACK_GUIDE.md)
+          - [Bandit Documentation](https://bandit.readthedocs.io/)
+          
+          ---
+          
+          **⚡ This is an automated revert PR created by GitHub Actions.**
+          
+          cc: @${commitAuthor}
+          `;
+          
+          const pr = await github.rest.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Revert: Security failure in ${shortSha}`,
+            head: branchName,
+            base: 'main',
+            body: prBody
+          });
+          
+          // Add labels
+          await github.rest.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.data.number,
+            labels: ['security', 'auto-revert', 'urgent', 'high-priority']
+          });
+          
+          console.log(`✅ Created revert PR #${pr.data.number}`);
+          console.log(`URL: ${pr.data.html_url}`);
+          
+          return pr.data.number;
+    
+    - name: Create tracking issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const commitSha = '${{ steps.commit_info.outputs.sha }}';
+          const shortSha = '${{ steps.commit_info.outputs.short_sha }}';
           const commitMsg = '${{ steps.commit_info.outputs.message }}';
           const commitAuthor = '${{ steps.commit_info.outputs.author }}';
           
-          const issueBody = `## 🚨 Automatic Revert: Security Scan Failure
+          const issueBody = `## 🚨 Security Scan Failure on Main Branch
           
-          A commit was automatically reverted from the \`main\` branch due to security scan failures.
+          A commit was pushed directly to \`main\` that failed security scanning.
+          An automatic revert PR has been created.
           
-          ### Reverted Commit
-          - **SHA:** \`${commitSha.substring(0, 7)}\`
-          - **Author:** ${commitAuthor}
+          ### Commit Details
+          - **SHA:** \`${commitSha}\`
+          - **Author:** @${commitAuthor}
           - **Message:** ${commitMsg}
           - **Link:** ${context.payload.repository.html_url}/commit/${commitSha}
           
-          ### Reason
-          The commit failed the Bandit security scan with HIGH or MEDIUM severity issues.
+          ### Actions Taken
+          - ✅ Revert PR created automatically
+          - ⏳ Waiting for review and merge
           
           ### What Happened
-          1. Commit was pushed directly to \`main\` branch
-          2. Security scan detected critical vulnerabilities
-          3. Commit was automatically reverted to protect the codebase
+          1. Commit was pushed directly to \`main\` branch (bypassing PR process)
+          2. Bandit security scan detected HIGH or MEDIUM severity vulnerabilities
+          3. Automatic revert PR was created to remove vulnerable code
           
           ### Next Steps
-          1. Review the security scan results: [View Workflow Run](${context.payload.workflow_run.html_url})
-          2. Fix the security issues in a feature branch
-          3. Create a Pull Request with the fixes
-          4. Ensure security scan passes before merging
+          1. **Review and merge the revert PR** to remove vulnerable code
+          2. **Review security scan results:** [View Workflow](${context.payload.workflow_run.html_url})
+          3. **Fix the security issues** in a feature branch
+          4. **Create a new PR** with the fixes
+          5. **Ensure security scan passes** before merging
           
           ### Prevention
           - Always use Pull Requests instead of direct pushes to \`main\`
-          - Branch protection rules should prevent this scenario
+          - Wait for all checks to pass before merging
           - Review branch protection settings if this happens frequently
           
-          @${commitAuthor} - Please review and fix the security issues.
+          @${commitAuthor} - Please review the security issues and create a fix.
           `;
           
           await github.rest.issues.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            title: `🚨 Auto-Revert: Security failure in ${commitSha.substring(0, 7)}`,
+            title: `🚨 Security failure: ${shortSha} - Revert PR created`,
             body: issueBody,
             labels: ['security', 'auto-revert', 'urgent']
           });
-    
-    - name: Send notification
-      uses: actions/github-script@v7
-      with:
-        script: |
-          console.log('🚨 AUTOMATIC REVERT EXECUTED');
-          console.log('Commit ${{ steps.commit_info.outputs.sha }} was reverted due to security scan failure');
-          console.log('An issue has been created to track this incident');
