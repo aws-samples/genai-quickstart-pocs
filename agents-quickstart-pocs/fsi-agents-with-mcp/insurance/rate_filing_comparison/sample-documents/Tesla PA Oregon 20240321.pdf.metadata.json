@@ -1,0 +1,21 @@
+{
+    "metadataAttributes": {
+        "companyName": "Tesla General Insurance, Inc.",
+        "state": "Oregon",
+        "filingType": "Rate/Rule",
+        "productLine": "Personal Auto",
+        "productName": "Personal Auto - Rates and Rule",
+        "effectiveDate": "2024-03-21",
+        "renewalDate": "2024-05-20",
+        "filingStatus": "Submitted to State",
+        "serffTrackingNumber": "TSIS-134021122",
+        "overallRateImpact": 5.9,
+        "submissionDate": "2024-03-19",
+        "dispositionDate": "9999-12-31",
+        "TOI": "19.0 Personal Auto",
+        "subTOI": "19.0001 Private Passenger Auto (PPA)",
+        "hasActuarialMemo": true,
+        "hasHistogram": true,
+        "ruleChanges": true
+    }
+}

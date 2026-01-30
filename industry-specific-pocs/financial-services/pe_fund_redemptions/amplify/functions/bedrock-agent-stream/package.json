@@ -1,0 +1,13 @@
+{
+  "name": "bedrock-agent-stream",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "handler.mjs",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "^3.864.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

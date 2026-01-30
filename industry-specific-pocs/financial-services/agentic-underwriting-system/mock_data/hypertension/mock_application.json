@@ -1,0 +1,74 @@
+{
+  "_meta": { "format": "synthetic_application_v1", "generated_from": "mock_application.xml" },
+  "request": {
+    "id": "87654321",
+    "timestamp": "2024-03-15T10:30:22.456-05:00",
+    "issuer": {
+      "name": "NORTHRIDGE_ASSURANCE_GROUP",
+      "code": "NORTHRIDGE_ASSURANCE",
+      "deal": "TERM_PREFERRED_PLUS",
+      "password": "XXXXXXXXXXXXXX"
+    }
+  },
+  "application": {
+    "policy": {
+      "number": "MER_24_785432_001",
+      "accept_ts": "2024-03-15T10:30:22.456-05:00",
+      "state_of_issue": "TX",
+      "coverage": {
+        "base": {
+          "amount": 750000,
+          "term_years": 20,
+          "conditional_receipt_amount": 750000,
+          "replacement": false,
+          "smoker": "NS",
+          "risk": "PP"
+        }
+      },
+      "product": { "code": "TERM_20_PREFERRED_PLUS", "batch": "UW_BATCH_2024_Q1_789" }
+    },
+    "people": {
+      "primary": {
+        "identifier": "MainApplicant",
+        "person_ref": "Person01",
+        "demographics": { "sex": "MALE", "dob": "1982-07-23", "citizenship": "US", "birth_state": "TX" },
+        "contact": { "home": "214-555-7892", "work": "214-555-3456" },
+        "biometrics": { "height_in": 71.0, "weight_lb": 185.0 },
+        "occupation": { "title": "SOFTWARE_ENGINEER", "description": "SENIOR SOFTWARE ENGINEER - FINANCIAL SERVICES", "annual_income": 145000 },
+        "drivers_license": { "status": "ACTIVE", "number": "TX85739462051", "state": "TX" },
+        "authorizations": { "medical_release_signed": true, "auth_signed_date": "2024-03-12" },
+        "signature": { "date": "2024-03-12", "city": "Dallas", "state": "TX" },
+        "tags": [
+          { "key": "MIB_REQUEST_ID", "value": "MIB_REQ_2024_031501" },
+          { "key": "RX_HISTORY_REQUEST_ID", "value": "RX_REQ_2024_031502" },
+          { "key": "UNDERWRITING_CLASS", "value": "PREFERRED_PLUS" }
+        ]
+      },
+      "insured_profile": {
+        "id": "Person01",
+        "identifier": "MainApplicant",
+        "name": { "first": "Michael", "middle": "James", "last": "Thompson" },
+        "address": { "line1": "3120 Western Ridge Blvd", "line2": "Unit 304", "city": "Dallas", "state": "TX", "postal_code": "75201", "country": "US" },
+        "ssn": "456789123"
+      },
+      "writing_agent": { "id": "Agent01", "name": { "first": "Jennifer", "middle": "Marie", "last": "Rodriguez" }, "agent_number": "AG742850", "license": { "number": "TX-LIFE-38291", "state": "TX" }, "commission_pct": 85, "signed_on": "2024-03-12" }
+    },
+    "questionnaire": [
+      { "qid": "Q001", "prompt": "Have you used tobacco, nicotine products, or e-cigarettes in the past 12 months?", "answer": "No" },
+      { "qid": "Q002", "prompt": "Do you consume more than 2 alcoholic drinks per day on average?", "answer": "No" },
+      { "qid": "Q003", "prompt": "Have you received medical treatment or been hospitalized in the past 5 years?", "answer": "Yes - Annual physical exams only" },
+      { "qid": "Q004", "prompt": "Are you currently taking any prescription medications?", "answer": "Yes - Lisinopril 10mg for blood pressure" },
+      { "qid": "Q005", "prompt": "Has any blood relative died before age 60 from heart disease, cancer, or stroke?", "answer": "Yes - Father had heart attack at age 58" },
+      { "qid": "Q006", "prompt": "Have you had any moving violations or accidents in the past 3 years?", "answer": "No" },
+      { "qid": "Q007", "prompt": "Do you pilot aircraft or participate in aviation activities?", "answer": "No" },
+      { "qid": "Q008", "prompt": "Do you participate in rock climbing, skydiving, or other hazardous sports?", "answer": "No" },
+      { "qid": "Q009", "prompt": "Do you plan to travel to high-risk countries in the next 2 years?", "answer": "No" },
+      { "qid": "Q010", "prompt": "Is the requested coverage amount appropriate for your income and financial needs?", "answer": "Yes - Coverage is approximately 5x annual income" },
+      { "qid": "Q011", "prompt": "Do you currently have other life insurance policies in force?", "answer": "Yes - $250,000 group term through employer" },
+      { "qid": "Q012", "prompt": "Have you gained or lost more than 20 pounds in the past year?", "answer": "No" }
+    ]
+  }
+}
+
+
+

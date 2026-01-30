@@ -1,0 +1,50 @@
+{
+  "workflow_id": "Claim_processing",
+  "created_at": "2025-06-30T23:15:42.816638+00:00",
+  "status": "running",
+  "tasks": [
+    {
+      "task_id": "fnol_processing",
+      "description": "Proccess FNOL forms Extract key data to process Claim",
+      "system_prompt": "Process {'fnol': {'claimNumber': 'CL-2023-1156789', 'reportDate': '2023-11-21', 'reportTime': '14:35:00', 'reportMethod': 'Online', 'submittedBy': 'Policyholder'}, 'policyInformation': {'policyNumber': 'AUTO-P987654321', 'policyType': 'Auto Insurance', 'effectiveDate': '2023-01-15', 'expirationDate': '2024-01-15', 'insuranceProvider': 'Acme Insurance Company', 'coverageTypes': [{'type': 'Liability', 'limit': '$300,000/$500,000'}, {'type': 'Collision', 'deductible': '$500'}, {'type': 'Comprehensive', 'deductible': '$250'}, {'type': 'Medical Payments', 'limit': '$10,000'}, {'type': 'Uninsured/Underinsured Motorist', 'limit': '$250,000/$500,000'}, {'type': 'Rental Reimbursement', 'limit': '$40/day, $1,200 maximum'}, {'type': 'Roadside Assistance', 'included': True}]}, 'policyholder': {'firstName': 'John', 'lastName': 'Smith', 'dateOfBirth': '1985-06-12', 'address': {'street': '123 Main Street', 'city': 'Springfield', 'state': 'IL', 'zipCode': '62704'}, 'contactInformation': {'homePhone': '217-555-1234', 'cellPhone': '217-555-5678', 'email': 'john.smith@email.com', 'preferredContactMethod': 'Email'}, 'driverLicense': {'number': 'S530-4281-7924', 'state': 'IL', 'expirationDate': '2026-06-12'}}, 'incident': {'date': '2023-11-19', 'time': '17:45:00', 'location': {'street': '456 Oak Avenue', 'city': 'Springfield', 'state': 'IL', 'zipCode': '62704', 'intersection': 'Oak Avenue and Maple Street', 'gpsCoordinates': {'latitude': '39.78383', 'longitude': '-89.65031'}}, 'description': 'While stopped at a red light, my vehicle was rear-ended by another car. The impact pushed my vehicle forward about 5 feet. I pulled over to the side of the road to exchange information with the other driver.', 'weatherConditions': {'condition': 'Light Rain', 'roadCondition': 'Wet', 'visibility': 'Good'}, 'policeReport': {'filed': True, 'reportNumber': 'SPD-2023-11875', 'departmentName': 'Springfield Police Department', 'officerName': 'Officer Michael Johnson', 'badgeNumber': '42587'}, 'witnesses': [{'name': 'Sarah Williams', 'phone': '217-555-9012', 'statement': \"I saw the blue sedan rear-end the policyholder's vehicle while it was completely stopped at the red light.\"}]}, 'vehicle': {'insuredVehicle': {'year': 2020, 'make': 'Honda', 'model': 'Accord', 'trim': 'EX-L', 'vin': '1HGCV2F35LA007149', 'licensePlate': {'number': 'ABC 1234', 'state': 'IL'}, 'mileage': 35650, 'primaryDriver': 'John Smith', 'damage': {'description': 'Rear bumper dented and paint scratched, trunk lid misaligned, possible frame damage, brake lights damaged', 'estimatedRepairCost': '$4,500', 'areas': ['Rear bumper', 'Trunk', 'Taillights', 'Possible frame']}, 'drivable': False, 'location': 'Springfield Auto Body Shop, 789 Industrial Pkwy, Springfield, IL 62704', 'photos': ['http://claimportal.acmeinsurance.com/claims/CL-2023-1156789/photo1.jpg', 'http://claimportal.acmeinsurance.com/claims/CL-2023-1156789/photo2.jpg', 'http://claimportal.acmeinsurance.com/claims/CL-2023-1156789/photo3.jpg', 'http://claimportal.acmeinsurance.com/claims/CL-2023-1156789/photo4.jpg']}}, 'otherParties': [{'type': 'Driver', 'firstName': 'Robert', 'lastName': 'Johnson', 'dateOfBirth': '1990-03-25', 'address': {'street': '789 Pine Road', 'city': 'Springfield', 'state': 'IL', 'zipCode': '62707'}, 'contactInformation': {'phone': '217-555-3456', 'email': 'robert.johnson@email.com'}, 'driverLicense': {'number': 'J525-7891-4562', 'state': 'IL'}, 'vehicle': {'year': 2018, 'make': 'Toyota', 'model': 'Camry', 'vin': '4T1B11HK5JU123456', 'licensePlate': {'number': 'XYZ 7890', 'state': 'IL'}, 'damage': {'description': 'Front bumper, hood, radiator damaged', 'areas': ['Front bumper', 'Hood', 'Grille', 'Radiator']}}, 'insurance': {'company': 'State County Insurance', 'policyNumber': 'AUTO-56789012', 'phoneNumber': '800-123-4567', 'verified': True}}], 'injuries': [{'injured': {'firstName': 'John', 'lastName': 'Smith', 'relationship': 'Policyholder'}, 'description': 'Neck pain, possible whiplash', 'medicalAttention': {'received': True, 'provider': 'Springfield General Hospital', 'date': '2023-11-19', 'treatmentDetails': 'X-rays taken, prescribed pain medication and neck brace'}}, {'injured': {'firstName': 'Robert', 'lastName': 'Johnson', 'relationship': 'Other driver'}, 'description': 'Minor airbag abrasions on face and arms', 'medicalAttention': {'received': True, 'provider': 'Springfield General Hospital', 'date': '2023-11-19', 'treatmentDetails': 'Examined and released with no serious injuries'}}], 'rentalCar': {'needed': True, 'provider': 'Enterprise Rent-A-Car', 'startDate': '2023-11-20', 'expectedDuration': '14 days', 'rentalDetails': {'make': 'Nissan', 'model': 'Altima', 'year': 2022, 'rentalRate': '$38/day'}}}You extract and structure Claim data from FNOL form.",
+      "priority": 5
+    },
+    {
+      "task_id": "appraisal",
+      "description": "Analyze Claim data, damages and assess estimated repair cost",
+      "dependencies": [
+        "fnol_processing"
+      ],
+      "system_prompt": "You identify damages and assess estimated repair cost based on Claim data.",
+      "priority": 3
+    },
+    {
+      "task_id": "settlement",
+      "description": "Generate Claim payout",
+      "dependencies": [
+        "appraisal"
+      ],
+      "system_prompt": "You create a Claim payout report.",
+      "priority": 2
+    }
+  ],
+  "current_task_index": 0,
+  "task_results": {
+    "fnol_processing": {
+      "status": "completed",
+      "result": [],
+      "completed_at": "2025-06-30T23:15:57.568745+00:00"
+    },
+    "appraisal": {
+      "status": "completed",
+      "result": [],
+      "completed_at": "2025-06-30T23:16:15.215641+00:00"
+    },
+    "settlement": {
+      "status": "completed",
+      "result": [],
+      "completed_at": "2025-06-30T23:16:33.498009+00:00"
+    }
+  },
+  "parallel_execution": true
+}

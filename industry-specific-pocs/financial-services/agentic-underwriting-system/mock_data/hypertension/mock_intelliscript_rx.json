@@ -1,0 +1,17 @@
+{
+  "_meta": { "format": "synthetic_rx_v1", "generated_from": "mock_intelliscript_rx.xml" },
+  "order": { "reference": "ORD_785432_001", "status": "H", "results_url": "https://example.com/rx/results/ORD_785432_001" },
+  "applicant": { "reference": "MER_24_785432_001", "ssn": "456789123", "name": { "first": "Michael", "middle": "James", "last": "Thompson" }, "sex": "M", "dob": "1982-07-23", "residence": { "state": "TX", "zip": "75201" } },
+  "eligibility": { "begin": "2019-03-15", "end": "2024-03-15" },
+  "rx": {
+    "total_fills": 3,
+    "fills": [
+      { "fill_date": "2024-01-10", "ndc": "00185-0020-30", "brand": "Lisinopril", "generic": "Lisinopril", "generic_and_dosage": "Lisinopril 10mg Tablet", "quantity": 90, "days_supply": 90, "priority": "MEDIUM", "physician": { "name": "Dr. Alan Grant", "specialty": "Internal Medicine", "address1": "123 Medical Center Drive", "address2": "Dallas, TX 75204", "phone": "214-555-1212" }, "pharmacy": { "id": "PHARMACY_TX_DALLAS_4587" }, "indications": ["Hypertension"] },
+      { "fill_date": "2023-10-12", "ndc": "00185-0020-30", "brand": "Lisinopril", "generic": "Lisinopril", "generic_and_dosage": "Lisinopril 10mg Tablet", "quantity": 90, "days_supply": 90, "priority": "MEDIUM", "physician": { "name": "Dr. Alan Grant", "specialty": "Internal Medicine", "address1": "123 Medical Center Drive", "address2": "Dallas, TX 75204", "phone": "214-555-1212" }, "pharmacy": { "id": "PHARMACY_TX_DALLAS_4587" }, "indications": ["Hypertension"] },
+      { "fill_date": "2023-08-21", "ndc": "00591-2401-30", "brand": "Amoxicillin", "generic": "Amoxicillin", "generic_and_dosage": "Amoxicillin 500mg Capsule", "quantity": 21, "days_supply": 7, "priority": "LOW", "physician": { "name": "Dr. Ellie Sattler", "specialty": "Urgent Care", "address1": "456 Urgent Care Way", "address2": "Dallas, TX 75201", "phone": "214-555-8888" }, "pharmacy": { "id": "PHARMACY_TX_DALLAS_1122" }, "indications": ["Sinus Infection"] }
+    ]
+  }
+}
+
+
+

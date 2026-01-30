@@ -1,0 +1,126 @@
+﻿@page "/chat"
+
+@using System.Runtime.CompilerServices;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using System.Threading.Channels;
+@using Amazon;
+@using Amazon.Bedrock
+@using Amazon.BedrockAgent
+@using Amazon.BedrockAgent.Model
+@using Amazon.BedrockAgentRuntime
+@using Amazon.BedrockAgentRuntime.Model
+@using Amazon.BedrockRuntime;
+@using Amazon.BedrockRuntime.Model;
+@using Amazon.Runtime.EventStreams;
+@using Amazon.Util;
+@using LangChain.Databases
+@using LangChain.Databases.Sqlite
+@using LangChain.Providers.Amazon.Bedrock.Predefined.Amazon;
+@using LangChain.Retrievers;
+@using LangChain.Chains.RetrievalQA;
+@using MudBlazor;
+@using LangChain.Providers.Amazon.Bedrock;
+@using LangChain.DocumentLoaders;
+@using LangChain.Splitters.Text;
+@using Amazon.Bedrock.Converse.Api.Poc.Components.Models;
+
+@inject AmazonBedrockAgentClient agentClient
+@inject AmazonBedrockAgentRuntimeClient agentRuntimeClient
+@inject AmazonBedrockClient bedrockClient
+
+@rendermode InteractiveServer
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<PageTitle>Amazon Bedrock Converse POC</PageTitle>
+
+<MudGrid>
+   
+    <MudItem xs="12" >
+        <MudAutocomplete T="BedrockModel" Label="Select Model" @bind-Value="_bedrockModel"
+                         SearchFunc="@Search"
+                         ToStringFunc="@(e=> e==null?null : $"{e.ModelName} ({e.ModelIdentifier})")"
+        Margin=Margin.Dense  Variant="Variant.Outlined">
+
+           
+        </MudAutocomplete>
+    </MudItem>
+</MudGrid>
+
+<MudDivider DividerType="DividerType.Middle" Class="my-6" />
+<MudGrid Justify="Justify.Center">   
+     <MudItem id="answers" xs="12" Class="overflow-x-auto">
+       
+            <div class="d-flex align-content-center flex-wrap flex-grow-1 full-height">
+                <Examples Message="Chat with your data" OnExampleClicked="@OnAskQuestionAsync" />
+            </div>
+        
+            <MudStack Reverse="@IsReversed" Spacing="12">
+                @foreach (var ((question, modelId, askedOn), answer) in _questionAndAnswerMap)
+                {
+                    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Start" Spacing="4">
+                        <MudBadge Origin="Origin.TopLeft" Overlap="true" Color="Color.Secondary"
+                          Icon="@Icons.Material.Filled.QuestionMark" Class="d-flex align-self-end">
+                            <MudPaper Class="pa-6 d-flex flex-column" Elevation="3">
+                                <MudText Typo="Typo.body1" Align="Align.End">
+                                    @question
+                                </MudText>
+                                <MudText Typo="Typo.caption" Align="Align.End" Color="Color.Secondary">
+                                    @($"Asked at {askedOn:h:mm:ss tt} on {askedOn:M/dd/yy}")
+                                </MudText>
+                            </MudPaper>
+                        </MudBadge>
+                       <div class="ten-twelves">
+                            <MudBadge Origin="Origin.TopLeft" Overlap="true" Color="Color.Secondary"
+                                      Icon="@Icons.Material.Filled.AutoAwesome"
+                                      Style="display:inherit">
+                                <Answer Response=@answer.Content FollowupQuestionClicked="@OnAskQuestionAsync" />
+                            </MudBadge>
+                        </div>
+
+                    </MudStack>
+                }
+            </MudStack>
+        
+    </MudItem>
+     <MudItem xs="12" Class="rounded">
+        <MudGrid>
+
+            <MudItem xs="12" lg="10">
+                <MudTextField @bind-Value="_userQuestion" Label="Enter Search prompt"
+                              Variant="Variant.Outlined" IconSize="Size.Large"
+                              Adornment="Adornment.End" MaxLength="1000" Lines="3"
+                              AdornmentIcon="@Icons.Material.Filled.Search" 
+                              HelperText="Use Shift + Enter for new lines."  />
+            </MudItem>
+            <MudItem xs="0" lg="2" Class="d-flex align-self-center">
+                <MudGrid Justify="Justify.Center">
+                    <MudItem xs="9" Class="pa-2">
+                        <MudFab Color="Color.Secondary" Size="Size.Large"
+                                StartIcon=@Icons.Material.Filled.Send Class="full-width"
+                                Label="Chat" aria-label="Ask question button."
+                                OnClick="@OnAskClickedAsync"
+                                Disabled=@(_isReceivingResponse || string.IsNullOrWhiteSpace(_userQuestion)) />
+                    </MudItem>
+                    <MudItem xs="3" Class="pa-2">
+                        <MudTooltip Arrow="true" Text="Clear chat history" Placement="Placement.Top">
+                            <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Delete" OnClick="@OnClearChat" />
+                          
+                        </MudTooltip>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+    
+        </MudGrid>
+ </MudItem>
+</MudGrid>
+
+
+@code {
+    
+
+ 
+}
