@@ -1,0 +1,165 @@
+name: Auto-Merge Revert PRs
+
+# This workflow automatically merges revert PRs created by the auto-revert workflow
+# ONLY merges if HIGH severity security issues are found
+# Requires: Branch protection to allow GitHub Actions to bypass
+
+on:
+  pull_request:
+    types: [opened, labeled]
+
+jobs:
+  auto-merge-revert:
+    runs-on: ubuntu-latest
+    # Only run for PRs with auto-revert label
+    if: contains(github.event.pull_request.labels.*.name, 'auto-revert')
+    
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - name: Check if HIGH severity issues exist
+      id: check_severity
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prBody = context.payload.pull_request.body || '';
+          
+          // Check if PR mentions HIGH severity
+          const hasHighSeverity = prBody.includes('HIGH severity') || 
+                                  prBody.includes('🔴 HIGH') ||
+                                  prBody.includes('HIGH Severity');
+          
+          console.log(`HIGH severity found: ${hasHighSeverity}`);
+          return hasHighSeverity;
+    
+    - name: Wait for checks to complete
+      if: steps.check_severity.outputs.result == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const maxWaitTime = 5 * 60 * 1000; // 5 minutes
+          const checkInterval = 10 * 1000; // 10 seconds
+          const startTime = Date.now();
+          
+          while (Date.now() - startTime < maxWaitTime) {
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            // Check if mergeable
+            if (pr.mergeable === true) {
+              console.log('✅ PR is mergeable');
+              return true;
+            }
+            
+            if (pr.mergeable === false) {
+              console.log('❌ PR has conflicts');
+              return false;
+            }
+            
+            console.log('⏳ Waiting for mergeable status...');
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+          }
+          
+          console.log('⏱️ Timeout waiting for mergeable status');
+          return false;
+    
+    - name: Auto-merge revert PR
+      if: steps.check_severity.outputs.result == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          
+          try {
+            // Enable auto-merge
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'merge',
+              commit_title: `🚨 Auto-merge: Revert security failure (HIGH severity)`,
+              commit_message: `Automatically merged revert PR due to HIGH severity security issues.\n\nThis is an automated action to protect the codebase.`
+            });
+            
+            console.log(`✅ Successfully merged PR #${prNumber}`);
+            
+            // Add comment explaining the auto-merge
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `## ✅ Automatically Merged
+              
+This revert PR was automatically merged because:
+- 🔴 **HIGH severity** security issues were detected
+- ⚡ Immediate action required to protect the codebase
+- ✅ PR passed all checks and had no conflicts
+
+The vulnerable code has been removed from the \`main\` branch.
+
+**Next steps:**
+1. Review the security issues in the original commit
+2. Create a new PR with fixes
+3. Ensure security scan passes before merging
+
+---
+*This is an automated action by GitHub Actions*`
+            });
+            
+          } catch (error) {
+            console.error('❌ Failed to merge PR:', error.message);
+            
+            // Comment on PR about the failure
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `## ⚠️ Auto-Merge Failed
+              
+Attempted to automatically merge this revert PR but encountered an error:
+
+\`\`\`
+${error.message}
+\`\`\`
+
+**Manual action required:**
+Please review and merge this PR manually to remove the vulnerable code.
+
+---
+*This is an automated notification by GitHub Actions*`
+            });
+            
+            throw error;
+          }
+    
+    - name: Skip auto-merge for MEDIUM severity
+      if: steps.check_severity.outputs.result != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body: `## ⏸️ Manual Review Required
+            
+This revert PR was **not** automatically merged because:
+- Only MEDIUM or LOW severity issues were detected
+- Manual review is recommended for non-critical issues
+
+**Please review and merge manually if appropriate.**
+
+To enable auto-merge for MEDIUM severity issues, update the workflow configuration.
+
+---
+*This is an automated notification by GitHub Actions*`
+          });
+          
+          console.log('ℹ️ Skipped auto-merge - only MEDIUM/LOW severity');
