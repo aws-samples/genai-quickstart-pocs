@@ -66,17 +66,21 @@ jobs:
       run: |
         if [ -f bandit-report.json ]; then
           echo "=== Scan Summary ==="
-          python3 -c "
+          python3 << 'EOF'
 import json
 try:
     with open('bandit-report.json', 'r') as f:
         data = json.load(f)
         metrics = data.get('metrics', {})
-        print(f\"Files scanned: {metrics.get('_totals', {}).get('loc', 0)} lines in {metrics.get('_totals', {}).get('nosec', 0)} files\")
-        print(f\"Issues found: {len(data.get('results', []))}\")
+        totals = metrics.get('_totals', {})
+        print(f"Files scanned: {totals.get('loc', 0)} lines")
+        print(f"Issues found: {len(data.get('results', []))}")
         for result in data.get('results', [])[:10]:
-            print(f\"  - {result.get('issue_severity')} severity: {result.get('issue_text')} in {result.get('filename')}\")
+            severity = result.get('issue_severity')
+            text = result.get('issue_text')
+            filename = result.get('filename')
+            print(f"  - {severity} severity: {text} in {filename}")
 except Exception as e:
     print(f'Could not parse results: {e}')
-"
+EOF
         fi
