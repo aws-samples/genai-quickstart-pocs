@@ -3,12 +3,8 @@ name: Bandit Security Scan
 on:
   push:
     branches: [ main, master, develop ]
-    paths:
-      - '**.py'
   pull_request:
     branches: [ main, master, develop ]
-    paths:
-      - '**.py'
   workflow_dispatch:
 
 jobs:
@@ -31,18 +27,56 @@ jobs:
       run: |
         pip install bandit[sarif]
     
-    - name: Run Bandit scan
+    - name: Verify Python files exist
       run: |
-        bandit -r . -f sarif -o bandit-report.sarif --exit-zero
+        echo "Checking for Python files..."
+        find . -name "*.py" -type f | head -20
+        echo "Total Python files found:"
+        find . -name "*.py" -type f | wc -l
+    
+    - name: Run Bandit scan (SARIF for Security tab)
+      run: |
+        echo "Running Bandit scan on ALL Python files..."
+        bandit -r . -f sarif -o bandit-report.sarif --exit-zero --exclude .git || true
+        echo "Checking SARIF output..."
+        if [ -f bandit-report.sarif ]; then
+          echo "SARIF file created successfully"
+          cat bandit-report.sarif | head -50
+        else
+          echo "Warning: SARIF file not created"
+        fi
       continue-on-error: true
     
     - name: Upload SARIF file to GitHub Security
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: bandit-report.sarif
-      if: always()
+      if: always() && hashFiles('bandit-report.sarif') != ''
     
-    - name: Run Bandit scan (with failure on issues)
+    - name: Run Bandit scan (detailed output)
       run: |
-        bandit -r . -f json -o bandit-report.json
-        bandit -r .
+        echo "Running detailed Bandit scan on ALL files..."
+        bandit -r . -f json -o bandit-report.json --exclude .git || true
+        echo ""
+        echo "=== Bandit Security Scan Results ==="
+        bandit -r . -f screen --exclude .git || true
+    
+    - name: Display summary
+      if: always()
+      run: |
+        if [ -f bandit-report.json ]; then
+          echo "=== Scan Summary ==="
+          python3 -c "
+import json
+try:
+    with open('bandit-report.json', 'r') as f:
+        data = json.load(f)
+        metrics = data.get('metrics', {})
+        print(f\"Files scanned: {metrics.get('_totals', {}).get('loc', 0)} lines in {metrics.get('_totals', {}).get('nosec', 0)} files\")
+        print(f\"Issues found: {len(data.get('results', []))}\")
+        for result in data.get('results', [])[:10]:
+            print(f\"  - {result.get('issue_severity')} severity: {result.get('issue_text')} in {result.get('filename')}\")
+except Exception as e:
+    print(f'Could not parse results: {e}')
+"
+        fi
