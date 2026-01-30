@@ -61,155 +61,145 @@ jobs:
         echo "=== Bandit Security Scan Results ==="
         bandit -r . -f screen --exclude .git || true
     
+    - name: Create analysis script
+      if: always()
+      run: |
+        cat > analyze_bandit.py << 'PYTHON_SCRIPT'
+import json
+import sys
+
+def analyze_results():
+    try:
+        with open('bandit-report.json') as f:
+            data = json.load(f)
+        
+        results = data.get('results', [])
+        high_issues = [r for r in results if r['issue_severity'] == 'HIGH']
+        medium_issues = [r for r in results if r['issue_severity'] == 'MEDIUM']
+        low_issues = [r for r in results if r['issue_severity'] == 'LOW']
+        
+        total = len(results)
+        high_count = len(high_issues)
+        medium_count = len(medium_issues)
+        low_count = len(low_issues)
+        critical_count = high_count + medium_count
+        
+        print("=== Security Scan Summary ===")
+        print(f"📊 Total Issues Found: {total}")
+        print(f"🔴 HIGH Severity: {high_count}")
+        print(f"🟡 MEDIUM Severity: {medium_count}")
+        print(f"🟢 LOW Severity: {low_count}")
+        print()
+        
+        # Create GitHub annotations
+        for issue in results:
+            severity = issue['issue_severity']
+            filename = issue['filename'].lstrip('./')
+            line = issue['line_number']
+            test_id = issue['test_id']
+            text = issue['issue_text']
+            
+            if severity == 'HIGH' or severity == 'MEDIUM':
+                level = 'error'
+            else:
+                level = 'notice'
+            
+            print(f"::{level} file={filename},line={line},title=Bandit {test_id} ({severity})::{text}")
+        
+        # Display critical issues
+        if critical_count > 0:
+            print()
+            print("╔════════════════════════════════════════════════════════════════╗")
+            print("║                                                                ║")
+            print("║  ❌ ❌ ❌  SECURITY ISSUES DETECTED - BUILD FAILED  ❌ ❌ ❌  ║")
+            print("║                                                                ║")
+            print("╚════════════════════════════════════════════════════════════════╝")
+            print()
+        
+        # Display HIGH severity issues
+        if high_count > 0:
+            print("🔴 HIGH SEVERITY ISSUES (MUST FIX) 🔴")
+            print("═══════════════════════════════════════════════════════════════")
+            for i, issue in enumerate(high_issues, 1):
+                print(f"\n🔴 Issue #{i}: {issue['test_id']}")
+                print(f"   Description: {issue['issue_text']}")
+                print(f"   Location: {issue['filename']}:{issue['line_number']}")
+                print(f"   Confidence: {issue['issue_confidence']}")
+                cwe = issue.get('issue_cwe', {})
+                if cwe:
+                    print(f"   CWE: {cwe.get('id', 'N/A')}")
+                print(f"   Documentation: {issue['more_info']}")
+            print("═══════════════════════════════════════════════════════════════")
+            print()
+        
+        # Display MEDIUM severity issues
+        if medium_count > 0:
+            print("🟡 MEDIUM SEVERITY ISSUES (MUST FIX) 🟡")
+            print("═══════════════════════════════════════════════════════════════")
+            for i, issue in enumerate(medium_issues, 1):
+                print(f"\n🟡 Issue #{i}: {issue['test_id']}")
+                print(f"   Description: {issue['issue_text']}")
+                print(f"   Location: {issue['filename']}:{issue['line_number']}")
+                print(f"   Confidence: {issue['issue_confidence']}")
+                print(f"   Documentation: {issue['more_info']}")
+            print("═══════════════════════════════════════════════════════════════")
+            print()
+        
+        # Display LOW severity issues
+        if low_count > 0:
+            print("ℹ️  LOW SEVERITY ISSUES (INFORMATIONAL) ℹ️")
+            print("───────────────────────────────────────────────────────────────")
+            for i, issue in enumerate(low_issues, 1):
+                text = issue['issue_text'][:80]
+                print(f"  {i}. {issue['test_id']}: {text}")
+                print(f"     {issue['filename']}:{issue['line_number']}")
+            print("───────────────────────────────────────────────────────────────")
+            print()
+        
+        # Final verdict
+        if critical_count > 0:
+            print()
+            print("╔════════════════════════════════════════════════════════════════╗")
+            print("║                                                                ║")
+            print("║  ⛔ ACTION REQUIRED: Fix all HIGH and MEDIUM severity issues  ║")
+            print("║                                                                ║")
+            print(f"║  Found: {high_count} HIGH + {medium_count} MEDIUM = {critical_count} issues to resolve              ║")
+            print("║                                                                ║")
+            print("║  This build will fail until all critical issues are fixed.    ║")
+            print("║                                                                ║")
+            print("║  Options to resolve:                                           ║")
+            print("║  1. Fix the security issues in your code                      ║")
+            print("║  2. Use # nosec comment if false positive (with justification)║")
+            print("║  3. Update .bandit config to skip specific tests (discouraged)║")
+            print("║                                                                ║")
+            print("╚════════════════════════════════════════════════════════════════╝")
+            print()
+            sys.exit(1)
+        else:
+            print()
+            print("╔════════════════════════════════════════════════════════════════╗")
+            print("║                                                                ║")
+            print("║  ✅ ✅ ✅  SECURITY SCAN PASSED  ✅ ✅ ✅                      ║")
+            print("║                                                                ║")
+            print("╚════════════════════════════════════════════════════════════════╝")
+            print()
+            if total == 0:
+                print("🎉 No security issues found!")
+            else:
+                print(f"ℹ️  Found {low_count} LOW severity issues (informational only)")
+    
+    except FileNotFoundError:
+        print("❌ Error: bandit-report.json not found")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error analyzing results: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    analyze_results()
+PYTHON_SCRIPT
+    
     - name: Analyze results and fail on HIGH/MEDIUM severity
       if: always()
       run: |
-        if [ -f bandit-report.json ]; then
-          echo "=== Security Scan Summary ==="
-          
-          # Parse the JSON report
-          TOTAL_ISSUES=$(python3 -c "import json; d=json.load(open('bandit-report.json')); print(len(d['results']))")
-          HIGH_ISSUES=$(python3 -c "import json; d=json.load(open('bandit-report.json')); print(len([r for r in d['results'] if r['issue_severity']=='HIGH']))")
-          MEDIUM_ISSUES=$(python3 -c "import json; d=json.load(open('bandit-report.json')); print(len([r for r in d['results'] if r['issue_severity']=='MEDIUM']))")
-          LOW_ISSUES=$(python3 -c "import json; d=json.load(open('bandit-report.json')); print(len([r for r in d['results'] if r['issue_severity']=='LOW']))")
-          
-          echo "📊 Total Issues Found: $TOTAL_ISSUES"
-          echo "🔴 HIGH Severity: $HIGH_ISSUES"
-          echo "🟡 MEDIUM Severity: $MEDIUM_ISSUES"
-          echo "🟢 LOW Severity: $LOW_ISSUES"
-          echo ""
-          
-          # Create GitHub annotations for all issues
-          python3 << 'EOF'
-import json
-with open('bandit-report.json') as f:
-    data = json.load(f)
-    for issue in data['results']:
-        severity = issue['issue_severity']
-        filename = issue['filename'].lstrip('./')
-        line = issue['line_number']
-        test_id = issue['test_id']
-        text = issue['issue_text']
-        
-        # Map severity to GitHub annotation level
-        if severity == 'HIGH':
-            level = 'error'
-        elif severity == 'MEDIUM':
-            level = 'error'  # Changed to error to make it more visible
-        else:
-            level = 'notice'
-        
-        # Create GitHub annotation
-        print(f"::{level} file={filename},line={line},title=Bandit {test_id} ({severity})::{text}")
-EOF
-          
-          # Check if we need to fail the build
-          CRITICAL_ISSUES=$((HIGH_ISSUES + MEDIUM_ISSUES))
-          
-          if [ "$CRITICAL_ISSUES" -gt 0 ]; then
-            echo ""
-            echo "╔════════════════════════════════════════════════════════════════╗"
-            echo "║                                                                ║"
-            echo "║  ❌ ❌ ❌  SECURITY ISSUES DETECTED - BUILD FAILED  ❌ ❌ ❌  ║"
-            echo "║                                                                ║"
-            echo "╚════════════════════════════════════════════════════════════════╝"
-            echo ""
-          fi
-          
-          # Display HIGH severity issues
-          if [ "$HIGH_ISSUES" -gt 0 ]; then
-            echo "🔴 HIGH SEVERITY ISSUES (MUST FIX) 🔴"
-            echo "═══════════════════════════════════════════════════════════════"
-            python3 << 'EOF'
-import json
-with open('bandit-report.json') as f:
-    data = json.load(f)
-    high_issues = [r for r in data['results'] if r['issue_severity'] == 'HIGH']
-    for i, issue in enumerate(high_issues, 1):
-        print(f"\n🔴 Issue #{i}: {issue['test_id']}")
-        print(f"   Description: {issue['issue_text']}")
-        print(f"   Location: {issue['filename']}:{issue['line_number']}")
-        print(f"   Confidence: {issue['issue_confidence']}")
-        print(f"   CWE: {issue.get('issue_cwe', {}).get('id', 'N/A')}")
-        print(f"   Documentation: {issue['more_info']}")
-        if 'code' in issue:
-            print(f"   Code: {issue['code'][:100]}...")
-EOF
-            echo "═══════════════════════════════════════════════════════════════"
-            echo ""
-          fi
-          
-          # Display MEDIUM severity issues
-          if [ "$MEDIUM_ISSUES" -gt 0 ]; then
-            echo "🟡 MEDIUM SEVERITY ISSUES (MUST FIX) 🟡"
-            echo "═══════════════════════════════════════════════════════════════"
-            python3 << 'EOF'
-import json
-with open('bandit-report.json') as f:
-    data = json.load(f)
-    medium_issues = [r for r in data['results'] if r['issue_severity'] == 'MEDIUM']
-    for i, issue in enumerate(medium_issues, 1):
-        print(f"\n🟡 Issue #{i}: {issue['test_id']}")
-        print(f"   Description: {issue['issue_text']}")
-        print(f"   Location: {issue['filename']}:{issue['line_number']}")
-        print(f"   Confidence: {issue['issue_confidence']}")
-        print(f"   Documentation: {issue['more_info']}")
-EOF
-            echo "═══════════════════════════════════════════════════════════════"
-            echo ""
-          fi
-          
-          # Display LOW severity issues as informational
-          if [ "$LOW_ISSUES" -gt 0 ]; then
-            echo "ℹ️  LOW SEVERITY ISSUES (INFORMATIONAL) ℹ️"
-            echo "───────────────────────────────────────────────────────────────"
-            python3 << 'EOF'
-import json
-with open('bandit-report.json') as f:
-    data = json.load(f)
-    low_issues = [r for r in data['results'] if r['issue_severity'] == 'LOW']
-    for i, issue in enumerate(low_issues, 1):
-        print(f"  {i}. {issue['test_id']}: {issue['issue_text'][:80]}")
-        print(f"     {issue['filename']}:{issue['line_number']}")
-EOF
-            echo "───────────────────────────────────────────────────────────────"
-            echo ""
-          fi
-          
-          # Final verdict
-          if [ "$CRITICAL_ISSUES" -gt 0 ]; then
-            echo ""
-            echo "╔════════════════════════════════════════════════════════════════╗"
-            echo "║                                                                ║"
-            echo "║  ⛔ ACTION REQUIRED: Fix all HIGH and MEDIUM severity issues  ║"
-            echo "║                                                                ║"
-            echo "║  Found: $HIGH_ISSUES HIGH + $MEDIUM_ISSUES MEDIUM = $CRITICAL_ISSUES issues to resolve              ║"
-            echo "║                                                                ║"
-            echo "║  This build will fail until all critical issues are fixed.    ║"
-            echo "║                                                                ║"
-            echo "║  Options to resolve:                                           ║"
-            echo "║  1. Fix the security issues in your code                      ║"
-            echo "║  2. Use # nosec comment if false positive (with justification)║"
-            echo "║  3. Update .bandit config to skip specific tests (not recommended)║"
-            echo "║                                                                ║"
-            echo "╚════════════════════════════════════════════════════════════════╝"
-            echo ""
-            exit 1
-          else
-            echo ""
-            echo "╔════════════════════════════════════════════════════════════════╗"
-            echo "║                                                                ║"
-            echo "║  ✅ ✅ ✅  SECURITY SCAN PASSED  ✅ ✅ ✅                      ║"
-            echo "║                                                                ║"
-            echo "╚════════════════════════════════════════════════════════════════╝"
-            echo ""
-            if [ "$TOTAL_ISSUES" -eq 0 ]; then
-              echo "🎉 No security issues found!"
-            else
-              echo "ℹ️  Found $LOW_ISSUES LOW severity issues (informational only)"
-            fi
-          fi
-        else
-          echo "❌ Error: bandit-report.json not found"
-          exit 1
-        fi
+        python3 analyze_bandit.py
