@@ -1,0 +1,5 @@
+# Lambda Dependencies
+# Lambda runtime already includes: boto3, botocore
+# All other imports are from Python standard library
+
+# NO EXTERNAL DEPENDENCIES NEEDED FOR LAMBDA!

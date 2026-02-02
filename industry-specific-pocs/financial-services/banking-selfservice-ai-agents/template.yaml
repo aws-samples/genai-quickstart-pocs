@@ -1,0 +1,439 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Debit Card Workflow API
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket name where lambda-deployment.zip is uploaded
+
+  LambdaCodeKey:
+    Type: String
+    Default: lambda-deployment.zip
+    Description: S3 key (file name) for the Lambda deployment package
+
+
+Resources:
+  # ==========================================
+  # DynamoDB Tables
+  # ==========================================
+  
+  CustomersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub bank-customers-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: customer_id
+          KeyType: HASH
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  AccountsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub bank-accounts-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: account_id
+          AttributeType: S
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: account_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: customer_id-index
+          KeySchema:
+            - AttributeName: customer_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  CardsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub bank-cards-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: card_id
+          AttributeType: S
+        - AttributeName: account_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: card_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: account_id-index
+          KeySchema:
+            - AttributeName: account_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  CardRequestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub bank-card-requests-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: request_id
+          AttributeType: S
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: request_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: customer_id-index
+          KeySchema:
+            - AttributeName: customer_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  # ==========================================
+  # Lambda Function
+  # ==========================================
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub bank-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt CustomersTable.Arn
+                  - !GetAtt AccountsTable.Arn
+                  - !GetAtt CardsTable.Arn
+                  - !GetAtt CardRequestsTable.Arn
+                  - !Sub ${AccountsTable.Arn}/index/*
+                  - !Sub ${CardsTable.Arn}/index/*
+                  - !Sub ${CardRequestsTable.Arn}/index/*
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  CardOperationsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub bank-card-operations-${Environment}
+      Runtime: python3.11
+      Handler: src.lambda_handler.handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Description: Handles debit card operations (lock, unlock, request new)
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          CUSTOMERS_TABLE: !Ref CustomersTable
+          ACCOUNTS_TABLE: !Ref AccountsTable
+          CARDS_TABLE: !Ref CardsTable
+          CARD_REQUESTS_TABLE: !Ref CardRequestsTable
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  # ==========================================
+  # API Gateway (Plain CloudFormation for control over stage creation)
+  # ==========================================
+
+  CardOperationsApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub bank-card-operations-${Environment}
+      Description: API for debit card operations
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  # /cards resource
+  CardsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !GetAtt CardOperationsApi.RootResourceId
+      PathPart: cards
+
+  # /cards/lock resource
+  LockResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: lock
+
+  # /cards/unlock resource
+  UnlockResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: unlock
+
+  # /cards/request-new resource
+  RequestNewResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: request-new
+
+  # POST /cards/lock method
+  LockCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref LockResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  # POST /cards/unlock method
+  UnlockCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref UnlockResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  # POST /cards/request-new method
+  RequestNewCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref RequestNewResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  # Lambda permission for API Gateway to invoke the function
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CardOperationsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CardOperationsApi}/*/*
+
+  # API Gateway Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - LockCardMethod
+      - UnlockCardMethod
+      - RequestNewCardMethod
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      Description: !Sub Deployment for ${Environment} environment
+
+  # API Gateway Stage
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      DeploymentId: !Ref ApiDeployment
+      StageName: v1
+      Description: !Sub v1 stage for ${Environment} environment
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: bank-card-operations
+
+  # API Key
+  CardOperationsApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub bank-api-key-${Environment}
+      Description: API Key for Card Operations
+      Enabled: true
+
+  # Usage Plan (associates API key with stage)
+  CardOperationsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ApiStage
+    Properties:
+      UsagePlanName: !Sub bank-usage-plan-${Environment}
+      Description: Usage plan for Card Operations
+      ApiStages:
+        - ApiId: !Ref CardOperationsApi
+          Stage: !Ref ApiStage
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50
+      Quota:
+        Limit: 10000
+        Period: DAY
+
+  # Associate API Key with Usage Plan
+  CardOperationsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref CardOperationsApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref CardOperationsUsagePlan
+
+  # ==========================================
+  # CloudWatch Log Group
+  # ==========================================
+  
+  CardOperationsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/bank-card-operations-${Environment}
+      RetentionInDays: 30
+
+  # ==========================================
+  # IAM Role for MCP Server (if running in Lambda)
+  # ==========================================
+  
+  MCPServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub bank-mcp-server-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: InvokeLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt CardOperationsFunction.Arn
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${CardOperationsApi}.execute-api.${AWS::Region}.amazonaws.com/v1
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiEndpoint
+
+  ApiKeyId:
+    Description: API Gateway API Key ID (use AWS CLI to get the key value)
+    Value: !Ref CardOperationsApiKey
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiKeyId
+
+  GetApiKeyCommand:
+    Description: Command to retrieve the API key value
+    Value: !Sub aws apigateway get-api-key --api-key ${CardOperationsApiKey} --include-value --query 'value' --output text
+
+  LambdaFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt CardOperationsFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaArn
+
+  CustomersTableName:
+    Description: Customers DynamoDB table name
+    Value: !Ref CustomersTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CustomersTable
+
+  AccountsTableName:
+    Description: Accounts DynamoDB table name
+    Value: !Ref AccountsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-AccountsTable
+
+  CardsTableName:
+    Description: Cards DynamoDB table name
+    Value: !Ref CardsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CardsTable
+
+  CardRequestsTableName:
+    Description: Card Requests DynamoDB table name
+    Value: !Ref CardRequestsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CardRequestsTable
+
+  Region:
+    Description: AWS Region
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub ${AWS::StackName}-Region
