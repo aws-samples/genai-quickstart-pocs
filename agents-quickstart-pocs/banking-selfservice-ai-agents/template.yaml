@@ -1,0 +1,598 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Banking Self-Service AI Agents API
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket name where lambda-deployment.zip is uploaded
+
+  LambdaCodeKey:
+    Type: String
+    Default: lambda-deployment.zip
+    Description: S3 key (file name) for the Lambda deployment package
+
+  VpcSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: List of VPC subnet IDs for Lambda function
+
+  VpcSecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: List of VPC security group IDs for Lambda function
+
+Resources:
+  # ==========================================
+  # KMS Key for Encryption
+  # ==========================================
+  
+  EncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encrypting DynamoDB tables, CloudWatch logs, and Lambda env vars
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+          - Sid: Allow CloudWatch Logs
+            Effect: Allow
+            Principal:
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
+            Action:
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
+            Resource: '*'
+            Condition:
+              ArnLike:
+                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  EncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/bank-card-ops-${Environment}
+      TargetKeyId: !Ref EncryptionKey
+
+  # ==========================================
+  # DynamoDB Tables
+  # ==========================================
+  
+  CustomersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: customer_id
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref EncryptionKey
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  AccountsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: account_id
+          AttributeType: S
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: account_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: customer_id-index
+          KeySchema:
+            - AttributeName: customer_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref EncryptionKey
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  CardsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: card_id
+          AttributeType: S
+        - AttributeName: account_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: card_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: account_id-index
+          KeySchema:
+            - AttributeName: account_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref EncryptionKey
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  CardRequestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: request_id
+          AttributeType: S
+        - AttributeName: customer_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: request_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: customer_id-index
+          KeySchema:
+            - AttributeName: customer_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref EncryptionKey
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  # ==========================================
+  # Dead Letter Queue for Lambda
+  # ==========================================
+
+  LambdaDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref EncryptionKey
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  # ==========================================
+  # IAM Managed Policy for DynamoDB Access
+  # ==========================================
+
+  DynamoDBAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for Lambda to access DynamoDB tables
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - !GetAtt CustomersTable.Arn
+              - !GetAtt AccountsTable.Arn
+              - !GetAtt CardsTable.Arn
+              - !GetAtt CardRequestsTable.Arn
+              - !Sub ${AccountsTable.Arn}/index/*
+              - !Sub ${CardsTable.Arn}/index/*
+              - !Sub ${CardRequestsTable.Arn}/index/*
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: !GetAtt EncryptionKey.Arn
+
+  # ==========================================
+  # Lambda Function
+  # ==========================================
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref DynamoDBAccessPolicy
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  LambdaDLQPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaDLQAccess
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt LambdaDeadLetterQueue.Arn
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: !GetAtt EncryptionKey.Arn
+      Roles:
+        - !Ref LambdaExecutionRole
+
+  CardOperationsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.11
+      Handler: src.lambda_handler.handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Description: Handles debit card operations (lock, unlock, request new)
+      Timeout: 30
+      MemorySize: 512
+      ReservedConcurrentExecutions: 100
+      DeadLetterConfig:
+        TargetArn: !GetAtt LambdaDeadLetterQueue.Arn
+      VpcConfig:
+        SubnetIds: !Ref VpcSubnetIds
+        SecurityGroupIds: !Ref VpcSecurityGroupIds
+      KmsKeyArn: !GetAtt EncryptionKey.Arn
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          CUSTOMERS_TABLE: !Ref CustomersTable
+          ACCOUNTS_TABLE: !Ref AccountsTable
+          CARDS_TABLE: !Ref CardsTable
+          CARD_REQUESTS_TABLE: !Ref CardRequestsTable
+      TracingConfig:
+        Mode: Active
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+    DependsOn:
+      - LambdaDLQPolicy
+
+  # ==========================================
+  # API Gateway
+  # ==========================================
+
+  CardOperationsApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub banking-selfservice-ai-agents-${Environment}
+      Description: API for debit card operations
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  CardsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !GetAtt CardOperationsApi.RootResourceId
+      PathPart: cards
+
+  LockResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: lock
+
+  UnlockResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: unlock
+
+  RequestNewResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ParentId: !Ref CardsResource
+      PathPart: request-new
+
+  LockCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref LockResource
+      HttpMethod: POST
+      AuthorizationType: AWS_IAM
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  UnlockCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref UnlockResource
+      HttpMethod: POST
+      AuthorizationType: AWS_IAM
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  RequestNewCardMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      ResourceId: !Ref RequestNewResource
+      HttpMethod: POST
+      AuthorizationType: AWS_IAM
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CardOperationsFunction.Arn}/invocations
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CardOperationsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CardOperationsApi}/*/*
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - LockCardMethod
+      - UnlockCardMethod
+      - RequestNewCardMethod
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      Description: !Sub Deployment for ${Environment} environment
+
+  ApiGatewayAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      KmsKeyId: !GetAtt EncryptionKey.Arn
+
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref CardOperationsApi
+      DeploymentId: !Ref ApiDeployment
+      StageName: v1
+      Description: !Sub v1 stage for ${Environment} environment
+      CacheClusterEnabled: true
+      CacheClusterSize: '0.5'
+      TracingEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayAccessLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","caller":"$context.identity.caller","user":"$context.identity.user","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          DataTraceEnabled: false
+          MetricsEnabled: true
+          CachingEnabled: false
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: banking-selfservice-ai-agents
+
+  CardOperationsApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Description: API Key for Card Operations
+      Enabled: true
+
+  CardOperationsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ApiStage
+    Properties:
+      Description: Usage plan for Card Operations
+      ApiStages:
+        - ApiId: !Ref CardOperationsApi
+          Stage: !Ref ApiStage
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50
+      Quota:
+        Limit: 10000
+        Period: DAY
+
+  CardOperationsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref CardOperationsApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref CardOperationsUsagePlan
+
+  # ==========================================
+  # CloudWatch Log Group for Lambda
+  # ==========================================
+  
+  CardOperationsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      KmsKeyId: !GetAtt EncryptionKey.Arn
+
+  # ==========================================
+  # IAM Managed Policy for MCP Server
+  # ==========================================
+
+  MCPServerInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for MCP Server to invoke Lambda
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !GetAtt CardOperationsFunction.Arn
+
+  MCPServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref MCPServerInvokePolicy
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${CardOperationsApi}.execute-api.${AWS::Region}.amazonaws.com/v1
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiEndpoint
+
+  ApiKeyId:
+    Description: API Gateway API Key ID
+    Value: !Ref CardOperationsApiKey
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiKeyId
+
+  GetApiKeyCommand:
+    Description: Command to retrieve the API key value
+    Value: !Sub aws apigateway get-api-key --api-key ${CardOperationsApiKey} --include-value --query 'value' --output text
+
+  LambdaFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt CardOperationsFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaArn
+
+  CustomersTableName:
+    Description: Customers DynamoDB table name
+    Value: !Ref CustomersTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CustomersTable
+
+  AccountsTableName:
+    Description: Accounts DynamoDB table name
+    Value: !Ref AccountsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-AccountsTable
+
+  CardsTableName:
+    Description: Cards DynamoDB table name
+    Value: !Ref CardsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CardsTable
+
+  CardRequestsTableName:
+    Description: Card Requests DynamoDB table name
+    Value: !Ref CardRequestsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-CardRequestsTable
+
+  EncryptionKeyArn:
+    Description: KMS Key ARN for encryption
+    Value: !GetAtt EncryptionKey.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-EncryptionKeyArn
+
+  Region:
+    Description: AWS Region
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub ${AWS::StackName}-Region

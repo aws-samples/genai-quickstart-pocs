@@ -1,0 +1,20 @@
+# Local Development and Testing Dependencies
+# These are NOT deployed to Lambda
+
+# AWS SDK (for local development and testing)
+boto3>=1.34.0
+botocore>=1.34.0
+
+# Testing frameworks
+pytest>=8.0.0
+pytest-cov>=4.1.0
+hypothesis>=6.98.0
+
+# AWS mocking for tests
+moto[dynamodb]>=5.0.0
+
+# MCP SDK (for MCP server, not Lambda handler)
+mcp>=1.25.0
+
+# HTTP client (for MCP server)
+requests>=2.31.0

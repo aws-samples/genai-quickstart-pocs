@@ -1,0 +1,6 @@
+{
+  "env": {
+    "CLAUDE_CODE_TASK_LIST_ID": "jeanie-hackathon",
+    "CLAUDE_CODE_ENABLE_TASKS": "true"
+  }
+}

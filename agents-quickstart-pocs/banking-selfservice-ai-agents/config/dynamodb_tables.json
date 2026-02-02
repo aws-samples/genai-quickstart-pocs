@@ -1,0 +1,122 @@
+{
+  "tables": [
+    {
+      "TableName": "bank-customers",
+      "KeySchema": [
+        {
+          "AttributeName": "customer_id",
+          "KeyType": "HASH"
+        }
+      ],
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "customer_id",
+          "AttributeType": "S"
+        }
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "bank-accounts",
+      "KeySchema": [
+        {
+          "AttributeName": "account_id",
+          "KeyType": "HASH"
+        }
+      ],
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "account_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "customer_id",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "customer_id-index",
+          "KeySchema": [
+            {
+              "AttributeName": "customer_id",
+              "KeyType": "HASH"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "bank-cards",
+      "KeySchema": [
+        {
+          "AttributeName": "card_id",
+          "KeyType": "HASH"
+        }
+      ],
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "card_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "account_id",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "account_id-index",
+          "KeySchema": [
+            {
+              "AttributeName": "account_id",
+              "KeyType": "HASH"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "bank-card-requests",
+      "KeySchema": [
+        {
+          "AttributeName": "request_id",
+          "KeyType": "HASH"
+        }
+      ],
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "request_id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "customer_id",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "customer_id-index",
+          "KeySchema": [
+            {
+              "AttributeName": "customer_id",
+              "KeyType": "HASH"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    }
+  ]
+}

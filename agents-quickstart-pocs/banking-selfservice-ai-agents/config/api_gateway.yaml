@@ -1,0 +1,252 @@
+openapi: 3.0.0
+info:
+  title: Jeanie Card Operations API
+  description: API for managing debit card operations (lock, unlock, request new card)
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production API
+
+paths:
+  /cards/lock:
+    post:
+      summary: Lock a debit card
+      description: Locks a debit card to prevent transactions
+      operationId: lockCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_id
+                - card_id
+              properties:
+                customer_id:
+                  type: string
+                  description: Unique identifier for the customer
+                card_id:
+                  type: string
+                  description: Unique identifier for the card to lock
+      responses:
+        '200':
+          description: Card successfully locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardOperationResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to access this card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/unlock:
+    post:
+      summary: Unlock a debit card
+      description: Unlocks a debit card to restore transaction capability
+      operationId: unlockCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_id
+                - card_id
+              properties:
+                customer_id:
+                  type: string
+                  description: Unique identifier for the customer
+                card_id:
+                  type: string
+                  description: Unique identifier for the card to unlock
+      responses:
+        '200':
+          description: Card successfully unlocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardOperationResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to access this card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/request-new:
+    post:
+      summary: Request a new debit card
+      description: Requests a replacement debit card
+      operationId: requestNewCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_id
+                - account_id
+              properties:
+                customer_id:
+                  type: string
+                  description: Unique identifier for the customer
+                account_id:
+                  type: string
+                  description: Unique identifier for the account
+                reason:
+                  type: string
+                  description: Reason for requesting a new card (optional)
+                delivery_address:
+                  type: string
+                  description: Delivery address for the new card (optional)
+      responses:
+        '200':
+          description: Card request successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardRequestResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to access this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CardOperationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        card:
+          type: object
+          properties:
+            card_id:
+              type: string
+            status:
+              type: string
+              enum: [active, locked]
+            last_four:
+              type: string
+            account_id:
+              type: string
+
+    CardRequestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        request:
+          type: object
+          properties:
+            request_id:
+              type: string
+            account_id:
+              type: string
+            estimated_delivery:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [pending, processing, shipped, delivered]
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
