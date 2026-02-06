@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AWS
+.aws-sam/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# Lambda deployment packages
+*.zip
+
+# Deployment artifacts
+deployment/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CDK
+cdk.out/
+cdk.context.json
+*.assets.json
+
+#Kiro
+.kiro/
+kiro/
