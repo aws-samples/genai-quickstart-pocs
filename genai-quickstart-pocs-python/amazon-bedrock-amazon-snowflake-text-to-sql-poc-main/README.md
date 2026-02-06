@@ -55,7 +55,7 @@ When a user interacts with the POC, the flow is as follows:
 2. Clone the repository to your local machine.
 
     ```bash
-    git clone https://github.com/AWS-Samples-GenAI-FSI/Sales-Analyst-Bedrock-Snowflake.git
+    git clone https://github.com/aws-samples/genai-quickstart-pocs/tree/9e2464fea43eb5a6af49f853a9eb8b3cc3df904d/genai-quickstart-pocs-python/amazon-bedrock-amazon-snowflake-text-to-sql-poc-main
     
     ```
     
