@@ -263,6 +263,64 @@ Status: Active
 
 ---
 
+### Step 3: Deploy Session Update Lambda
+
+The Session Update Lambda function updates Amazon Q in Connect with customer information during contact flows. This must be deployed separately using CloudFormation.
+
+#### 3.1 Download the CloudFormation Template
+
+The template is located at: `assistant-update-session-data-lambda-customer.yaml` in the repository root.
+
+#### 3.2 Deploy via CloudFormation Console
+
+1. **Open CloudFormation Console**
+   - Go to [AWS CloudFormation Console](https://console.aws.amazon.com/cloudformation/)
+   - Click **Create stack** → **With new resources (standard)**
+
+2. **Specify Template**
+   - Under **Specify template**: Select **Upload a template file**
+   - Click **Choose file** and select `assistant-update-session-data-lambda-customer.yaml`
+   - Click **Next**
+
+3. **Specify Stack Details**
+   - **Stack name**: `ConnectAssistantUpdateSessionData`
+   - **AiAssistantARN**: Enter your Connect Assistant ARN
+     - Find this in Amazon Connect admin page → **AI Agent designer** → Select any AI Agent
+     - Format: `arn:aws:wisdom:REGION:ACCOUNT:assistant/ASSISTANT_ID`
+     - Example: `arn:aws:wisdom:us-east-1:123456789012:assistant/abc123def456`
+   - **ConnectInstanceARN**: Enter your Amazon Connect instance ARN
+     - Find this in Amazon Connect console → **Instance settings**
+     - Format: `arn:aws:connect:REGION:ACCOUNT:instance/INSTANCE_ID`
+     - Example: `arn:aws:connect:us-east-1:123456789012:instance/0ae6132f-2da2-4714-a37c-a54a9f6f42c7`
+   - Click **Next**
+
+4. **Configure Stack Options**
+   - Leave defaults
+   - Click **Next**
+
+5. **Review and Create**
+   - Review your settings
+   - Check the box: **I acknowledge that AWS CloudFormation might create IAM resources**
+   - Click **Submit**
+
+6. **Wait for Completion**
+   - Wait for stack status to reach **CREATE_COMPLETE** (typically 1-2 minutes)
+   - Once complete, go to the **Outputs** tab
+   - Note the **LambdaFunctionArn** - you'll need this when configuring Connect contact flows
+
+#### 3.3 Save Lambda Information
+
+Copy to your text file:
+
+```
+=== Session Update Lambda ===
+Stack Name: ConnectAssistantUpdateSessionData
+Lambda Function ARN: arn:aws:lambda:us-east-1:123456789012:function:ConnectAssistantUpdateSessionData
+Lambda Function Name: ConnectAssistantUpdateSessionData
+```
+
+---
+
 ## Software Requirements
 
 ### For Command-Line Deployment
@@ -320,6 +378,8 @@ Status: Active
 - [ ] Amazon Q in Connect Assistant enabled
 - [ ] KMS key configured for Connect Assistant
 - [ ] Connect instance ARN and URL saved
+- [ ] Session Update Lambda deployed via CloudFormation
+- [ ] Session Lambda ARN saved
 
 ---
 

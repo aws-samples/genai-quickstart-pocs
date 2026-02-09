@@ -16,7 +16,7 @@ echo "========================================="
 # Deploy CDK stacks
 echo ""
 echo "Deploying BetterBank stacks..."
-cdk deploy --all -c environment="$ENVIRONMENT" --require-approval never
+cdk deploy --all -c environment=$ENVIRONMENT --require-approval never
 
 # Get outputs
 echo ""
@@ -29,7 +29,7 @@ echo ""
 
 echo "Gateway Role ARN (use when creating Gateway):"
 aws cloudformation describe-stacks \
-  --stack-name "betterbank-mcp-lambda-$ENVIRONMENT" \
+  --stack-name betterbank-mcp-lambda-$ENVIRONMENT \
   --query 'Stacks[0].Outputs[?OutputKey==`GatewayRoleArn`].OutputValue' \
   --output text
 
@@ -38,17 +38,17 @@ echo "Lambda ARNs for Gateway targets:"
 echo ""
 
 aws cloudformation describe-stacks \
-  --stack-name "betterbank-mcp-lambda-$ENVIRONMENT" \
+  --stack-name betterbank-mcp-lambda-$ENVIRONMENT \
   --query 'Stacks[0].Outputs[?OutputKey==`LockCardLambdaArn`].[OutputKey,OutputValue]' \
   --output text
 
 aws cloudformation describe-stacks \
-  --stack-name "betterbank-mcp-lambda-$ENVIRONMENT" \
+  --stack-name betterbank-mcp-lambda-$ENVIRONMENT \
   --query 'Stacks[0].Outputs[?OutputKey==`UnlockCardLambdaArn`].[OutputKey,OutputValue]' \
   --output text
 
 aws cloudformation describe-stacks \
-  --stack-name "betterbank-mcp-lambda-$ENVIRONMENT" \
+  --stack-name betterbank-mcp-lambda-$ENVIRONMENT \
   --query 'Stacks[0].Outputs[?OutputKey==`RequestNewCardLambdaArn`].[OutputKey,OutputValue]' \
   --output text
 

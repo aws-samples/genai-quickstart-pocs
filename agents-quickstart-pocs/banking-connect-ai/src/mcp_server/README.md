@@ -4,12 +4,12 @@ Model Context Protocol (MCP) server that exposes card operation tools for AI age
 
 ## What is MCP?
 
-MCP (Model Context Protocol) is a standard way for AI agents to interact with external tools and services. This server exposes three card management tools that Jeanie (the AI banking agent) can use to help customers.
+MCP (Model Context Protocol) is a standard way for AI agents to interact with external tools and services. This server exposes three card management tools that the BetterBank AI assistant can use to help customers.
 
 ## Available Tools
 
 ### 1. lock_card
-Lock a customer's debit card to prevent transactions.
+Lock a customers debit card to prevent transactions.
 
 **Parameters:**
 - `customer_id` (required): Customer identifier (e.g., "CUST001")
@@ -24,7 +24,7 @@ Lock a customer's debit card to prevent transactions.
 ```
 
 ### 2. unlock_card
-Unlock a customer's debit card to restore transaction capability.
+Unlock a customers debit card to restore transaction capability.
 
 **Parameters:**
 - `customer_id` (required): Customer identifier
@@ -74,7 +74,7 @@ python scripts/test_mcp_server.py
 ## How It Works
 
 ```
-AI Agent (Jeanie)
+AI Agent (BetterBank Assistant)
     ↓
 MCP Server (this)
     ↓

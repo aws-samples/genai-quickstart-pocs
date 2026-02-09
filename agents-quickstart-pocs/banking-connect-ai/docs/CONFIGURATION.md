@@ -76,7 +76,7 @@ Before creating the Gateway, gather these values from your Amazon Connect instan
 
 6. **Add First Target** (target-quick-start section at bottom)
    - **Target name**: `lock-card-target`
-   - **Target description**: `Lock a customer's debit card to prevent transactions`
+   - **Target description**: `Lock a customers debit card to prevent transactions`
    - **Target type**: Select **MCP server**
    - **MCP endpoint**: Paste the **Lambda ARN** for lock_card from deployment output
      - Example: `arn:aws:lambda:us-east-1:123456789012:function:betterbank-mcp-lock-card-dev`
@@ -85,7 +85,7 @@ Before creating the Gateway, gather these values from your Amazon Connect instan
 ```json
 {
   "name": "lock_card",
-  "description": "Lock a customer's debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
+  "description": "Lock a customers debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -139,7 +139,7 @@ aws bedrock-agentcore create-gateway \
   --discovery-url "$DISCOVERY_URL" \
   --targets "[{
     \"name\": \"lock-card-target\",
-    \"description\": \"Lock a customer's debit card to prevent transactions\",
+    \"description\": \"Lock a customers debit card to prevent transactions\",
     \"targetType\": \"MCP_SERVER\",
     \"mcpEndpoint\": \"$LOCK_ARN\",
     \"authConfiguration\": {\"type\": \"IAM_CLIENT\"}
@@ -184,13 +184,13 @@ Now that the gateway is created with the first target, add the remaining two tar
 
 **Target Name:** `unlock-card-target`
 
-**Target Description:** `Unlock a customer's debit card to restore transaction capability`
+**Target Description:** `Unlock a customers debit card to restore transaction capability`
 
 **Inline Schema:**
 ```json
 {
   "name": "unlock_card",
-  "description": "Unlock a customer's debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
+  "description": "Unlock a customers debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -224,7 +224,7 @@ Now that the gateway is created with the first target, add the remaining two tar
 ```json
 {
   "name": "request-new-card",
-  "description": "Request a replacement debit card for a customer. Use this when a customer's card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
+  "description": "Request a replacement debit card for a customer. Use this when a customers card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -308,7 +308,7 @@ REQUEST_ARN=$(aws cloudformation describe-stacks \
 aws bedrock-agentcore create-gateway-target \
   --gateway-id "$GATEWAY_ID" \
   --name "unlock-card-target" \
-  --description "Unlock a customer's debit card to restore transaction capability" \
+  --description "Unlock a customers debit card to restore transaction capability" \
   --target-type "MCP_SERVER" \
   --mcp-endpoint "$UNLOCK_ARN" \
   --auth-configuration '{"type": "IAM_CLIENT"}'
@@ -361,8 +361,8 @@ Model Context Protocol (MCP) is a standard protocol for AI agents to interact wi
 
 The target descriptions you provide when adding targets help the AI decide when to use each tool:
 
-- **lock-card-target**: "Lock a customer's debit card to prevent transactions"
-- **unlock-card-target**: "Unlock a customer's debit card to restore transaction capability"  
+- **lock-card-target**: "Lock a customers debit card to prevent transactions"
+- **unlock-card-target**: "Unlock a customers debit card to restore transaction capability"  
 - **request-new-card-target**: "Request a replacement debit card for a customer"
 
 Make these descriptions clear and specific so the AI can select the right tool based on customer intent.

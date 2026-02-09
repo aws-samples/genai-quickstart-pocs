@@ -214,7 +214,7 @@ if __name__ == '__main__':
     import argparse
     
     parser = argparse.ArgumentParser(description='Seed AWS DynamoDB tables with mock data')
-    parser.add_argument('--stack-name', default='betterbank-card-operations-dev',
+    parser.add_argument('--stack-name', default='betterbank-mcp-lambda-dev',
                        help='CloudFormation stack name')
     parser.add_argument('--region', default='us-east-1',
                        help='AWS region')

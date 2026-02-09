@@ -26,7 +26,7 @@ async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
             name="lock_card",
-            description="Lock a customer's debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
+            description="Lock a customers debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
             inputSchema={
                 "type": "object",
                 "properties": {
