@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  Amazon Connect Agent Screen Pop View and Contact Flow for Workshop
+
+Parameters:
+  ConnectInstanceArn:
+    Type: String
+    Description: ARN of the Amazon Connect instance
+
+Resources:
+  # Agent Screen Pop View
+  AgentScreenPopView:
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Type: AWS::Connect::View
+    Properties:
+      InstanceArn: !Ref ConnectInstanceArn
+      Name: Agent Screen Pop
+      Template:
+        {
+          'Head':
+            {
+              'Configuration': { 'Layout': { 'Columns': ['3', '9'] } },
+              'Integrations': [],
+              'Title': 'Agent Screen Pop',
+            },
+          'Body':
+            [
+              {
+                '_id': 'Container_1764185708801',
+                'Type': 'Container',
+                'Props': { 'Visibility': 'true', 'HideBorder': 'false' },
+                'Content':
+                  [
+                    {
+                      '_id': 'Image_1764185747054',
+                      'Type': 'Image',
+                      'Props':
+                        {
+                          'Alt': 'An image of the current customer',
+                          'Src': '$.Image_1764185747054.Src',
+                        },
+                      'Content': [],
+                      'Configuration': { 'Style': { '--img-width': '70%' } },
+                    },
+                    {
+                      '_id': 'TextBox_1764185812604',
+                      'Type': 'TextBox',
+                      'Props':
+                        {
+                          'Variant': 'div',
+                          'FontWeight': 'bold',
+                          'FontSize': 'heading-m',
+                          'TextAlign': 'left',
+                        },
+                      'Content': ['Customer Details'],
+                    },
+                    {
+                      '_id': 'AttributeSection_1764185860582',
+                      'Type': 'AttributeSection',
+                      'Props':
+                        {
+                          'Columns': '',
+                          'Items':
+                            [
+                              {
+                                'Label': 'Customer Name',
+                                'Value':
+                                  '$.AttributeSection_1764185860582.Items[0].Value',
+                              },
+                              {
+                                'Label': 'Customer ID',
+                                'Value':
+                                  '$.AttributeSection_1764185860582.Items[1].Value',
+                              },
+                            ],
+                        },
+                      'Content': [],
+                      'Configuration': { 'Layout': { 'Columns': '12' } },
+                    },
+                    {
+                      '_id': 'ButtonGroup_1764186070952',
+                      'Type': 'ButtonGroup',
+                      'Props':
+                        {
+                          'SpaceBetweenButtons': 's',
+                          'Items':
+                            [
+                              {
+                                'Variant': 'primary',
+                                'Label': 'Profile',
+                                'Action': 'ActionSelected',
+                                'IconAlign': 'left',
+                                'Disabled': 'false',
+                                'IconName': 'user-profile',
+                              },
+                              {
+                                'Label': 'Unlock',
+                                'FormAction': 'submit',
+                                'Action': 'ActionSelected',
+                                'IconName': 'unlocked',
+                              },
+                            ],
+                          'ButtonsOrientation': 'vertical',
+                        },
+                      'Content': [],
+                    },
+                  ],
+                'Configuration': { 'Layout': { 'Columns': '12' } },
+              },
+              {
+                '_id': 'Container_1764185712000',
+                'Type': 'Container',
+                'Props': { 'Visibility': 'true', 'HideBorder': 'false' },
+                'Content':
+                  [
+                    {
+                      '_id': 'EscalationReason',
+                      'Type': 'Alert',
+                      'Props':
+                        {
+                          'dismissible': 'false',
+                          'type': 'info',
+                          'level': 'page',
+                          'heading': 'Escalation Reason',
+                        },
+                      'Content': ['$.EscalationReason.Content'],
+                    },
+                    {
+                      '_id': 'CustomerAttributes',
+                      'Type': 'AttributeBar',
+                      'Props':
+                        {
+                          'Attributes':
+                            [
+                              {
+                                'Label': 'Customer Intent',
+                                'Value': '$.CustomerAttributes.Attributes[0].Value',
+                              },
+                              {
+                                'Label': 'Customer Sentiment',
+                                'Value': '$.CustomerAttributes.Attributes[1].Value',
+                              },
+                            ],
+                        },
+                      'Content': [],
+                    },
+                    {
+                      '_id': 'EscalationSummary',
+                      'Type': 'TextArea',
+                      'Props':
+                        {
+                          'DefaultValue': '$.EscalationSummary.DefaultValue',
+                          'HelperText':
+                            'This is the summary generated by the AI agent',
+                          'Required': 'false',
+                          'Label': 'Escalation Summary',
+                          'MaxLength': '2000',
+                          'Disabled': 'false',
+                          'Name': 'escalationSummary',
+                        },
+                      'Content': [],
+                    },
+                  ],
+                'Configuration': { 'Layout': { 'Columns': '12' } },
+              },
+            ],
+        }
+      Actions:
+        - ActionSelected
+      Description: Agent Screen Pop view for human escalation workshop
+
+  # Agent Screen Pop Contact Flow
+  AgentScreenPopContactFlow:
+    Type: AWS::Connect::ContactFlow
+    DependsOn:
+      - AgentScreenPopView
+    Properties:
+      InstanceArn: !Ref ConnectInstanceArn
+      Name: Agent Screen Pop
+      Type: CONTACT_FLOW
+      Content: !Sub
+        - |
+          {"Version":"2019-10-30","StartAction":"5f4ce637-b5dd-4a7f-9073-fc145ce35fa5","Metadata":{"entryPointPosition":{"x":40,"y":40},"ActionMetadata":{"5f4ce637-b5dd-4a7f-9073-fc145ce35fa5":{"position":{"x":160.8,"y":59.2}},"93c24198-53b6-4a5d-8d5e-ae93e06a302b":{"position":{"x":710.4,"y":456}},"d5d2a164-48a9-42c4-9e09-e67a0863893d":{"position":{"x":448.8,"y":50.4},"parameters":{"ViewResource":{"Id":{"displayName":"Agent Screen Pop"}},"InvocationTimeLimitSeconds":{"unit":60},"ViewData":{"AttributeSection_1764185860582":{"useJson":true},"CustomerAttributes":{"useJson":true},"Image_1764185747054":{"useJson":true},"EscalationReason":{"useJson":true},"EscalationSummary":{"useJson":true}}}},"79a9c245-f620-4136-a5c5-f311e2e2027a":{"position":{"x":698.4,"y":54.4},"parameters":{"ViewResource":{"Id":{"displayName":"Agent Screen Pop"}},"InvocationTimeLimitSeconds":{"unit":60},"ViewData":{"AttributeSection_1764185860582":{"useJson":true},"CustomerAttributes":{"useJson":true},"Image_1764185747054":{"useJson":true},"EscalationReason":{"useJson":true},"EscalationSummary":{"useJson":true}}}}},"Annotations":[]},"Actions":[{"Parameters":{"FlowLoggingBehavior":"Enabled"},"Identifier":"5f4ce637-b5dd-4a7f-9073-fc145ce35fa5","Type":"UpdateFlowLoggingBehavior","Transitions":{"NextAction":"d5d2a164-48a9-42c4-9e09-e67a0863893d"}},{"Parameters":{},"Identifier":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","Type":"DisconnectParticipant","Transitions":{}},{"Parameters":{"ViewResource":{"Id":"arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}/view/${AgentScreenPopViewId}:$LATEST"},"InvocationTimeLimitSeconds":"1200","ViewData":{"AttributeSection_1764185860582":{"Items":[{"Value":"$.Attributes.customerFirstName"},{"Value":"$.Attributes.ProfileId"}]},"CustomerAttributes":{"Attributes":[{"Value":"$.Attributes.customerIntent"},{"Value":"$.Attributes.sentiment"}]},"Image_1764185747054":{"Src":"https://d1sk9q2brplra3.cloudfront.net/order-app/sofia_customer.png"},"EscalationReason":{"Content":"$.Attributes.escalationReason"},"EscalationSummary":{"DefaultValue":"$.Attributes.escalationSummary"}}},"Identifier":"d5d2a164-48a9-42c4-9e09-e67a0863893d","Type":"ShowView","Transitions":{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","Conditions":[{"NextAction":"79a9c245-f620-4136-a5c5-f311e2e2027a","Condition":{"Operator":"Equals","Operands":["ActionSelected"]}}],"Errors":[{"NextAction":"79a9c245-f620-4136-a5c5-f311e2e2027a","ErrorType":"NoMatchingCondition"},{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","ErrorType":"NoMatchingError"},{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","ErrorType":"TimeLimitExceeded"}]}},{"Parameters":{"ViewResource":{"Id":"arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}/view/${AgentScreenPopViewId}:$LATEST"},"InvocationTimeLimitSeconds":"1200","ViewData":{"AttributeSection_1764185860582":{"Items":[{"Value":"$.Attributes.customerFirstName"},{"Value":"$.Attributes.ProfileId"}]},"CustomerAttributes":{"Attributes":[{"Value":"$.Attributes.customerIntent"},{"Value":"$.Attributes.sentiment"}]},"Image_1764185747054":{"Src":"https://d1sk9q2brplra3.cloudfront.net/order-app/sofia_customer.png"},"EscalationReason":{"Content":"$.Attributes.escalationReason"},"EscalationSummary":{"DefaultValue":"$.Attributes.escalationSummary"}}},"Identifier":"79a9c245-f620-4136-a5c5-f311e2e2027a","Type":"ShowView","Transitions":{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","Conditions":[{"NextAction":"d5d2a164-48a9-42c4-9e09-e67a0863893d","Condition":{"Operator":"Equals","Operands":["ActionSelected"]}}],"Errors":[{"NextAction":"d5d2a164-48a9-42c4-9e09-e67a0863893d","ErrorType":"NoMatchingCondition"},{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","ErrorType":"NoMatchingError"},{"NextAction":"93c24198-53b6-4a5d-8d5e-ae93e06a302b","ErrorType":"TimeLimitExceeded"}]}}]}
+        - InstanceId: !Select [1, !Split ['/', !Ref ConnectInstanceArn]]
+          AgentScreenPopViewId:
+            !Select [3, !Split ['/', !Ref AgentScreenPopView]]
+      Description: Agent Screen Pop contact flow for human escalation workshop
+
+Outputs:
+  AgentScreenPopViewArn:
+    Description: ARN for Agent Screen Pop view
+    Value: !GetAtt AgentScreenPopView.ViewArn
+    Export:
+      Name: !Sub '${AWS::StackName}-agent-screen-pop-view-arn'
+
+  AgentScreenPopViewId:
+    Description: ID for Agent Screen Pop view
+    Value: !Select [3, !Split ['/', !Ref AgentScreenPopView]]
+    Export:
+      Name: AgentScreenPopViewId
+
+  AgentScreenPopContactFlowArn:
+    Description: ARN for Agent Screen Pop contact flow
+    Value: !GetAtt AgentScreenPopContactFlow.ContactFlowArn
+    Export:
+      Name: !Sub '${AWS::StackName}-agent-screen-pop-flow-arn'
+
+  AgentScreenPopContactFlowId:
+    Description: ID for Agent Screen Pop contact flow
+    Value: !Ref AgentScreenPopContactFlow
+    Export:
+      Name: AgentScreenPopContactFlowId

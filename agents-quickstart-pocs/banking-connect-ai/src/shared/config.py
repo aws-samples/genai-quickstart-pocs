@@ -16,9 +16,6 @@ class Config:
     CARDS_TABLE = os.getenv('CARDS_TABLE', 'betterbank-cards')
     CARD_REQUESTS_TABLE = os.getenv('CARD_REQUESTS_TABLE', 'betterbank-card-requests')
     
-    # API Gateway Configuration
-    API_GATEWAY_URL = os.getenv('API_GATEWAY_URL', 'https://api.example.com/v1')
-    
     # Logging
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 

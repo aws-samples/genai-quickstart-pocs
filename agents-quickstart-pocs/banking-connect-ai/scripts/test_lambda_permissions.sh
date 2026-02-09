@@ -14,7 +14,7 @@ aws lambda invoke \
 
 if [ $? -eq 0 ]; then
     echo "   ✅ lock_card Lambda is invocable"
-    python -m json.tool < /tmp/lock_response.json 2>/dev/null || cat /tmp/lock_response.json
+    cat /tmp/lock_response.json | python -m json.tool 2>/dev/null || cat /tmp/lock_response.json
 else
     echo "   ❌ lock_card Lambda failed"
 fi
@@ -30,7 +30,7 @@ aws lambda invoke \
 
 if [ $? -eq 0 ]; then
     echo "   ✅ unlock_card Lambda is invocable"
-    python -m json.tool < /tmp/unlock_response.json 2>/dev/null || cat /tmp/unlock_response.json
+    cat /tmp/unlock_response.json | python -m json.tool 2>/dev/null || cat /tmp/unlock_response.json
 else
     echo "   ❌ unlock_card Lambda failed"
 fi
@@ -46,7 +46,7 @@ aws lambda invoke \
 
 if [ $? -eq 0 ]; then
     echo "   ✅ request_new_card Lambda is invocable"
-    python -m json.tool < /tmp/request_response.json 2>/dev/null || cat /tmp/request_response.json
+    cat /tmp/request_response.json | python -m json.tool 2>/dev/null || cat /tmp/request_response.json
 else
     echo "   ❌ request_new_card Lambda failed"
 fi

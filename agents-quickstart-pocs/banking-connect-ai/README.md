@@ -4,6 +4,15 @@ AI-powered debit card operations (lock, unlock, request new card) for conversati
 
 ## 🚀 Quick Start
 
+### 1. Prerequisites
+
+Complete Amazon Connect setup first (see [Prerequisites](docs/PREREQUISITES.md)):
+- Create Amazon Connect instance
+- Enable Amazon Q in Connect Assistant
+- Deploy Session Update Lambda via CloudFormation template
+
+### 2. Deploy Infrastructure
+
 Deploy Lambda functions as MCP servers for AgentCore Gateway integration:
 
 ```bash
@@ -26,12 +35,19 @@ scripts\deploy_stack.bat dev
 
 ## 📋 What You Get
 
+### Infrastructure (CDK Deployment)
 - **3 MCP Lambda Functions**: Implement Model Context Protocol for AI agent
 - **Card Operations Lambda**: Business logic for card management
 - **4 DynamoDB Tables**: Customer, account, card, and request data
+- **S3 Bucket**: Knowledge base storage
 - **VPC**: Private subnets with NAT gateway for secure networking
 - **IAM Roles**: Least-privilege permissions for all components
 - **Mock Data**: 3 customers, 5 accounts, 5 cards for testing
+
+### Session Lambda (CloudFormation Template)
+- **Session Update Lambda**: Updates Amazon Q in Connect with customer data
+- **CloudFormation Template**: `assistant-update-session-data-lambda-customer.yaml`
+- **Deployed Separately**: See [Prerequisites](docs/PREREQUISITES.md#step-3-deploy-session-update-lambda)
 
 ---
 
@@ -40,7 +56,7 @@ scripts\deploy_stack.bat dev
 ```
 Amazon Connect
     ↓
-Bedrock Agent (Jeanie)
+Bedrock Agent (BetterBank Assistant)
     ↓
 AgentCore Gateway
     ↓
@@ -142,12 +158,14 @@ Request a replacement debit card.
 ├── src/
 │   ├── lambda_handler/         # Card operations Lambda
 │   ├── mcp_server/            # MCP protocol handlers
+│   ├── session_lambda/        # Session update Lambda code (deployed via CF)
 │   └── shared/                # Business logic & data access
 ├── scripts/
 │   ├── deploy_stack.sh        # Deploy infrastructure
 │   ├── deploy_stack.bat       # Deploy infrastructure (Windows)
 │   └── seed_data_aws.py       # Seed test data
 ├── docs/                      # All documentation
+├── assistant-update-session-data-lambda-customer.yaml  # Session Lambda CF template
 ├── mcp_stack.py               # CDK stack definition
 └── app.py                     # CDK app entry point
 ```

@@ -33,7 +33,7 @@ Returns list of available tools with their schemas.
     "tools": [
       {
         "name": "lock_card",
-        "description": "Lock a customer's debit card...",
+        "description": "Lock a customers debit card...",
         "inputSchema": { ... }
       }
     ]
@@ -97,13 +97,13 @@ Executes a specific tool with provided arguments.
 
 ### lock_card
 
-**Purpose:** Lock a customer's debit card to prevent transactions.
+**Purpose:** Lock a customers debit card to prevent transactions.
 
 **Schema:**
 ```json
 {
   "name": "lock_card",
-  "description": "Lock a customer's debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
+  "description": "Lock a customers debit card to prevent transactions. Use this when a customer reports their card as lost, stolen, or suspects fraudulent activity. The card can be unlocked later.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -153,13 +153,13 @@ Executes a specific tool with provided arguments.
 
 ### unlock_card
 
-**Purpose:** Unlock a customer's debit card to restore transaction capability.
+**Purpose:** Unlock a customers debit card to restore transaction capability.
 
 **Schema:**
 ```json
 {
   "name": "unlock_card",
-  "description": "Unlock a customer's debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
+  "description": "Unlock a customers debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -215,7 +215,7 @@ Executes a specific tool with provided arguments.
 ```json
 {
   "name": "request_new_card",
-  "description": "Request a replacement debit card for a customer. Use this when a customer's card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
+  "description": "Request a replacement debit card for a customer. Use this when a customers card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
   "inputSchema": {
     "type": "object",
     "properties": {

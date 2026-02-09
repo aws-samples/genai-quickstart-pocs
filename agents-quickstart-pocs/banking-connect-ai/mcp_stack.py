@@ -307,9 +307,8 @@ class MCPStack(Stack):
         return role
 
     def _get_mcp_lambda_code(self, tool_name: str, lambda_path: str, description: str, input_schema: dict) -> str:
-        """Generate MCP Lambda function code"""
+        """Generate Lambda function code for AgentCore Gateway direct invocation"""
         import json as json_module
-        schema_str = json_module.dumps(input_schema)
         
         return f'''import json
 import boto3
@@ -320,120 +319,52 @@ CARD_OPS_FUNCTION = os.environ.get('CARD_OPS_FUNCTION_NAME', 'betterbank-card-op
 
 def lambda_handler(event, context):
     """
-    MCP Lambda handler for {tool_name}
-    Implements MCP protocol and forwards to card operations Lambda
+    Lambda handler for {tool_name}
+    Invoked directly by AgentCore Gateway with tool arguments
     """
     
-    # Parse MCP request
+    print(f"Received event: {{json.dumps(event)}}")
+    
     try:
-        if isinstance(event.get('body'), str):
-            body = json.loads(event['body'])
-        else:
-            body = event.get('body', event)
+        # AgentCore Gateway sends tool arguments directly in the event
+        arguments = event
         
-        method = body.get('method')
-        params = body.get('params', {{}})
-        request_id = body.get('id')
+        # Invoke card operations Lambda
+        card_ops_event = {{
+            'httpMethod': 'POST',
+            'path': '{lambda_path}',
+            'body': json.dumps(arguments)
+        }}
         
-        # Handle tools/list
-        if method == 'tools/list':
-            return {{
-                'statusCode': 200,
-                'body': json.dumps({{
-                    'jsonrpc': '2.0',
-                    'result': {{
-                        'tools': [{{
-                            'name': '{tool_name}',
-                            'description': '{description}',
-                            'inputSchema': {schema_str}
-                        }}]
-                    }},
-                    'id': request_id
-                }})
-            }}
+        print(f"Invoking card operations Lambda: {{CARD_OPS_FUNCTION}}")
+        print(f"With payload: {{json.dumps(card_ops_event)}}")
         
-        # Handle tools/call
-        elif method == 'tools/call':
-            tool_name = params.get('name')
-            arguments = params.get('arguments', {{}})
-            
-            if tool_name != '{tool_name}':
-                return {{
-                    'statusCode': 400,
-                    'body': json.dumps({{
-                        'jsonrpc': '2.0',
-                        'error': {{
-                            'code': -32602,
-                            'message': f'Unknown tool: {{tool_name}}'
-                        }},
-                        'id': request_id
-                    }})
-                }}
-            
-            # Invoke card operations Lambda
-            card_ops_event = {{
-                'httpMethod': 'POST',
-                'path': '{lambda_path}',
-                'body': json.dumps(arguments)
-            }}
-            
-            response = lambda_client.invoke(
-                FunctionName=CARD_OPS_FUNCTION,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(card_ops_event)
-            )
-            
-            payload = json.loads(response['Payload'].read())
-            status_code = payload.get('statusCode', 500)
+        response = lambda_client.invoke(
+            FunctionName=CARD_OPS_FUNCTION,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(card_ops_event)
+        )
+        
+        payload = json.loads(response['Payload'].read())
+        print(f"Card operations response: {{json.dumps(payload)}}")
+        
+        status_code = payload.get('statusCode', 500)
+        
+        if status_code == 200:
+            # Parse and return the result
             result_body = json.loads(payload.get('body', '{{}}'))
-            
-            if status_code == 200:
-                return {{
-                    'statusCode': 200,
-                    'body': json.dumps({{
-                        'jsonrpc': '2.0',
-                        'result': result_body,
-                        'id': request_id
-                    }})
-                }}
-            else:
-                return {{
-                    'statusCode': status_code,
-                    'body': json.dumps({{
-                        'jsonrpc': '2.0',
-                        'error': {{
-                            'code': status_code,
-                            'message': result_body.get('error', {{}}).get('message', 'Unknown error')
-                        }},
-                        'id': request_id
-                    }})
-                }}
-        
+            print(f"Success: {{json.dumps(result_body)}}")
+            return result_body
         else:
-            return {{
-                'statusCode': 400,
-                'body': json.dumps({{
-                    'jsonrpc': '2.0',
-                    'error': {{
-                        'code': -32601,
-                        'message': f'Method not found: {{method}}'
-                    }},
-                    'id': request_id
-                }})
-            }}
+            # Handle error
+            result_body = json.loads(payload.get('body', '{{}}'))
+            error_message = result_body.get('error', {{}}).get('message', 'Unknown error')
+            print(f"Error: {{error_message}}")
+            raise Exception(f"Card operation failed: {{error_message}}")
     
     except Exception as e:
-        return {{
-            'statusCode': 500,
-            'body': json.dumps({{
-                'jsonrpc': '2.0',
-                'error': {{
-                    'code': -32603,
-                    'message': f'Internal error: {{str(e)}}'
-                }},
-                'id': request_id if 'request_id' in locals() else None
-            }})
-        }}
+        print(f"Exception: {{str(e)}}")
+        raise e
 '''
 
     def _create_lock_card_lambda(self) -> lambda_.Function:
@@ -447,7 +378,7 @@ def lambda_handler(event, context):
             code=lambda_.Code.from_inline(self._get_mcp_lambda_code(
                 tool_name="lock_card",
                 lambda_path="/v1/cards/lock",
-                description="Lock a customer's debit card to prevent transactions",
+                description="Lock a customers debit card to prevent transactions",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -478,7 +409,7 @@ def lambda_handler(event, context):
             code=lambda_.Code.from_inline(self._get_mcp_lambda_code(
                 tool_name="unlock_card",
                 lambda_path="/v1/cards/unlock",
-                description="Unlock a customer's debit card to restore transactions",
+                description="Unlock a customers debit card to restore transactions",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -586,7 +517,7 @@ def lambda_handler(event, context):
     def _add_tags(self):
         """Add tags to all resources"""
         Tags.of(self).add("Environment", self.env_name)
-        Tags.of(self).add("Project", "betterbank-jeanie")
+        Tags.of(self).add("Project", "betterbank")
         Tags.of(self).add("ManagedBy", "CDK")
 
     def _create_outputs(self):

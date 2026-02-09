@@ -47,9 +47,9 @@ Solution: Ensure S3 bucket and CloudFormation are in same region
 
 ---
 
-## API Issues
+## Lambda Issues
 
-### API Returns 403 Forbidden
+### Lambda Returns 403 Forbidden
 
 **Symptoms:**
 ```json
@@ -59,41 +59,32 @@ Solution: Ensure S3 bucket and CloudFormation are in same region
 ```
 
 **Causes:**
-1. Missing or invalid API key
-2. Wrong API key header name
-3. API key not associated with usage plan
+1. Missing or insufficient IAM permissions
+2. Lambda resource-based policy missing caller
+3. VPC security group blocking access
 
 **Solutions:**
 
-**Check API key:**
+**Check IAM permissions:**
 ```bash
-# Get API key from CloudFormation
-aws cloudformation describe-stacks \
-  --stack-name betterbank-card-operations-dev \
-  --query 'Stacks[0].Outputs[?OutputKey==`ApiKeyId`].OutputValue' \
-  --output text
+# Verify Lambda function exists
+aws lambda get-function \
+  --function-name betterbank-card-operations-dev
 
-# Get key value
-aws apigateway get-api-key \
-  --api-key <API_KEY_ID> \
-  --include-value \
-  --query 'value' \
+# Check Lambda execution role
+aws lambda get-function-configuration \
+  --function-name betterbank-card-operations-dev \
+  --query 'Role' \
   --output text
 ```
 
-**Verify header:**
-```bash
-# Correct
-curl -H "x-api-key: YOUR_KEY" ...
-
-# Wrong
-curl -H "X-API-Key: YOUR_KEY" ...  # Case sensitive!
-curl -H "api-key: YOUR_KEY" ...    # Wrong name
-```
+**Verify invocation permissions:**
+- Ensure the calling service (AgentCore Gateway) has `lambda:InvokeFunction` permission
+- Check the Lambda resource-based policy allows the caller
 
 ---
 
-### API Returns 500 Internal Server Error
+### Lambda Returns 500 Internal Server Error
 
 **Symptoms:**
 ```json
@@ -135,7 +126,7 @@ Solution: Verify environment variables in Lambda configuration
 
 ---
 
-### API Returns 401 Unauthorized
+### Lambda Returns 401 Unauthorized
 
 **Symptoms:**
 ```json
@@ -172,7 +163,7 @@ python scripts/seed_data_aws.py
 
 ---
 
-### API Returns 404 Not Found
+### Lambda Returns 404 Not Found
 
 **Symptoms:**
 ```json
@@ -200,6 +191,78 @@ aws dynamodb get-item \
 
 **Use valid test IDs:**
 - CARD001, CARD002, CARD003, CARD004, CARD005
+
+---
+
+## Amazon Connect Issues
+
+### Connect Cannot Invoke Session Lambda (AccessDeniedException)
+
+**Symptoms:**
+- Contact flow shows error: "Status Code: 403; Error Code: AccessDeniedException"
+- Lambda function exists but Connect cannot invoke it
+- Error in Connect contact flow logs when invoking Lambda
+
+**Example Error:**
+```json
+{
+  "Results": "Status Code: 403; Error Code: AccessDeniedException",
+  "ContactFlowName": "Customer profile lookup",
+  "ContactFlowModuleType": "InvokeExternalResource",
+  "Identifier": "Update session data Lambda",
+  "Parameters": {
+    "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:ConnectAssistantUpdateSessionData-dev"
+  }
+}
+```
+
+**Cause:**
+The Lambda function is missing a resource-based policy that allows Amazon Connect to invoke it.
+
+**Solution:**
+
+**Option 1: Redeploy the stack** (Recommended)
+```bash
+# The latest version includes the Connect invoke permission
+./scripts/deploy_stack.sh dev
+```
+
+**Option 2: Add permission manually via CLI**
+```bash
+# Get your Connect instance ID
+CONNECT_INSTANCE_ID="your-connect-instance-id"
+
+# Add permission to Lambda
+aws lambda add-permission \
+  --function-name ConnectAssistantUpdateSessionData-dev \
+  --statement-id AllowConnectInvoke \
+  --action lambda:InvokeFunction \
+  --principal connect.amazonaws.com \
+  --source-arn "arn:aws:connect:us-east-1:123456789012:instance/$CONNECT_INSTANCE_ID/*"
+```
+
+**Option 3: Add permission via Console**
+1. Go to Lambda Console → `ConnectAssistantUpdateSessionData-dev`
+2. Click **Configuration** tab → **Permissions**
+3. Scroll to **Resource-based policy statements**
+4. Click **Add permissions**
+5. Select **AWS service**
+6. Service: **Other**
+7. Statement ID: `AllowConnectInvoke`
+8. Principal: `connect.amazonaws.com`
+9. Source ARN: `arn:aws:connect:us-east-1:123456789012:instance/YOUR-INSTANCE-ID/*`
+10. Action: `lambda:InvokeFunction`
+11. Click **Save**
+
+**Verify the permission:**
+```bash
+aws lambda get-policy \
+  --function-name ConnectAssistantUpdateSessionData-dev \
+  --query Policy \
+  --output text | jq
+```
+
+You should see a statement allowing `connect.amazonaws.com` to invoke the function.
 
 ---
 
@@ -408,9 +471,9 @@ python scripts/delete_tables.py
 
 ---
 
-## Performance Issues
+## API Issues
 
-### Slow API Response
+### Slow Lambda Response
 
 **Symptoms:**
 - API takes > 1 second to respond

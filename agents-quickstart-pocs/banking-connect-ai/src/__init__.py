@@ -1,1 +1,1 @@
-"""Jeanie Debit Card Workflow - Main package"""
+"""BetterBank Debit Card Workflow - Main package"""

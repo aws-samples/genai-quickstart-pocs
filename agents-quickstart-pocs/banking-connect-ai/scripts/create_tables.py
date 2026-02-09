@@ -21,7 +21,7 @@ def create_tables():
     dynamodb = boto3.client('dynamodb', **dynamodb_kwargs)
     
     # Load table definitions
-    with open('config/dynamodb_tables.json', 'r', encoding='utf-8') as f:
+    with open('config/dynamodb_tables.json', 'r') as f:
         table_config = json.load(f)
     
     created_tables = []
