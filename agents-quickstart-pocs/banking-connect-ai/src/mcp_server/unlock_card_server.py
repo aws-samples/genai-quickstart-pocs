@@ -26,7 +26,7 @@ async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
             name="unlock_card",
-            description="Unlock a customer's debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
+            description="Unlock a customers debit card to restore transaction capability. Use this when a customer has found their card or resolved the security concern that caused them to lock it.",
             inputSchema={
                 "type": "object",
                 "properties": {

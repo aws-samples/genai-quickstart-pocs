@@ -9,7 +9,7 @@ Customer
     ↓
 Amazon Connect
     ↓
-Bedrock Agent (Jeanie)
+Bedrock Agent (BetterBank Assistant)
     ↓
 AgentCore Gateway
     ↓

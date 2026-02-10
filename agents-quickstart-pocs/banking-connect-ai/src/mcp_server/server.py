@@ -23,7 +23,7 @@ async def handle_list_tools() -> list[Tool]:
         Tool(
             name="lock_card",
             description=(
-                "Lock a customer's debit card to prevent transactions. "
+                "Lock a customers debit card to prevent transactions. "
                 "Use this when a customer reports their card as lost, stolen, "
                 "or suspects fraudulent activity. The card can be unlocked later."
             ),
@@ -45,7 +45,7 @@ async def handle_list_tools() -> list[Tool]:
         Tool(
             name="unlock_card",
             description=(
-                "Unlock a customer's debit card to restore transaction capability. "
+                "Unlock a customers debit card to restore transaction capability. "
                 "Use this when a customer has found their card or resolved the "
                 "security concern that caused them to lock it."
             ),
@@ -68,7 +68,7 @@ async def handle_list_tools() -> list[Tool]:
             name="request_new_card",
             description=(
                 "Request a replacement debit card for a customer. "
-                "Use this when a customer's card is damaged, permanently lost, "
+                "Use this when a customers card is damaged, permanently lost, "
                 "stolen, or expired. A new card will be mailed to the customer."
             ),
             inputSchema={
@@ -120,7 +120,7 @@ async def handle_call_tool(name: str, arguments: Any) -> list[TextContent]:
             })
         )]
     
-    # Create Lambda event (simulating API Gateway)
+    # Create Lambda event
     event = {
         "httpMethod": "POST",
         "path": tool_to_path[name],

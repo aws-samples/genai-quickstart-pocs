@@ -26,7 +26,7 @@ async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
             name="request_new_card",
-            description="Request a replacement debit card for a customer. Use this when a customer's card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
+            description="Request a replacement debit card for a customer. Use this when a customers card is damaged, permanently lost, stolen, or expired. A new card will be mailed to the customer.",
             inputSchema={
                 "type": "object",
                 "properties": {

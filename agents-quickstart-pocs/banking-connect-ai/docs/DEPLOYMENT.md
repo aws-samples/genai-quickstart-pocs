@@ -105,7 +105,7 @@ After deployment completes, you need to create and configure the AgentCore Gatew
 ```bash
 aws bedrock-agent update-agent \
   --agent-id "<YOUR_AGENT_ID>" \
-  --agent-name "Jeanie-Card-Operations" \
+  --agent-name "BetterBank-Card-Operations" \
   --instruction "Help customers with debit card operations" \
   --foundation-model "anthropic.claude-3-sonnet-20240229-v1:0" \
   --action-groups '[{
