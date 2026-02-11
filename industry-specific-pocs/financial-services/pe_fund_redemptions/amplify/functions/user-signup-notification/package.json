@@ -5,6 +5,6 @@
   "main": "handler.mjs",
   "private": true,
   "dependencies": {
-    "@aws-sdk/client-sns": "^3.600.0"
+    "@aws-sdk/client-sns": "^3.987.0"
   }
 }
