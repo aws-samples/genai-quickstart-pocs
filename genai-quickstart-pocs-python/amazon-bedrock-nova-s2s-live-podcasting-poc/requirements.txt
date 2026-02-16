@@ -1,0 +1,15 @@
+# Web framework
+Flask==3.0.0
+
+# AWS SDK for Amazon Bedrock bidirectional streaming
+aws-sdk-bedrock-runtime==0.1.0
+smithy-aws-core==0.1.0
+
+# Reactive extensions for stream processing
+rx==3.2.0
+
+# Audio I/O
+PyAudio==0.2.14
+
+# Environment variable loading
+python-dotenv==1.0.0
