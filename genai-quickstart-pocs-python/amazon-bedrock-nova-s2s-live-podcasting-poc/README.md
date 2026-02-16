@@ -6,8 +6,6 @@ This proof-of-concept demonstrates how to use [Amazon Nova Sonic](https://docs.a
 
 The application uses the [Amazon Bedrock bidirectional streaming API](https://docs.aws.amazon.com/nova/latest/userguide/speech-bidirection.html) (`InvokeModelWithBidirectionalStream`) to send prompts and receive both text and audio responses from Amazon Nova Sonic. A Flask web server orchestrates the conversation, alternating between two AI speakers with distinct voices. Unlike other POCs in this repository that use Streamlit, this sample uses Flask with Server-Sent Events (SSE) to support real-time bidirectional audio streaming, which requires persistent connections that Streamlit does not natively support.
 
-![Amazon Bedrock Nova S2S Live Podcasting POC](images/demo.png)
-
 ## Architecture
 
 ```
