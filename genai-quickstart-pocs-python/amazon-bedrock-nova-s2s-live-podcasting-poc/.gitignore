@@ -1,0 +1,50 @@
+# Environment variables
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Audio artifacts
+*.wav
+*.mp3
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+
+# Security reports
+Security reviews/
+bandit_report.*
+bandit-report.*
+scan-report-*
+iam-access-analyzer-report*
+
+# Hypothesis (PBT framework cache)
+.hypothesis/
+
+# Kiro IDE
+.kiro/
