@@ -1,0 +1,48 @@
+CYBERSECURITY SERVICES RFP
+
+1. Service Provider Background
+Provide details about:
+- Company establishment date and ownership
+- Cybersecurity expertise and specializations
+- Industry certifications and accreditations
+- Client portfolio and case studies
+
+2. Security Services Offered
+Describe your security service portfolio:
+- 24/7 Security Operations Center (SOC)
+- Threat intelligence and monitoring
+- Incident response and forensics
+- Vulnerability assessments and penetration testing
+- Security awareness training programs
+
+3. Technology Stack
+Detail your technology capabilities:
+- SIEM and log management platforms
+- Endpoint detection and response (EDR)
+- Network security monitoring tools
+- Cloud security solutions
+- Artificial intelligence and machine learning integration
+
+4. Compliance Expertise
+Address regulatory compliance support:
+- SOX compliance assistance
+- FFIEC examination support
+- ISO 27001 implementation
+- NIST Cybersecurity Framework alignment
+- Regulatory reporting capabilities
+
+5. Incident Response
+Outline your incident response process:
+- Response time commitments
+- Escalation procedures
+- Communication protocols
+- Forensic investigation capabilities
+- Recovery and remediation services
+
+6. Pricing and Contracts
+Provide pricing information for:
+- Monthly retainer fees
+- Incident response charges
+- Assessment and testing services
+- Training program costs
+- Contract terms and conditions
