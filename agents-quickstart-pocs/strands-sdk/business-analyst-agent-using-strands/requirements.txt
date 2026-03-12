@@ -92,7 +92,7 @@ sympy==1.14.0
 tenacity==9.1.2
 termcolor==3.1.0
 toml==0.10.2
-tornado==6.4.2
+tornado==6.5.5
 typer==0.16.0
 typing-inspection==0.4.1
 typing_extensions==4.13.2
