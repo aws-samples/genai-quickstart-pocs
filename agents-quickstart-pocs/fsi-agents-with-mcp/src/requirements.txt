@@ -1,5 +1,5 @@
 termcolor==2.5.0
-black==24.10.0
+black==26.3.1
 opensearch-py==2.7.1
 pydantic==2.10.2
 rich==13.9.4
