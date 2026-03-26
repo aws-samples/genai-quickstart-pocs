@@ -69,7 +69,7 @@ python-dotenv==1.1.0
 python-multipart==0.0.20
 pytz==2025.1
 referencing==0.36.2
-requests==2.32.3
+requests==2.33.0
 rich==14.0.0
 rpds-py==0.22.3
 s3transfer==0.11.2
