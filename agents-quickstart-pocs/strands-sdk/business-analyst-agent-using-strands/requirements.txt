@@ -87,7 +87,7 @@ starlette==0.46.2
 strands-agents==0.1.5
 strands-agents-builder==0.1.2
 strands-agents-tools==0.1.4
-streamlit==1.45.1
+streamlit==1.54.0
 sympy==1.14.0
 tenacity==9.1.2
 termcolor==3.1.0
