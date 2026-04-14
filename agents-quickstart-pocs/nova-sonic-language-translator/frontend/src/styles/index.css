@@ -1,0 +1,71 @@
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  body {
+    font-family: 'Inter', 'Amazon Ember', system-ui, sans-serif;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  /* AWS gradient background */
+  .aws-gradient {
+    background: linear-gradient(135deg, #232f3e 0%, #1b2838 100%);
+  }
+
+  /* Live indicator pulse animation */
+  .live-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* Audio wave animation */
+  .audio-wave {
+    background: linear-gradient(90deg, #ff9900, #ffac31, #ff9900);
+    background-size: 200% 100%;
+    animation: wave 1.5s linear infinite;
+  }
+
+  /* Custom scrollbar for transcript areas */
+  .scroll-area::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scroll-area::-webkit-scrollbar-track {
+    background: #f1f3f5;
+  }
+
+  .scroll-area::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+
+  .scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+/* Custom animations */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes wave {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
