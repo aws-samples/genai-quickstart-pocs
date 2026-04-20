@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Status Dashboard | RFP Processing Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-light: #2d5a87;
+            --primary-dark: #0f2a44;
+            --secondary-color: #3182ce;
+            --accent-color: #4299e1;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --error-color: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            background: var(--gray-50);
+        }
+
+        .nav-link.active {
+            color: var(--primary-color);
+            background: var(--gray-100);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card.total .stat-number { color: var(--primary-color); }
+        .stat-card.processing .stat-number { color: var(--warning-color); }
+        .stat-card.completed .stat-number { color: var(--success-color); }
+        .stat-card.error .stat-number { color: var(--error-color); }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--gray-700);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .jobs-container {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .jobs-header {
+            background: var(--gray-50);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .jobs-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .job-card {
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.5rem 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .job-card:hover {
+            background: var(--gray-50);
+        }
+
+        .job-card:last-child {
+            border-bottom: none;
+        }
+
+        .job-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .job-info {
+            flex: 1;
+        }
+
+        .job-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .job-id {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            font-family: monospace;
+        }
+
+        .job-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .job-status.processing {
+            background: rgba(214, 158, 46, 0.1);
+            color: var(--warning-color);
+        }
+
+        .job-status.completed {
+            background: rgba(56, 161, 105, 0.1);
+            color: var(--success-color);
+        }
+
+        .job-status.error {
+            background: rgba(229, 62, 62, 0.1);
+            color: var(--error-color);
+        }
+
+        .job-progress {
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+        }
+
+        .job-stages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .stage-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .stage.completed {
+            background: rgba(56, 161, 105, 0.1);
+            color: var(--success-color);
+        }
+
+        .stage.completed .stage-icon {
+            background: var(--success-color);
+            color: var(--white);
+        }
+
+        .stage.processing {
+            background: rgba(214, 158, 46, 0.1);
+            color: var(--warning-color);
+        }
+
+        .stage.processing .stage-icon {
+            background: var(--warning-color);
+            color: var(--white);
+        }
+
+        .stage.pending {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+
+        .stage.pending .stage-icon {
+            background: var(--gray-400);
+            color: var(--white);
+        }
+
+        .stage.error {
+            background: rgba(229, 62, 62, 0.1);
+            color: var(--error-color);
+        }
+
+        .stage.error .stage-icon {
+            background: var(--error-color);
+            color: var(--white);
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--secondary-color);
+            font-weight: 500;
+            font-size: 1.125rem;
+        }
+
+        .no-jobs {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .no-jobs-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gray-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            color: var(--gray-400);
+        }
+
+        .no-jobs-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-jobs-text {
+            color: var(--gray-500);
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .job-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .job-stages {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">RP</div>
+                <div class="logo-text">RFP Platform</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">
+                    <span>📤</span>
+                    Upload Portal
+                </a>
+                <a href="downloads.html" class="nav-link">
+                    <span>📥</span>
+                    Download Center
+                </a>
+                <a href="status.html" class="nav-link active">
+                    <span>📊</span>
+                    Job Status
+                </a>
+                <a href="json-explorer.html" class="nav-link">
+                    <span>🔍</span>
+                    JSON Explorer
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Job Status Dashboard</h1>
+            <p class="page-subtitle">Monitor all RFP processing jobs in real-time</p>
+        </div>
+        
+        <div class="dashboard-stats" id="dashboardStats">
+            <div class="stat-card total">
+                <div class="stat-number" id="totalJobs">-</div>
+                <div class="stat-label">Total Jobs</div>
+            </div>
+            <div class="stat-card processing">
+                <div class="stat-number" id="processingJobs">-</div>
+                <div class="stat-label">Processing</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-number" id="completedJobs">-</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card error">
+                <div class="stat-number" id="errorJobs">-</div>
+                <div class="stat-label">Errors</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshJobs()">
+                <span>🔄</span>
+                Refresh Jobs
+            </button>
+            <select class="filter-select" id="statusFilter" onchange="filterJobs()">
+                <option value="all">All Status</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="error">Error</option>
+            </select>
+            <select class="filter-select" id="sortBy" onchange="sortJobs()">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name">Name A-Z</option>
+            </select>
+        </div>
+        
+        <div class="jobs-container">
+            <div class="jobs-header">
+                <div class="jobs-title">Processing Jobs</div>
+                <div id="lastUpdated" style="font-size: 0.875rem; color: var(--gray-500);"></div>
+            </div>
+            <div id="jobsList" class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading jobs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allJobs = [];
+        let filteredJobs = [];
+
+        const stageNames = {
+            'uploaded': 'Uploaded',
+            'questions_extracted': 'Questions Extracted',
+            'questions_answered': 'Questions Answered',
+            'compliance_reviewed': 'Compliance Reviewed',
+            'final_document': 'Final Document'
+        };
+
+        const stageIcons = {
+            'uploaded': '📤',
+            'questions_extracted': '❓',
+            'questions_answered': '💡',
+            'compliance_reviewed': '✅',
+            'final_document': '📋'
+        };
+
+        async function refreshJobs() {
+            const jobsList = document.getElementById('jobsList');
+            jobsList.innerHTML = `<div class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading jobs...</div>
+            </div>`;
+            
+            try {
+                // Try the list-jobs endpoint first
+                let jobFiles = [];
+                try {
+                    const response = await fetch('{{API_GATEWAY_URL}}/list-jobs');
+                    if (response.ok) {
+                        jobFiles = await response.json();
+                    } else {
+                        throw new Error('List jobs endpoint not available');
+                    }
+                } catch (listError) {
+                    console.log('List jobs endpoint not available, trying alternative approach...');
+                    
+                    // Fallback: Try to get job files from downloads endpoint
+                    try {
+                        const downloadsResponse = await fetch('{{API_GATEWAY_URL}}/downloads');
+                        if (downloadsResponse.ok) {
+                            const downloadFiles = await downloadsResponse.json();
+                            // Extract unique job names from download files
+                            const jobSet = new Set();
+                            downloadFiles.forEach(file => {
+                                const fileName = typeof file === 'string' ? file : file.name;
+                                // Try to extract original job name patterns
+                                if (fileName.includes('_final.json')) {
+                                    const baseName = fileName.replace('_final.json', '');
+                                    // Try to find corresponding uploaded file
+                                    jobSet.add(baseName + '.txt');
+                                    jobSet.add(baseName + '.pdf');
+                                } else if (fileName.includes('_RFP_Response.txt')) {
+                                    const baseName = fileName.replace('_RFP_Response.txt', '');
+                                    jobSet.add(baseName + '.txt');
+                                    jobSet.add(baseName + '.pdf');
+                                }
+                            });
+                            jobFiles = Array.from(jobSet);
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback approach also failed:', fallbackError);
+                        throw new Error('Unable to load jobs - API endpoints may not be deployed yet');
+                    }
+                }
+                
+                allJobs = [];
+                
+                // For each job file, get its status
+                for (const fileName of jobFiles) {
+                    try {
+                        const statusResponse = await fetch(`{{API_GATEWAY_URL}}/status?fileName=${encodeURIComponent(fileName)}`);
+                        if (statusResponse.ok) {
+                            const statusData = await statusResponse.json();
+                            allJobs.push(statusData);
+                        }
+                    } catch (error) {
+                        console.error(`Failed to get status for ${fileName}:`, error);
+                    }
+                }
+                
+                updateDashboardStats();
+                filterJobs();
+                document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                
+            } catch (error) {
+                console.error('Failed to fetch jobs:', error);
+                jobsList.innerHTML = `<div class="no-jobs">
+                    <div class="no-jobs-icon">⚠️</div>
+                    <div class="no-jobs-title">API Endpoint Not Available</div>
+                    <div class="no-jobs-text">The list-jobs API endpoint needs to be deployed. Please run the deployment script to add this endpoint, or check individual job status from the upload page.</div>
+                </div>`;
+            }
+        }
+
+        function updateDashboardStats() {
+            const total = allJobs.length;
+            const processing = allJobs.filter(job => job.overall_status === 'processing').length;
+            const completed = allJobs.filter(job => job.overall_status === 'completed').length;
+            const error = allJobs.filter(job => job.overall_status === 'error').length;
+            
+            document.getElementById('totalJobs').textContent = total;
+            document.getElementById('processingJobs').textContent = processing;
+            document.getElementById('completedJobs').textContent = completed;
+            document.getElementById('errorJobs').textContent = error;
+        }
+
+        function filterJobs() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            if (statusFilter === 'all') {
+                filteredJobs = [...allJobs];
+            } else {
+                filteredJobs = allJobs.filter(job => job.overall_status === statusFilter);
+            }
+            
+            sortJobs();
+        }
+
+        function sortJobs() {
+            const sortBy = document.getElementById('sortBy').value;
+            
+            filteredJobs.sort((a, b) => {
+                switch (sortBy) {
+                    case 'newest':
+                        return new Date(b.last_updated || 0) - new Date(a.last_updated || 0);
+                    case 'oldest':
+                        return new Date(a.last_updated || 0) - new Date(b.last_updated || 0);
+                    case 'name':
+                        const nameA = (a.original_filename || a.file_name).toLowerCase();
+                        const nameB = (b.original_filename || b.file_name).toLowerCase();
+                        return nameA.localeCompare(nameB);
+                    default:
+                        return 0;
+                }
+            });
+            
+            displayJobs();
+        }
+
+        function displayJobs() {
+            const jobsList = document.getElementById('jobsList');
+            
+            if (filteredJobs.length === 0) {
+                jobsList.innerHTML = `<div class="no-jobs">
+                    <div class="no-jobs-icon">📋</div>
+                    <div class="no-jobs-title">No Jobs Found</div>
+                    <div class="no-jobs-text">No jobs match the current filter criteria.</div>
+                </div>`;
+                return;
+            }
+            
+            let html = '';
+            
+            filteredJobs.forEach(job => {
+                const displayName = job.original_filename || job.file_name.replace(/_\d{8}_\d{6}\.(txt|pdf)$/, '.$1');
+                const progress = calculateProgress(job);
+                const currentStage = getCurrentStageInfo(job);
+                
+                html += `<div class="job-card">
+                    <div class="job-header">
+                        <div class="job-info">
+                            <div class="job-name">${displayName}</div>
+                            <div class="job-id">ID: ${job.file_name}</div>
+                        </div>
+                        <div class="job-status ${job.overall_status}">
+                            <span>${getStatusIcon(job.overall_status)}</span>
+                            ${job.overall_status}
+                        </div>
+                    </div>
+                    
+                    <div class="job-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="progress-text">
+                            ${progress}% complete • Current: ${currentStage.name}
+                            ${job.last_updated ? ` • Updated: ${new Date(job.last_updated).toLocaleString()}` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="job-stages">
+                        ${renderStages(job)}
+                    </div>
+                    
+                    <div class="job-actions">
+                        <button class="btn btn-secondary btn-small" onclick="viewJobDetails('${job.file_name}')">
+                            <span>👁️</span>
+                            View Details
+                        </button>
+                        ${job.overall_status === 'completed' ? `
+                            <a href="downloads.html" class="btn btn-primary btn-small">
+                                <span>📥</span>
+                                Download Files
+                            </a>
+                            <a href="json-explorer.html?file=${encodeURIComponent(job.file_name.replace(/\.(txt|pdf)$/, '_final.json'))}" class="btn btn-secondary btn-small">
+                                <span>🔍</span>
+                                Explore JSON
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>`;
+            });
+            
+            jobsList.innerHTML = html;
+        }
+
+        function calculateProgress(job) {
+            if (!job.stages || job.stages.length === 0) return 0;
+            
+            const totalStages = 5; // uploaded, questions_extracted, questions_answered, compliance_reviewed, final_document
+            const completedStages = job.stages.filter(stage => stage.status === 'completed').length;
+            
+            return Math.round((completedStages / totalStages) * 100);
+        }
+
+        function getCurrentStageInfo(job) {
+            const allStageNames = ['uploaded', 'questions_extracted', 'questions_answered', 'compliance_reviewed', 'final_document'];
+            
+            if (!job.stages || job.stages.length === 0) {
+                return { name: 'Unknown', status: 'pending' };
+            }
+            
+            // Find the last completed stage or first non-completed stage
+            for (let i = allStageNames.length - 1; i >= 0; i--) {
+                const stage = job.stages.find(s => s.name === allStageNames[i]);
+                if (stage && stage.status === 'completed') {
+                    return { name: stageNames[allStageNames[i]], status: 'completed' };
+                }
+            }
+            
+            // If no completed stages, find first pending/processing/error stage
+            for (const stageName of allStageNames) {
+                const stage = job.stages.find(s => s.name === stageName);
+                if (stage && stage.status !== 'completed') {
+                    return { name: stageNames[stageName], status: stage.status };
+                }
+            }
+            
+            return { name: stageNames[job.current_stage] || job.current_stage, status: 'processing' };
+        }
+
+        function renderStages(job) {
+            const allStageNames = ['uploaded', 'questions_extracted', 'questions_answered', 'compliance_reviewed', 'final_document'];
+            let html = '';
+            
+            allStageNames.forEach(stageName => {
+                const stage = job.stages?.find(s => s.name === stageName);
+                const status = stage ? stage.status : 'pending';
+                
+                html += `<div class="stage ${status}">
+                    <div class="stage-icon">${getStageIcon(stageName, status)}</div>
+                    <span>${stageNames[stageName]}</span>
+                </div>`;
+            });
+            
+            return html;
+        }
+
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'processing': return '⏳';
+                case 'completed': return '✅';
+                case 'error': return '❌';
+                default: return '⚪';
+            }
+        }
+
+        function getStageIcon(stageName, status) {
+            if (status === 'completed') return '✓';
+            if (status === 'processing') return '⏳';
+            if (status === 'error') return '✗';
+            return '○';
+        }
+
+        function viewJobDetails(fileName) {
+            // Redirect to main page with job tracking
+            window.location.href = `index.html?track=${encodeURIComponent(fileName)}`;
+        }
+
+        // Auto-refresh every 2 minutes
+        setInterval(refreshJobs, 120000);
+
+        // Load jobs on page load
+        window.addEventListener('load', refreshJobs);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Explorer | RFP Processing Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-light: #2d5a87;
+            --primary-dark: #0f2a44;
+            --secondary-color: #3182ce;
+            --accent-color: #4299e1;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --error-color: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .explorer-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+        }
+
+        .sidebar {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            padding: 1.5rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .sidebar-content {
+            padding: 1rem;
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            word-break: break-all;
+        }
+
+        .file-item:hover {
+            background: var(--gray-50);
+        }
+
+        .file-item.active {
+            background: var(--secondary-color);
+            color: var(--white);
+        }
+
+        .main-content {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            background: var(--gray-50);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .content-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .view-toggle {
+            display: flex;
+            background: var(--gray-200);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .view-toggle button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .view-toggle button.active {
+            background: var(--white);
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .content-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .json-viewer {
+            flex: 1;
+            overflow: auto;
+            padding: 2rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .json-tree {
+            margin: 0;
+        }
+
+        .json-key {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .json-string {
+            color: var(--success-color);
+        }
+
+        .json-number {
+            color: var(--warning-color);
+        }
+
+        .json-boolean {
+            color: var(--secondary-color);
+        }
+
+        .json-null {
+            color: var(--gray-500);
+            font-style: italic;
+        }
+
+        .json-expandable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .json-expandable:hover {
+            background: var(--gray-50);
+        }
+
+        .json-collapsed {
+            color: var(--gray-500);
+        }
+
+        .rfp-section {
+            margin: 1.5rem 0;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--white);
+        }
+
+        .rfp-section-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .rfp-section-header:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary-color));
+        }
+
+        .rfp-section-content {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .question-item {
+            margin: 1.5rem 0;
+            padding: 1.25rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            background: var(--gray-50);
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .question-number {
+            background: var(--secondary-color);
+            color: var(--white);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .question-text {
+            flex: 1;
+            font-weight: 600;
+            color: var(--gray-800);
+            line-height: 1.5;
+        }
+
+        .answer-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--white);
+            border-radius: 6px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: var(--success-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .answer-text {
+            color: var(--gray-700);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .metadata-section {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .metadata-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.25rem 0;
+        }
+
+        .metadata-label {
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        .metadata-value {
+            color: var(--gray-800);
+            font-family: monospace;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--gray-50), var(--white));
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        .search-box {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--white);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            padding: 2rem;
+            text-align: center;
+            color: var(--error-color);
+        }
+
+        .no-file-selected {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            gap: 1rem;
+            color: var(--gray-500);
+        }
+
+        .no-file-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gray-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .explorer-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .sidebar {
+                order: 2;
+            }
+
+            .main-content {
+                order: 1;
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .content-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">RP</div>
+                <div class="logo-text">RFP Platform</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">
+                    <span>📤</span>
+                    Upload Portal
+                </a>
+                <a href="downloads.html" class="nav-link">
+                    <span>📥</span>
+                    Download Center
+                </a>
+                <a href="status.html" class="nav-link">
+                    <span>📊</span>
+                    Job Status
+                </a>
+                <a href="json-explorer.html" class="nav-link">
+                    <span>🔍</span>
+                    JSON Explorer
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">JSON Explorer</h1>
+            <p class="page-subtitle">Explore and analyze RFP processing results in detail</p>
+        </div>
+
+        <div class="explorer-container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    📋 JSON Files
+                </div>
+                <div class="sidebar-content">
+                    <ul class="file-list" id="fileList">
+                        <li class="loading">
+                            <div class="loading-spinner"></div>
+                            <div>Loading files...</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="content-header">
+                    <div class="content-title" id="contentTitle">Select a JSON file to explore</div>
+                    <div class="controls">
+                        <div class="view-toggle">
+                            <button class="active" onclick="setViewMode('structured')">📋 Structured</button>
+                            <button onclick="setViewMode('tree')">🌳 Tree</button>
+                            <button onclick="setViewMode('raw')">📄 Raw</button>
+                        </div>
+                        <button class="btn btn-secondary" onclick="downloadCurrentFile()" id="downloadBtn"
+                            style="display: none;">
+                            <span>⬇</span>
+                            Download
+                        </button>
+                        <button class="btn btn-primary" onclick="copyToClipboard()" id="copyBtn" style="display: none;">
+                            <span>📋</span>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="search-box" id="searchBox" style="display: none;">
+                    <input type="text" class="search-input" placeholder="Search in JSON..." id="searchInput"
+                        oninput="searchInJson()">
+                </div>
+
+                <div class="content-body">
+                    <div class="no-file-selected" id="noFileSelected">
+                        <div class="no-file-icon">📋</div>
+                        <div>Select a JSON file from the sidebar to start exploring</div>
+                    </div>
+                    <div class="json-viewer" id="jsonViewer" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentJsonData = null;
+        let currentFileName = null;
+        let currentFileMetadata = null;
+        let viewMode = 'structured';
+        let searchTerm = '';
+
+        async function loadJsonFiles() {
+            const fileList = document.getElementById('fileList');
+
+            try {
+                const response = await fetch('{{API_GATEWAY_URL}}/downloads');
+                if (response.ok) {
+                    const files = await response.json();
+                    const jsonFiles = files.filter(file => {
+                        const fileName = typeof file === 'string' ? file : file.name;
+                        return fileName.endsWith('_final.json');
+                    });
+
+                    if (jsonFiles.length === 0) {
+                        fileList.innerHTML = '<li style="padding: 1rem; text-align: center; color: var(--gray-500);">No JSON files found</li>';
+                        return;
+                    }
+
+                    fileList.innerHTML = '';
+                    jsonFiles.forEach(file => {
+                        const fileName = typeof file === 'string' ? file : file.name;
+                        const displayName = fileName.replace('_final.json', '').replace(/_\d{8}_\d{6}$/, '');
+
+                        const li = document.createElement('li');
+                        li.className = 'file-item';
+                        li.textContent = displayName;
+                        li.title = fileName;
+                        li.dataset.fileMetadata = JSON.stringify(file); // Store file metadata
+                        li.onclick = () => loadJsonFile(fileName, file);
+                        fileList.appendChild(li);
+                    });
+
+                    // Check if there's a file parameter in URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const fileParam = urlParams.get('file');
+                    if (fileParam) {
+                        // Find the file metadata for the URL parameter
+                        const fileData = jsonFiles.find(file => {
+                            const fileName = typeof file === 'string' ? file : file.name;
+                            return fileName === fileParam;
+                        });
+                        loadJsonFile(fileParam, fileData);
+                    }
+                } else {
+                    throw new Error('Failed to fetch files');
+                }
+            } catch (error) {
+                console.error('Failed to load JSON files:', error);
+                fileList.innerHTML = '<li style="padding: 1rem; text-align: center; color: var(--error-color);">Error loading files</li>';
+            }
+        }
+
+        async function loadJsonFile(fileName, fileMetadata = null) {
+            const jsonViewer = document.getElementById('jsonViewer');
+            const noFileSelected = document.getElementById('noFileSelected');
+            const contentTitle = document.getElementById('contentTitle');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const searchBox = document.getElementById('searchBox');
+
+            // Update active file in sidebar
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.title === fileName) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Show loading
+            jsonViewer.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Loading JSON...</div></div>';
+            jsonViewer.style.display = 'block';
+            noFileSelected.style.display = 'none';
+
+            try {
+                const response = await fetch(`{{API_GATEWAY_URL}}/download/${fileName}`);
+                if (response.ok) {
+                    const jsonText = await response.text();
+                    currentJsonData = JSON.parse(jsonText);
+                    currentFileName = fileName;
+                    currentFileMetadata = fileMetadata;
+
+                    const displayName = fileName.replace('_final.json', '').replace(/_\d{8}_\d{6}$/, '');
+                    contentTitle.textContent = `📋 ${displayName}`;
+
+                    downloadBtn.style.display = 'inline-flex';
+                    copyBtn.style.display = 'inline-flex';
+                    searchBox.style.display = 'block';
+
+                    renderJson();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Failed to load JSON file:', error);
+                jsonViewer.innerHTML = `<div class="error-message">Failed to load JSON file: ${error.message}</div>`;
+            }
+        }
+
+        function renderJson() {
+            const jsonViewer = document.getElementById('jsonViewer');
+
+            if (!currentJsonData) {
+                jsonViewer.innerHTML = '<div class="error-message">No JSON data to display</div>';
+                return;
+            }
+
+            if (viewMode === 'raw') {
+                jsonViewer.innerHTML = `<pre>${JSON.stringify(currentJsonData, null, 2)}</pre>`;
+            } else if (viewMode === 'structured') {
+                jsonViewer.innerHTML = renderRFPStructure(currentJsonData, searchTerm);
+            } else {
+                jsonViewer.innerHTML = renderJsonTree(currentJsonData, '', searchTerm);
+            }
+        }
+
+        function renderRFPStructure(data, search = '') {
+            let html = '';
+
+            // Add summary card
+            html += renderSummaryCard(data);
+
+            // Check if this looks like RFP data structure with question_analysis
+            if (data.question_analysis && Array.isArray(data.question_analysis)) {
+                html += renderQuestionsSection(data.question_analysis, search);
+            }
+
+            // Render document content if available
+            if (data.document_content) {
+                html += renderDocumentSection(data.document_content, search);
+            }
+
+            // Render compliance reasoning if available
+            if (data.compliance_reasoning) {
+                html += renderComplianceSection(data.compliance_reasoning, search);
+            }
+
+            // Render other sections
+            const mainSections = ['question_analysis', 'document_content', 'compliance_reasoning', 'rfp_name', 'total_questions', 'processing_timestamp', 'status'];
+            Object.keys(data).forEach(key => {
+                if (!mainSections.includes(key)) {
+                    html += renderGenericSection(key, data[key], search);
+                }
+            });
+
+            return html;
+        }
+
+        function renderSummaryCard(data) {
+            const questionCount = data.total_questions || (data.question_analysis ? data.question_analysis.length : 0);
+            const answeredCount = data.question_analysis ? data.question_analysis.filter(q => q.drafted_answer && q.drafted_answer.trim()).length : 0;
+            const rfpName = data.rfp_name || 'Unknown RFP';
+            const status = data.status || 'Unknown';
+
+            // Use file metadata for date if available, otherwise try JSON timestamp
+            let generatedDate = 'Unknown';
+            if (currentFileMetadata && currentFileMetadata.lastModified) {
+                generatedDate = new Date(currentFileMetadata.lastModified).toLocaleDateString();
+            } else if (currentFileMetadata && currentFileMetadata.last_modified) {
+                generatedDate = new Date(currentFileMetadata.last_modified).toLocaleDateString();
+            } else if (data.processing_timestamp && data.processing_timestamp !== 'Unknown') {
+                generatedDate = new Date(data.processing_timestamp).toLocaleDateString();
+            }
+
+            return `
+                <div class="summary-card">
+                    <div class="summary-title">📋 ${rfpName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">${questionCount}</div>
+                            <div class="stat-label">Total Questions</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${answeredCount}</div>
+                            <div class="stat-label">Answered</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                            <div class="stat-label">Status</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${generatedDate}</div>
+                            <div class="stat-label">Generated</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuestionsSection(questions, search) {
+            let html = `
+                <div class="rfp-section">
+                    <div class="rfp-section-header" onclick="toggleRFPSection(this)">
+                        <span>▼</span>
+                        <span>❓ Questions & Answers (${questions.length})</span>
+                    </div>
+                    <div class="rfp-section-content">
+            `;
+
+            questions.forEach((question, index) => {
+                html += renderQuestionItem(question, index + 1, search);
+            });
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderQuestionItem(question, number, search) {
+            const questionText = question.question || 'No question text';
+            const originalAnswer = question.original_answer || 'No original answer';
+            const draftedAnswer = question.drafted_answer || 'No drafted answer';
+            const confidence = question.confidence || question.confidence_score;
+            const sources = question.sources || question.source_documents;
+
+            // Apply search highlighting
+            const highlightedQuestion = search && questionText.toLowerCase().includes(search.toLowerCase())
+                ? questionText.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : questionText;
+            const highlightedOriginalAnswer = search && originalAnswer.toLowerCase().includes(search.toLowerCase())
+                ? originalAnswer.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : originalAnswer;
+            const highlightedDraftedAnswer = search && draftedAnswer.toLowerCase().includes(search.toLowerCase())
+                ? draftedAnswer.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : draftedAnswer;
+
+            let html = `
+                <div class="question-item">
+                    <div class="question-header">
+                        <div class="question-number">${number}</div>
+                        <div class="question-text">${highlightedQuestion}</div>
+                    </div>
+                    <div class="answer-section">
+                        <div class="answer-label">Original Answer</div>
+                        <div class="answer-text">${highlightedOriginalAnswer}</div>
+                    </div>
+                    
+                    <div class="answer-section" style="border-left-color: var(--primary-color);">
+                        <div class="answer-label">Drafted Answer</div>
+                        <div class="answer-text">${highlightedDraftedAnswer}</div>
+                    </div>
+            `;
+
+            // Add compliance and metadata sections with proper formatting
+            const complianceStatus = question.compliance_status || 'Unknown';
+            const hasPII = question.has_pii || 'Unknown';
+            const hasPrivilegedData = question.has_privileged_data || 'Unknown';
+            const issuesFound = question.issues_found || [];
+            const actionTaken = question.action_taken || 'Unknown';
+
+            // Apply search highlighting to compliance data
+            const highlightedComplianceStatus = search && complianceStatus.toLowerCase().includes(search.toLowerCase())
+                ? complianceStatus.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : complianceStatus;
+
+            // Compliance Status Section
+            html += `<div class="answer-section" style="border-left-color: ${getComplianceColor(complianceStatus)};">
+                <div class="answer-label">Compliance Status</div>
+                <div class="answer-text" style="color: ${getComplianceColor(complianceStatus)}; font-weight: 600;">
+                    ${highlightedComplianceStatus}
+                </div>
+            </div>`;
+
+            // Data Classification Section
+            html += `<div class="answer-section" style="border-left-color: var(--secondary-color);">
+                <div class="answer-label">Data Classification</div>
+                <div class="answer-text">
+                    <div style="margin-bottom: 0.5rem;"><strong>Contains PII:</strong> ${hasPII}</div>
+                    <div><strong>Privileged Data:</strong> ${hasPrivilegedData}</div>
+                </div>
+            </div>`;
+
+            // Action Taken Section
+            if (actionTaken && actionTaken !== 'Unknown') {
+                const highlightedActionTaken = search && actionTaken.toLowerCase().includes(search.toLowerCase())
+                    ? actionTaken.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                    : actionTaken;
+
+                html += `<div class="answer-section" style="border-left-color: var(--accent-color);">
+                    <div class="answer-label">Action Taken</div>
+                    <div class="answer-text">${highlightedActionTaken}</div>
+                </div>`;
+            }
+
+            // Issues Found Section (if any)
+            if (issuesFound && issuesFound.length > 0) {
+                html += `<div class="answer-section" style="border-left-color: var(--error-color);">
+                    <div class="answer-label">Issues Found (${issuesFound.length})</div>
+                    <div class="answer-text">`;
+
+                issuesFound.forEach((issue, index) => {
+                    const highlightedIssue = search && issue.toLowerCase().includes(search.toLowerCase())
+                        ? issue.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                        : issue;
+
+                    html += `<div style="background: rgba(229, 62, 62, 0.1); padding: 0.75rem; margin: ${index > 0 ? '0.5rem' : '0'} 0; border-radius: 6px; border-left: 3px solid var(--error-color);">
+                        ${highlightedIssue}
+                    </div>`;
+                });
+
+                html += `</div></div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderGenericSection(key, value, search) {
+            const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+            return `
+                <div class="rfp-section">
+                    <div class="rfp-section-header" onclick="toggleRFPSection(this)">
+                        <span>▼</span>
+                        <span>📄 ${displayKey}</span>
+                    </div>
+                    <div class="rfp-section-content">
+                        ${renderJsonTree(value, '', search)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleRFPSection(header) {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('span:first-child');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+
+        function renderDocumentSection(documentContent, search) {
+            const highlightedContent = search && documentContent.toLowerCase().includes(search.toLowerCase())
+                ? documentContent.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : documentContent;
+
+            return `
+                <div class="rfp-section">
+                    <div class="rfp-section-header" onclick="toggleRFPSection(this)">
+                        <span>▼</span>
+                        <span>📄 Generated Document Content</span>
+                    </div>
+                    <div class="rfp-section-content">
+                        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; max-height: 500px; overflow-y: auto;">
+                            ${highlightedContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderComplianceSection(complianceReasoning, search) {
+            const highlightedContent = search && complianceReasoning.toLowerCase().includes(search.toLowerCase())
+                ? complianceReasoning.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                : complianceReasoning;
+
+            return `
+                <div class="rfp-section">
+                    <div class="rfp-section-header" onclick="toggleRFPSection(this)">
+                        <span>▼</span>
+                        <span>⚖️ Compliance Review Analysis</span>
+                    </div>
+                    <div class="rfp-section-content">
+                        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; max-height: 500px; overflow-y: auto;">
+                            ${highlightedContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getComplianceColor(status) {
+            switch (status.toLowerCase()) {
+                case 'approve':
+                    return 'var(--success-color)';
+                case 'redact with explanation':
+                case 'redact':
+                    return 'var(--warning-color)';
+                case 'reject':
+                    return 'var(--error-color)';
+                default:
+                    return 'var(--gray-600)';
+            }
+        }
+
+        function renderJsonTree(obj, path = '', search = '') {
+            if (obj === null) {
+                return '<span class="json-null">null</span>';
+            }
+
+            if (typeof obj === 'string') {
+                const highlighted = search && obj.toLowerCase().includes(search.toLowerCase())
+                    ? obj.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                    : obj;
+                return `<span class="json-string">"${highlighted}"</span>`;
+            }
+
+            if (typeof obj === 'number') {
+                return `<span class="json-number">${obj}</span>`;
+            }
+
+            if (typeof obj === 'boolean') {
+                return `<span class="json-boolean">${obj}</span>`;
+            }
+
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) {
+                    return '<span class="json-collapsed">[]</span>';
+                }
+
+                let html = '<div class="json-expandable" onclick="toggleExpand(this)">';
+                html += '<span class="json-key">▼ Array</span> <span class="json-collapsed">[' + obj.length + ' items]</span>';
+                html += '<div class="json-content" style="margin-left: 20px;">';
+
+                obj.forEach((item, index) => {
+                    html += `<div><span class="json-key">[${index}]:</span> ${renderJsonTree(item, `${path}[${index}]`, search)}</div>`;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+
+            if (typeof obj === 'object') {
+                const keys = Object.keys(obj);
+                if (keys.length === 0) {
+                    return '<span class="json-collapsed">{}</span>';
+                }
+
+                let html = '<div class="json-expandable" onclick="toggleExpand(this)">';
+                html += '<span class="json-key">▼ Object</span> <span class="json-collapsed">{' + keys.length + ' properties}</span>';
+                html += '<div class="json-content" style="margin-left: 20px;">';
+
+                keys.forEach(key => {
+                    const keyHighlighted = search && key.toLowerCase().includes(search.toLowerCase())
+                        ? key.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
+                        : key;
+                    html += `<div><span class="json-key">"${keyHighlighted}":</span> ${renderJsonTree(obj[key], `${path}.${key}`, search)}</div>`;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+
+            return '<span class="json-null">undefined</span>';
+        }
+
+        function toggleExpand(element) {
+            const content = element.querySelector('.json-content');
+            const arrow = element.querySelector('.json-key');
+            const collapsed = element.querySelector('.json-collapsed');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = arrow.textContent.replace('▶', '▼');
+                collapsed.style.display = 'none';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = arrow.textContent.replace('▼', '▶');
+                collapsed.style.display = 'inline';
+            }
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+
+            // Update toggle buttons
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderJson();
+        }
+
+        function searchInJson() {
+            const searchInput = document.getElementById('searchInput');
+            searchTerm = searchInput.value.trim();
+
+            if (viewMode !== 'raw') {
+                renderJson();
+            }
+        }
+
+        function downloadCurrentFile() {
+            if (currentFileName) {
+                const link = document.createElement('a');
+                link.href = `{{API_GATEWAY_URL}}/download/${currentFileName}`;
+                link.download = currentFileName;
+                link.click();
+            }
+        }
+
+        function copyToClipboard() {
+            if (currentJsonData) {
+                const jsonText = JSON.stringify(currentJsonData, null, 2);
+                navigator.clipboard.writeText(jsonText).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<span>✓</span> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy to clipboard:', err);
+                    alert('Failed to copy to clipboard');
+                });
+            }
+        }
+
+        // Load files on page load
+        window.addEventListener('load', loadJsonFiles);
+    </script>
+</body>
+
+</html>
+
+

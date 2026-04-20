@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Center | RFP Processing Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-light: #2d5a87;
+            --primary-dark: #0f2a44;
+            --secondary-color: #3182ce;
+            --accent-color: #4299e1;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --error-color: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .rfp-group {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            margin: 2rem 0;
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .rfp-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .rfp-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .rfp-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .rfp-content {
+            padding: 2rem;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            margin: 0.75rem 0;
+            background: var(--gray-50);
+            border-radius: 12px;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .file-row:hover {
+            background: var(--white);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--white);
+            margin-right: 1.5rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 1.125rem;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-name:hover {
+            color: var(--secondary-color);
+        }
+
+        .file-type {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-details {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .download-item {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .download-item:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .download-item a {
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .download-item a:hover {
+            color: var(--secondary-color);
+        }
+
+        .no-files {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+        }
+
+        .no-files-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gray-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            color: var(--gray-400);
+        }
+
+        .no-files-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-files-text {
+            color: var(--gray-500);
+            font-size: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--secondary-color);
+            font-weight: 500;
+            font-size: 1.125rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .actions-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .file-row {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            
+            .file-icon {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">RP</div>
+                <div class="logo-text">RFP Platform</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">
+                    <span>📤</span>
+                    Upload Portal
+                </a>
+                <a href="downloads.html" class="nav-link">
+                    <span>📥</span>
+                    Download Center
+                </a>
+                <a href="status.html" class="nav-link">
+                    <span>📊</span>
+                    Job Status
+                </a>
+                <a href="json-explorer.html" class="nav-link">
+                    <span>🔍</span>
+                    JSON Explorer
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Download Center</h1>
+            <p class="page-subtitle">Access all completed RFP response documents and processing files</p>
+        </div>
+        
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="refreshDownloads()">
+                <span>🔄</span>
+                Refresh Downloads
+            </button>
+            <button class="btn btn-danger" onclick="clearDownloads()">
+                <span>🗑️</span>
+                Clear All Downloads
+            </button>
+        </div>
+        
+        <div id="downloadList" class="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading downloads...</div>
+        </div>
+    </div>
+
+    <script>
+        function groupFilesByRFP(files) {
+            const groups = {};
+            const ungrouped = [];
+            
+            files.forEach(file => {
+                const fileName = typeof file === 'string' ? file : file.name;
+                
+                // Extract base name for grouping
+                let baseName = fileName;
+                if (fileName.includes('_final.json')) {
+                    baseName = fileName.replace('_final.json', '');
+                } else if (fileName.includes('_RFP_Response.txt')) {
+                    baseName = fileName.replace('_RFP_Response.txt', '');
+                } else {
+                    // File doesn't match expected pattern, add to ungrouped
+                    ungrouped.push(file);
+                    return;
+                }
+                
+                if (!groups[baseName]) {
+                    groups[baseName] = [];
+                }
+                groups[baseName].push(file);
+            });
+            
+            return { groups, ungrouped };
+        }
+
+        function getFileIcon(fileName) {
+            if (fileName.endsWith('_final.json')) return '📋';
+            if (fileName.endsWith('_RFP_Response.txt')) return '📄';
+            return '📁';
+        }
+
+        function getFileTypeDescription(fileName) {
+            if (fileName.endsWith('_final.json')) return 'Final Response Data (JSON)';
+            if (fileName.endsWith('_RFP_Response.txt')) return 'RFP Response Document (Text)';
+            return 'File';
+        }
+
+        async function refreshDownloads() {
+            const downloadList = document.getElementById('downloadList');
+            downloadList.innerHTML = `<div class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading downloads...</div>
+            </div>`;
+            
+            try {
+                const response = await fetch('{{API_GATEWAY_URL}}/downloads');
+                if (response.ok) {
+                    const files = await response.json();
+                    if (files.length === 0) {
+                        downloadList.innerHTML = `<div class="no-files">
+                            <div class="no-files-icon">📁</div>
+                            <div class="no-files-title">No Files Available</div>
+                            <div class="no-files-text">Upload an RFP file to get started with processing!</div>
+                        </div>`;
+                    } else {
+                        const { groups, ungrouped } = groupFilesByRFP(files);
+                        let html = '';
+                        
+                        // Display grouped RFP files
+                        Object.keys(groups).forEach(baseName => {
+                            const groupFiles = groups[baseName];
+                            const displayName = baseName.replace(/_\d{8}_\d{6}$/, ''); // Remove timestamp for display
+                            
+                            html += `<div class="rfp-group">
+                                <div class="rfp-header">
+                                    <div class="rfp-icon">📋</div>
+                                    <div class="rfp-title">${displayName}</div>
+                                </div>
+                                <div class="rfp-content">`;
+                            
+                            groupFiles.forEach(file => {
+                                const fileName = typeof file === 'string' ? file : file.name;
+                                const lastModified = typeof file === 'object' && file.lastModified 
+                                    ? new Date(file.lastModified).toLocaleString() 
+                                    : '';
+                                const size = typeof file === 'object' && file.size 
+                                    ? `(${(file.size / 1024).toFixed(1)} KB)` 
+                                    : '';
+                                
+                                html += `<div class="file-row">
+                                    <div class="file-icon">${getFileIcon(fileName)}</div>
+                                    <div class="file-info">
+                                        <a href="{{API_GATEWAY_URL}}/download/${fileName}" download class="file-name">${fileName}</a>
+                                        <div class="file-type">${getFileTypeDescription(fileName)}</div>
+                                        ${lastModified ? `<div class="file-details">Modified: ${lastModified} ${size}</div>` : ''}
+                                        ${fileName.endsWith('_final.json') ? `<div style="margin-top: 0.75rem;">
+                                            <a href="json-explorer.html?file=${encodeURIComponent(fileName)}" class="btn btn-secondary btn-small" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.875rem; border-radius: 6px; margin-right: 0.5rem;">
+                                                <span>🔍</span>
+                                                Explore JSON
+                                            </a>
+                                        </div>` : ''}
+                                    </div>
+                                </div>`;
+                            });
+                            
+                            html += '</div></div>';
+                        });
+                        
+                        // Display ungrouped files (if any)
+                        if (ungrouped.length > 0) {
+                            html += `<div class="rfp-group">
+                                <div class="rfp-header">
+                                    <div class="rfp-icon">📄</div>
+                                    <div class="rfp-title">Other Files</div>
+                                </div>
+                                <div class="rfp-content">`;
+                            
+                            ungrouped.forEach(file => {
+                                const fileName = typeof file === 'string' ? file : file.name;
+                                const lastModified = typeof file === 'object' && file.lastModified 
+                                    ? new Date(file.lastModified).toLocaleString() 
+                                    : '';
+                                const size = typeof file === 'object' && file.size 
+                                    ? `(${(file.size / 1024).toFixed(1)} KB)` 
+                                    : '';
+                                
+                                html += `<div class="download-item">
+                                    <a href="{{API_GATEWAY_URL}}/download/${fileName}" download>
+                                        <span>📄</span>
+                                        ${fileName}
+                                    </a>
+                                    ${lastModified ? `<div class="file-details">Modified: ${lastModified} ${size}</div>` : ''}
+                                </div>`;
+                            });
+                            
+                            html += '</div></div>';
+                        }
+                        
+                        downloadList.innerHTML = html;
+                    }
+                } else {
+                    throw new Error('Failed to fetch downloads');
+                }
+            } catch (error) {
+                console.error('Failed to fetch downloads:', error);
+                downloadList.innerHTML = `<div class="no-files">
+                    <div class="no-files-icon">⚠️</div>
+                    <div class="no-files-title">Error Loading Files</div>
+                    <div class="no-files-text">Please try refreshing the page or contact support if the issue persists.</div>
+                </div>`;
+            }
+        }
+
+        async function clearDownloads() {
+            if (confirm('Are you sure you want to clear all downloads? This action cannot be undone.')) {
+                // This would need to be implemented on the backend
+                alert('Clear downloads functionality would need to be implemented on the backend.');
+            }
+        }
+
+        // Load downloads on page load
+        window.addEventListener('load', refreshDownloads);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
