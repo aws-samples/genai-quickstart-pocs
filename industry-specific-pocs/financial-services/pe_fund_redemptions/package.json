@@ -31,7 +31,7 @@
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "aws-cdk": "^2.138.0",
-    "aws-cdk-lib": "^2.138.0",
+    "aws-cdk-lib": "^2.260.0",
     "constructs": "^10.3.0",
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
@@ -39,6 +39,30 @@
     "eslint-plugin-react-refresh": "^0.4.6",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5",
-    "vite": "^5.4.10"
+    "vite": "^6.4.3"
+  },
+  "overrides": {
+    "brace-expansion": "2.1.6",
+    "@fastify/busboy": "3.2.1",
+    "basic-ftp": "6.2.1",
+    "fast-uri": "3.1.7",
+    "immutable": "3.8.4",
+    "js-yaml": "4.3.2",
+    "browserslist": "4.28.7",
+    "nanoid": "3.3.18",
+    "mysql2": "3.22.0",
+    "ip-address": "10.3.1",
+    "postcss": "8.5.18",
+    "js-cookie": "3.0.7",
+    "lodash": "4.18.0",
+    "picomatch": "2.3.2",
+    "lodash-es": "4.18.0",
+    "handlebars": "4.7.9",
+    "fast-xml-parser": "5.5.6",
+    "flatted": "3.4.2",
+    "minimatch": "10.2.3",
+    "rollup": "4.59.0",
+    "@isaacs/brace-expansion": "5.0.1",
+    "glob": "11.1.0"
   }
 }

@@ -4,5 +4,8 @@
   "description": "Lambda layer for Bedrock Agent Core SDK",
   "dependencies": {
     "@aws-sdk/client-bedrock-agentcore": "^3.864.0"
+  },
+  "overrides": {
+    "fast-xml-parser": "5.5.6"
   }
 }
