@@ -1,14 +1,13 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 
 // Vitest config for the PE fund redemptions frontend.
-// Scoped to pure-logic unit tests that do not require the deploy-time
-// amplify_outputs.json (which main.tsx imports and is .gitignored).
+// Scoped to pure-logic unit tests (session utils, agent-config constants) that
+// need no DOM and no deploy-time amplify_outputs.json (which main.tsx imports
+// and is .gitignored). Uses the lightweight node environment accordingly.
 export default defineConfig({
-  plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })
