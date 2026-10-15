@@ -6,5 +6,8 @@
   "private": true,
   "dependencies": {
     "@aws-sdk/client-sns": "^3.600.0"
+  },
+  "overrides": {
+    "fast-xml-parser": "5.5.6"
   }
 }
