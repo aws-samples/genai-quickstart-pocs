@@ -5,7 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ENV REACT_APP_PROXY_URL=http://bankiq-platform-alb-614395446.us-east-1.elb.amazonaws.com
+# Vite only inlines VITE_-prefixed env vars at build time.
+ENV VITE_PROXY_URL=http://bankiq-platform-alb-614395446.us-east-1.elb.amazonaws.com
 RUN npm run build
 
 # Production stage with serve
