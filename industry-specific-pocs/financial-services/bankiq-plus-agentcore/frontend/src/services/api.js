@@ -2,7 +2,7 @@ import { API_URL } from '../config';
 import { fetchAuthSession } from '@aws-amplify/auth';
 
 // Use CloudFront URL for production
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || API_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || API_URL;
 
 async function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };

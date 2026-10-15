@@ -4,7 +4,7 @@
  */
 class AgentService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_GATEWAY_URL || window.location.origin;
+    this.baseURL = import.meta.env.VITE_API_GATEWAY_URL || window.location.origin;
     this.websocket = null;
     this.eventSource = null;
     this.listeners = new Map();

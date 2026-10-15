@@ -1,7 +1,8 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { api } from '../api';
 
-// Mock fetch globally
-global.fetch = jest.fn();
+// Mock fetch globally (Vitest). Converted from jest.fn() during CRA->Vite migration.
+global.fetch = vi.fn();
 
 describe('API Service Tests', () => {
   beforeEach(() => {
@@ -9,22 +10,23 @@ describe('API Service Tests', () => {
   });
 
   describe('analyzePeers', () => {
-    it('should parse DATA: prefix format correctly', async () => {
-      const mockResponse = `DATA: {"data": [{"Bank": "JPMorgan", "Quarter": "2024-Q1", "Metric": "ROA", "Value": 1.5}], "base_bank": "JPMorgan", "peer_banks": ["BofA"]}
-      
-      Analysis: JPMorgan shows strong performance...`;
+    it('should extract chart data from a complete tool JSON (Pattern 1)', async () => {
+      // Pattern 1 requires data, base_bank, peer_banks, analysis AND source keys
+      // (matches the format the agent prompt in analyzePeers documents).
+      const mockResponse = `{"data": [{"Bank": "JPMorgan", "Quarter": "2024-Q1", "Metric": "ROA", "Value": 1.5}], "base_bank": "JPMorgan", "peer_banks": ["BofA"], "analysis": "JPMorgan shows strong performance", "source": "FDIC"}
 
-      // Mock job submission and polling
+This is the expanded analysis that is long enough to exceed the fifty character threshold used by the parser.`;
+
       fetch
         .mockResolvedValueOnce({ // submitJob
           ok: true,
           json: async () => ({ jobId: 'test-123', status: 'pending' })
         })
-        .mockResolvedValueOnce({ // pollJob - status check
+        .mockResolvedValueOnce({ // checkJobStatus
           ok: true,
           json: async () => ({ status: 'completed' })
         })
-        .mockResolvedValueOnce({ // pollJob - get result
+        .mockResolvedValueOnce({ // getJobResult
           ok: true,
           json: async () => ({ status: 'completed', result: mockResponse })
         });
@@ -34,13 +36,14 @@ describe('API Service Tests', () => {
       expect(result.success).toBe(true);
       expect(result.result.data).toHaveLength(1);
       expect(result.result.data[0].Bank).toBe('JPMorgan');
-      expect(result.result.analysis).not.toContain('DATA:');
+      // The extracted analysis is everything after the JSON, not the DATA: fragment.
+      expect(result.result.analysis).toContain('expanded analysis');
     });
 
-    it('should parse embedded JSON format', async () => {
+    it('should parse embedded single-line JSON (Pattern 2)', async () => {
       const mockResponse = `Here is the analysis:
-      {"data": [{"Bank": "Wells", "Quarter": "2024-Q2", "Metric": "ROE", "Value": 12.3}]}
-      The data shows...`;
+{"data": [{"Bank": "Wells", "Quarter": "2024-Q2", "Metric": "ROE", "Value": 12.3}]}
+The data shows...`;
 
       fetch
         .mockResolvedValueOnce({ ok: true, json: async () => ({ jobId: 'test-456', status: 'pending' }) })
@@ -91,7 +94,7 @@ describe('API Service Tests', () => {
 
       // Agent upload fails
       fetch.mockResolvedValueOnce({ ok: false, status: 500 });
-      
+
       // Direct upload succeeds
       fetch.mockResolvedValueOnce({
         ok: true,
