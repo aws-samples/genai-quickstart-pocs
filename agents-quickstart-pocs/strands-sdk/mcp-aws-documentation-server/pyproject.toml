@@ -8,6 +8,6 @@ dependencies = [
     "awslabs-aws-documentation-mcp-server>=1.1.2",
     "mcp>=1.12.1",
     "strands-agents>=1.0.1",
-    "strands-agents-tools>=0.2.1",
-    "streamlit>=1.47.0",
+    "strands-agents-tools>=0.8.9",
+    "streamlit>=1.47.0,<2",
 ]
