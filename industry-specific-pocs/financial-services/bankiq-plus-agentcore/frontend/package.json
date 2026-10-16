@@ -28,6 +28,9 @@
     "vite": "^6.0.0",
     "vitest": "^3.0.0"
   },
+  "overrides": {
+    "tinypool": ">=2.1.2"
+  },
   "scripts": {
     "start": "vite",
     "dev": "vite",
