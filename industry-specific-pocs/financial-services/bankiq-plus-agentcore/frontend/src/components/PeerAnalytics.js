@@ -9,7 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { api } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 function PeerAnalytics() {
   const [selectedBank, setSelectedBank] = useState('');

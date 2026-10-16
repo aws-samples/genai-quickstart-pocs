@@ -1276,13 +1276,20 @@ app.post('/api/admin/clear-cache', (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-  console.log(`✅ BankIQ+ Backend running on port ${PORT}`);
-  console.log(`   Health check: http://localhost:${PORT}/health`);
-  console.log(`   Chat API (async): http://localhost:${PORT}/api/chat`);
-  console.log(`   Agent API (direct): http://localhost:${PORT}/api/invoke-agent`);
-  console.log(`   Async Jobs: http://localhost:${PORT}/api/jobs/submit`);
-  console.log(`   CSV Storage: http://localhost:${PORT}/api/store-csv-data`);
-  console.log(`   CSV Analysis: http://localhost:${PORT}/api/analyze-local-data`);
-  console.log(`   Bank Search: http://localhost:${PORT}/api/search-banks`);
-});
+// Only start the HTTP listener when run directly (node server.js), not when
+// imported by tests. This keeps `node server.js` behavior identical while
+// allowing supertest to exercise the Express app without binding a port.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`✅ BankIQ+ Backend running on port ${PORT}`);
+    console.log(`   Health check: http://localhost:${PORT}/health`);
+    console.log(`   Chat API (async): http://localhost:${PORT}/api/chat`);
+    console.log(`   Agent API (direct): http://localhost:${PORT}/api/invoke-agent`);
+    console.log(`   Async Jobs: http://localhost:${PORT}/api/jobs/submit`);
+    console.log(`   CSV Storage: http://localhost:${PORT}/api/store-csv-data`);
+    console.log(`   CSV Analysis: http://localhost:${PORT}/api/analyze-local-data`);
+    console.log(`   Bank Search: http://localhost:${PORT}/api/search-banks`);
+  });
+}
+
+module.exports = app;
