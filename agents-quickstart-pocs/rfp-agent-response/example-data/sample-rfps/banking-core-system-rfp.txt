@@ -1,0 +1,225 @@
+REQUEST FOR PROPOSAL (RFP)
+CORE BANKING SYSTEM MODERNIZATION
+
+RFP Number: RFP-2025-CBS-001
+Issue Date: March 15, 2025
+Proposal Due Date: May 17, 2025, 3:00 PM EST
+Contact: procurement@anycompany.com
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ANYCOMPANY BANK
+Established 1952 | Assets: $12.8 Billion | Branches: 185 | Employees: 2,400
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TABLE OF CONTENTS
+
+1. EXECUTIVE SUMMARY
+2. ORGANIZATION BACKGROUND
+3. PROJECT OVERVIEW AND OBJECTIVES
+4. SCOPE OF WORK
+5. TECHNICAL REQUIREMENTS
+6. FUNCTIONAL REQUIREMENTS
+7. SECURITY AND COMPLIANCE REQUIREMENTS
+8. PROPOSAL SUBMISSION REQUIREMENTS
+9. EVALUATION CRITERIA
+
+═══════════════════════════════════════════════════════════════════════════════
+
+1. EXECUTIVE SUMMARY
+
+AnyCompany Bank is seeking qualified vendors to provide a comprehensive core banking system modernization solution. This initiative represents a strategic investment of approximately $15-25 million over three years to replace our legacy mainframe-based core system with a modern, cloud-native platform.
+
+The selected vendor will be responsible for: account management, transaction processing, customer relationship management, regulatory reporting, and integration with existing third-party systems.
+
+2. ORGANIZATION BACKGROUND
+
+AnyCompany Bank is a federally chartered commercial bank headquartered in Springfield, Illinois. Founded in 1952, we serve over 450,000 customers across Illinois, Indiana, and Missouri through 185 branch locations.
+
+Key Statistics:
+• Total Assets: $12.8 billion
+• Employees: 2,400
+• Daily Transaction Volume: 2.8 million
+• Peak Concurrent Users: 85,000
+
+Current Technology Environment:
+• Core System: IBM z/OS mainframe (installed 1998)
+• Database: IBM DB2 z/OS
+• Online Banking: Fiserv Premier Connect
+• Mobile Banking: Custom iOS/Android applications
+
+3. PROJECT OVERVIEW AND OBJECTIVES
+
+Business Objectives:
+• Reduce operational costs by 30% within 24 months
+• Improve time-to-market for new products from 18 months to 3 months
+• Enhance customer experience through real-time processing
+• Achieve 99.95% system uptime with sub-second response times
+• Enable advanced analytics and AI-driven insights
+• Ensure regulatory compliance across all jurisdictions
+
+4. SCOPE OF WORK
+
+The vendor shall provide a complete core banking system solution including:
+
+Core Banking Platform:
+• Customer Information File (CIF) management
+• Deposit account processing (checking, savings, CDs)
+• Loan origination and servicing
+• General ledger and financial reporting
+• Interest calculation and fee processing
+• Regulatory reporting (Call Reports, CTR, SAR)
+
+Digital Banking Channels:
+• Online banking platform (responsive web design)
+• Mobile banking applications (iOS and Android)
+• API gateway for third-party integrations
+• Administrative dashboards and reporting tools
+
+Integration & Infrastructure:
+• Data migration from legacy mainframe system
+• Cloud-native architecture (AWS, Azure, or Google Cloud)
+• Disaster recovery and business continuity
+• Security monitoring and performance optimization
+
+5. TECHNICAL REQUIREMENTS
+
+Architecture Requirements:
+• Microservices-based architecture
+• Container orchestration (Kubernetes preferred)
+• RESTful APIs with OpenAPI 3.0 specification
+• Database support for PostgreSQL, Oracle, or SQL Server
+• Horizontal scalability to handle 10x current transaction volume
+
+Performance Requirements:
+• Transaction processing: 10,000 TPS sustained, 25,000 TPS peak
+• Response time: <500ms for 95% of transactions
+• System availability: 99.95% uptime
+• Recovery Time Objective (RTO): 4 hours
+• Concurrent user support: 100,000 active sessions
+
+Technology Stack:
+• Programming Languages: Java, .NET Core, Python, or Go
+• Database: Enterprise-grade RDBMS with ACID compliance
+• Message Broker: Apache Kafka, RabbitMQ, or equivalent
+• Monitoring: Prometheus, Grafana, or equivalent APM solution
+
+6. FUNCTIONAL REQUIREMENTS
+
+Account Management:
+• Real-time account opening and closing
+• Joint account management with multiple signatories
+• Account hierarchy and relationship management
+• Automated account maintenance and lifecycle management
+
+Transaction Processing:
+• Real-time posting and settlement
+• Multi-currency support (USD, EUR, CAD minimum)
+• Batch and real-time transaction processing
+• Transaction limits and controls
+
+Customer Relationship Management:
+• 360-degree customer view
+• Household and business relationship mapping
+• Customer segmentation and profiling
+• Marketing campaign management
+
+Reporting and Analytics:
+• Real-time operational dashboards
+• Regulatory reporting automation
+• Financial reporting and consolidation
+• Customer analytics and insights
+
+7. SECURITY AND COMPLIANCE REQUIREMENTS
+
+Regulatory Compliance:
+• SOX (Sarbanes-Oxley Act) compliance
+• GLBA (Gramm-Leach-Bliley Act) compliance
+• BSA/AML (Bank Secrecy Act/Anti-Money Laundering)
+• FFIEC guidelines adherence
+• GDPR and CCPA privacy regulations
+
+Security Certifications (Required):
+• SOC 2 Type II certification (current within 12 months)
+• ISO 27001 certification
+• PCI DSS Level 1 Service Provider certification
+
+Data Security Requirements:
+• End-to-end encryption (AES-256 minimum)
+• Multi-factor authentication (MFA) for all users
+• Role-based access control (RBAC)
+• 24/7 Security Operations Center (SOC)
+• Vulnerability management and penetration testing
+
+8. PROPOSAL SUBMISSION REQUIREMENTS
+
+Vendor Qualifications:
+Vendors must demonstrate:
+• Minimum 10 years experience in core banking systems
+• Minimum 50 successful implementations at banks with >$5B assets
+• Current client base of at least 100 financial institutions
+• Financial stability (audited financials for past 3 years)
+
+Proposal Format:
+Proposals must include the following sections:
+A. Executive Summary (5 pages maximum)
+B. Company Overview and Qualifications
+C. Technical Solution Architecture
+D. Implementation Methodology and Timeline
+E. Security and Compliance Approach
+F. Pricing and Commercial Terms
+G. Client References (minimum 5 similar implementations)
+
+Submission Requirements:
+• Electronic submission via secure portal
+• PDF format with searchable text
+• Proposals must remain valid for 120 days
+
+9. EVALUATION CRITERIA
+
+Proposals will be evaluated based on the following weighted criteria:
+
+Technical Solution (30%)
+• Architecture and scalability
+• Functional capabilities
+• Integration capabilities
+• Performance and reliability
+
+Implementation Approach (25%)
+• Methodology and timeline
+• Risk mitigation
+• Data migration approach
+
+Vendor Qualifications (20%)
+• Experience and track record
+• Financial stability
+• Client references
+
+Total Cost of Ownership (15%)
+• Implementation costs
+• Licensing and ongoing fees
+• Support and maintenance costs
+
+Support and Maintenance (10%)
+• Service level commitments
+• Support model
+• Training and documentation
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PROPOSAL SUBMISSION DEADLINE: May 17, 2025, 3:00 PM EST
+
+Late submissions will not be accepted under any circumstances.
+
+For questions regarding this RFP, please contact:
+Jane Doe, VP of Technology Procurement
+Email: procurement@anycompany.com
+Phone: (555) 555-5555
+
+═══════════════════════════════════════════════════════════════════════════════
+
+This RFP is confidential and proprietary to AnyCompany Bank.
+Distribution is restricted to authorized recipients only.
+
+© 2025 AnyCompany Bank. All rights reserved.
