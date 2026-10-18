@@ -1,0 +1,62 @@
+# Deployment artifacts
+temp/
+temp-lambda-package/
+*.zip
+lambda-function.zip
+notification.json
+empty-notification.json
+
+# Test files
+temp_rfp.txt
+test-rfp-*.txt
+response.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv/
+venv/
+env/
+ENV/
+
+# IDE and Editor files
+.vscode/
+.kiro/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS and deployment
+.aws/
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Node modules (if any web dependencies)
+node_modules/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Generated web files (templates are in web/templates/)
+web/*.html
+!web/templates/
