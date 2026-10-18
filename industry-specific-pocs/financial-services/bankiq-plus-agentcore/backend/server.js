@@ -4,8 +4,10 @@ const AWS = require('aws-sdk');
 const https = require('https');
 const { spawn } = require('child_process');
 const path = require('path');
+const crypto = require('crypto');
 const { verifyToken } = require('./auth-middleware');
 const NodeCache = require('node-cache');
+const rateLimit = require('express-rate-limit');
 
 // ============================================================================
 // DEBUG CONFIGURATION
@@ -127,6 +129,29 @@ app.use((req, res, next) => {
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// Security (CodeQL js/missing-rate-limiting): the API exposes expensive routes
+// (Bedrock agent invocation, PDF processing) with no throttling. Apply a
+// baseline global limiter to every route, plus a stricter limiter on the
+// expensive agent/upload endpoints. standardHeaders surfaces RateLimit-* so
+// clients can back off; legacyHeaders disabled to avoid the deprecated set.
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300,                 // 300 requests / window / IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+const expensiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,                  // 30 requests / window / IP for costly operations
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests to this resource, please slow down.' }
+});
+
+app.use(globalLimiter);
 
 // In-memory job storage (in production, use DynamoDB or Redis)
 const jobs = new Map();
@@ -260,7 +285,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // Main agent invocation endpoint (protected)
-app.post('/api/invoke-agent', verifyToken, async (req, res) => {
+app.post('/api/invoke-agent', expensiveLimiter, verifyToken, async (req, res) => {
   return invokeAgent(req, res);
 });
 
@@ -288,8 +313,10 @@ async function invokeAgent(req, res) {
     logger.debug(`Region: ${region}`);
     logger.debug(`API Host: bedrock-agentcore.${region}.amazonaws.com`);
     logger.debug(`API Path: /runtimes/${encodeURIComponent(agentRuntimeArn)}/invocations`);
-    // Session ID must be at least 33 characters (make it 40+ to be safe)
-    const runtimeSessionId = sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`;
+    // Session ID must be at least 33 characters (make it 40+ to be safe).
+    // Security (CodeQL js/insecure-randomness): this value identifies a Bedrock
+    // AgentCore runtime session, so it is a security context. Use a CSPRNG.
+    const runtimeSessionId = sessionId || `session-${Date.now()}-${crypto.randomUUID()}`;
 
     // Prepare request payload
     const payload = JSON.stringify({ prompt: inputText });
@@ -436,7 +463,7 @@ app.post('/api/store-csv-data', (req, res) => {
 });
 
 // Analyze local CSV data endpoint (auth handled by frontend)
-app.post('/api/analyze-local-data', async (req, res) => {
+app.post('/api/analyze-local-data', expensiveLimiter, async (req, res) => {
   const { data, baseBank, peerBanks, metric } = req.body;
 
   console.log(`[${new Date().toISOString()}] Analyzing local CSV data: ${baseBank} vs ${peerBanks.join(', ')} on ${metric}`);
@@ -465,7 +492,7 @@ Use professional banking terminology and provide quantitative insights with spec
 
     // Extract region from ARN
     const region = agentRuntimeArn.split(':')[3] || 'us-east-1';
-    const runtimeSessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`;
+    const runtimeSessionId = `session-${Date.now()}-${crypto.randomUUID()}`;
 
     const payload = JSON.stringify({ prompt: inputText });
     const host = `bedrock-agentcore.${region}.amazonaws.com`;
@@ -554,7 +581,7 @@ Use professional banking terminology and provide quantitative insights with spec
 });
 
 // Upload PDF documents endpoint
-app.post('/api/upload-pdf', async (req, res) => {
+app.post('/api/upload-pdf', expensiveLimiter, async (req, res) => {
   const { files, bankName } = req.body;
 
   if (!files || files.length === 0) {
@@ -776,7 +803,16 @@ app.post('/api/get-sec-filings', async (req, res) => {
   }
 
   try {
-    const targetCik = cik || '0000000000';
+    // Security (CodeQL js/request-forgery): the CIK is user-controlled and is
+    // interpolated into the outbound SEC URL path. A value containing '/', '@',
+    // '?', '#', or '..' could alter the resolved host/path (SSRF). A SEC CIK is
+    // strictly a numeric identifier, canonically zero-padded to 10 digits, so we
+    // reject anything that is not pure digits and re-normalize to 10 digits.
+    const rawCik = String(cik || '').trim();
+    if (!/^\d{1,10}$/.test(rawCik)) {
+      return res.status(400).json({ success: false, error: 'Invalid CIK: must be 1-10 digits', '10-K': [], '10-Q': [] });
+    }
+    const targetCik = rawCik.padStart(10, '0');
 
     if (targetCik === '0000000000') {
       return res.json({ success: false, error: 'Invalid CIK', '10-K': [], '10-Q': [] });
@@ -1083,7 +1119,7 @@ async function processJob(jobId) {
 
     // Extract region from ARN (format: arn:aws:bedrock-agentcore:REGION:account:runtime/name)
     const region = agentRuntimeArn.split(':')[3] || 'us-east-1';
-    const runtimeSessionId = job.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`;
+    const runtimeSessionId = job.sessionId || `session-${Date.now()}-${crypto.randomUUID()}`;
 
     const payload = JSON.stringify({ prompt: job.inputText });
     const host = `bedrock-agentcore.${region}.amazonaws.com`;
