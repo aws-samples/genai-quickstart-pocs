@@ -1,7 +1,6 @@
-/* Tailwind CSS directives */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind CSS v4 entry */
+@import "tailwindcss";
+@config "../../tailwind.config.js";
 
 /* Base styles */
 @layer base {
