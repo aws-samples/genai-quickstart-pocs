@@ -1,6 +1,6 @@
 # Python Backend - Nova Sonic Integration
 
-Real-time speech-to-speech translation using Amazon Nova Sonic 2.
+Real-time speech-to-speech translation using Amazon Nova 2.5 Sonic.
 
 ## Setup
 
