@@ -7,7 +7,7 @@ interface ServiceDetailsProps {
 }
 
 export function ServiceDetails({
-  model = 'Nova Sonic 2',
+  model = 'Nova 2.5 Sonic',
   region = 'us-east-1',
   languages = 'EN ↔ ES',
   latency = '<500ms',
