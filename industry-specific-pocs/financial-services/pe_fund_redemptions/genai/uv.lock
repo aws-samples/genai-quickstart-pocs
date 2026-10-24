@@ -793,7 +793,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "starlette", specifier = ">=0.49.1" },
-    { name = "strands-agents", specifier = ">=1.4.0" },
+    { name = "strands-agents", specifier = ">=1.43.0" },
     { name = "strands-agents-tools", specifier = ">=0.2.3" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
@@ -2330,25 +2330,27 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.4.0"
+version = "1.43.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "botocore" },
     { name = "docstring-parser" },
+    { name = "jsonschema" },
     { name = "mcp" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-instrumentation-threading" },
     { name = "opentelemetry-sdk" },
     { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
     { name = "pydantic", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pyyaml" },
     { name = "typing-extensions", version = "4.14.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
     { name = "typing-extensions", version = "4.16.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/9e/6f578c0055156a96e3a747c4a3e953a442cb78f76758ea72c4838b80eb59/strands_agents-1.4.0.tar.gz", hash = "sha256:ef8bc719a1758115fd3602b1562b4a0a108ccc803ac8eb5b9fd9a33aa37244a8", size = 252894, upload-time = "2025-08-08T17:41:38.525Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/e7/ba9faab3ebaa63325ef03b61a74806bc5ccb6b626428541f898b4f33fb21/strands_agents-1.43.0.tar.gz", hash = "sha256:379ad28af36d9306c7ae3f43702b086082193e8eafa53de051c9ce91496178ac", size = 922114, upload-time = "2026-06-12T14:27:57.069Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/68/45dc5a0a91f1d74c6e4d238751e48998b4fbe837e40b29b38fc371b4c170/strands_agents-1.4.0-py3-none-any.whl", hash = "sha256:06a2c9c9bc3bff6035b624a3d5e559761c0c1fdf80e6e3881644d3cb0a32d0d8", size = 176768, upload-time = "2025-08-08T17:41:35.988Z" },
+    { url = "https://files.pythonhosted.org/packages/68/35/29fc4c02293aef54dfa59a5516419153a9fb15a4857ecf8f2ce8638ae3dd/strands_agents-1.43.0-py3-none-any.whl", hash = "sha256:b934f74fe1b7103d438684b69ee044223a5bb407db2ccd2b55e5da6bf639d31b", size = 472542, upload-time = "2026-06-12T14:27:55.55Z" },
 ]
 
 [[package]]
