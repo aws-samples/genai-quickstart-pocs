@@ -5,5 +5,5 @@ description = "Email notification service for shipment updates"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp[cli]>=1.6.0,<2",
+    "mcp[cli]>=1.30.0,<2",
 ] 
