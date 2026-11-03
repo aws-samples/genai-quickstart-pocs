@@ -122,10 +122,11 @@ Applications will be declined or postponed for travel or residency in countries 
 
 - North Korea
 - Iran
-- Syria
 - Cuba (with limited exceptions)
 - Crimea Region
 - Certain regions of Ukraine (Donetsk and Luhansk)
+
+Countries under targeted sanctions only, such as Syria, are covered in Sanctioned Countries & Regions. Their country-risk tier above still applies.
 
 ## Required Documentation
 

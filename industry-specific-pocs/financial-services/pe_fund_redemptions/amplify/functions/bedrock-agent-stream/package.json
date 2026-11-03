@@ -5,12 +5,9 @@
   "main": "handler.mjs",
   "private": true,
   "dependencies": {
-    "@aws-sdk/client-bedrock-agentcore": "^3.864.0"
+    "@aws-sdk/client-bedrock-agentcore": "^3.1161.0"
   },
   "engines": {
     "node": ">=20"
-  },
-  "overrides": {
-    "fast-xml-parser": "5.5.6"
   }
 }
