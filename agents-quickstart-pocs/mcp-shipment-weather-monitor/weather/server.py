@@ -23,6 +23,9 @@ logging.basicConfig(
     format='%(levelname)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+# httpx logs every request URL at INFO. NWS points URLs contain the shipment
+# coordinates, so keep httpx to warnings and above.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 # Initialize FastMCP server with the service name "Weather"
 mcp = FastMCP("Weather")
@@ -31,15 +34,19 @@ mcp = FastMCP("Weather")
 NWS_API_BASE = "https://api.weather.gov"  # Base URL for the National Weather Service API
 USER_AGENT = "weather-app/1.0"  # User agent required by NWS API
 
-async def make_nws_request(url: str) -> dict[str, Any] | None:
+async def make_nws_request(url: str, endpoint: str) -> dict[str, Any] | None:
     """
     Make a request to the NWS API with proper error handling.
     
     This helper function handles the HTTP request to the National Weather Service API,
     including proper headers, error handling, and response processing.
+
+    Request URLs can embed shipment coordinates, so they are never logged. Log
+    lines use the short `endpoint` label plus the HTTP status or error type.
     
     Args:
         url: The complete URL for the NWS API endpoint
+        endpoint: Non-sensitive label for the endpoint (e.g. "alerts", "points")
         
     Returns:
         dict: JSON response data if successful, None if the request failed
@@ -53,22 +60,36 @@ async def make_nws_request(url: str) -> dict[str, Any] | None:
     # Use httpx for async HTTP requests
     async with httpx.AsyncClient() as client:
         try:
-            logger.info(f"Making request to NWS API: {url}")
+            logger.info("Making request to NWS API endpoint: %s", endpoint)
             response = await client.get(url, headers=headers, timeout=30.0)
             response.raise_for_status()  # Raise exception for 4XX/5XX responses
-            logger.debug(f"Successful response from NWS API: {url}")
+            logger.debug("Successful response from NWS API endpoint: %s", endpoint)
             return response.json()
-        except httpx.TimeoutError:
+        except httpx.TimeoutException:
             # Handle timeout errors specifically
-            logger.error(f"Timeout while requesting {url}")
+            logger.error("Timeout while requesting NWS API endpoint: %s", endpoint)
+            return None
+        except httpx.HTTPStatusError as e:
+            # Handle 4XX/5XX responses. str(e) contains the URL, so log only the status.
+            logger.error(
+                "HTTP %s from NWS API endpoint: %s", e.response.status_code, endpoint
+            )
             return None
         except httpx.HTTPError as e:
-            # Handle HTTP errors (status codes, connection issues)
-            logger.error(f"HTTP error while requesting {url}: {str(e)}")
+            # Handle connection and protocol errors
+            logger.error(
+                "HTTP error (%s) while requesting NWS API endpoint: %s",
+                type(e).__name__,
+                endpoint,
+            )
             return None
         except Exception as e:
             # Catch-all for any other unexpected errors
-            logger.error(f"Unexpected error while requesting {url}: {str(e)}")
+            logger.error(
+                "Unexpected error (%s) while requesting NWS API endpoint: %s",
+                type(e).__name__,
+                endpoint,
+            )
             return None
 
 def format_alert(feature: dict) -> str:
@@ -111,7 +132,7 @@ async def get_alerts(state: str) -> str:
     logger.info(f"Fetching weather alerts for state: {state}")
     # Construct the URL for the state alerts endpoint
     url = f"{NWS_API_BASE}/alerts/active/area/{state}"
-    data = await make_nws_request(url)
+    data = await make_nws_request(url, endpoint="alerts")
 
     # Handle cases where the request failed or returned invalid data
     if not data or "features" not in data:
@@ -151,25 +172,28 @@ async def get_forecast(latitude: float, longitude: float) -> str:
         str: Formatted string containing the weather forecast for the next 5 periods,
              or an error message if the forecast couldn't be retrieved
     """
-    logger.info(f"Fetching forecast for location: {latitude}, {longitude}")
+    # Coordinates identify a shipment destination, so they are not logged.
+    logger.info("Fetching forecast for a shipment location")
     
     # Step 1: Get the forecast grid endpoint for the coordinates
     points_url = f"{NWS_API_BASE}/points/{latitude},{longitude}"
-    points_data = await make_nws_request(points_url)
+    points_data = await make_nws_request(points_url, endpoint="points")
 
     # Handle failure to get points data
     if not points_data:
-        logger.error(f"Failed to fetch points data for location: {latitude}, {longitude}")
+        logger.error("Failed to fetch NWS points data for the requested location")
         return "Unable to fetch forecast data for this location."
 
     # Step 2: Get the forecast using the URL from the points response
     forecast_url = points_data["properties"]["forecast"]
-    logger.debug(f"Retrieved forecast URL: {forecast_url}")
-    forecast_data = await make_nws_request(forecast_url)
+    # Log the NWS grid office only; the full grid URL narrows down the location.
+    grid_id = points_data["properties"].get("gridId", "unknown")
+    logger.debug("Retrieved forecast URL for NWS grid office: %s", grid_id)
+    forecast_data = await make_nws_request(forecast_url, endpoint="forecast")
 
     # Handle failure to get forecast data
     if not forecast_data:
-        logger.error(f"Failed to fetch forecast data from {forecast_url}")
+        logger.error("Failed to fetch forecast data for NWS grid office: %s", grid_id)
         return "Unable to fetch detailed forecast."
 
     # Format the periods into a readable forecast

@@ -8,3 +8,8 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.30.0,<2",
 ]
+
+[tool.setuptools]
+# Flat layout with more than one top-level module: list them explicitly so
+# `uv pip install -e .` does not fail setuptools automatic discovery.
+py-modules = ["server", "create_shipments_db"]
