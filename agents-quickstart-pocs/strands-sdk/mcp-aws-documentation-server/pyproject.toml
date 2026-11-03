@@ -3,7 +3,7 @@ name = "mcp-aws-documentation-server"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "awslabs-aws-documentation-mcp-server>=1.1.2",
     "mcp>=1.12.1",
