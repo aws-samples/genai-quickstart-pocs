@@ -28,7 +28,6 @@ The following countries are subject to comprehensive sanctions that generally pr
 |---------|----------------------------|----------------|------------------------|
 | **North Korea** | US (OFAC), UN, EU, UK, Canada | Comprehensive sanctions | Decline all applications for travel or residence |
 | **Iran** | US (OFAC), partial UN, EU, UK, Canada | Comprehensive US sanctions | Decline all applications for travel or residence |
-| **Syria** | US (OFAC), EU, UK, Canada | Comprehensive sanctions | Decline all applications for travel or residence |
 | **Cuba** | US (OFAC) | Comprehensive US sanctions with exceptions | Decline most applications; limited exceptions possible with Legal review |
 | **Crimea Region** | US (OFAC), EU, UK, Canada | Comprehensive sanctions | Decline all applications for travel or residence |
 | **Donetsk/Luhansk People's Republics** | US (OFAC), EU, UK, Canada | Comprehensive sanctions | Decline all applications for travel or residence |
@@ -50,6 +49,7 @@ The following countries are subject to more limited sanctions that require caref
 | **Democratic Republic of Congo** | Specific individuals, minerals sector | Limited targeted sanctions | Rate as Tier 4 country; decline for extended stays |
 | **South Sudan** | Specific individuals, arms embargo | Limited targeted sanctions | Rate as Tier 4-5 country; generally decline |
 | **Lebanon** | Financial, limited targeted sanctions | Country-specific restrictions | Legal review required for extended stays or residence |
+| **Syria** | Former regime officials, specific entities, EU arms embargo | Targeted sanctions (US country-wide program ended July 2025) | Legal review required for government or regime connections; see Foreign Travel & Residency for country risk |
 
 ## Rapidly Evolving Sanctions Situations
 
