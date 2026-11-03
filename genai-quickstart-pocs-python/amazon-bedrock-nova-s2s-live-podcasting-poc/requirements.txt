@@ -1,5 +1,5 @@
 # Web framework
-Flask==3.0.0
+Flask==3.1.3
 
 # AWS SDK for Amazon Bedrock bidirectional streaming
 aws-sdk-bedrock-runtime==0.1.0
@@ -12,4 +12,4 @@ rx==3.2.0
 PyAudio==0.2.14
 
 # Environment variable loading
-python-dotenv==1.0.0
+python-dotenv==1.2.2
