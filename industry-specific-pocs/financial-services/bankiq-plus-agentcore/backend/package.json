@@ -21,16 +21,16 @@
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.1.14",
     "supertest": "^7.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "brace-expansion": "1.1.18",
+    "uuid": "11.1.1",
     "form-data": "4.0.6",
-    "picomatch": "2.3.2",
+    "picomatch@^2": "2.3.2",
     "path-to-regexp": "0.1.13",
-    "minimatch": "3.1.4",
+    "minimatch": "11.0.4",
     "jws": "3.2.3",
     "tinypool": ">=2.1.2"
   }
