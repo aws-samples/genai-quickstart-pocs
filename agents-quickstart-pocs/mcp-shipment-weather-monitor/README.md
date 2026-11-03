@@ -24,7 +24,7 @@ The system consists of three main services:
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - uv (Python package manager)
 - MCP CLI (`pip install mcp[cli]`)
 - Amazon Q Developer extension (for testing with Amazon Q)
