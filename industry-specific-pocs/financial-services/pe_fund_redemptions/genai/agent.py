@@ -67,7 +67,9 @@ async def agent_invocation(payload):
             client_info = secret_data['client_info']
             gateway_url = secret_data['gateway_url']
             
-            print(f"🔧 Got MCP Gateway URL: {gateway_url}")
+            # gateway_url comes from the same secret as the OAuth client secret,
+            # so log only that it was found.
+            print("🔧 Got MCP Gateway URL from Secrets Manager")
             
             # Get access token
             response = requests.post(
