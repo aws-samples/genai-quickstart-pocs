@@ -2,7 +2,7 @@
 PyYAML>=6.0
 boto3>=1.26.0
 flask>=2.0.0
-requests>=2.25.0
+requests>=2.34.2
 
 # Strands Agents framework
 strands-agents>=1.4.0

@@ -17,7 +17,7 @@ moto[dynamodb]>=5.0.0
 mcp>=1.25.0
 
 # HTTP client (for MCP server)
-requests>=2.31.0
+requests>=2.34.2
 
 # CDK (for infrastructure deployment)
 aws-cdk-lib>=2.100.0
