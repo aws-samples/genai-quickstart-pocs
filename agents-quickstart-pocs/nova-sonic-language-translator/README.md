@@ -2,7 +2,7 @@
 
 **⚠️ NON-PRODUCTION USE ONLY - This is a proof-of-concept demonstration**
 
-Real-time bidirectional speech-to-speech translation powered by Amazon Nova Sonic 2, enabling communication between speakers of different languages.
+Real-time bidirectional speech-to-speech translation powered by Amazon Nova 2.5 Sonic, enabling communication between speakers of different languages.
 
 ## Overview
 
@@ -32,7 +32,7 @@ This PoC demonstrates AI-powered real-time translation for communication scenari
                      │
                      ▼
          ┌───────────────────────┐
-         │  Amazon Nova Sonic 2  │
+         │ Amazon Nova 2.5 Sonic │
          │  (Amazon Bedrock)     │
          │  Bidirectional Stream │
          └───────────────────────┘
@@ -42,7 +42,7 @@ This PoC demonstrates AI-powered real-time translation for communication scenari
 
 - **Backend**: Python 3.11+ with FastAPI, WebSockets, aws-sdk-bedrock-runtime
 - **Frontend**: React 18 + Vite + Tailwind CSS (main app) + Standalone HTML (2-party demo)
-- **AI Model**: Amazon Nova Sonic 2 (`amazon.nova-2-sonic-v1:0`)
+- **AI Model**: Amazon Nova 2.5 Sonic (`amazon.nova-2-5-sonic`)
 - **Cloud**: Amazon Bedrock (us-east-1)
 
 ## Supported Languages

@@ -23,7 +23,7 @@ load_aws_credentials()
 # AWS Configuration
 AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
 os.environ['AWS_DEFAULT_REGION'] = AWS_REGION
-NOVA_SONIC_MODEL_ID = os.getenv('NOVA_SONIC_MODEL_ID', 'amazon.nova-2-sonic-v1:0')
+NOVA_SONIC_MODEL_ID = os.getenv('NOVA_SONIC_MODEL_ID', 'amazon.nova-2-5-sonic')
 
 # Audio Configuration
 INPUT_SAMPLE_RATE = 16000
