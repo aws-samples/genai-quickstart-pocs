@@ -202,7 +202,7 @@ import os
 os.environ["BYPASS_TOOL_CONSENT"] = "true"
 
 from strands import Agent
-from strands_tools.calculator import calculator
+from calculator_tool import calculator  # safe arithmetic tool shipped with this sample
 
 # Create the calculator agent
 agent = Agent(
