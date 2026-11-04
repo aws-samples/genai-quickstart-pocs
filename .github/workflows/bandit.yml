@@ -1,0 +1,106 @@
+# Bandit security scan for the Python samples in this repo.
+#
+# main's branch protection requires a status check named "bandit-scan".
+# The job below has the id and name "bandit-scan", so GitHub Actions
+# reports a check run with exactly that context.
+#
+# Gate: the job fails on any finding of Medium-or-higher severity with
+# Medium-or-higher confidence (-ll -ii) that is not already recorded in
+# bandit-baseline.json. See "Bandit scan" in README.md for how to refresh
+# the baseline.
+name: Bandit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  BANDIT_VERSION: "1.9.4"
+  # Paths skipped by the scan: VCS data, virtualenvs, vendored node
+  # modules, notebook checkpoints and test code (assert-heavy, not shipped).
+  BANDIT_EXCLUDE: "*/.git/*,*/.venv/*,*/venv/*,*/node_modules/*,*/.ipynb_checkpoints/*,*/tests/*,*/test/*"
+
+jobs:
+  bandit-scan:
+    name: bandit-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Sparse, blobless checkout: only Python sources and the baseline
+      # are downloaded, which keeps checkout fast in this large repo.
+      - name: Check out Python sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            *.py
+            /bandit-baseline.json
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: python -m pip install --disable-pip-version-check "bandit==${BANDIT_VERSION}"
+
+      - name: Run Bandit (Medium+ severity, Medium+ confidence, new findings only)
+        run: >-
+          bandit -r . -q
+          -x "${BANDIT_EXCLUDE}"
+          -ll -ii
+          -b bandit-baseline.json
+          -f screen
+
+  # Uploads the same findings to code scanning. Kept in a separate job so
+  # the required bandit-scan check needs only read access and cannot fail
+  # because of an upload problem. Skipped for PRs from forks, whose token
+  # cannot write security events.
+  bandit-sarif:
+    name: bandit-sarif
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out Python sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            *.py
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: python -m pip install --disable-pip-version-check "bandit[sarif]==${BANDIT_VERSION}"
+
+      - name: Run Bandit (SARIF report)
+        run: >-
+          bandit -r . -q
+          -x "${BANDIT_EXCLUDE}"
+          -ll -ii
+          -f sarif -o bandit.sarif
+          --exit-zero
+
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
