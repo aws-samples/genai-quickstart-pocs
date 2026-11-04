@@ -2,7 +2,7 @@
 # UV will automatically resolve and install additional dependencies
 
 # Core dependencies
-strands-agents>=1.4.0
+strands-agents>=1.62.0
 mcp>=1.13.0
 streamlit>=1.48.0
 
