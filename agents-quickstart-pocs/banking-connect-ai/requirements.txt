@@ -2,7 +2,7 @@
 # These are NOT deployed to Lambda
 
 # AWS SDK (for local development and testing)
-boto3>=1.34.0
+boto3>=1.43.120
 botocore>=1.34.0
 
 # Testing frameworks

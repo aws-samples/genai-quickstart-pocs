@@ -1,6 +1,6 @@
 # Core dependencies for AWS and configuration
 PyYAML>=6.0
-boto3>=1.26.0
+boto3>=1.43.120
 flask>=2.0.0
 requests>=2.25.0
 
