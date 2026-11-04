@@ -2,7 +2,7 @@
 deepeval>=2.0.0
 
 # AWS SDK
-boto3>=1.34.0
+boto3>=1.43.121
 botocore>=1.34.0
 aiobotocore>=2.12.0
 
