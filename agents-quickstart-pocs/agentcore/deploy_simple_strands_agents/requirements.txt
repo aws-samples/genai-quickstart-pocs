@@ -1,7 +1,7 @@
 # Core dependencies for AWS and configuration
 PyYAML>=6.0.3
 boto3>=1.26.0
-flask>=2.0.0
+flask>=2.3.3
 requests>=2.25.0
 
 # Strands Agents framework
