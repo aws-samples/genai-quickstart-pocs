@@ -13,7 +13,8 @@ class SetupManager:
     def __init__(self, region_name: str = 'us-east-1'):
         self.region = region_name
         self.s3 = boto3.client('s3', region_name=region_name)
-        self.bedrock = boto3.client('bedrock-runtime', region_name=region_name)
+        # list_foundation_models (used by verify_bedrock_access) is on the control-plane client.
+        self.bedrock = boto3.client('bedrock', region_name=region_name)
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
@@ -105,8 +106,6 @@ def run_setup():
             'region': input("Enter AWS region (default: us-east-1): ") or 'us-east-1',
             's3_bucket': input("Enter unique S3 bucket name: "),
         },
-
-        }
     }
     
     # 2. Create S3 bucket
