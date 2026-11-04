@@ -10,7 +10,7 @@ aiobotocore>=2.12.0
 requests>=2.31.0
 
 # Config and data handling
-pyyaml>=6.0
+pyyaml>=6.0.3
 pydantic>=2.5.0
 
 # Testing
