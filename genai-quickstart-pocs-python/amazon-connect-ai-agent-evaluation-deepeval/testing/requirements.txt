@@ -7,7 +7,7 @@ botocore>=1.34.0
 aiobotocore>=2.12.0
 
 # HTTP client (gateway invocation via SigV4-signed requests)
-requests>=2.31.0
+requests>=2.34.2
 
 # Config and data handling
 pyyaml>=6.0.3

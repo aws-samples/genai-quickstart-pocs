@@ -6,4 +6,4 @@ psycopg2-binary>=2.9.0
 faiss-cpu>=1.7.4
 python-dotenv>=1.0.0
 
-requests>=2.31.0
+requests>=2.34.2
