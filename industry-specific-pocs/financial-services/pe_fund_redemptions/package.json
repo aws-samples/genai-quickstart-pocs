@@ -12,7 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@aws-amplify/ui-react": "^6.5.5",
+    "@aws-amplify/ui-react": "^6.15.7",
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/signature-v4": "^3.370.0",
     "@emotion/react": "^11.14.0",
