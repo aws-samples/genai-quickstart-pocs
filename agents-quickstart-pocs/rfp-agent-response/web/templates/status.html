@@ -588,6 +588,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="js/app.js"></script>
     <script>
         const { escapeHtml } = RFP;
@@ -621,7 +622,7 @@
                 // Try the list-jobs endpoint first
                 let jobFiles = [];
                 try {
-                    const response = await fetch('{{API_GATEWAY_URL}}/list-jobs');
+                    const response = await RFP.apiFetch('/list-jobs');
                     if (response.ok) {
                         jobFiles = await response.json();
                     } else {
@@ -632,7 +633,7 @@
                     
                     // Fallback: Try to get job files from downloads endpoint
                     try {
-                        const downloadsResponse = await fetch('{{API_GATEWAY_URL}}/downloads');
+                        const downloadsResponse = await RFP.apiFetch('/downloads');
                         if (downloadsResponse.ok) {
                             const downloadFiles = await downloadsResponse.json();
                             // Extract unique job names from download files
@@ -664,7 +665,7 @@
                 // For each job file, get its status
                 for (const fileName of jobFiles) {
                     try {
-                        const statusResponse = await fetch(`{{API_GATEWAY_URL}}/status?fileName=${encodeURIComponent(fileName)}`);
+                        const statusResponse = await RFP.apiFetch(`/status?fileName=${encodeURIComponent(fileName)}`);
                         if (statusResponse.ok) {
                             const statusData = await statusResponse.json();
                             allJobs.push(statusData);
@@ -868,11 +869,11 @@
             return '○';
         }
 
-        // Auto-refresh every 2 minutes
-        setInterval(refreshJobs, 120000);
-
-        // Load jobs on page load
-        window.addEventListener('load', refreshJobs);
+        // Sign in, load jobs, then auto-refresh every 2 minutes
+        RFP.onReady(() => {
+            refreshJobs();
+            setInterval(refreshJobs, 120000);
+        });
     </script>
 </body>
 </html>

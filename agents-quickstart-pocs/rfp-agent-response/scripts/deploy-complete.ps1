@@ -5,6 +5,7 @@ param(
     [string]$WebStackName = "rfp-web-app",
     [string]$Region = "us-east-1",
     [string]$ModelId = "us.anthropic.claude-haiku-5-5",
+    [string]$AdminEmail = "",
     [switch]$SkipPackaging = $false
 )
 
@@ -184,7 +185,7 @@ aws cloudformation deploy `
     --stack-name $WebStackName `
     --capabilities CAPABILITY_IAM `
     --region $Region `
-    --parameter-overrides ProcessingStackName=$InfraStackName `
+    --parameter-overrides ProcessingStackName=$InfraStackName $(if ($AdminEmail) { "AdminEmail=$AdminEmail" }) `
     --no-fail-on-empty-changeset `
     --no-paginate
 
@@ -241,38 +242,20 @@ Write-Host "   Web Lambda functions deployed successfully" -ForegroundColor Gree
 Write-Host ""
 Write-Host "9. Deploying web interface..." -ForegroundColor Yellow
 
-# Update HTML files with correct API URL
-Write-Host "   - Updating web interface with API endpoints..." -ForegroundColor Gray
-
-# Generate web files from templates with the correct API Gateway URL
-# This approach ensures templates remain unchanged and can be reused for multiple deployments
-$webFiles = @("index.html", "downloads.html", "status.html", "admin.html", "json-explorer.html")
-
-foreach ($webFile in $webFiles) {
-    $templatePath = "web/templates/$webFile"
-    $outputPath = "web/$webFile"
-    
-    if (Test-Path $templatePath) {
-        Write-Host "   - Generating $webFile from template with API endpoints..." -ForegroundColor Gray
-        $content = Get-Content $templatePath -Raw
-        
-        # Replace the placeholder pattern with the actual API Gateway URL
-        $content = $content -replace '\{\{API_GATEWAY_URL\}\}', $ApiUrl
-        
-        # Write the processed content to the web directory
-        $content | Set-Content $outputPath
-    } else {
-        Write-Host "   - Warning: Template not found for $webFile" -ForegroundColor Yellow
-    }
+# Render the static site and config.js (API URL, Cognito settings) from the
+# web stack outputs. The shared helper is also used by scripts/deploy.sh.
+$python = if (Test-Path ".venv/Scripts/python.exe") { ".venv/Scripts/python.exe" } elseif (Test-Path ".venv/bin/python") { ".venv/bin/python" } else { "python" }
+New-Item -ItemType Directory -Path "build" -Force | Out-Null
+aws cloudformation describe-stacks --stack-name $WebStackName --region $Region --query "Stacks[0].Outputs" --output json --no-paginate | Set-Content "build/web-outputs.json" -Encoding ascii
+& $python scripts/deploy_helper.py render-web --outputs build/web-outputs.json --templates web/templates --out build/web
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "   ERROR: Could not render the web interface" -ForegroundColor Red
+    exit 1
 }
-
-# Copy shared JavaScript helpers (escaping, and so on) used by every page
-New-Item -ItemType Directory -Path "web/js" -Force | Out-Null
-Copy-Item "web/templates/js/*" -Destination "web/js" -Force
 
 # Upload web files to S3
 Write-Host "   - Uploading web files to S3..." -ForegroundColor Gray
-aws s3 sync web/ s3://$WebsiteBucket/ --delete --region $Region --no-paginate
+aws s3 sync build/web/ s3://$WebsiteBucket/ --delete --region $Region --no-paginate
 
 # Create CloudFront invalidation to force cache refresh
 Write-Host "   - Creating CloudFront invalidation for immediate updates..." -ForegroundColor Gray
@@ -318,20 +301,25 @@ foreach ($func in $lambdaFunctions) {
 }
 Write-Host "   - Lambda functions: $functionsOk/$($lambdaFunctions.Count) active" -ForegroundColor $(if ($functionsOk -eq $lambdaFunctions.Count) { "Green" } else { "Yellow" })
 
-# Test status API
-try {
-    $statusResponse = Invoke-RestMethod -Uri "$ApiUrl/status?fileName=test.txt" -Method GET -TimeoutSec 10 -ErrorAction SilentlyContinue
-    Write-Host "   - Status API: RESPONDING" -ForegroundColor Green
-} catch {
-    Write-Host "   - Status API: MAY STILL BE DEPLOYING" -ForegroundColor Yellow
+# Every API route must reject anonymous callers (Cognito authorizer -> 401)
+$anonymousOk = $true
+foreach ($route in @("/list-jobs", "/downloads", "/status?fileName=test.txt", "/download/final_responses/test.txt")) {
+    try {
+        Invoke-WebRequest -Uri "$ApiUrl$route" -Method GET -TimeoutSec 15 -UseBasicParsing | Out-Null
+        $code = 200
+    } catch {
+        $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+    }
+    if ($code -eq 401) {
+        Write-Host "   - Anonymous GET $route -> 401 (authentication required)" -ForegroundColor Green
+    } else {
+        Write-Host "   - Anonymous GET $route -> $code (expected 401)" -ForegroundColor Red
+        $anonymousOk = $false
+    }
 }
-
-# Test list jobs API
-try {
-    $listJobsResponse = Invoke-RestMethod -Uri "$ApiUrl/list-jobs" -Method GET -TimeoutSec 10 -ErrorAction SilentlyContinue
-    Write-Host "   - List Jobs API: RESPONDING" -ForegroundColor Green
-} catch {
-    Write-Host "   - List Jobs API: MAY STILL BE DEPLOYING" -ForegroundColor Yellow
+if (-not $anonymousOk) {
+    Write-Host "   ERROR: The API is not rejecting anonymous requests. Do not use this deployment." -ForegroundColor Red
+    exit 1
 }
 
 # Step 11: Cleanup and final output
@@ -339,7 +327,6 @@ Write-Host ""
 Write-Host "11. Cleaning up..." -ForegroundColor Yellow
 Remove-Item "lambda-function.zip" -ErrorAction SilentlyContinue
 Remove-Item "temp" -Recurse -ErrorAction SilentlyContinue
-Remove-Item "*.json" -ErrorAction SilentlyContinue
 
 # Get final URLs
 $CloudFrontURL = aws cloudformation describe-stacks --stack-name $WebStackName --region $Region --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" --output text --no-paginate

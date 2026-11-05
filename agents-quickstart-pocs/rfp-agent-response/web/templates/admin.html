@@ -545,6 +545,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="js/app.js"></script>
     <script>
         const { escapeHtml } = RFP;
@@ -702,7 +703,7 @@
         document.head.appendChild(style);
 
         // Load initial data
-        window.addEventListener('load', () => {
+        RFP.onReady(() => {
             loadSystemStats();
             loadSystemInfo();
         });

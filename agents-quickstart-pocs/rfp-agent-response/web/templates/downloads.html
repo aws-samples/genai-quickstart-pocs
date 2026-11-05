@@ -457,10 +457,6 @@
                 <span>🔄</span>
                 Refresh Downloads
             </button>
-            <button class="btn btn-danger" onclick="clearDownloads()">
-                <span>🗑️</span>
-                Clear All Downloads
-            </button>
         </div>
         
         <div id="downloadList" class="loading">
@@ -469,6 +465,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="js/app.js"></script>
     <script>
         const { escapeHtml } = RFP;
@@ -520,7 +517,7 @@
             </div>`;
             
             try {
-                const response = await fetch('{{API_GATEWAY_URL}}/downloads');
+                const response = await RFP.apiFetch('/downloads');
                 if (response.ok) {
                     const files = await response.json();
                     if (files.length === 0) {
@@ -557,7 +554,7 @@
                                 html += `<div class="file-row">
                                     <div class="file-icon">${getFileIcon(fileName)}</div>
                                     <div class="file-info">
-                                        <a href="{{API_GATEWAY_URL}}/download/${escapeHtml(encodeURIComponent(fileName))}" download class="file-name">${escapeHtml(fileName)}</a>
+                                        <a href="#" data-download="${escapeHtml(fileName)}" class="file-name">${escapeHtml(fileName)}</a>
                                         <div class="file-type">${getFileTypeDescription(fileName)}</div>
                                         ${lastModified ? `<div class="file-details">Modified: ${escapeHtml(lastModified)} ${escapeHtml(size)}</div>` : ''}
                                         ${fileName.endsWith('_final.json') ? `<div style="margin-top: 0.75rem;">
@@ -592,7 +589,7 @@
                                     : '';
                                 
                                 html += `<div class="download-item">
-                                    <a href="{{API_GATEWAY_URL}}/download/${escapeHtml(encodeURIComponent(fileName))}" download>
+                                    <a href="#" data-download="${escapeHtml(fileName)}">
                                         <span>📄</span>
                                         ${escapeHtml(fileName)}
                                     </a>
@@ -618,15 +615,8 @@
             }
         }
 
-        async function clearDownloads() {
-            if (confirm('Are you sure you want to clear all downloads? This action cannot be undone.')) {
-                // This would need to be implemented on the backend
-                alert('Clear downloads functionality would need to be implemented on the backend.');
-            }
-        }
-
         // Load downloads on page load
-        window.addEventListener('load', refreshDownloads);
+        RFP.onReady(refreshDownloads);
     </script>
 </body>
 </html>

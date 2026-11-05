@@ -88,14 +88,16 @@ Resources:
           - ObjectOwnership: BucketOwnerEnforced
       VersioningConfiguration:
         Status: Enabled
-      # Browsers upload RFPs straight to this bucket with presigned POSTs
-      # issued by the upload API.
+      # Browsers upload RFPs (presigned POST) and read pipeline files
+      # (presigned GET) straight from this bucket. The presigned URLs are
+      # issued by the authenticated upload and download APIs.
       CorsConfiguration: !If
         - HasWebAppOrigin
         - CorsRules:
             - AllowedOrigins:
                 - !Ref WebAppOrigin
               AllowedMethods:
+                - GET
                 - POST
               AllowedHeaders:
                 - '*'

@@ -1,49 +1,35 @@
-import json
-import boto3
-from datetime import datetime
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+"""API: ``GET /list-jobs`` - list uploaded RFP files, newest first."""
 
-def lambda_handler(event, context):
-    """API Gateway Lambda function to list all RFP processing jobs"""
-    
+import logging
+from typing import Any, Dict, List
+
+import common
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
+def list_jobs(s3_client: Any, bucket: str) -> List[str]:
+    """Return uploaded file names, most recently uploaded first."""
+    objects = [
+        obj for obj in common.iter_objects(s3_client, bucket,
+                                           common.UPLOAD_PREFIX)
+        if obj['Key'] != common.UPLOAD_PREFIX
+    ]
+    objects.sort(key=lambda obj: obj['LastModified'], reverse=True)
+    return [obj['Key'][len(common.UPLOAD_PREFIX):] for obj in objects]
+
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """List every RFP processing job."""
+    if event.get('httpMethod') == 'OPTIONS':
+        return common.json_response(200, {})
     try:
-        # Get S3 client and bucket name
-        s3_client = boto3.client('s3')
-        bucket_name = 'terminal-upload-' + context.invoked_function_arn.split(':')[4] + '-' + boto3.Session().region_name
-        
-        # List all files in the uploaded_rfp_requests folder
-        response = s3_client.list_objects_v2(
-            Bucket=bucket_name,
-            Prefix='uploaded_rfp_requests/'
-        )
-        
-        job_files = []
-        if 'Contents' in response:
-            for obj in response['Contents']:
-                # Extract filename from the key (remove folder prefix)
-                file_name = obj['Key'].replace('uploaded_rfp_requests/', '')
-                if file_name:  # Skip empty strings (folder itself)
-                    job_files.append(file_name)
-        
-        # Sort by last modified (newest first)
-        job_files.sort(reverse=True)
-        
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET'
-            },
-            'body': json.dumps(job_files)
-        }
-        
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET'
-            },
-            'body': json.dumps({'error': str(e)})
-        }
+        return common.json_response(200, list_jobs(
+            common.regional_s3_client(), common.get_bucket_name()
+        ))
+    except Exception:
+        logger.exception('Could not list jobs')
+        return common.json_response(500, {'error': 'Internal server error'})

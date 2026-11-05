@@ -691,6 +691,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="js/app.js"></script>
     <script>
         const { escapeHtml, highlightText } = RFP;
@@ -704,7 +705,7 @@
             const fileList = document.getElementById('fileList');
 
             try {
-                const response = await fetch('{{API_GATEWAY_URL}}/downloads');
+                const response = await RFP.apiFetch('/downloads');
                 if (response.ok) {
                     const files = await response.json();
                     const jsonFiles = files.filter(file => {
@@ -773,9 +774,9 @@
             noFileSelected.style.display = 'none';
 
             try {
-                const response = await fetch(`{{API_GATEWAY_URL}}/download/${encodeURIComponent(fileName)}`);
-                if (response.ok) {
-                    const jsonText = await response.text();
+                // Ask the API for a presigned URL, then read the file from S3.
+                {
+                    const jsonText = await RFP.fetchFileText(fileName);
                     currentJsonData = JSON.parse(jsonText);
                     currentFileName = fileName;
                     currentFileMetadata = fileMetadata;
@@ -788,8 +789,6 @@
                     searchBox.style.display = 'block';
 
                     renderJson();
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
                 console.error('Failed to load JSON file:', error);
@@ -1165,10 +1164,9 @@
 
         function downloadCurrentFile() {
             if (currentFileName) {
-                const link = document.createElement('a');
-                link.href = `{{API_GATEWAY_URL}}/download/${encodeURIComponent(currentFileName)}`;
-                link.download = currentFileName;
-                link.click();
+                RFP.downloadFile(currentFileName).catch((error) => {
+                    alert(`Download failed: ${error.message}`);
+                });
             }
         }
 
@@ -1190,7 +1188,7 @@
         }
 
         // Load files on page load
-        window.addEventListener('load', loadJsonFiles);
+        RFP.onReady(loadJsonFiles);
     </script>
 </body>
 

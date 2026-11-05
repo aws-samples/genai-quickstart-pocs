@@ -524,6 +524,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="js/app.js"></script>
     <script>
         const { escapeHtml } = RFP;
@@ -559,10 +560,10 @@
                 return;
             }
 
-            // Check file size (limit to 10MB for now)
-            const maxSize = 10 * 1024 * 1024; // 10MB
+            // The server enforces the same limit (upload API and S3 policy).
+            const maxSize = Number(RFP.config.maxUploadBytes) || 10 * 1024 * 1024;
             if (file.size > maxSize) {
-                showStatus('File too large. Maximum size is 10MB.', 'error');
+                showStatus(`File too large. Maximum size is ${Math.floor(maxSize / (1024 * 1024))} MB.`, 'error');
                 return;
             }
 
@@ -571,7 +572,7 @@
             try {
                 // 1. Ask the API to authorize the upload. The server checks
                 //    the file type and size and returns a presigned S3 POST.
-                const response = await fetch('{{API_GATEWAY_URL}}/upload', {
+                const response = await RFP.apiFetch('/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fileName: file.name, fileSize: file.size })
@@ -639,7 +640,7 @@
 
         async function checkProcessingStatus(fileName) {
             try {
-                const response = await fetch(`{{API_GATEWAY_URL}}/status?fileName=${encodeURIComponent(fileName)}`);
+                const response = await RFP.apiFetch(`/status?fileName=${encodeURIComponent(fileName)}`);
                 if (response.ok) {
                     return await response.json();
                 }
@@ -720,14 +721,14 @@
                 // Add download link if file is completed
                 if (stageStatus === 'completed' && downloadLink && downloadName) {
                     html += `<div style="margin-top: 0.75rem;">
-                        <a href="{{API_GATEWAY_URL}}${escapeHtml(downloadLink)}" download class="download-link">
+                        <a href="#" data-download="${escapeHtml(downloadLink)}" class="download-link">
                             <span>⬇</span>
                             Download ${escapeHtml(downloadName)}
                         </a>`;
                     
                     // Add JSON explorer link for final JSON files
-                    if (downloadName.includes('final.json')) {
-                        const jsonFileName = downloadLink.split('/').pop();
+                    if (stageName === 'final_document') {
+                        const jsonFileName = statusData.file_name.replace(/\.(txt|pdf)$/i, '_final.json');
                         html += `<a href="json-explorer.html?file=${escapeHtml(encodeURIComponent(jsonFileName))}" class="download-link" style="margin-left: 0.5rem; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));">
                             <span>🔍</span>
                             Explore JSON
@@ -738,7 +739,7 @@
                     const additionalDownloads = stage.additional_downloads;
                     if (additionalDownloads && additionalDownloads.length > 0) {
                         additionalDownloads.forEach(additional => {
-                            html += `<a href="{{API_GATEWAY_URL}}${escapeHtml(additional.download_link)}" download class="download-link" style="margin-left: 0.5rem;">
+                            html += `<a href="#" data-download="${escapeHtml(additional.download_link)}" class="download-link" style="margin-left: 0.5rem;">
                                 <span>⬇</span>
                                 Download ${escapeHtml(additional.download_name)}
                             </a>`;
@@ -769,8 +770,8 @@
             }
         }
 
-        // Check for tracking parameter on page load
-        window.addEventListener('load', () => {
+        // Sign in, then check for a tracking parameter
+        RFP.onReady(() => {
             const urlParams = new URLSearchParams(window.location.search);
             const trackFile = urlParams.get('track');
             if (trackFile) {

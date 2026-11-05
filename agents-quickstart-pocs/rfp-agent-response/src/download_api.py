@@ -2,17 +2,21 @@
 # SPDX-License-Identifier: MIT-0
 """API: list final responses and download pipeline files.
 
-Routes:
+Routes (both require a Cognito ID token, checked by API Gateway):
 
 * ``GET /downloads`` - list the files under ``final_responses/``.
-* ``GET /download/{proxy+}`` - return one file from a pipeline prefix.
+* ``GET /download/{proxy+}`` - return a short-lived presigned S3 URL for one
+  file under one of the five pipeline prefixes.
+
+Returning a presigned URL instead of the file body lets the browser fetch
+files of any size or type (including the original PDF), without exceeding
+the Lambda response size limit.
 """
 
-import json
 import logging
-from typing import Any, Dict, Optional
+import os
+from typing import Any, Dict, List
 
-import boto3
 from botocore.exceptions import ClientError
 
 import common
@@ -20,56 +24,35 @@ import common
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-}
-
-
-def _response(status: int, body: Any,
-              headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-    """Build an API Gateway proxy response."""
-    return {
-        'statusCode': status,
-        'headers': {**CORS_HEADERS, 'Content-Type': 'application/json',
-                    **(headers or {})},
-        'body': body if isinstance(body, str) else json.dumps(body),
-    }
-
-
-def _bucket_name(context: Any) -> str:
-    """Return the upload bucket name for this account and Region."""
-    account = context.invoked_function_arn.split(':')[4]
-    return f'terminal-upload-{account}-{boto3.Session().region_name}'
+DEFAULT_URL_TTL_SECONDS = 300
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Route ``/downloads`` and ``/download/{proxy+}`` requests."""
-    try:
-        method = event.get('httpMethod')
-        path = event.get('path', '')
-        if method == 'OPTIONS':
-            return _response(200, '')
-        if method != 'GET':
-            return _response(405, {'error': 'Method not allowed'})
+    method = event.get('httpMethod')
+    if method == 'OPTIONS':
+        return common.json_response(200, {})
+    if method != 'GET':
+        return common.json_response(405, {'error': 'Method not allowed'})
 
-        s3_client = boto3.client('s3')
-        bucket = _bucket_name(context)
-        if path == '/downloads':
-            return _response(200, list_final_responses(s3_client, bucket))
-        if path.startswith('/download/'):
+    try:
+        s3_client = common.regional_s3_client()
+        bucket = common.get_bucket_name()
+        resource = event.get('resource') or event.get('path', '')
+        if resource == '/downloads':
+            return common.json_response(
+                200, list_final_responses(s3_client, bucket)
+            )
+        if resource.startswith('/download/'):
             proxy = (event.get('pathParameters') or {}).get('proxy')
-            if proxy is None:
-                proxy = path[len('/download/'):]
-            return download_file(s3_client, bucket, proxy)
-        return _response(404, {'error': 'Not found'})
+            return download_url(s3_client, bucket, proxy)
+        return common.json_response(404, {'error': 'Not found'})
     except Exception:
         logger.exception('Download API error')
-        return _response(500, {'error': 'Internal server error'})
+        return common.json_response(500, {'error': 'Internal server error'})
 
 
-def list_final_responses(s3_client: Any, bucket: str) -> list:
+def list_final_responses(s3_client: Any, bucket: str) -> List[Dict[str, Any]]:
     """List final response files, most recent first."""
     files = [
         {
@@ -84,32 +67,48 @@ def list_final_responses(s3_client: Any, bucket: str) -> list:
     return files
 
 
-def download_file(s3_client: Any, bucket: str, proxy: str) -> Dict[str, Any]:
-    """Return a file from one of the pipeline prefixes."""
+def download_url(s3_client: Any, bucket: str, proxy: Any) -> Dict[str, Any]:
+    """Return a presigned GET URL for an allowed pipeline file.
+
+    Args:
+        s3_client: S3 client used to check the object and sign the URL.
+        bucket: Pipeline bucket name.
+        proxy: The ``{proxy+}`` path parameter.
+
+    Returns:
+        400 for a disallowed path, 404 if the file does not exist, otherwise
+        200 with ``url``, ``fileName`` and ``expiresIn``.
+    """
     try:
         key = common.validate_download_key(proxy)
     except ValueError as error:
-        return _response(400, {'error': str(error)})
+        return common.json_response(400, {'error': str(error)})
 
     file_name = key.split('/')[-1]
     try:
-        content = s3_client.get_object(Bucket=bucket, Key=key)['Body'].read()
+        s3_client.head_object(Bucket=bucket, Key=key)
     except ClientError as error:
-        if error.response.get('Error', {}).get('Code') in ('NoSuchKey',
-                                                           '404'):
-            return _response(404, {'error': 'File not found'})
+        code = error.response.get('Error', {}).get('Code', '')
+        # Without s3:ListBucket on the prefix, S3 reports a missing object
+        # as 403 rather than 404.
+        if code in ('404', 'NoSuchKey', 'NotFound', '403', 'AccessDenied'):
+            return common.json_response(404, {'error': 'File not found'})
         raise
 
-    content_type = 'application/octet-stream'
-    if file_name.endswith('.json'):
-        content_type = 'application/json'
-    elif file_name.endswith('.txt'):
-        content_type = 'text/plain'
-    return _response(
-        200,
-        content.decode('utf-8'),
-        {
-            'Content-Type': content_type,
-            'Content-Disposition': f'attachment; filename="{file_name}"',
+    expires_in = int(os.environ.get('DOWNLOAD_URL_TTL_SECONDS',
+                                    DEFAULT_URL_TTL_SECONDS))
+    url = s3_client.generate_presigned_url(
+        'get_object',
+        Params={
+            'Bucket': bucket,
+            'Key': key,
+            'ResponseContentDisposition':
+                f'attachment; filename="{file_name}"',
         },
+        ExpiresIn=expires_in,
     )
+    return common.json_response(200, {
+        'url': url,
+        'fileName': file_name,
+        'expiresIn': expires_in,
+    })
