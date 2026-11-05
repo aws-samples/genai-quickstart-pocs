@@ -603,11 +603,6 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ''
             OriginAccessControlId: !Ref OriginAccessControl
-          - Id: ApiOrigin
-            DomainName: !Sub '${UploadApi}.execute-api.${AWS::Region}.amazonaws.com'
-            CustomOriginConfig:
-              HTTPPort: 443
-              OriginProtocolPolicy: https-only
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
@@ -619,28 +614,6 @@ Resources:
             - HEAD
           ForwardedValues:
             QueryString: false
-        CacheBehaviors:
-          - PathPattern: '/api/*'
-            TargetOriginId: ApiOrigin
-            ViewerProtocolPolicy: https-only
-            AllowedMethods:
-              - DELETE
-              - GET
-              - HEAD
-              - OPTIONS
-              - PATCH
-              - POST
-              - PUT
-            CachedMethods:
-              - GET
-              - HEAD
-            ForwardedValues:
-              QueryString: true
-              Headers:
-                - '*'
-            MinTTL: 0
-            DefaultTTL: 0
-            MaxTTL: 0
         Enabled: true
         DefaultRootObject: index.html
         ViewerCertificate:
