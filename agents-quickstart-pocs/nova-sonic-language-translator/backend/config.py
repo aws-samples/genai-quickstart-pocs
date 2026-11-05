@@ -32,7 +32,11 @@ CHANNELS = 1
 CHUNK_SIZE = 1024
 
 # Server Configuration
-SERVER_HOST = os.getenv('SERVER_HOST', '0.0.0.0')
+# Bind address for both servers (server.py and two_party_server_fastapi.py).
+# Defaults to loopback so the servers are reachable only from this machine.
+# To accept connections on other interfaces (for example inside a container
+# whose port you publish deliberately), set SERVER_HOST explicitly.
+SERVER_HOST = os.getenv('SERVER_HOST', '127.0.0.1')
 SERVER_PORT = int(os.getenv('SERVER_PORT', '3001'))
 CORS_ORIGIN = os.getenv('CORS_ORIGIN', 'http://localhost:5173')
 

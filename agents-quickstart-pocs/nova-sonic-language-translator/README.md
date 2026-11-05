@@ -93,9 +93,14 @@ Ensure AWS credentials are available via one of:
 ```bash
 cd packages/backend-python
 source venv/bin/activate
-python two_party_server.py
-# Server starts on ws://localhost:8082
+python two_party_server_fastapi.py
+# Server starts on ws://127.0.0.1:8082 (loopback only)
 ```
+
+The backend binds to `127.0.0.1` by default. To bind another address on
+purpose (for example `0.0.0.0` inside a container), set `SERVER_HOST`. See
+[backend/README.md](backend/README.md#network-binding) before exposing it:
+the servers have no authentication.
 
 **Terminal 2 - Frontend:**
 ```bash
@@ -132,7 +137,7 @@ npm run dev --workspace=packages/frontend
 | Server | Port | Description |
 |--------|------|-------------|
 | `server.py` | 3001 | Single-user mode with speaker toggle |
-| `two_party_server.py` | 8082 | 2-party mode (recommended for demo) |
+| `two_party_server_fastapi.py` | 8082 | 2-party mode (recommended for demo) |
 | Frontend (Vite) | 5173 | React app + static HTML demo |
 
 ## Features

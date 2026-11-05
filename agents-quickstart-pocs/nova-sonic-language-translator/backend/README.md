@@ -24,6 +24,27 @@ python two_party_server_fastapi.py  # Port 8082
 ```
 Two separate browsers, each with their own role.
 
+## Network Binding
+
+Both servers bind to `127.0.0.1` by default, so they accept connections only
+from the machine they run on. The bind address comes from `SERVER_HOST`
+(see `config.py` and `.env.example`):
+
+```bash
+# Default: loopback only
+python two_party_server_fastapi.py
+
+# Opt in to another address, for example inside a container
+SERVER_HOST=0.0.0.0 python two_party_server_fastapi.py
+```
+
+If you run the backend in a container, set `SERVER_HOST=0.0.0.0` inside the
+container and publish the port to loopback on the host
+(`docker run -p 127.0.0.1:8082:8082 ...`), not to all interfaces. These servers
+have no authentication, so do not expose them on a public or shared network.
+
+> `HOST` is no longer read by `two_party_server_fastapi.py`; use `SERVER_HOST`.
+
 ## AWS Credentials
 
 Configure via `~/.aws/credentials` or environment variables:
