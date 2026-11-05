@@ -8,6 +8,8 @@ only the Python standard library (plus pip for ``package``).
 
 Subcommands::
 
+    python scripts/deploy_helper.py package --src src \\
+        --out build/lambda-function.zip
     python scripts/deploy_helper.py render-web --outputs web-outputs.json \\
         --templates web/templates --out build/web
 """
@@ -15,9 +17,17 @@ Subcommands::
 import argparse
 import json
 import shutil
+import subprocess
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional
+
+# Lambda runtime and architecture the dependencies are installed for. Keep
+# in sync with Runtime in infrastructure/*.yaml.
+LAMBDA_PYTHON_VERSION = '3.14'
+LAMBDA_PLATFORM = 'manylinux2014_x86_64'
 
 # Stack outputs that the web UI needs, mapped to window.RFP_CONFIG keys.
 WEB_CONFIG_OUTPUTS = {
@@ -84,10 +94,67 @@ def render_web(outputs_file: Path, templates: Path, out: Path) -> List[Path]:
     return sorted(p for p in out.rglob('*') if p.is_file())
 
 
+def package_lambda(src: Path, out: Path) -> int:
+    """Build the deployment package shared by every Lambda function.
+
+    Installs ``src/requirements.txt`` for the Lambda runtime (Linux x86_64)
+    and zips it together with ``src/*.py``. Entries always use forward
+    slashes, which Lambda requires, on every operating system.
+
+    Args:
+        src: The ``src`` directory.
+        out: Path of the zip file to write.
+
+    Returns:
+        The number of files in the package.
+
+    Raises:
+        OSError: If ``src`` has no Python files or pip fails.
+    """
+    sources = sorted(src.glob('*.py'))
+    if not sources:
+        raise OSError(f'No Python files found in {src}')
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as staging:
+        requirements = src / 'requirements.txt'
+        if requirements.exists():
+            command = [
+                sys.executable, '-m', 'pip', 'install', '--quiet',
+                '--disable-pip-version-check',
+                '--requirement', str(requirements),
+                '--target', staging,
+                '--platform', LAMBDA_PLATFORM,
+                '--implementation', 'cp',
+                '--python-version', LAMBDA_PYTHON_VERSION,
+                '--only-binary=:all:',
+                '--upgrade',
+            ]
+            if subprocess.run(command, check=False).returncode != 0:
+                raise OSError('pip could not install src/requirements.txt')
+        for source in sources:
+            shutil.copy2(source, staging)
+
+        count = 0
+        root = Path(staging)
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
+            for path in sorted(root.rglob('*')):
+                relative = path.relative_to(root)
+                if (path.is_dir() or '__pycache__' in relative.parts
+                        or path.suffix == '.pyc'):
+                    continue
+                archive.write(path, relative.as_posix())
+                count += 1
+    return count
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """Parse arguments and run a subcommand."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest='command', required=True)
+
+    pkg = sub.add_parser('package', help='Build the Lambda deployment zip')
+    pkg.add_argument('--src', type=Path, required=True)
+    pkg.add_argument('--out', type=Path, required=True)
 
     web = sub.add_parser('render-web',
                          help='Render the static site with config.js')
@@ -98,7 +165,11 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     args = parser.parse_args(argv)
     try:
-        if args.command == 'render-web':
+        if args.command == 'package':
+            count = package_lambda(args.src, args.out)
+            size_kb = args.out.stat().st_size // 1024
+            print(f'Packaged {count} files into {args.out} ({size_kb} KB)')
+        elif args.command == 'render-web':
             files = render_web(args.outputs, args.templates, args.out)
             print(f'Rendered {len(files)} web files into {args.out}')
     except (KeyError, OSError, ValueError) as error:

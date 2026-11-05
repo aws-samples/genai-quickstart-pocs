@@ -37,7 +37,7 @@ rfp-agent-response/
 │   ├── drafting_agent.py         # Response drafting agent
 │   └── requirements.txt          # Python dependencies
 ├── scripts/                      # Deployment and management scripts
-│   ├── deploy-complete.ps1       # Complete system deployment
+│   ├── deploy.ps1       # Complete system deployment
 │   ├── cleanup.ps1              # Resource cleanup
 │   └── diagnose-pipeline.ps1    # Troubleshooting tools
 ├── infrastructure/               # CloudFormation templates
@@ -164,7 +164,7 @@ Before proceeding to deployment, verify:
 ### 3. Deploy Complete System
 ```powershell
 cd scripts
-.\deploy-complete.ps1
+.\deploy.ps1
 ```
 
 **During deployment, you'll be prompted for your Knowledge Base ID** - just paste the ID you copied from Step B above. The deployment script will automatically configure all API endpoints.
@@ -269,7 +269,7 @@ Use the provided PowerShell script for system management:
   - Verify the Knowledge Base is populated with relevant documentation and has been synced
   - Check that the Knowledge Base is in the same AWS region as your deployment
   - If you see "Knowledge Base ID not configured" errors, the deployment script may not have received the correct Knowledge Base ID
-  - To update the Knowledge Base ID after deployment, redeploy with: `.\scripts\deploy-complete.ps1`
+  - To update the Knowledge Base ID after deployment, redeploy with: `.\scripts\deploy.ps1`
 - **Processing Stuck**: Use the diagnostic script (`diagnose-pipeline.ps1`) to check pipeline health
 - **Empty Responses**: Usually indicates Knowledge Base issues - check that documents are properly indexed and the Knowledge Base ID is correct
 - **Logs**: Check CloudWatch logs for detailed processing information and error messages

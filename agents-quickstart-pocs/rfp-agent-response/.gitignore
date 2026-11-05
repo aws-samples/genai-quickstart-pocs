@@ -1,11 +1,5 @@
-# Deployment artifacts
+# Deployment artifacts (packages, rendered web site, stack outputs)
 build/
-temp/
-temp-lambda-package/
-*.zip
-lambda-function.zip
-notification.json
-empty-notification.json
 
 # Test files
 temp_rfp.txt
@@ -57,8 +51,3 @@ node_modules/
 *.bak
 *.backup
 *.orig
-
-# Generated web files (templates are in web/templates/)
-web/*.html
-web/js/
-!web/templates/
