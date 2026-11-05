@@ -14,7 +14,7 @@ from strands.vended_tools import write
 from config import CHATBOT_CONFIG
 from mcp import StdioServerParameters, stdio_client
 from strands.tools.mcp import MCPClient
-from config import SERVICENOW_MCP_CONFIG
+from config import get_servicenow_mcp_config
 from config import AWS_CONFIG
 
 class ServiceNowChatbot:
@@ -30,13 +30,17 @@ class ServiceNowChatbot:
     def initialize_agent(self):
         """Initialize the chatbot agent with tools and system prompt"""
         try:
+            # Read ServiceNow settings from the environment; raises a clear
+            # error naming any missing setting (see .env.example).
+            servicenow_mcp_config = get_servicenow_mcp_config()
+
             # Connect to ServiceNow MCP server and discover tools
             self.mcp_client = MCPClient(
                 lambda: stdio_client(
                     StdioServerParameters(
-                        command=SERVICENOW_MCP_CONFIG["command"],
-                        args=SERVICENOW_MCP_CONFIG["args"],
-                        env=SERVICENOW_MCP_CONFIG["env"]
+                        command=servicenow_mcp_config["command"],
+                        args=servicenow_mcp_config["args"],
+                        env=servicenow_mcp_config["env"]
                     )
                 )
             )
