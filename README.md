@@ -306,6 +306,23 @@ Detailed instructions for each sample are provided in their respective directori
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
+### Bandit scan
+
+Every pull request and every push to `main` runs [Bandit](https://bandit.readthedocs.io/) through `.github/workflows/bandit.yml`. Its `bandit-scan` job is a required check on `main`. The job fails on any finding of Medium or higher severity with Medium or higher confidence (`-ll -ii`) that is not already listed in `bandit-baseline.json`. Virtualenvs, `node_modules`, `.ipynb_checkpoints`, and `tests`/`test` directories are not scanned.
+
+`bandit-baseline.json` records the findings that were on `main` when the gate was added, so only new findings fail a PR. Bandit matches baseline entries by file, rule, severity, confidence, and message, not by line number, so unrelated edits to a file do not break the match.
+
+To refresh the baseline after fixing a recorded finding, or after a reviewer accepts a new one, run this from the repo root with the Bandit version pinned in the workflow, and commit the result:
+
+```bash
+pip install "bandit==1.9.4"
+bandit -r . -q \
+  -x "*/.git/*,*/.venv/*,*/venv/*,*/node_modules/*,*/.ipynb_checkpoints/*,*/tests/*,*/test/*" \
+  -ll -ii -f json | jq '{results: .results}' > bandit-baseline.json
+```
+
+Prefer fixing a finding, or adding a `# nosec BXXX` comment with a reason on the line, over adding it to the baseline.
+
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
