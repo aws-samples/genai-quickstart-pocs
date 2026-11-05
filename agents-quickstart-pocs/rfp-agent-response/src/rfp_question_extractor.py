@@ -2,7 +2,7 @@ import boto3
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime
-import PyPDF2
+import pypdf
 import io
 
 def lambda_handler(event, context):
@@ -10,11 +10,11 @@ def lambda_handler(event, context):
     
     print(f"Lambda invoked with event: {json.dumps(event)}")
     
-    # Test PyPDF2 import
+    # Log pypdf version
     try:
-        print(f"PyPDF2 version: {PyPDF2.__version__}")
+        print(f"pypdf version: {pypdf.__version__}")
     except Exception as e:
-        print(f"PyPDF2 import issue: {str(e)}")
+        print(f"pypdf import issue: {str(e)}")
     
     s3_client = boto3.client('s3')
     bedrock = boto3.client('bedrock-runtime')
@@ -108,7 +108,7 @@ def extract_text_from_pdf(pdf_content):
     try:
         print("Creating PDF reader...")
         pdf_file = io.BytesIO(pdf_content)
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        pdf_reader = pypdf.PdfReader(pdf_file)
         
         print(f"PDF has {len(pdf_reader.pages)} pages")
         

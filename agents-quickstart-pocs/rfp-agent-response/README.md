@@ -213,7 +213,7 @@ When files are uploaded, the system automatically:
 
 1. **File Upload**: Files stored in `uploaded_rfp_requests/` with timestamps
 2. **Question Extraction**: 
-   - PDF text extraction using PyPDF2
+   - PDF text extraction using pypdf
    - AI-powered question identification using Bedrock
    - Results saved as JSON in `formatted_questions/` folder
 3. **Response Generation**:
