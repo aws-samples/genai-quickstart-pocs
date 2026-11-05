@@ -5,6 +5,7 @@ boto3>=1.43.121
 psycopg2-binary>=2.9.0
 faiss-cpu>=1.7.4
 python-dotenv>=1.0.0
-pyyaml>=6.0.3  # used by src/utils/setup_utils.py
+pyyaml>=6.0.3  # used by src/prompts/prompt_template.py
+tomli-w>=1.2.0  # writes .streamlit/secrets.toml in src/utils/setup_utils.py
 
 requests>=2.34.2
