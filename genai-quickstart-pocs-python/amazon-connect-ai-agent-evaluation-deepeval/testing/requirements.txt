@@ -2,9 +2,8 @@
 deepeval>=2.0.0
 
 # AWS SDK
-boto3>=1.43.115
-botocore>=1.43.115
-aiobotocore>=3.10.0
+boto3>=1.43.121
+botocore>=1.43.121
 
 # HTTP client (gateway invocation via SigV4-signed requests)
 requests>=2.34.2
