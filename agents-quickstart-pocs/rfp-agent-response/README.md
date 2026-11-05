@@ -1,275 +1,291 @@
 # RFP Agent Response System
 
-An intelligent RFP (Request for Proposal) processing system that automatically extracts questions from RFP documents and generates professional responses using AWS Bedrock Knowledge Base and AI agents. The system supports both PDF and text files, providing a complete web-based interface for enterprise RFP management.
+An RFP (Request for Proposal) processing pipeline that extracts the questions from an RFP document, answers them from an Amazon Bedrock knowledge base, reviews each answer for PII and confidential information, and drafts a client-ready response. It accepts PDF and text files and includes a web interface for uploading RFPs, tracking jobs and downloading results.
 
-## Architecture Overview
+> **Security note: this is a demo, not a production system.** The sample shows one way to put a Cognito sign-in in front of the API and keep data private, but it has not been hardened for production use. For example, it has no WAF, no MFA, no API access logging, no per-user data separation (every signed-in user sees every job), no data retention policy, and no human approval step before a response leaves the system. Review the generated responses yourself, and review the code and configuration against your own security requirements before using it with real data.
 
-The system consists of two main components working together:
+## Architecture
 
-### Core Processing Pipeline
-- **S3 Storage**: Organized file storage with separate folders for uploads, processing stages, and results
-- **Multi-Stage Lambda Processing**: 
-  - Question extraction from PDF/text files using Amazon Bedrock
-  - Knowledge base querying for intelligent response generation
-  - CSV export generation for professional RFP responses
-- **Bedrock Knowledge Base**: AI-powered document retrieval and response generation
-- **S3 Event Triggers**: Automatic pipeline progression between processing stages
+```
+Browser ──► CloudFront ──► S3 (static site)
+   │
+   ├──► Cognito hosted UI (sign-in, authorization code + PKCE)
+   │
+   ├──► API Gateway (Cognito authorizer, throttled) ──► API Lambdas
+   │        POST /upload  GET /status  GET /list-jobs  GET /downloads  GET /download/{path}
+   │
+   └──► S3 upload bucket (presigned POST / GET only)
+             │
+             ▼  S3 event notifications
+   uploaded_rfp_requests/ ─► rfp_question_extractor ─► formatted_questions/
+   formatted_questions/   ─► question_processor     ─► completed_responses/   (Bedrock knowledge base)
+   completed_responses/   ─► compliance_agent       ─► compliance_reviewed/
+   compliance_reviewed/   ─► drafting_agent         ─► final_responses/
+                                    │
+                                    └─► DynamoDB status table (every stage)
+```
 
-### Web Interface
-- **CloudFront + S3**: Enterprise-grade static web hosting
-- **API Gateway**: RESTful APIs for file upload, status tracking, and result downloads
-- **Multi-Page Interface**: Upload, status monitoring, admin panel, and download management
-- **Real-time Status**: Live tracking of RFP processing stages
+The system is two CloudFormation stacks:
 
-## Project Structure
+- **Processing stack** (`infrastructure/cloudformation.yaml`): the upload bucket and its event notifications, the four pipeline Lambda functions (each with its own least-privilege role), the DynamoDB status table, and a deployment bucket for the Lambda package.
+- **Web stack** (`infrastructure/web-cloudformation.yaml`): a private S3 bucket served through CloudFront, a Cognito user pool with the hosted sign-in UI, an API Gateway REST API with a Cognito authorizer on every method, and the API Lambda functions.
+
+All Lambda functions run on Python 3.14 and are deployed from one package built from `src/`.
+
+### Processing pipeline
+
+1. **Upload.** The browser asks `POST /upload` for permission to upload. The API checks the file type and size and returns a presigned S3 POST for `uploaded_rfp_requests/<name>_<timestamp>.<ext>`. The browser uploads the file straight to S3; the presigned policy caps the size (10 MB by default), so S3 rejects larger files.
+2. **Question extraction** (`rfp_question_extractor.py`). Reads the PDF (with [pypdf](https://pypi.org/project/pypdf/)) or text file and asks Claude to turn every requirement into a question. Output: `formatted_questions/<name>_questions.json`.
+3. **Answers** (`question_processor.py`). Calls Bedrock `RetrieveAndGenerate` against your knowledge base for each question. Output: `completed_responses/<name>_responses.json`.
+4. **Compliance review** (`compliance_agent.py`). Asks Claude whether each answer contains PII or privileged information and whether to approve, redact or reject it. Output: `compliance_reviewed/<name>_compliance_reviewed.json`.
+5. **Drafting** (`drafting_agent.py`). Drafts a polished answer per question and a complete response document, applying each compliance decision. Output:
+   - `final_responses/<name>_RFP_Response.txt`: the client-ready response document.
+   - `final_responses/<name>_final.json`: per-question original and drafted answers, compliance decisions and a compliance reasoning summary.
+
+**The compliance step fails closed.** If the review of an answer errors, returns something that is not valid JSON, or doesn't make one clear approve, redact or reject decision, the answer is **withheld**. A withheld answer is never sent to the drafting model and never appears in the response document; a placeholder takes its place. If drafting a redacted or rejected answer fails, the placeholder is used too, never the original answer. The status record lists the withheld questions, and the web UI shows them as "Needs review".
+
+Every stage records its progress in the DynamoDB status table, which the status API and web UI read.
+
+### Model
+
+Every stage uses the same model, set by the `BedrockModelId` parameter of the processing stack. The default is `us.anthropic.claude-haiku-5-5`, the US cross-Region inference profile for Claude Haiku 5.5. It can be called from `us-east-1`, `us-east-2`, `us-west-1` and `us-west-2` (and the Canadian Regions), and routes requests to Regions in the US. To use a different geography or model, pass another inference profile ID with `--model-id` / `-ModelId`, for example `eu.anthropic.claude-haiku-5-5` from an EU Region. The IAM policy only allows that inference profile and its foundation model.
+
+## Project structure
 
 ```
 rfp-agent-response/
-├── src/                          # Lambda functions and APIs
-│   ├── rfp_question_extractor.py # Question extraction from RFP documents
-│   ├── question_processor.py     # Knowledge base integration and response generation
-│   ├── upload_api.py             # File upload API endpoint
-│   ├── status_api.py             # Processing status tracking API
-│   ├── download_api.py           # Result download API
-│   ├── list_jobs_api.py          # Job listing API
-│   ├── cleanup_api.py            # Cleanup operations API
-│   ├── compliance_agent.py       # Compliance-focused response agent
-│   ├── drafting_agent.py         # Response drafting agent
-│   └── requirements.txt          # Python dependencies
-├── scripts/                      # Deployment and management scripts
-│   ├── deploy.ps1       # Complete system deployment
-│   ├── cleanup.ps1              # Resource cleanup
-│   └── diagnose-pipeline.ps1    # Troubleshooting tools
-├── infrastructure/               # CloudFormation templates
-│   ├── cloudformation.yaml      # Core infrastructure
-│   └── web-cloudformation.yaml  # Web interface infrastructure
-├── web/                         # Web interface
-│   ├── templates/              # Template files with placeholders
-│   │   ├── index.html          # Main upload interface template
-│   │   ├── status.html         # Processing status dashboard template
-│   │   ├── downloads.html      # Result download page template
-│   │   ├── admin.html          # Administrative interface template
-│   │   └── json-explorer.html  # JSON data explorer template
-│   └── [generated files]       # Actual web files (created during deployment)
-├── example-data/                # Sample data and documentation
-│   ├── sample-rfps/            # Example RFP documents (PDF/TXT)
-│   ├── knowledge-base-docs/    # Sample knowledge base content
-│   └── README.md               # Usage instructions for examples
+├── src/                            # Lambda functions (one shared package)
+│   ├── common.py                   # Shared helpers: Bedrock calls, status tracking, validation
+│   ├── rfp_question_extractor.py   # Stage 1: extract questions (PDF/TXT)
+│   ├── question_processor.py       # Stage 2: answer from the knowledge base
+│   ├── compliance_agent.py         # Stage 3: PII/confidentiality review (fails closed)
+│   ├── drafting_agent.py           # Stage 4: draft the final response
+│   ├── upload_api.py               # POST /upload
+│   ├── status_api.py               # GET /status
+│   ├── list_jobs_api.py            # GET /list-jobs
+│   ├── download_api.py             # GET /downloads, GET /download/{path}
+│   └── requirements.txt            # Lambda runtime dependencies
+├── infrastructure/
+│   ├── cloudformation.yaml         # Processing stack
+│   └── web-cloudformation.yaml     # Web stack (CloudFront, Cognito, API Gateway)
+├── scripts/
+│   ├── deploy.sh / deploy.ps1                  # Deploy everything
+│   ├── cleanup.sh / cleanup.ps1                # Remove everything, or reset demo data
+│   ├── diagnose-pipeline.sh / diagnose-pipeline.ps1   # Read-only health checks
+│   └── deploy_helper.py            # Packaging and site rendering shared by both script sets
+├── web/templates/                  # Static web UI (index, status, downloads, json-explorer, admin)
+│   └── js/app.js                   # Sign-in, API calls, escaping helpers
+├── example-data/
+│   ├── sample-rfps/                # Sample RFPs (.txt)
+│   └── knowledge-base-docs/        # Sample knowledge base documents (.md)
+├── tests/                          # Unit tests (pytest, moto, botocore Stubber)
+├── requirements-dev.txt            # Test and lint tools
 └── README.md
 ```
 
-## Prerequisites and Dependencies
+## Prerequisites
 
-### AWS Requirements
-- AWS CLI configured with appropriate permissions
-- AWS account with access to:
-  - Amazon S3
-  - AWS Lambda
-  - Amazon Bedrock (Claude Sonnet models and Knowledge Base)
-  - CloudFormation
-  - API Gateway
-  - CloudFront
-  - IAM (for role and policy management)
+| | macOS / Linux | Windows |
+|---|---|---|
+| Shell | bash (the bash 3.2 that ships with macOS works) | Windows PowerShell 5.1 or PowerShell 7 |
+| AWS CLI | [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
+| Python | Python 3.9 or later, with `pip` (`python3`) | Python 3.9 or later, with `pip` (`python` or `py`) |
+| Other | `curl` (preinstalled on macOS and most Linux distributions) | none |
 
-### Local Environment
-- Python 3.8 or higher
-- PowerShell (for deployment scripts)
-- Required Python packages (see `src/requirements.txt`)
+PowerShell is not needed on macOS or Linux.
 
-### AWS Permissions
-Your AWS credentials need permissions for:
-- S3 bucket creation and management
-- Lambda function deployment and execution
-- CloudFormation stack operations
-- Bedrock model invocation and Knowledge Base operations
-- API Gateway and CloudFront management
-- IAM role and policy creation
+You also need:
 
-## Setup Instructions
+- AWS credentials for the account you deploy to, configured for the AWS CLI (for example `aws configure sso`, then `export AWS_PROFILE=<profile>` or `$env:AWS_PROFILE = "<profile>"`). The deploy scripts print the identity they use before they change anything. The credentials must be able to create the resources listed under [Architecture](#architecture), including IAM roles.
+- Access to Claude Haiku 5.5 (or the model you choose) in Amazon Bedrock in your Region. The first time you use an Anthropic model, Bedrock might ask you for use-case details in the console.
+- A Bedrock knowledge base in the same Region (see below).
 
-### 1. Install Dependencies
-```bash
-cd src
-pip install -r requirements.txt
-```
+Create a virtual environment in the project folder. The deploy scripts use it automatically if it exists.
 
-### 2. Set Up Knowledge Base (Required Before Deployment)
-
-The RFP system needs a Knowledge Base containing your company's information to generate intelligent responses. Follow these steps carefully:
-
-> **⚠️ CRITICAL**: Complete this entire section before running the deployment script, or the system won't work.
-
----
-
-#### 🗂️ **Step A: Upload Your Company Documents**
-
-First, create an S3 bucket and upload your company documentation:
+**macOS / Linux**
 
 ```bash
-# Replace 'your-company-kb-docs' with your preferred bucket name
-aws s3 mb s3://your-company-kb-docs --region us-east-1
-
-# Upload the sample documents (you can customize these later)
-aws s3 sync example-data/knowledge-base-docs/ s3://your-company-kb-docs/
+cd agents-quickstart-pocs/rfp-agent-response
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
 ```
 
-**What documents should you include?**
-- Company overview and history
-- Product/service descriptions and capabilities
-- Pricing information and service tiers
-- Compliance certifications and security measures
-- Implementation methodologies and timelines
-- Support and maintenance offerings
+**Windows (PowerShell)**
 
----
-
-#### 🧠 **Step B: Create the Knowledge Base in AWS**
-
-1. **Open AWS Console** and navigate to **Amazon Bedrock** → **Knowledge bases**
-
-2. **Click "Create knowledge base"**
-
-3. **Fill in the basic details**:
-   ```
-   Name: rfp-response-knowledge-base
-   Description: Knowledge base for automated RFP response generation
-   ```
-
-4. **Set up the data source**:
-   - **Data source type**: S3
-   - **S3 URI**: `s3://your-company-kb-docs/` (the bucket you created above)
-   - **Data source name**: `company-documents`
-
-5. **Choose your AI models**:
-   - **Embeddings model**: `Amazon Titan Text Embeddings v2` (recommended)
-   - **Vector database**: `Amazon OpenSearch Serverless or Amazon S3 Vectors` (let AWS create it)
-
-6. **Review and create** - AWS will automatically process your documents
-
-7. **📝 SAVE THE KNOWLEDGE BASE ID**: After creation, you'll see a Knowledge Base ID like `ABC123DEF456` - **copy this exactly**
-
----
-
-#### ✅ **Verification**
-
-Before proceeding to deployment, verify:
-- [ ] S3 bucket created and documents uploaded
-- [ ] Knowledge Base created and shows "Available" status
-- [ ] Knowledge Base ID copied (you'll need it during deployment)
-
-**🎯 You're now ready to deploy the system!**
-
-> **💡 Note**: You don't need to edit any code files! The deployment script will prompt you for your Knowledge Base ID and configure everything automatically.
-
-### 3. Deploy Complete System
 ```powershell
-cd scripts
-.\deploy.ps1
+cd agents-quickstart-pocs\rfp-agent-response
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
 ```
 
-**During deployment, you'll be prompted for your Knowledge Base ID** - just paste the ID you copied from Step B above. The deployment script will automatically configure all API endpoints.
+## Set up the knowledge base
 
-This will create:
-- S3 buckets for uploads, processing, and results
-- Multiple Lambda functions for the processing pipeline (automatically configured with your Knowledge Base)
-- S3 event triggers for automatic processing
-- API Gateway endpoints for web interface
-- CloudFront distribution for web hosting
-- All necessary IAM roles and policies
+The pipeline answers questions from a Bedrock knowledge base that contains your company's information. Create it before you deploy.
 
-**🎉 That's it!** The system will automatically:
-- Use your Knowledge Base for generating RFP responses
-- Generate web interface files with the correct API endpoints
-- Work consistently across multiple deployments
+1. Create an S3 bucket for the documents and upload the samples (or your own documents):
 
-## Usage Examples
+   ```bash
+   aws s3 mb s3://<your-kb-docs-bucket> --region us-east-1
+   aws s3 sync example-data/knowledge-base-docs/ s3://<your-kb-docs-bucket>/
+   ```
 
-### Web-Based Processing (Recommended)
-1. **Access the Interface**: Open the CloudFront URL provided after deployment
-2. **Upload RFP Files**: 
-   - Drag and drop PDF or TXT files onto the upload area
-   - Or use the file selector to choose files
-   - Supports both individual files and batch uploads
-3. **Monitor Progress**: 
-   - View real-time processing status on the status page
-   - Track each stage: upload → question extraction → response generation
-4. **Download Results**: 
-   - Access completed RFP responses in CSV format
-   - Download individual files or batch results
+2. In the Amazon Bedrock console, open **Knowledge bases** and choose **Create knowledge base** with a vector store.
+3. Use the S3 bucket as the data source, choose an embeddings model (for example Amazon Titan Text Embeddings V2), and let Bedrock create the vector store (Amazon OpenSearch Serverless or Amazon S3 Vectors).
+4. After it's created, **sync** the data source.
+5. Copy the **knowledge base ID**, a 10-character value such as `ABC123DEF4`.
 
-### Sample Data Testing
-Test the system with provided examples:
+Useful documents include a company overview, product and service descriptions, pricing and service tiers, compliance certifications and security controls, implementation methodology, and support offerings.
+
+## Deployment
+
+The two script sets do the same thing and take the same options.
+
+**macOS / Linux**
 
 ```bash
-# Upload sample RFPs from the example-data folder
-# Use any file from: example-data/sample-rfps/
-# - banking-core-system-rfp.pdf
-# - payment-processing-rfp.txt
-# - cybersecurity-services-rfp.txt
+./scripts/deploy.sh \
+  --knowledge-base-id ABC123DEF4 \
+  --admin-email you@example.com \
+  --region us-east-1
 ```
 
-### Automatic Processing Pipeline
-When files are uploaded, the system automatically:
+**Windows (PowerShell)**
 
-1. **File Upload**: Files stored in `uploaded_rfp_requests/` with timestamps
-2. **Question Extraction**: 
-   - PDF text extraction using pypdf
-   - AI-powered question identification using Bedrock
-   - Results saved as JSON in `formatted_questions/` folder
-3. **Response Generation**:
-   - Knowledge base queries for each extracted question
-   - Professional response drafting using compliance and drafting agents
-   - Final CSV generation with complete RFP responses
-4. **Result Storage**: Completed responses in `final_responses/` folder
+```powershell
+.\scripts\deploy.ps1 `
+  -KnowledgeBaseId ABC123DEF4 `
+  -AdminEmail you@example.com `
+  -Region us-east-1
+```
 
-### File Organization
-- **Uploads**: `uploaded_rfp_requests/` - Original RFP files
-- **Questions**: `formatted_questions/` - Extracted questions in JSON format
-- **Responses**: `final_responses/` - Complete RFP responses in CSV format
-- **Status**: Real-time tracking via web interface and CloudWatch logs
+| bash | PowerShell | Default | Description |
+|---|---|---|---|
+| `--knowledge-base-id` | `-KnowledgeBaseId` | prompted | Bedrock knowledge base ID |
+| `--admin-email` | `-AdminEmail` | none | Creates a Cognito user; Cognito emails a temporary password |
+| `--model-id` | `-ModelId` | `us.anthropic.claude-haiku-5-5` | Inference profile ID used by every stage |
+| `--region` | `-Region` | `us-east-1` | AWS Region |
+| `--infra-stack-name` | `-InfraStackName` | `terminal-upload` | Processing stack name |
+| `--web-stack-name` | `-WebStackName` | `rfp-web-app` | Web stack name |
+| `--skip-packaging` | `-SkipPackaging` | off | Reuse `build/lambda-function.zip` |
+
+The deploy script:
+
+1. Builds `build/lambda-function.zip` from `src/` (`scripts/deploy_helper.py package`).
+2. Deploys the processing stack and updates the pipeline Lambda functions.
+3. Deploys the web stack and updates the API Lambda functions.
+4. Sets the upload bucket's CORS rule to the CloudFront origin.
+5. Renders the web UI and `config.js` from the stack outputs (`scripts/deploy_helper.py render-web`), uploads it, and invalidates the CloudFront cache.
+6. Checks that every API route rejects anonymous requests with `401`, and fails if any doesn't.
+
+Run it again at any time to apply changes. The first deployment takes about 10 minutes, mostly for CloudFront.
+
+### Sign in
+
+Open the CloudFront URL that the script prints. You are redirected to the Cognito sign-in page. With `--admin-email`/`-AdminEmail`, Cognito emails a temporary password; you set a new password the first time you sign in. Self sign-up is disabled. To add users:
+
+```bash
+aws cognito-idp admin-create-user --region us-east-1 \
+  --user-pool-id <UserPoolId from the script output> \
+  --username user@example.com \
+  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true
+```
+
+Every user in the pool can see and download every job.
+
+## Usage
+
+1. **Upload** a PDF or text RFP on the upload page (drag and drop, or **Select File**). The page then tracks the job through each stage.
+2. **Job Status** (`status.html`) lists every job with its progress, and flags answers that were withheld for review.
+3. **Download Center** (`downloads.html`) lists the final responses (`_RFP_Response.txt` and `_final.json`). Each stage's output is also linked from the job's status. Downloads use five-minute presigned S3 URLs.
+4. **JSON Explorer** (`json-explorer.html`) shows the `_final.json` file: questions, original and drafted answers, compliance decisions and reasoning.
+
+To try it, upload one of the samples in `example-data/sample-rfps/`:
+
+- `banking-core-system-rfp.txt`
+- `payment-processing-rfp.txt`
+- `cybersecurity-services-rfp.txt`
+
+The pipeline takes a few minutes per RFP, depending on the number of questions.
+
+### Outputs
+
+| S3 prefix | File | Contents |
+|---|---|---|
+| `uploaded_rfp_requests/` | `<name>_<timestamp>.pdf` or `.txt` | The uploaded RFP |
+| `formatted_questions/` | `<name>_questions.json` | Extracted questions (JSON array) |
+| `completed_responses/` | `<name>_responses.json` | Knowledge base answers |
+| `compliance_reviewed/` | `<name>_compliance_reviewed.json` | Answers with compliance decisions |
+| `final_responses/` | `<name>_RFP_Response.txt` | Client-ready response document |
+| `final_responses/` | `<name>_final.json` | Drafted answers, decisions and compliance reasoning |
+
+### API
+
+Every method requires a Cognito ID token in the `Authorization` header (API Gateway returns `401` otherwise), and the stage is throttled (10 requests per second, burst 20, by default). CORS allows only the CloudFront origin.
+
+| Method and path | Description |
+|---|---|
+| `POST /upload` | Body `{"fileName": "rfp.pdf", "fileSize": 12345}`. Validates the type (`.pdf`, `.txt`) and size, and returns `{uploadUrl, fields, timestamped_filename, ...}`, a presigned S3 POST. Returns `413` for files over the limit. |
+| `GET /status?fileName=<timestamped file name>` | Status of one job: every stage, download links, and warnings for withheld answers. |
+| `GET /list-jobs` | Uploaded file names, newest first. |
+| `GET /downloads` | Files under `final_responses/`, with size and last-modified time. |
+| `GET /download/<prefix>/<file>` | `{url, fileName, expiresIn}`, a presigned URL for one file. Only the five prefixes above are allowed; `..`, other prefixes and encoded paths return `400`. A bare `<file>` refers to `final_responses/`. |
+
+There is no cleanup endpoint. Destructive operations are only available through the cleanup scripts, using your own AWS credentials.
+
+### Configuration
+
+| Stack | Parameter | Default | Description |
+|---|---|---|---|
+| Processing | `KnowledgeBaseId` | (required) | Bedrock knowledge base ID |
+| Processing | `BedrockModelId` | `us.anthropic.claude-haiku-5-5` | Inference profile ID |
+| Processing | `WebAppOrigin` | set by the deploy script | Origin allowed by the upload bucket's CORS rule |
+| Web | `AdminEmail` | empty | First Cognito user |
+| Web | `MaxUploadBytes` | `10485760` (10 MB) | Largest upload the API authorizes |
+| Web | `ApiThrottleRateLimit` / `ApiThrottleBurstLimit` | `10` / `20` | API Gateway stage throttling |
+| Web | `ProcessingStackName` | `terminal-upload` | Processing stack to import the bucket and table from |
+
+## Testing
+
+```bash
+source .venv/bin/activate          # Windows: .\.venv\Scripts\Activate.ps1
+python -m pytest                   # unit tests; no AWS calls
+flake8 src scripts tests
+cfn-lint infrastructure/*.yaml
+```
+
+To check the deployed pipeline (read-only):
+
+```bash
+./scripts/diagnose-pipeline.sh --region us-east-1         # macOS / Linux
+.\scripts\diagnose-pipeline.ps1 -Region us-east-1        # Windows
+```
 
 ## Cleanup
 
-To remove all deployed resources:
+Reset the demo data (delete every uploaded file, pipeline output and status record) but keep the stacks:
 
-```powershell
-cd scripts
-.\cleanup.ps1
+```bash
+./scripts/cleanup.sh --data-only          # macOS / Linux
+.\scripts\cleanup.ps1 -DataOnly           # Windows
 ```
 
-This will delete all CloudFormation stacks and associated resources, helping you avoid ongoing AWS charges.
+Delete everything (S3 buckets and their contents, both stacks, the Cognito user pool and its users):
 
-## Advanced Features
+```bash
+./scripts/cleanup.sh                      # macOS / Linux
+.\scripts\cleanup.ps1                     # Windows
+```
 
-### Multiple Web Interfaces
-- **Main Upload** (`index.html`): Primary file upload interface
-- **Status Dashboard** (`status.html`): Real-time processing monitoring
-- **Downloads** (`downloads.html`): Result retrieval and management
-- **Admin Panel** (`admin.html`): System administration and cleanup
-- **JSON Explorer** (`json-explorer.html`): Detailed data inspection
-
-### API Endpoints
-The system provides RESTful APIs for integration:
-- `POST /upload` - File upload
-- `GET /status/{jobId}` - Processing status
-- `GET /download/{jobId}` - Result download
-- `GET /list-jobs` - Job listing
-- `DELETE /cleanup/{jobId}` - Resource cleanup
-
-### Diagnostic Tools
-Use the provided PowerShell script for system management:
-- `diagnose-pipeline.ps1` - Pipeline health checks and troubleshooting
+Both ask you to type a confirmation word; `--force` / `-Force` skips the prompt. Pass the same `--region` and stack names you deployed with. The knowledge base and its document bucket are not part of the stacks; delete them in the Bedrock and S3 consoles if you no longer need them. Lambda log groups are kept.
 
 ## Troubleshooting
 
-- **Permission Issues**: Ensure your AWS credentials have the required permissions listed in Prerequisites
-- **Model Access**: Verify Amazon Bedrock Claude Sonnet model access and Knowledge Base setup in your AWS region
-- **File Format**: System supports both PDF and TXT files
-- **Knowledge Base Configuration**: 
-  - Verify the Knowledge Base is populated with relevant documentation and has been synced
-  - Check that the Knowledge Base is in the same AWS region as your deployment
-  - If you see "Knowledge Base ID not configured" errors, the deployment script may not have received the correct Knowledge Base ID
-  - To update the Knowledge Base ID after deployment, redeploy with: `.\scripts\deploy.ps1`
-- **Processing Stuck**: Use the diagnostic script (`diagnose-pipeline.ps1`) to check pipeline health
-- **Empty Responses**: Usually indicates Knowledge Base issues - check that documents are properly indexed and the Knowledge Base ID is correct
-- **Logs**: Check CloudWatch logs for detailed processing information and error messages
+- **The deploy script stops at "The API is not rejecting anonymous requests".** Don't use the deployment. Check that the web stack deployed fully and that the API Gateway methods use the Cognito authorizer, then run the deploy script again.
+- **Sign-in loops or fails with "state mismatch".** Open the site in one tab only, clear the site's session storage, and sign in again. The callback URL must be `https://<CloudFront domain>/index.html`.
+- **Upload fails with a CORS or 403 error from S3.** The upload bucket's CORS rule is set in deploy step 7. Run the deploy script again.
+- **Model errors (`AccessDeniedException`, `ValidationException`).** Make sure your account can use the model in your Region, and that `--model-id` is an inference profile that your Region can call.
+- **Empty or generic answers.** Make sure the knowledge base data source has been synced and that the knowledge base is in the same Region as the stacks.
+- **Answers marked "Needs review".** The compliance review could not reach a clear decision for those answers, so they were withheld from the response document. Review them in the `_compliance_reviewed.json` or `_final.json` file and edit the response yourself.
+- **A job is stuck.** Run the diagnose script and check the Lambda logs in CloudWatch.
