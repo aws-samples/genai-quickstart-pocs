@@ -1,223 +1,159 @@
-import boto3
-import json
-import time
-from urllib.parse import unquote_plus
-from datetime import datetime
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+"""Stage 2: answer each extracted question from the Bedrock knowledge base.
 
-def lambda_handler(event, context):
-    """Lambda function triggered when JSON files are added to formatted_questions folder"""
-    
+Triggered by S3 ``ObjectCreated`` events under ``formatted_questions/``.
+Calls ``RetrieveAndGenerate`` once per question and writes the answers to
+``completed_responses/<name>_responses.json``.
+"""
+
+import json
+import logging
+import os
+import time
+from typing import Any, Dict, List
+from urllib.parse import unquote_plus
+
+import boto3
+
+import common
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+STAGE = 'questions_answered'
+SUFFIX = '_questions.json'
+# Pause between knowledge base calls to stay under default request quotas.
+DELAY_BETWEEN_QUESTIONS = 5
+
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle an S3 event for a newly written questions file."""
+    record = event['Records'][0]
+    bucket = record['s3']['bucket']['name']
+    key = unquote_plus(record['s3']['object']['key'])
+    base_name = common.strip_suffix(key.split('/')[-1], SUFFIX)
+    logger.info('Answering questions in s3://%s/%s', bucket, key)
+
     s3_client = boto3.client('s3')
-    kb_client = boto3.client('bedrock-agent-runtime')
-    
+    source_file = f'{base_name}.txt'
     try:
-        # Get S3 event details
-        record = event['Records'][0]
-        bucket_name = record['s3']['bucket']['name']
-        file_key = unquote_plus(record['s3']['object']['key'])
-        
-        print(f"Processing JSON file: {file_key} from bucket: {bucket_name}")
-        
-        # Extract filename for status tracking - preserve original extension
-        json_filename = file_key.split('/')[-1]  # e.g., "document_questions.json"
-        base_name = json_filename.replace('_questions.json', '')  # e.g., "document"
-        
-        # Determine original file extension by checking if PDF exists in S3
-        try:
-            # Try PDF first
-            s3_client.head_object(Bucket=bucket_name, Key=f'uploaded_rfp_requests/{base_name}.pdf')
-            base_filename = f'{base_name}.pdf'
-        except:
-            # Fallback to txt
-            base_filename = f'{base_name}.txt'
-        
-        update_processing_status(base_filename, 'questions_answered', 'processing')
-        
-        # Download JSON file content from S3
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-        json_content = response['Body'].read().decode('utf-8')
-        questions = json.loads(json_content)
-        
-        print(f"Found {len(questions)} questions to answer")
-        
-        # Answer each question using Bedrock knowledge base
-        responses = []
-        for i, question in enumerate(questions, 1):
-            print(f"Answering question {i}: {question[:50]}...")
-            
-            try:
-                # Query Bedrock knowledge base with retry logic
-                answer = query_knowledge_base_with_retry(kb_client, question)
-                
-                response_item = {
-                    "question_id": i,
-                    "question": question,
-                    "answer": answer,
-                    "status": "answered"
-                }
-            except Exception as e:
-                print(f"Error answering question {i}: {str(e)}")
-                response_item = {
-                    "question_id": i,
-                    "question": question,
-                    "answer": "Unable to retrieve answer from knowledge base after retries",
-                    "status": "error",
-                    "error": str(e)
-                }
-            
-            responses.append(response_item)
-            
-            # Add delay between questions to avoid throttling
-            if i < len(questions):
-                time.sleep(5)
-        
-        # Save completed responses to S3
-        base_filename_for_s3 = file_key.split('/')[-1].replace('_questions.json', '')
-        output_key = f'completed_responses/{base_filename_for_s3}_responses.json'
-        
+        obj = s3_client.get_object(Bucket=bucket, Key=key)
+        source_file = common.resolve_source_file(
+            s3_client, bucket, obj.get('Metadata'), base_name
+        )
+        common.update_processing_status(source_file, STAGE, 'processing')
+        questions = json.loads(obj['Body'].read().decode('utf-8'))
+
+        responses = answer_questions(
+            boto3.client('bedrock-agent-runtime'),
+            questions,
+            knowledge_base_id=_required_env('KNOWLEDGE_BASE_ID'),
+            model_arn=_required_env('BEDROCK_INFERENCE_PROFILE_ARN'),
+        )
+
+        output_key = f'{common.RESPONSES_PREFIX}{base_name}_responses.json'
         s3_client.put_object(
-            Bucket=bucket_name,
+            Bucket=bucket,
             Key=output_key,
             Body=json.dumps(responses, indent=2),
-            ContentType='application/json'
+            ContentType='application/json',
+            Metadata={common.SOURCE_FILE_METADATA_KEY: source_file},
         )
-        
-        print(f"Saved completed responses to: {output_key}")
-        
-        # Update status to completed - use the same filename format as initial status update
-        update_processing_status(base_filename, 'questions_answered', 'completed')
-        
+        logger.info('Saved %d responses to %s', len(responses), output_key)
+        common.update_processing_status(source_file, STAGE, 'completed')
         return {
             'statusCode': 200,
             'body': json.dumps({
                 'message': f'Answered {len(questions)} questions',
-                'output_file': output_key
-            })
+                'output_file': output_key,
+            }),
         }
-        
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        # Update status to error if we have the filename
-        try:
-            if 'file_key' in locals():
-                json_filename = file_key.split('/')[-1]
-                base_name = json_filename.replace('_questions.json', '')
-                try:
-                    s3_client.head_object(Bucket=bucket_name, Key=f'uploaded_rfp_requests/{base_name}.pdf')
-                    base_filename = f'{base_name}.pdf'
-                except:
-                    base_filename = f'{base_name}.txt'
-            else:
-                base_filename = 'unknown'
-            update_processing_status(base_filename, 'questions_answered', 'error', str(e))
-        except:
-            pass
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+    except Exception as error:
+        logger.exception('Answering questions failed for %s', key)
+        common.update_processing_status(
+            source_file, STAGE, 'error', str(error)
+        )
+        return {'statusCode': 500, 'body': json.dumps({'error': str(error)})}
 
-def query_knowledge_base_with_retry(kb_client, question, max_retries=5):
-    """Query Bedrock knowledge base with exponential backoff retry logic"""
-    
-    import os
-    
-    # Get Knowledge Base ID from environment variable
-    knowledge_base_id = os.environ.get('KNOWLEDGE_BASE_ID')
-    if not knowledge_base_id:
-        error_msg = "Knowledge Base ID not configured! Please ensure KNOWLEDGE_BASE_ID environment variable is set."
-        print(error_msg)
-        raise ValueError(error_msg)
-    
-    for attempt in range(max_retries):
+
+def _required_env(name: str) -> str:
+    """Return environment variable ``name`` or raise a clear error."""
+    value = os.environ.get(name, '').strip()
+    if not value:
+        raise RuntimeError(f'{name} environment variable is not set')
+    return value
+
+
+def answer_questions(
+    kb_client: Any,
+    questions: List[str],
+    knowledge_base_id: str,
+    model_arn: str,
+    delay: float = DELAY_BETWEEN_QUESTIONS,
+) -> List[Dict[str, Any]]:
+    """Answer each question, recording per-question failures.
+
+    Args:
+        kb_client: A ``bedrock-agent-runtime`` boto3 client.
+        questions: Questions to answer.
+        knowledge_base_id: Bedrock knowledge base ID.
+        model_arn: Inference profile ARN used to generate answers.
+        delay: Seconds to wait between questions.
+
+    Returns:
+        One response item per question.
+    """
+    responses = []
+    for index, question in enumerate(questions, 1):
+        logger.info('Answering question %d/%d', index, len(questions))
         try:
-            response = kb_client.retrieve_and_generate(
-                input={'text': question},
-                retrieveAndGenerateConfiguration={
-                    'type': 'KNOWLEDGE_BASE',
-                    'knowledgeBaseConfiguration': {
-                        'knowledgeBaseId': knowledge_base_id,
-                        'modelArn': 'us.anthropic.claude-sonnet-4-20250514-v1:0'
-                    }
-                }
+            answer = query_knowledge_base(
+                kb_client, question, knowledge_base_id, model_arn
             )
-            
-            return response['output']['text']
-            
-        except Exception as e:
-            if 'ThrottlingException' in str(e) and attempt < max_retries - 1:
-                wait_time = (2 ** attempt) * 5  # Exponential backoff: 10, 20, 40, 80 seconds
-                print(f"Throttled on attempt {attempt + 1}, waiting {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                print(f"Error querying knowledge base: {str(e)}")
-                raise e
+            item = {
+                'question_id': index,
+                'question': question,
+                'answer': answer,
+                'status': 'answered',
+            }
+        except Exception as error:
+            logger.exception('Error answering question %d', index)
+            item = {
+                'question_id': index,
+                'question': question,
+                'answer': ('Unable to retrieve answer from knowledge base '
+                           'after retries'),
+                'status': 'error',
+                'error': str(error),
+            }
+        responses.append(item)
+        if index < len(questions) and delay:
+            time.sleep(delay)
+    return responses
 
-def update_processing_status(file_name, stage_name, status='completed', error_message=None):
-    """Helper function to update processing status in DynamoDB"""
-    try:
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('rfp-processing-status')
-        
-        timestamp = datetime.utcnow().isoformat()
-        
-        # Get current status or create new
-        try:
-            response = table.get_item(Key={'file_name': file_name})
-            if 'Item' in response:
-                status_data = response['Item']
-            else:
-                status_data = {
-                    'file_name': file_name,
-                    'stages': [],
-                    'overall_status': 'processing',
-                    'created_at': timestamp
-                }
-        except:
-            status_data = {
-                'file_name': file_name,
-                'stages': [],
-                'overall_status': 'processing',
-                'created_at': timestamp
-            }
-        
-        # Update the specific stage
-        stages = status_data.get('stages', [])
-        stage_found = False
-        
-        for stage in stages:
-            if stage['name'] == stage_name:
-                stage['status'] = status
-                stage['timestamp'] = timestamp
-                if error_message:
-                    stage['error'] = error_message
-                stage_found = True
-                break
-        
-        if not stage_found:
-            new_stage = {
-                'name': stage_name,
-                'status': status,
-                'timestamp': timestamp
-            }
-            if error_message:
-                new_stage['error'] = error_message
-            stages.append(new_stage)
-        
-        status_data['stages'] = stages
-        status_data['current_stage'] = stage_name
-        status_data['last_updated'] = timestamp
-        
-        # Update overall status
-        if status == 'error':
-            status_data['overall_status'] = 'error'
-        elif stage_name == 'final_document' and status == 'completed':
-            status_data['overall_status'] = 'completed'
-        else:
-            status_data['overall_status'] = 'processing'
-        
-        # Save to DynamoDB
-        table.put_item(Item=status_data)
-        
-    except Exception as e:
-        print(f"Error updating status: {str(e)}")
+
+def query_knowledge_base(
+    kb_client: Any,
+    question: str,
+    knowledge_base_id: str,
+    model_arn: str,
+) -> str:
+    """Retrieve context for ``question`` and generate an answer.
+
+    ``RetrieveAndGenerate`` needs the full ARN of the inference profile,
+    not just its ID.
+    """
+    response = common.call_with_retry(
+        lambda: kb_client.retrieve_and_generate(
+            input={'text': question},
+            retrieveAndGenerateConfiguration={
+                'type': 'KNOWLEDGE_BASE',
+                'knowledgeBaseConfiguration': {
+                    'knowledgeBaseId': knowledge_base_id,
+                    'modelArn': model_arn,
+                },
+            },
+        )
+    )
+    return response['output']['text']

@@ -5,6 +5,18 @@ Parameters:
   KnowledgeBaseId:
     Type: String
     Description: 'The ID of the Amazon Bedrock Knowledge Base to use for RFP response generation'
+    AllowedPattern: '^[0-9A-Z]{10}$'
+    ConstraintDescription: 'Must be a 10-character knowledge base ID such as ABC123DEF4'
+
+  BedrockModelId:
+    Type: String
+    Default: 'us.anthropic.claude-haiku-5-5'
+    Description: >-
+      Cross-Region inference profile ID of the Claude model used by every
+      pipeline stage (for example us.anthropic.claude-haiku-5-5). The first
+      segment is the geography prefix, the rest is the foundation model ID.
+    AllowedPattern: '^[a-z]+\.[a-z0-9-]+\.[A-Za-z0-9.:-]+$'
+    ConstraintDescription: 'Must be an inference profile ID such as us.anthropic.claude-haiku-5-5'
 
 Resources:
   DeploymentBucket:
@@ -37,6 +49,9 @@ Resources:
       FunctionName: !Sub 'rfp-processor-${AWS::AccountId}-${AWS::Region}'
       Runtime: python3.11
       Handler: rfp_question_extractor.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
       Code:
         ZipFile: |
           import json
@@ -88,6 +103,9 @@ Resources:
       Environment:
         Variables:
           KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          # RetrieveAndGenerate needs the full inference profile ARN.
+          BEDROCK_INFERENCE_PROFILE_ARN: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}'
 
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
@@ -103,6 +121,9 @@ Resources:
       FunctionName: !Sub 'compliance-agent-${AWS::AccountId}-${AWS::Region}'
       Runtime: python3.11
       Handler: compliance_agent.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
       Code:
         ZipFile: |
           import json
@@ -133,6 +154,9 @@ Resources:
       FunctionName: !Sub 'drafting-agent-${AWS::AccountId}-${AWS::Region}'
       Runtime: python3.11
       Handler: drafting_agent.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
       Code:
         ZipFile: |
           import json

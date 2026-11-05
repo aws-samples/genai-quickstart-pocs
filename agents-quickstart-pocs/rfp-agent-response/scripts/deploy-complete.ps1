@@ -4,6 +4,7 @@ param(
     [string]$InfraStackName = "terminal-upload",
     [string]$WebStackName = "rfp-web-app",
     [string]$Region = "us-east-1",
+    [string]$ModelId = "us.anthropic.claude-haiku-5-5",
     [switch]$SkipPackaging = $false
 )
 
@@ -113,7 +114,7 @@ aws cloudformation deploy `
     --stack-name $InfraStackName `
     --capabilities CAPABILITY_NAMED_IAM `
     --region $Region `
-    --parameter-overrides KnowledgeBaseId=$KnowledgeBaseId `
+    --parameter-overrides KnowledgeBaseId=$KnowledgeBaseId BedrockModelId=$ModelId `
     --no-paginate
 
 if ($LASTEXITCODE -ne 0) {

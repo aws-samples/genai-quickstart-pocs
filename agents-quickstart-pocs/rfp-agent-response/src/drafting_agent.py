@@ -1,451 +1,85 @@
-import boto3
-from botocore.config import Config
-import json
-import time
-from urllib.parse import unquote_plus
-from datetime import datetime
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+"""Stage 4: draft the client-ready RFP response.
 
-def lambda_handler(event, context):
-    """Lambda function triggered when JSON files are added to compliance_reviewed folder"""
-    
-    s3_client = boto3.client('s3')
-    # Configure Bedrock client with longer timeout for large RFP responses
-    bedrock = boto3.client(
-        'bedrock-runtime',
-        config=Config(
-            read_timeout=300,  # 5 minutes
-            connect_timeout=60,
-            retries={'max_attempts': 3}
-        )
-    )
-    
-    try:
-        # Get S3 event details
-        record = event['Records'][0]
-        bucket_name = record['s3']['bucket']['name']
-        file_key = unquote_plus(record['s3']['object']['key'])
-        
-        print(f"Processing drafting for: {file_key} from bucket: {bucket_name}")
-        
-        # Extract filename for status tracking - preserve original extension
-        json_filename = file_key.split('/')[-1]  # e.g., "document_compliance_reviewed.json"
-        base_name = json_filename.replace('_compliance_reviewed.json', '')  # e.g., "document"
-        
-        # Determine original file extension by checking if PDF exists in S3
-        try:
-            # Try PDF first
-            s3_client.head_object(Bucket=bucket_name, Key=f'uploaded_rfp_requests/{base_name}.pdf')
-            base_filename = f'{base_name}.pdf'
-        except:
-            # Fallback to txt
-            base_filename = f'{base_name}.txt'
-        
-        update_processing_status(base_filename, 'final_document', 'processing')
-        
-        # Download JSON file content from S3
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-        json_content = response['Body'].read().decode('utf-8')
-        compliance_reviewed_responses = json.loads(json_content)
-        
-        print(f"Found {len(compliance_reviewed_responses)} responses to draft professionally")
-        
-        # Create a comprehensive professional RFP response document
-        try:
-            professional_document = create_comprehensive_rfp_response_with_retry(
-                bedrock, 
-                compliance_reviewed_responses
-            )
-            
-            # Generate individual drafted answers with compliance applied
-            drafted_responses = generate_individual_drafted_responses_with_retry(
-                bedrock,
-                compliance_reviewed_responses
-            )
-            
-            # Save as both text document and JSON for different use cases
-            base_filename_for_s3 = file_key.split('/')[-1].replace('_compliance_reviewed.json', '')
-            
-            # Save client-ready text document
-            text_output_key = f'final_responses/{base_filename_for_s3}_RFP_Response.txt'
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key=text_output_key,
-                Body=professional_document,
-                ContentType='text/plain'
-            )
-            
-            # Generate compliance reasoning summary
-            compliance_reasoning = generate_compliance_reasoning_with_retry(
-                bedrock,
-                compliance_reviewed_responses
-            )
-            
-            # Also save structured data for reference
-            json_output_key = f'final_responses/{base_filename_for_s3}_final.json'
-            structured_data = {
-                "rfp_name": base_filename_for_s3,
-                "total_questions": len(compliance_reviewed_responses),
-                "document_content": professional_document,
-                "compliance_reasoning": compliance_reasoning,
-                "question_analysis": [
-                    {
-                        "question_id": item['question_id'],
-                        "question": item['question'],
-                        "original_answer": item['answer'],
-                        "drafted_answer": drafted_responses.get(str(item['question_id']), item['answer']),
-                        "compliance_status": item.get('compliance_review', {}).get('recommendation', 'approve'),
-                        "has_pii": item.get('compliance_review', {}).get('has_pii', 'no'),
-                        "has_privileged_data": item.get('compliance_review', {}).get('has_privileged_data', 'no'),
-                        "issues_found": item.get('compliance_review', {}).get('issues_found', []),
-                        "action_taken": get_action_description(item.get('compliance_review', {}).get('recommendation', 'approve'))
-                    }
-                    for item in compliance_reviewed_responses
-                ],
-                "processing_timestamp": context.aws_request_id,
-                "status": "complete"
-            }
-            
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key=json_output_key,
-                Body=json.dumps(structured_data, indent=2),
-                ContentType='application/json'
-            )
-            
-            print(f"Saved client-ready document to: {text_output_key}")
-            print(f"Saved structured data to: {json_output_key}")
-            
-            # Update status to completed - use the same filename format as initial status update
-            update_processing_status(base_filename, 'final_document', 'completed')
-            
-            return {
-                'statusCode': 200,
-                'body': json.dumps({
-                    'message': f'Created comprehensive RFP response with {len(compliance_reviewed_responses)} questions',
-                    'client_document': text_output_key,
-                    'structured_data': json_output_key
-                })
-            }
-            
-        except Exception as e:
-            print(f"Error creating comprehensive document: {str(e)}")
-            # Fallback to error document
-            base_filename_for_s3 = file_key.split('/')[-1].replace('_compliance_reviewed.json', '')
-            error_output_key = f'final_responses/{base_filename_for_s3}_ERROR.txt'
-            
-            error_document = f"""RFP RESPONSE DOCUMENT - ERROR
+Triggered by S3 ``ObjectCreated`` events under ``compliance_reviewed/``.
+Writes two files to ``final_responses/``:
 
-We apologize, but there was an error generating the comprehensive RFP response.
-Error: {str(e)}
-
-Please contact our team for manual assistance with this RFP.
+* ``<name>_RFP_Response.txt`` - the response document for the client.
+* ``<name>_final.json`` - per-question drafts and compliance reasoning.
 """
-            
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key=error_output_key,
-                Body=error_document,
-                ContentType='text/plain'
-            )
-            
-            # Update status to error - use the same filename format as initial status update
-            update_processing_status(base_filename, 'final_document', 'error', str(e))
-            
-            return {
-                'statusCode': 500,
-                'body': json.dumps({
-                    'error': str(e),
-                    'error_document': error_output_key
-                })
-            }
-        
 
-        
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        # Update status to error if we have the filename
-        try:
-            if 'file_key' in locals():
-                json_filename = file_key.split('/')[-1]
-                base_name = json_filename.replace('_compliance_reviewed.json', '')
-                try:
-                    s3_client.head_object(Bucket=bucket_name, Key=f'uploaded_rfp_requests/{base_name}.pdf')
-                    base_filename = f'{base_name}.pdf'
-                except:
-                    base_filename = f'{base_name}.txt'
-            else:
-                base_filename = 'unknown'
-            update_processing_status(base_filename, 'final_document', 'error', str(e))
-        except:
-            pass
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+import json
+import logging
+import time
+from typing import Any, Dict, List, Optional
+from urllib.parse import unquote_plus
 
-def get_action_description(recommendation):
-    """Get human-readable description of compliance action taken"""
-    actions = {
-        'approve': 'Response approved and enhanced professionally',
-        'redact': 'Sensitive information removed or generalized',
-        'reject': 'Information withheld due to confidentiality requirements'
-    }
-    return actions.get(recommendation, 'Standard processing applied')
+import boto3
 
-def generate_individual_drafted_responses_with_retry(bedrock, compliance_reviewed_responses, max_retries=5):
-    """Generate individual drafted responses for each question with compliance applied"""
-    drafted_responses = {}
-    
-    for item in compliance_reviewed_responses:
-        question_id = str(item['question_id'])
-        question = item['question']
-        original_answer = item['answer']
-        compliance_review = item.get('compliance_review', {})
-        recommendation = compliance_review.get('recommendation', 'approve')
-        issues_found = compliance_review.get('issues_found', [])
-        
-        print(f"Drafting individual response for question {question_id} with recommendation: {recommendation}")
-        
-        for attempt in range(max_retries):
-            try:
-                if recommendation == 'approve':
-                    prompt = f"""Enhance this RFP response to be more professional and client-ready while keeping all the original information:
+import common
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+STAGE = 'final_document'
+SUFFIX = '_compliance_reviewed.json'
+# RFPs with more questions than this are drafted in chunks and combined.
+CHUNK_THRESHOLD = 50
+CHUNK_SIZE = 25
+DELAY_BETWEEN_DRAFTS = 2
+DOCUMENT_MAX_TOKENS = 16000
+ANSWER_MAX_TOKENS = 4000
+REASONING_MAX_TOKENS = 6000
+
+ACTION_DESCRIPTIONS = {
+    'approve': 'Response approved and enhanced professionally',
+    'redact': 'Sensitive information removed or generalized',
+    'reject': 'Information withheld due to confidentiality requirements',
+}
+
+APPROVE_PROMPT = """Enhance this RFP response to be more professional and \
+client-ready while keeping all the original information:
 
 QUESTION: {question}
-ORIGINAL ANSWER: {original_answer}
+ORIGINAL ANSWER: {answer}
 
-Make it more polished, professional, and suitable for a client-facing RFP response. Maintain all factual content but improve the language, structure, and presentation."""
+Make it more polished, professional, and suitable for a client-facing RFP \
+response. Maintain all factual content but improve the language, structure, \
+and presentation."""
 
-                elif recommendation == 'redact':
-                    issues_text = ', '.join(issues_found) if issues_found else 'sensitive information'
-                    prompt = f"""Revise this RFP response by removing or generalizing sensitive information while maintaining a professional, helpful response:
-
-QUESTION: {question}
-ORIGINAL ANSWER: {original_answer}
-ISSUES TO ADDRESS: {issues_text}
-
-Create a professional response that addresses the question without including sensitive details. Generalize specific information where needed and maintain a helpful tone."""
-
-                elif recommendation == 'reject':
-                    prompt = f"""Create a polite, professional response explaining that this information cannot be shared due to confidentiality requirements:
+REDACT_PROMPT = """Revise this RFP response by removing or generalizing \
+sensitive information while maintaining a professional, helpful response:
 
 QUESTION: {question}
-ORIGINAL ANSWER: {original_answer}
-ISSUES: {', '.join(issues_found) if issues_found else 'confidential information'}
+ORIGINAL ANSWER: {answer}
+ISSUES TO ADDRESS: {issues}
 
-Provide a courteous explanation of why this information cannot be disclosed while maintaining professionalism."""
+Create a professional response that addresses the question without including \
+sensitive details. Generalize specific information where needed and maintain \
+a helpful tone."""
 
-                else:
-                    # Fallback for unknown recommendations
-                    prompt = f"""Create a professional RFP response for this question:
+REJECT_PROMPT = """Create a polite, professional response explaining that \
+this information cannot be shared due to confidentiality requirements:
 
 QUESTION: {question}
-ORIGINAL ANSWER: {original_answer}
+ORIGINAL ANSWER: {answer}
+ISSUES: {issues}
+
+Provide a courteous explanation of why this information cannot be disclosed \
+while maintaining professionalism."""
+
+DEFAULT_PROMPT = """Create a professional RFP response for this question:
+
+QUESTION: {question}
+ORIGINAL ANSWER: {answer}
 
 Make it professional and client-ready."""
 
-                body = json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 1500,
-                    "temperature": 0.3,
-                    "messages": [{"role": "user", "content": prompt}]
-                })
-                
-                response = bedrock.invoke_model(
-                    modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
-                    body=body
-                )
-                
-                response_body = json.loads(response['body'].read())
-                drafted_answer = response_body['content'][0]['text'].strip()
-                
-                if drafted_answer:
-                    drafted_responses[question_id] = drafted_answer
-                    break
-                else:
-                    raise Exception("Empty response from Bedrock")
-                    
-            except Exception as e:
-                error_str = str(e)
-                if ('ThrottlingException' in error_str or 'timeout' in error_str.lower() or 'ReadTimeoutError' in error_str) and attempt < max_retries - 1:
-                    wait_time = (2 ** attempt) * 3
-                    print(f"Retryable error drafting question {question_id} on attempt {attempt + 1}: {error_str[:100]}... waiting {wait_time} seconds...")
-                    time.sleep(wait_time)
-                else:
-                    print(f"Error drafting response for question {question_id}: {str(e)}")
-                    # Fallback to original answer
-                    drafted_responses[question_id] = original_answer
-                    break
-        
-        # Small delay between questions to avoid throttling
-        time.sleep(2)
-    
-    return drafted_responses
-
-def generate_compliance_reasoning_with_retry(bedrock, compliance_reviewed_responses, max_retries=5):
-    """Generate detailed reasoning about compliance decisions with retry logic"""
-    for attempt in range(max_retries):
-        try:
-            # Prepare compliance summary for analysis
-            compliance_summary = ""
-            for item in compliance_reviewed_responses:
-                compliance_review = item.get('compliance_review', {})
-                compliance_summary += f"""\nQuestion {item['question_id']}: {item['question'][:100]}...
-Recommendation: {compliance_review.get('recommendation', 'approve')}
-PII Found: {compliance_review.get('has_pii', 'no')}
-Privileged Data: {compliance_review.get('has_privileged_data', 'no')}
-Issues: {', '.join(compliance_review.get('issues_found', []))}
----"""
-            
-            prompt = f"""Analyze the compliance decisions made for this RFP response and provide detailed reasoning about what was included, excluded, or modified.
-
-COMPLIANCE REVIEW SUMMARY:
-{compliance_summary}
-
-Provide a comprehensive analysis explaining:
-1. Overall compliance approach taken
-2. What information was approved for inclusion and why
-3. What information was redacted or generalized and the reasoning
-4. What information was completely excluded and why
-5. Risk mitigation strategies applied
-6. Summary of how the final document balances transparency with data protection
-
-Create a detailed compliance reasoning report:"""
-
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 3000,
-                "messages": [{"role": "user", "content": prompt}]
-            })
-            
-            response = bedrock.invoke_model(
-                modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
-                body=body
-            )
-            
-            response_body = json.loads(response['body'].read())
-            content = response_body['content'][0]['text'].strip()
-            
-            if not content:
-                return "Unable to generate compliance reasoning due to empty response"
-            
-            return content
-            
-        except Exception as e:
-            error_str = str(e)
-            if ('ThrottlingException' in error_str or 'timeout' in error_str.lower() or 'ReadTimeoutError' in error_str) and attempt < max_retries - 1:
-                wait_time = (2 ** attempt) * 5
-                print(f"Retryable error generating compliance reasoning on attempt {attempt + 1}: {error_str[:100]}... waiting {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                print(f"Error generating compliance reasoning: {str(e)}")
-                return f"Unable to generate compliance reasoning due to error: {str(e)}"
-
-def create_comprehensive_rfp_response_with_retry(bedrock, compliance_reviewed_responses, max_retries=5):
-    """Create comprehensive RFP response document with chunking for large RFPs"""
-    
-    # If RFP is very large (>50 questions), process in chunks
-    if len(compliance_reviewed_responses) > 50:
-        return create_chunked_rfp_response(bedrock, compliance_reviewed_responses, max_retries)
-    
-    return create_single_rfp_response(bedrock, compliance_reviewed_responses, max_retries)
-
-def create_chunked_rfp_response(bedrock, compliance_reviewed_responses, max_retries=5):
-    """Handle large RFPs by processing in chunks and combining"""
-    chunk_size = 25  # Process 25 questions at a time
-    chunks = [compliance_reviewed_responses[i:i + chunk_size] 
-              for i in range(0, len(compliance_reviewed_responses), chunk_size)]
-    
-    print(f"Processing large RFP in {len(chunks)} chunks of up to {chunk_size} questions each")
-    
-    chunk_responses = []
-    for i, chunk in enumerate(chunks):
-        print(f"Processing chunk {i+1}/{len(chunks)} with {len(chunk)} questions")
-        chunk_response = create_single_rfp_response(bedrock, chunk, max_retries, chunk_number=i+1)
-        chunk_responses.append(chunk_response)
-    
-    # Combine all chunks into final document
-    return combine_rfp_chunks(bedrock, chunk_responses, len(compliance_reviewed_responses), max_retries)
-
-def combine_rfp_chunks(bedrock, chunk_responses, total_questions, max_retries=5):
-    """Combine multiple RFP response chunks into a cohesive document"""
-    for attempt in range(max_retries):
-        try:
-            combined_content = "\n\n".join(chunk_responses)
-            
-            prompt = f"""Combine these RFP response sections into a single, cohesive professional document. 
-Remove any duplicate headers or introductions, ensure consistent formatting, and create smooth transitions between sections.
-
-SECTIONS TO COMBINE:
-{combined_content}
-
-Create a single, well-formatted RFP response document with:
-1. One professional header and introduction
-2. All {total_questions} questions and responses in logical order
-3. Consistent formatting throughout
-4. One professional closing
-5. Remove any section breaks or chunk indicators
-
-Final combined RFP response document:"""
-
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8000,
-                "temperature": 0.3,
-                "messages": [{"role": "user", "content": prompt}]
-            })
-            
-            response = bedrock.invoke_model(
-                modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
-                body=body
-            )
-            
-            response_body = json.loads(response['body'].read())
-            content = response_body['content'][0]['text'].strip()
-            
-            if not content:
-                raise Exception("Empty response from Bedrock when combining chunks")
-            
-            return content
-            
-        except Exception as e:
-            error_str = str(e)
-            if ('ThrottlingException' in error_str or 'timeout' in error_str.lower() or 'ReadTimeoutError' in error_str) and attempt < max_retries - 1:
-                wait_time = (2 ** attempt) * 5
-                print(f"Retryable error combining chunks on attempt {attempt + 1}: {error_str[:100]}... waiting {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                print(f"Error combining RFP chunks: {str(e)}")
-                # Fallback: return chunks with basic formatting
-                return f"""RFP RESPONSE DOCUMENT
-
-This document contains responses to {total_questions} questions.
-
-{chr(10).join(chunk_responses)}
-
-Thank you for your consideration."""
-
-def create_single_rfp_response(bedrock, compliance_reviewed_responses, max_retries=5, chunk_number=None):
-    """Create RFP response document with exponential backoff retry logic"""
-    chunk_info = f" (Chunk {chunk_number})" if chunk_number else ""
-    print(f"Creating RFP response{chunk_info} for {len(compliance_reviewed_responses)} questions")
-    
-    for attempt in range(max_retries):
-        try:
-            # Prepare all questions and answers for comprehensive processing
-            qa_content = ""
-            for item in compliance_reviewed_responses:
-                compliance_review = item.get('compliance_review', {})
-                compliance_action = compliance_review.get('recommendation', 'approve')
-                issues_found = compliance_review.get('issues_found', [])
-                
-                qa_content += f"""\n\nQUESTION {item['question_id']}: {item['question']}
-ORIGINAL ANSWER: {item['answer']}
-COMPLIANCE STATUS: {compliance_action}
-ISSUES: {', '.join(issues_found) if issues_found else 'None'}
----"""
-            
-            prompt = f"""Create a comprehensive, professional RFP response document that is ready to send to a prospective client. This should be a complete, well-formatted document that addresses all questions professionally.
+DOCUMENT_PROMPT = """Create a comprehensive, professional RFP response \
+document that is ready to send to a prospective client. This should be a \
+complete, well-formatted document that addresses all questions \
+professionally.
 
 RFP QUESTIONS AND ANSWERS:
 {qa_content}
@@ -466,103 +100,289 @@ INSTRUCTIONS:
 
 Create a complete RFP response document:"""
 
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8000,
-                "temperature": 0.3,  # More consistent responses
-                "messages": [{"role": "user", "content": prompt}]
-            })
-            
-            response = bedrock.invoke_model(
-                modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
-                body=body
-            )
-            
-            response_body = json.loads(response['body'].read())
-            content = response_body['content'][0]['text'].strip()
-            
-            print(f"Bedrock comprehensive response: {content[:200]}...")  # Log first 200 chars
-            
-            if not content:
-                raise Exception("Empty response from Bedrock")
-            
-            return content
-            
-        except Exception as e:
-            error_str = str(e)
-            if ('ThrottlingException' in error_str or 'timeout' in error_str.lower() or 'ReadTimeoutError' in error_str) and attempt < max_retries - 1:
-                wait_time = (2 ** attempt) * 5  # Exponential backoff: 5, 10, 20, 40 seconds
-                print(f"Retryable error on attempt {attempt + 1}: {error_str[:100]}... waiting {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                print(f"Error with Bedrock comprehensive drafting: {str(e)}")
-                raise e
+COMBINE_PROMPT = """Combine these RFP response sections into a single, \
+cohesive professional document. Remove any duplicate headers or \
+introductions, ensure consistent formatting, and create smooth transitions \
+between sections.
 
-def update_processing_status(file_name, stage_name, status='completed', error_message=None):
-    """Helper function to update processing status in DynamoDB"""
+SECTIONS TO COMBINE:
+{sections}
+
+Create a single, well-formatted RFP response document with:
+1. One professional header and introduction
+2. All {total} questions and responses in logical order
+3. Consistent formatting throughout
+4. One professional closing
+5. Remove any section breaks or chunk indicators
+
+Final combined RFP response document:"""
+
+REASONING_PROMPT = """Analyze the compliance decisions made for this RFP \
+response and provide detailed reasoning about what was included, excluded, \
+or modified.
+
+COMPLIANCE REVIEW SUMMARY:
+{summary}
+
+Provide a comprehensive analysis explaining:
+1. Overall compliance approach taken
+2. What information was approved for inclusion and why
+3. What information was redacted or generalized and the reasoning
+4. What information was completely excluded and why
+5. Risk mitigation strategies applied
+6. Summary of how the final document balances transparency with data \
+protection
+
+Create a detailed compliance reasoning report:"""
+
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle an S3 event for a newly written compliance review file."""
+    record = event['Records'][0]
+    bucket = record['s3']['bucket']['name']
+    key = unquote_plus(record['s3']['object']['key'])
+    base_name = common.strip_suffix(key.split('/')[-1], SUFFIX)
+    logger.info('Drafting final response for s3://%s/%s', bucket, key)
+
+    s3_client = boto3.client('s3')
+    source_file = f'{base_name}.txt'
     try:
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('rfp-processing-status')
-        
-        timestamp = datetime.utcnow().isoformat()
-        
-        # Get current status or create new
+        obj = s3_client.get_object(Bucket=bucket, Key=key)
+        source_file = common.resolve_source_file(
+            s3_client, bucket, obj.get('Metadata'), base_name
+        )
+        common.update_processing_status(source_file, STAGE, 'processing')
+        items = json.loads(obj['Body'].read().decode('utf-8'))
+    except Exception as error:
+        logger.exception('Could not load %s', key)
+        common.update_processing_status(
+            source_file, STAGE, 'error', str(error)
+        )
+        return {'statusCode': 500, 'body': json.dumps({'error': str(error)})}
+
+    metadata = {common.SOURCE_FILE_METADATA_KEY: source_file}
+    bedrock_client = common.bedrock_runtime_client()
+    try:
+        document = create_rfp_document(bedrock_client, items)
+        drafts = draft_individual_responses(bedrock_client, items)
+        reasoning = generate_compliance_reasoning(bedrock_client, items)
+
+        text_key = f'{common.FINAL_PREFIX}{base_name}_RFP_Response.txt'
+        s3_client.put_object(
+            Bucket=bucket, Key=text_key, Body=document,
+            ContentType='text/plain; charset=utf-8', Metadata=metadata,
+        )
+        json_key = f'{common.FINAL_PREFIX}{base_name}_final.json'
+        structured = build_structured_output(
+            base_name, items, document, drafts, reasoning,
+            request_id=getattr(context, 'aws_request_id', None),
+        )
+        s3_client.put_object(
+            Bucket=bucket, Key=json_key,
+            Body=json.dumps(structured, indent=2),
+            ContentType='application/json', Metadata=metadata,
+        )
+        logger.info('Saved %s and %s', text_key, json_key)
+        common.update_processing_status(source_file, STAGE, 'completed')
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': (f'Created RFP response with {len(items)} '
+                            'questions'),
+                'client_document': text_key,
+                'structured_data': json_key,
+            }),
+        }
+    except Exception as error:
+        logger.exception('Drafting failed for %s', key)
+        error_key = f'{common.FINAL_PREFIX}{base_name}_ERROR.txt'
+        s3_client.put_object(
+            Bucket=bucket, Key=error_key,
+            Body=('RFP RESPONSE DOCUMENT - ERROR\n\n'
+                  'There was an error generating the RFP response.\n'
+                  f'Error: {error}\n'),
+            ContentType='text/plain; charset=utf-8', Metadata=metadata,
+        )
+        common.update_processing_status(
+            source_file, STAGE, 'error', str(error)
+        )
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(error),
+                                'error_document': error_key}),
+        }
+
+
+def get_recommendation(item: Dict[str, Any]) -> str:
+    """Return the compliance recommendation recorded for an item."""
+    return item.get('compliance_review', {}).get('recommendation', 'approve')
+
+
+def get_action_description(recommendation: str) -> str:
+    """Return a human-readable description of the compliance action."""
+    return ACTION_DESCRIPTIONS.get(recommendation,
+                                   'Standard processing applied')
+
+
+def build_structured_output(
+    base_name: str,
+    items: List[Dict[str, Any]],
+    document: str,
+    drafts: Dict[str, str],
+    reasoning: str,
+    request_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Assemble the ``_final.json`` document."""
+    analysis = []
+    for item in items:
+        review = item.get('compliance_review', {})
+        recommendation = get_recommendation(item)
+        analysis.append({
+            'question_id': item['question_id'],
+            'question': item['question'],
+            'original_answer': item['answer'],
+            'drafted_answer': drafts.get(str(item['question_id']),
+                                         item['answer']),
+            'compliance_status': recommendation,
+            'has_pii': review.get('has_pii', 'no'),
+            'has_privileged_data': review.get('has_privileged_data', 'no'),
+            'issues_found': review.get('issues_found', []),
+            'action_taken': get_action_description(recommendation),
+        })
+    return {
+        'rfp_name': base_name,
+        'total_questions': len(items),
+        'document_content': document,
+        'compliance_reasoning': reasoning,
+        'question_analysis': analysis,
+        'processing_timestamp': common.utc_now_iso(),
+        'request_id': request_id,
+        'status': 'complete',
+    }
+
+
+def _issues_text(item: Dict[str, Any], default: str) -> str:
+    """Return the compliance issues for an item as a comma-separated list."""
+    issues = item.get('compliance_review', {}).get('issues_found', [])
+    return ', '.join(str(issue) for issue in issues) if issues else default
+
+
+def build_answer_prompt(item: Dict[str, Any]) -> str:
+    """Build the per-question drafting prompt for an item's recommendation."""
+    recommendation = get_recommendation(item)
+    fields = {'question': item['question'], 'answer': item['answer']}
+    if recommendation == 'approve':
+        return APPROVE_PROMPT.format(**fields)
+    if recommendation == 'redact':
+        return REDACT_PROMPT.format(
+            issues=_issues_text(item, 'sensitive information'), **fields
+        )
+    if recommendation == 'reject':
+        return REJECT_PROMPT.format(
+            issues=_issues_text(item, 'confidential information'), **fields
+        )
+    return DEFAULT_PROMPT.format(**fields)
+
+
+def draft_individual_responses(
+    bedrock_client: Any,
+    items: List[Dict[str, Any]],
+    delay: float = DELAY_BETWEEN_DRAFTS,
+) -> Dict[str, str]:
+    """Draft a client-ready answer for every question.
+
+    Returns:
+        Drafted answers keyed by question ID (as a string).
+    """
+    drafts = {}
+    for item in items:
+        question_id = str(item['question_id'])
+        logger.info('Drafting question %s (%s)', question_id,
+                    get_recommendation(item))
         try:
-            response = table.get_item(Key={'file_name': file_name})
-            if 'Item' in response:
-                status_data = response['Item']
-            else:
-                status_data = {
-                    'file_name': file_name,
-                    'stages': [],
-                    'overall_status': 'processing',
-                    'created_at': timestamp
-                }
-        except:
-            status_data = {
-                'file_name': file_name,
-                'stages': [],
-                'overall_status': 'processing',
-                'created_at': timestamp
-            }
-        
-        # Update the specific stage
-        stages = status_data.get('stages', [])
-        stage_found = False
-        
-        for stage in stages:
-            if stage['name'] == stage_name:
-                stage['status'] = status
-                stage['timestamp'] = timestamp
-                if error_message:
-                    stage['error'] = error_message
-                stage_found = True
-                break
-        
-        if not stage_found:
-            new_stage = {
-                'name': stage_name,
-                'status': status,
-                'timestamp': timestamp
-            }
-            if error_message:
-                new_stage['error'] = error_message
-            stages.append(new_stage)
-        
-        status_data['stages'] = stages
-        status_data['current_stage'] = stage_name
-        status_data['last_updated'] = timestamp
-        
-        # Update overall status
-        if status == 'error':
-            status_data['overall_status'] = 'error'
-        elif stage_name == 'final_document' and status == 'completed':
-            status_data['overall_status'] = 'completed'
-        else:
-            status_data['overall_status'] = 'processing'
-        
-        # Save to DynamoDB
-        table.put_item(Item=status_data)
-        
-    except Exception as e:
-        print(f"Error updating status: {str(e)}")
+            drafts[question_id] = common.invoke_claude(
+                bedrock_client, build_answer_prompt(item),
+                max_tokens=ANSWER_MAX_TOKENS,
+            )
+        except Exception:
+            logger.exception('Error drafting question %s', question_id)
+            drafts[question_id] = item['answer']
+        if delay:
+            time.sleep(delay)
+    return drafts
+
+
+def generate_compliance_reasoning(
+    bedrock_client: Any, items: List[Dict[str, Any]]
+) -> str:
+    """Summarise the compliance decisions made across all answers."""
+    summary = ''
+    for item in items:
+        review = item.get('compliance_review', {})
+        summary += (
+            f"\nQuestion {item['question_id']}: {item['question'][:100]}...\n"
+            f"Recommendation: {get_recommendation(item)}\n"
+            f"PII Found: {review.get('has_pii', 'no')}\n"
+            f"Privileged Data: {review.get('has_privileged_data', 'no')}\n"
+            f"Issues: {_issues_text(item, '')}\n---"
+        )
+    try:
+        return common.invoke_claude(
+            bedrock_client, REASONING_PROMPT.format(summary=summary),
+            max_tokens=REASONING_MAX_TOKENS,
+        )
+    except Exception as error:
+        logger.exception('Error generating compliance reasoning')
+        return f'Unable to generate compliance reasoning due to error: {error}'
+
+
+def create_rfp_document(
+    bedrock_client: Any, items: List[Dict[str, Any]]
+) -> str:
+    """Create the full response document, chunking large RFPs."""
+    if len(items) <= CHUNK_THRESHOLD:
+        return create_document_section(bedrock_client, items)
+
+    chunks = [items[i:i + CHUNK_SIZE]
+              for i in range(0, len(items), CHUNK_SIZE)]
+    logger.info('Drafting %d questions in %d chunks', len(items), len(chunks))
+    sections = [create_document_section(bedrock_client, chunk)
+                for chunk in chunks]
+    return combine_sections(bedrock_client, sections, len(items))
+
+
+def create_document_section(
+    bedrock_client: Any, items: List[Dict[str, Any]]
+) -> str:
+    """Draft the response document for a set of questions."""
+    qa_content = ''
+    for item in items:
+        qa_content += (
+            f"\n\nQUESTION {item['question_id']}: {item['question']}\n"
+            f"ORIGINAL ANSWER: {item['answer']}\n"
+            f"COMPLIANCE STATUS: {get_recommendation(item)}\n"
+            f"ISSUES: {_issues_text(item, 'None')}\n---"
+        )
+    return common.invoke_claude(
+        bedrock_client, DOCUMENT_PROMPT.format(qa_content=qa_content),
+        max_tokens=DOCUMENT_MAX_TOKENS,
+    )
+
+
+def combine_sections(
+    bedrock_client: Any, sections: List[str], total: int
+) -> str:
+    """Merge chunked document sections into one document."""
+    try:
+        return common.invoke_claude(
+            bedrock_client,
+            COMBINE_PROMPT.format(sections='\n\n'.join(sections),
+                                  total=total),
+            max_tokens=DOCUMENT_MAX_TOKENS,
+        )
+    except Exception:
+        logger.exception('Error combining document sections')
+        return ('RFP RESPONSE DOCUMENT\n\n'
+                f'This document contains responses to {total} questions.\n\n'
+                + '\n\n'.join(sections)
+                + '\n\nThank you for your consideration.')
