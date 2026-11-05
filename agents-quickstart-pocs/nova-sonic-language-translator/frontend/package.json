@@ -34,6 +34,11 @@
     "vite": "^7.0.0",
     "vitest": "^4.1.11"
   },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.4"
+    }
+  },
   "engines": {
     "node": ">=20.19"
   }
