@@ -92,28 +92,23 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
    - See [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) for setup instructions.
    - Skip the Setup #3  under installation of this repository if you are using below config file within your application to start the MCP server.
    
-5. **Configure  ServiceNow MCP server with your application :**
+5. **Configure the ServiceNow MCP server:**
 
-Edit `config.py` with your ServiceNow MCP server details.  
-If you install the servicenow‑mcp server at `C:/my-mcp-servers`, then your command should look like this:
+`config.py` reads the ServiceNow settings from environment variables, or from a `.env` file in this directory. Nothing is hard-coded. Copy the template and fill it in:
 
-```powershell
-"C:\\my-mcp-servers\\servicenow-mcp\\.venv\\Scripts\\python.exe"
-
+```bash
+cp .env.example .env
 ```
 
-```python
-SERVICENOW_MCP_CONFIG = {
-    "command": "path_to_servicenow_mcp_server\\.venv\\Scripts\\python.exe",
-    "args": ["-m", "servicenow_mcp.cli"],
-    "env": {
-        "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
-        "SERVICENOW_USERNAME": "your-username",
-        "SERVICENOW_PASSWORD": "your-password",
-        "SERVICENOW_AUTH_TYPE": "basic"
-    }
-}
-```
+| Variable | Required | Description |
+|---|---|---|
+| `SERVICENOW_MCP_COMMAND` | yes | Python interpreter of your servicenow-mcp install, e.g. `/path/to/servicenow-mcp/.venv/bin/python` or `C:\path\to\servicenow-mcp\.venv\Scripts\python.exe` |
+| `SERVICENOW_INSTANCE_URL` | yes | Your instance, e.g. `https://your-instance.service-now.com` |
+| `SERVICENOW_USERNAME` | yes | The ServiceNow user the agent acts as |
+| `SERVICENOW_PASSWORD` | yes | That user's password |
+| `SERVICENOW_AUTH_TYPE` | no | Defaults to `basic` |
+
+If a required variable is missing, the agent prints an error that names each missing variable and does not start the MCP server. `.env` is git-ignored; don't commit real credentials.
 
 ## Usage
 
