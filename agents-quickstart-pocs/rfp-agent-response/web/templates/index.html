@@ -553,7 +553,8 @@
         });
 
         async function handleFile(file) {
-            if (!file.name.endsWith('.txt') && !file.name.endsWith('.pdf')) {
+            const lowerName = file.name.toLowerCase();
+            if (!lowerName.endsWith('.txt') && !lowerName.endsWith('.pdf')) {
                 showStatus('Only .txt and .pdf files are supported', 'error');
                 return;
             }
@@ -568,45 +569,33 @@
             showStatus('Uploading...', 'info');
 
             try {
-                let fileContent;
-                if (file.name.endsWith('.pdf')) {
-                    // For PDF files, convert to base64 using FileReader (more reliable for large files)
-                    fileContent = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            // Remove the data URL prefix (data:application/pdf;base64,)
-                            const base64 = reader.result.split(',')[1];
-                            resolve(base64);
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                } else {
-                    // For text files, read as text
-                    fileContent = await file.text();
-                }
-
+                // 1. Ask the API to authorize the upload. The server checks
+                //    the file type and size and returns a presigned S3 POST.
                 const response = await fetch('{{API_GATEWAY_URL}}/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fileName: file.name,
-                        fileContent: fileContent
-                    })
+                    body: JSON.stringify({ fileName: file.name, fileSize: file.size })
                 });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    // Use the timestamped filename for tracking
-                    currentFileName = result.timestamped_filename || file.name;
-                    showStatus(`File uploaded successfully as ${result.timestamped_filename}! Processing will begin automatically.`, 'success');
-                    document.getElementById('processingStatus').style.display = 'block';
-                    startStatusTracking();
-
-                } else {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP ${response.status}`);
                 }
+
+                // 2. Upload the file straight to S3. The presigned policy
+                //    pins the key and content type and enforces the size
+                //    limit, so S3 rejects anything else.
+                const form = new FormData();
+                Object.entries(result.fields).forEach(([name, value]) => form.append(name, value));
+                form.append('file', file);
+                const upload = await fetch(result.uploadUrl, { method: 'POST', body: form });
+                if (!upload.ok) {
+                    throw new Error(`Storage upload failed (HTTP ${upload.status})`);
+                }
+
+                currentFileName = result.timestamped_filename;
+                showStatus(`File uploaded successfully as ${result.timestamped_filename}! Processing will begin automatically.`, 'success');
+                document.getElementById('processingStatus').style.display = 'block';
+                startStatusTracking();
             } catch (error) {
                 console.error('Upload error:', error);
                 showStatus(`Upload failed: ${error.message}. Please try again.`, 'error');

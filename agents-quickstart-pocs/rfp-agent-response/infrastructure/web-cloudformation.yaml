@@ -1,6 +1,31 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Web app infrastructure with CloudFront and S3'
 
+Parameters:
+  ProcessingStackName:
+    Type: String
+    Default: 'terminal-upload'
+    Description: 'Name of the processing stack (infrastructure/cloudformation.yaml) whose bucket and table this app uses'
+
+  MaxUploadBytes:
+    Type: Number
+    Default: 10485760
+    MinValue: 1024
+    MaxValue: 104857600
+    Description: 'Largest RFP file, in bytes, that the upload API will authorize (default 10 MB)'
+
+  ApiThrottleRateLimit:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: 'Steady-state requests per second allowed across the API'
+
+  ApiThrottleBurstLimit:
+    Type: Number
+    Default: 20
+    MinValue: 1
+    Description: 'Burst request limit for the API'
+
 Resources:
   # S3 bucket for hosting the web app
   WebsiteBucket:
@@ -258,7 +283,9 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Origin: true
 
-  UploadApiDeploymentV2:
+  # API Gateway does not redeploy when methods change. Rename this resource
+  # (V3 -> V4, ...) whenever methods, authorizers or gateway responses change.
+  UploadApiDeploymentV3:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - UploadApiMethod
@@ -273,7 +300,19 @@ Resources:
       - ListJobsApiOptionsMethod
     Properties:
       RestApiId: !Ref UploadApi
-      StageName: prod
+      Description: 'RFP API deployment'
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref UploadApi
+      DeploymentId: !Ref UploadApiDeploymentV3
+      StageName: v1
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingRateLimit: !Ref ApiThrottleRateLimit
+          ThrottlingBurstLimit: !Ref ApiThrottleBurstLimit
 
   # Lambda function for handling uploads
   UploadLambda:
@@ -282,6 +321,15 @@ Resources:
       FunctionName: !Sub 'rfp-upload-api-${AWS::StackName}'
       Runtime: python3.14
       Handler: upload_api.lambda_handler
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+          TABLE_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-TableName'
+          MAX_UPLOAD_BYTES: !Ref MaxUploadBytes
+          UPLOAD_URL_TTL_SECONDS: '300'
+          ALLOWED_ORIGIN: !Sub 'https://${CloudFrontDistribution.DomainName}'
       Code:
         ZipFile: |
           import json
@@ -308,10 +356,10 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action:
-                  - s3:PutObject
-                  - s3:PutObjectAcl
-                Resource: !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/*'
+                # Presigned POSTs are signed with this role, so it can only
+                # authorize uploads to the upload prefix.
+                Action: s3:PutObject
+                Resource: !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
         - PolicyName: DynamoDBAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -320,8 +368,8 @@ Resources:
                 Action:
                   - dynamodb:PutItem
                   - dynamodb:GetItem
-                  - dynamodb:UpdateItem
-                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/rfp-processing-status'
+                Resource:
+                  Fn::ImportValue: !Sub '${ProcessingStackName}-TableArn'
 
   DownloadLambda:
     Type: AWS::Lambda::Function
@@ -536,6 +584,10 @@ Outputs:
 
   ApiGatewayURL:
     Description: 'API Gateway URL'
-    Value: !Sub 'https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+    Value: !Sub 'https://${UploadApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${ApiStage}'
     Export:
       Name: !Sub '${AWS::StackName}-ApiGatewayURL'
+
+  MaxUploadBytes:
+    Description: 'Largest RFP file, in bytes, that the upload API authorizes'
+    Value: !Ref MaxUploadBytes

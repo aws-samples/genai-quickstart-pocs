@@ -18,6 +18,18 @@ Parameters:
     AllowedPattern: '^[a-z]+\.[a-z0-9-]+\.[A-Za-z0-9.:-]+$'
     ConstraintDescription: 'Must be an inference profile ID such as us.anthropic.claude-haiku-5-5'
 
+  WebAppOrigin:
+    Type: String
+    Default: ''
+    Description: >-
+      Origin of the web app (https://<distribution>.cloudfront.net), allowed
+      by the upload bucket's CORS rule for browser uploads. Leave empty on the
+      first deployment; the deploy scripts set it after the web stack exists.
+    AllowedPattern: '^(https://[A-Za-z0-9.-]+)?$'
+
+Conditions:
+  HasWebAppOrigin: !Not [!Equals [!Ref WebAppOrigin, '']]
+
 Resources:
   DeploymentBucket:
     Type: AWS::S3::Bucket
@@ -76,6 +88,19 @@ Resources:
           - ObjectOwnership: BucketOwnerEnforced
       VersioningConfiguration:
         Status: Enabled
+      # Browsers upload RFPs straight to this bucket with presigned POSTs
+      # issued by the upload API.
+      CorsConfiguration: !If
+        - HasWebAppOrigin
+        - CorsRules:
+            - AllowedOrigins:
+                - !Ref WebAppOrigin
+              AllowedMethods:
+                - POST
+              AllowedHeaders:
+                - '*'
+              MaxAge: 3000
+        - !Ref AWS::NoValue
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:*'

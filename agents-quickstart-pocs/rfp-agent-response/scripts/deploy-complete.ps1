@@ -184,6 +184,8 @@ aws cloudformation deploy `
     --stack-name $WebStackName `
     --capabilities CAPABILITY_IAM `
     --region $Region `
+    --parameter-overrides ProcessingStackName=$InfraStackName `
+    --no-fail-on-empty-changeset `
     --no-paginate
 
 if ($LASTEXITCODE -ne 0) {
@@ -192,6 +194,22 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "   Web infrastructure deployed successfully" -ForegroundColor Green
+
+# Allow browser uploads from the CloudFront origin (upload bucket CORS rule)
+$CloudFrontOrigin = aws cloudformation describe-stacks --stack-name $WebStackName --region $Region --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" --output text --no-paginate
+Write-Host "   - Allowing uploads from $CloudFrontOrigin..." -ForegroundColor Gray
+aws cloudformation deploy `
+    --template-file infrastructure/cloudformation.yaml `
+    --stack-name $InfraStackName `
+    --capabilities CAPABILITY_NAMED_IAM `
+    --region $Region `
+    --parameter-overrides WebAppOrigin=$CloudFrontOrigin `
+    --no-fail-on-empty-changeset `
+    --no-paginate
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "   ERROR: Could not update the upload bucket CORS rule" -ForegroundColor Red
+    exit 1
+}
 
 # Step 8: Deploy web Lambda functions
 Write-Host ""

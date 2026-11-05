@@ -52,6 +52,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     file_name = key.split('/')[-1]
     logger.info('Extracting questions from s3://%s/%s', bucket, key)
 
+    # The browser uploads straight to S3, so the upload is only confirmed
+    # once this function is triggered.
+    common.update_processing_status(file_name, 'uploaded', 'completed')
     common.update_processing_status(file_name, STAGE, 'processing')
     try:
         s3_client = boto3.client('s3')

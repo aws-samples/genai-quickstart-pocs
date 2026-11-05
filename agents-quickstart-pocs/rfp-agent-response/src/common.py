@@ -14,6 +14,7 @@ import os
 import re
 import time
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
 
 import boto3
@@ -316,6 +317,7 @@ def update_processing_status(
     error_message: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
     table: Any = None,
+    item_attributes: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Record the status of one pipeline stage for an uploaded file.
 
@@ -329,6 +331,8 @@ def update_processing_status(
         error_message: Optional error text to store on the stage.
         details: Optional extra attributes to store on the stage.
         table: DynamoDB Table resource; defaults to :func:`get_status_table`.
+        item_attributes: Optional top-level attributes to store on the job,
+            such as ``original_filename``.
     """
     try:
         table = table if table is not None else get_status_table()
@@ -354,6 +358,8 @@ def update_processing_status(
             stage.update(details)
 
         item['stages'] = stages
+        if item_attributes:
+            item.update(item_attributes)
         item['current_stage'] = stage_name
         item['last_updated'] = timestamp
         if status == 'error':
@@ -429,3 +435,65 @@ def validate_download_key(path: Any) -> str:
     if prefix not in PIPELINE_PREFIXES or not is_safe_file_name(file_name):
         raise ValueError('Invalid file path')
     return prefix + file_name
+
+
+def get_bucket_name() -> str:
+    """Return the pipeline bucket name from the ``BUCKET_NAME`` variable."""
+    bucket = os.environ.get('BUCKET_NAME', '').strip()
+    if not bucket:
+        raise RuntimeError('BUCKET_NAME environment variable is not set')
+    return bucket
+
+
+def regional_s3_client() -> Any:
+    """Create an S3 client for generating browser-facing presigned URLs.
+
+    Uses the Regional virtual-hosted endpoint and SigV4 so that the URLs
+    work from a browser in every Region without a redirect.
+    """
+    region = os.environ.get('AWS_REGION') or boto3.Session().region_name
+    return boto3.client(
+        's3',
+        region_name=region,
+        endpoint_url=f'https://s3.{region}.amazonaws.com',
+        config=Config(signature_version='s3v4',
+                      s3={'addressing_style': 'virtual'}),
+    )
+
+
+def cors_headers(methods: str = 'GET,OPTIONS') -> Dict[str, str]:
+    """Return CORS headers that allow only the web app's origin.
+
+    The origin comes from ``ALLOWED_ORIGIN`` (the CloudFront URL). If it is
+    not set, no ``Access-Control-Allow-Origin`` header is sent and browsers
+    block cross-origin reads.
+    """
+    headers = {
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Methods': methods,
+        'Vary': 'Origin',
+    }
+    origin = os.environ.get('ALLOWED_ORIGIN', '').strip()
+    if origin:
+        headers['Access-Control-Allow-Origin'] = origin
+    return headers
+
+
+def _json_default(value: Any) -> Any:
+    """Serialise DynamoDB ``Decimal`` values."""
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(
+            value)
+    raise TypeError(f'{type(value).__name__} is not JSON serialisable')
+
+
+def json_response(
+    status_code: int, body: Any, methods: str = 'GET,OPTIONS'
+) -> Dict[str, Any]:
+    """Build an API Gateway proxy response with a JSON body."""
+    return {
+        'statusCode': status_code,
+        'headers': {**cors_headers(methods),
+                    'Content-Type': 'application/json'},
+        'body': json.dumps(body, default=_json_default),
+    }
