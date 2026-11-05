@@ -449,7 +449,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:HeadObject
                   - s3:GetObject
                 Resource: !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/*'
               - Effect: Allow

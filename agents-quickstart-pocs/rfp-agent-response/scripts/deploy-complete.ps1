@@ -132,7 +132,6 @@ $FUNCTION_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName
 $QUESTION_PROCESSOR_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`QuestionProcessorFunctionName`].OutputValue' --output text --region $Region --no-paginate
 $COMPLIANCE_AGENT_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`ComplianceAgentFunctionName`].OutputValue' --output text --region $Region --no-paginate
 $DRAFTING_AGENT_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`DraftingAgentFunctionName`].OutputValue' --output text --region $Region --no-paginate
-$STATUS_API_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`StatusApiFunctionName`].OutputValue' --output text --region $Region --no-paginate
 $DEPLOYMENT_BUCKET = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`DeploymentBucket`].OutputValue' --output text --region $Region --no-paginate
 $BUCKET_NAME = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text --region $Region --no-paginate
 
@@ -140,7 +139,6 @@ Write-Host "   - RFP Processor: $FUNCTION_NAME" -ForegroundColor Gray
 Write-Host "   - Question Processor: $QUESTION_PROCESSOR_NAME" -ForegroundColor Gray
 Write-Host "   - Compliance Agent: $COMPLIANCE_AGENT_NAME" -ForegroundColor Gray
 Write-Host "   - Drafting Agent: $DRAFTING_AGENT_NAME" -ForegroundColor Gray
-Write-Host "   - Status API: $STATUS_API_NAME" -ForegroundColor Gray
 Write-Host "   - Upload Bucket: $BUCKET_NAME" -ForegroundColor Gray
 Write-Host "   Infrastructure details retrieved successfully" -ForegroundColor Green
 
@@ -170,137 +168,9 @@ aws lambda update-function-code --function-name $COMPLIANCE_AGENT_NAME --s3-buck
 Write-Host "   - Updating drafting agent function..." -ForegroundColor Gray
 aws lambda update-function-code --function-name $DRAFTING_AGENT_NAME --s3-bucket $DEPLOYMENT_BUCKET --s3-key lambda-function.zip --region $Region --no-paginate | Out-Null
 
-Write-Host "   - Updating status API function..." -ForegroundColor Gray
-aws lambda update-function-code --function-name $STATUS_API_NAME --s3-bucket $DEPLOYMENT_BUCKET --s3-key lambda-function.zip --region $Region --no-paginate | Out-Null
-
 Write-Host "   All Lambda functions updated successfully" -ForegroundColor Green
 
-# Step 6: Configure S3 event triggers
-Write-Host ""
-Write-Host "6. Configuring S3 event triggers..." -ForegroundColor Yellow
-
-# Get Lambda ARNs
-$FUNCTION_ARN = aws lambda get-function --function-name $FUNCTION_NAME --query 'Configuration.FunctionArn' --output text --region $Region --no-paginate
-$QUESTION_PROCESSOR_ARN = aws lambda get-function --function-name $QUESTION_PROCESSOR_NAME --query 'Configuration.FunctionArn' --output text --region $Region --no-paginate
-$COMPLIANCE_AGENT_ARN = aws lambda get-function --function-name $COMPLIANCE_AGENT_NAME --query 'Configuration.FunctionArn' --output text --region $Region --no-paginate
-$DRAFTING_AGENT_ARN = aws lambda get-function --function-name $DRAFTING_AGENT_NAME --query 'Configuration.FunctionArn' --output text --region $Region --no-paginate
-
-# Clear existing notifications
-Write-Host "   - Clearing existing S3 triggers..." -ForegroundColor Gray
-$emptyConfig = '{"LambdaFunctionConfigurations":[],"TopicConfigurations":[],"QueueConfigurations":[]}'
-$emptyConfig | Out-File -FilePath "empty-notification.json" -Encoding ascii
-aws s3api put-bucket-notification-configuration --bucket $BUCKET_NAME --notification-configuration file://empty-notification.json --region $Region --no-paginate | Out-Null
-Remove-Item "empty-notification.json" -ErrorAction SilentlyContinue
-
-# Create comprehensive S3 trigger configuration
-Write-Host "   - Setting up processing pipeline triggers..." -ForegroundColor Gray
-$notificationConfig = @"
-{
-  "LambdaFunctionConfigurations": [
-    {
-      "Id": "RFPProcessorTriggerTxt",
-      "LambdaFunctionArn": "$FUNCTION_ARN",
-      "Events": ["s3:ObjectCreated:*"],
-      "Filter": {
-        "Key": {
-          "FilterRules": [
-            {
-              "Name": "prefix",
-              "Value": "uploaded_rfp_requests/"
-            },
-            {
-              "Name": "suffix",
-              "Value": ".txt"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "Id": "RFPProcessorTriggerPdf",
-      "LambdaFunctionArn": "$FUNCTION_ARN",
-      "Events": ["s3:ObjectCreated:*"],
-      "Filter": {
-        "Key": {
-          "FilterRules": [
-            {
-              "Name": "prefix",
-              "Value": "uploaded_rfp_requests/"
-            },
-            {
-              "Name": "suffix",
-              "Value": ".pdf"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "Id": "QuestionProcessorTrigger",
-      "LambdaFunctionArn": "$QUESTION_PROCESSOR_ARN",
-      "Events": ["s3:ObjectCreated:*"],
-      "Filter": {
-        "Key": {
-          "FilterRules": [
-            {
-              "Name": "prefix",
-              "Value": "formatted_questions/"
-            },
-            {
-              "Name": "suffix",
-              "Value": ".json"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "Id": "ComplianceAgentTrigger",
-      "LambdaFunctionArn": "$COMPLIANCE_AGENT_ARN",
-      "Events": ["s3:ObjectCreated:*"],
-      "Filter": {
-        "Key": {
-          "FilterRules": [
-            {
-              "Name": "prefix",
-              "Value": "completed_responses/"
-            },
-            {
-              "Name": "suffix",
-              "Value": ".json"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "Id": "DraftingAgentTrigger",
-      "LambdaFunctionArn": "$DRAFTING_AGENT_ARN",
-      "Events": ["s3:ObjectCreated:*"],
-      "Filter": {
-        "Key": {
-          "FilterRules": [
-            {
-              "Name": "prefix",
-              "Value": "compliance_reviewed/"
-            },
-            {
-              "Name": "suffix",
-              "Value": ".json"
-            }
-          ]
-        }
-      }
-    }
-  ]
-}
-"@
-
-$notificationConfig | Out-File -FilePath "notification.json" -Encoding ascii
-aws s3api put-bucket-notification-configuration --bucket $BUCKET_NAME --notification-configuration file://notification.json --region $Region --no-paginate | Out-Null
-Remove-Item "notification.json" -ErrorAction SilentlyContinue
-
-Write-Host "   S3 event triggers configured successfully" -ForegroundColor Green
+# Step 6: S3 event triggers are defined in infrastructure/cloudformation.yaml
 
 # Step 7: Deploy web infrastructure
 Write-Host ""
@@ -459,7 +329,7 @@ if ($tableStatus -eq "ACTIVE") {
 }
 
 # Check Lambda functions
-$lambdaFunctions = @($FUNCTION_NAME, $QUESTION_PROCESSOR_NAME, $COMPLIANCE_AGENT_NAME, $DRAFTING_AGENT_NAME, $STATUS_API_NAME)
+$lambdaFunctions = @($FUNCTION_NAME, $QUESTION_PROCESSOR_NAME, $COMPLIANCE_AGENT_NAME, $DRAFTING_AGENT_NAME)
 $functionsOk = 0
 foreach ($func in $lambdaFunctions) {
     $funcStatus = aws lambda get-function --function-name $func --region $Region --query 'Configuration.State' --output text --no-paginate 2>$null
