@@ -159,6 +159,8 @@ Thumbs.db
 # FAISS indices
 *.index
 faiss_*
+# ...but not the vector store module that app.py imports
+!src/vector_store/faiss_manager.py
 
 # Temporary files
 *.tmp

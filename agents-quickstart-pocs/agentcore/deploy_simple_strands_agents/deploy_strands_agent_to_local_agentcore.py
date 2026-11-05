@@ -36,7 +36,7 @@ def check_environment():
         print("✅ Virtual environment detected")
     
     # Check required packages
-    required_packages = ['strands', 'strands_tools', 'bedrock_agentcore']
+    required_packages = ['strands', 'calculator_tool', 'bedrock_agentcore']
     missing_packages = []
     
     for package in required_packages:
@@ -59,7 +59,7 @@ def create_local_agentcore_agent():
     """Create the Strands agent with BedrockAgentCoreApp for local testing."""
     print("\n📝 Creating local AgentCore agent...")
 
-    agent_code = '''#!/usr/bin/env python3
+    agent_code = r'''#!/usr/bin/env python3
 """
 Strands Calculator Agent - Local AgentCore Testing
 
@@ -73,7 +73,7 @@ import os
 os.environ["BYPASS_TOOL_CONSENT"] = "true"
 
 from strands import Agent
-from strands_tools.calculator import calculator
+from calculator_tool import calculator
 
 # Create the calculator agent
 agent = Agent(
@@ -119,15 +119,15 @@ if __name__ == "__main__":
     ]
     
     for i, test_case in enumerate(test_cases, 1):
-        print(f"\\n{i}. Testing: {test_case}")
+        print(f"\n{i}. Testing: {test_case}")
         try:
             result = agent(test_case)
             print(f"   Result: {result.message}")
         except Exception as e:
             print(f"   Error: {e}")
     
-    print("\\n✅ Local testing complete!")
-    print("\\n🚀 Starting local AgentCore server...")
+    print("\n✅ Local testing complete!")
+    print("\n🚀 Starting local AgentCore server...")
     print("   Server will be available at: http://localhost:8080")
     print("   Test with: curl -X POST http://localhost:8080/invocations \\")
     print("        -H 'Content-Type: application/json' \\")
@@ -149,10 +149,9 @@ def create_requirements_file():
     """Create a requirements.txt file for local testing."""
     print("\n📝 Creating requirements.txt...")
 
-    requirements_content = """strands-agents
-strands-tools
-bedrock-agentcore
-PyYAML>=6.0
+    requirements_content = """strands-agents>=1.64.0
+bedrock-agentcore>=0.1.2
+PyYAML>=6.0.3
 """
 
     requirements_file = "requirements_local.txt"
@@ -250,6 +249,7 @@ COPY requirements_local.txt .
 RUN pip install --no-cache-dir -r requirements_local.txt
 
 # Copy agent code
+COPY calculator_tool.py .
 COPY strands_calculator_agent.py .
 
 # Expose the port that BedrockAgentCoreApp uses
@@ -299,7 +299,7 @@ def main():
     # Create and test the agent locally
     try:
         from strands import Agent
-        from strands_tools.calculator import calculator
+        from calculator_tool import calculator
         
         # Create the calculator agent
         agent = Agent(

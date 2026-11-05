@@ -9,7 +9,8 @@ import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from strands import Agent, tool
-from strands_tools import swarm, file_write
+# strands-agents-tools 0.9.0 removed its tools; strands.vended_tools.write replaces file_write.
+from strands.vended_tools import write
 from config import CHATBOT_CONFIG
 from mcp import StdioServerParameters, stdio_client
 from strands.tools.mcp import MCPClient
@@ -81,7 +82,7 @@ class ServiceNowChatbot:
                 
                 Use the available tools to perform actions and provide helpful responses to users.
                 """,
-                tools=self.tools + [file_write]
+                tools=self.tools + [write]
             )
         except Exception as e:
             print(f"Error initializing agent: {str(e)}")

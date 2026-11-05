@@ -3,13 +3,13 @@
 Simple Strands Calculator Agent
 
 This example demonstrates how to create a basic Strands agent that uses
-the calculator tool from the strands-agents-tools library.
+the sample's calculator tool (calculator_tool.py).
 
 Cross-platform compatible (Windows, macOS, Linux).
 """
 
 from strands import Agent
-from strands_tools.calculator import calculator
+from calculator_tool import calculator
 
 def main():
     """

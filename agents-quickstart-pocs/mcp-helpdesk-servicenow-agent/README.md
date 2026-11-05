@@ -26,7 +26,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 - **Perform incident managemnt, change managemnt,knowlegebase management with natural language prompts.**
 - **Modern Streamlit UI**: User-friendly chat interface for ITSM operations.
 - **LLM integration**: Works with Bedrock or other 3rd party LLMs.
-- **Easy extensibility**: Add new ServiceNow tools to the MCP server and they become available instantly. Incorporates Strands's `swarm` tool for multi-agent collaboration.
+- **Easy extensibility**: Add new ServiceNow tools to the MCP server and they become available instantly.
 - **Query ServiceNow records and tables**: Use natural language to retrieve any record or table in ServiceNow.
 - **Create, update, and delete ServiceNow records**: Perform full CRUD operations on ServiceNow data.
 - **Natural language interface for all MCP tools**: Any tool exposed by the MCP server is available to the agent via natural language queries.
@@ -194,7 +194,7 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 ## Resources
 
 - [Strands Agents SDK](https://pypi.org/project/strands-agents/)
-- [strands-agents-tools](https://pypi.org/project/strands-agents-tools/)
+- [Strands vended tools](https://strandsagents.com/docs/user-guide/migrate/strands-agents-tools/) (replace the deprecated strands-agents-tools package)
 - [ServiceNow MCP server](https://github.com/echelon-ai-labs/servicenow-mcp) 
 - [Streamlit] (https://streamlit.io/)
 
