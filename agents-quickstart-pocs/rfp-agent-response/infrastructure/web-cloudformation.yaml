@@ -326,7 +326,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-upload-api-${AWS::StackName}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: upload_api.lambda_handler
       Code:
         ZipFile: |
@@ -373,7 +373,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-download-api-${AWS::StackName}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: download_api.lambda_handler
       Code:
         ZipFile: |
@@ -412,7 +412,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-status-api-${AWS::StackName}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: status_api.lambda_handler
       Code:
         ZipFile: |
@@ -462,7 +462,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-list-jobs-api-${AWS::StackName}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: list_jobs_api.lambda_handler
       Code:
         ZipFile: |
@@ -499,7 +499,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-cleanup-api-${AWS::StackName}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: cleanup_api.lambda_handler
       Code:
         ZipFile: |

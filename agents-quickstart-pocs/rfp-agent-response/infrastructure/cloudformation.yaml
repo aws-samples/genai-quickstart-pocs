@@ -47,7 +47,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'rfp-processor-${AWS::AccountId}-${AWS::Region}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: rfp_question_extractor.lambda_handler
       Environment:
         Variables:
@@ -91,7 +91,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'question-processor-${AWS::AccountId}-${AWS::Region}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: question_processor.lambda_handler
       Code:
         ZipFile: |
@@ -119,7 +119,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'compliance-agent-${AWS::AccountId}-${AWS::Region}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: compliance_agent.lambda_handler
       Environment:
         Variables:
@@ -152,7 +152,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'drafting-agent-${AWS::AccountId}-${AWS::Region}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: drafting_agent.lambda_handler
       Environment:
         Variables:
@@ -189,7 +189,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'status-api-${AWS::AccountId}-${AWS::Region}'
-      Runtime: python3.11
+      Runtime: python3.14
       Handler: status_api.lambda_handler
       Code:
         ZipFile: |
