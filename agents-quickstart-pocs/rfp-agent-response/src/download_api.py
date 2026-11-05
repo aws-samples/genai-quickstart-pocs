@@ -1,122 +1,115 @@
-import json
-import boto3
-from urllib.parse import unquote
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+"""API: list final responses and download pipeline files.
 
-def lambda_handler(event, context):
-    """API Gateway Lambda function to handle file downloads"""
-    
+Routes:
+
+* ``GET /downloads`` - list the files under ``final_responses/``.
+* ``GET /download/{proxy+}`` - return one file from a pipeline prefix.
+"""
+
+import json
+import logging
+from typing import Any, Dict, Optional
+
+import boto3
+from botocore.exceptions import ClientError
+
+import common
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+
+def _response(status: int, body: Any,
+              headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Build an API Gateway proxy response."""
+    return {
+        'statusCode': status,
+        'headers': {**CORS_HEADERS, 'Content-Type': 'application/json',
+                    **(headers or {})},
+        'body': body if isinstance(body, str) else json.dumps(body),
+    }
+
+
+def _bucket_name(context: Any) -> str:
+    """Return the upload bucket name for this account and Region."""
+    account = context.invoked_function_arn.split(':')[4]
+    return f'terminal-upload-{account}-{boto3.Session().region_name}'
+
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Route ``/downloads`` and ``/download/{proxy+}`` requests."""
     try:
-        path = event['path']
-        method = event['httpMethod']
-        
+        method = event.get('httpMethod')
+        path = event.get('path', '')
+        if method == 'OPTIONS':
+            return _response(200, '')
+        if method != 'GET':
+            return _response(405, {'error': 'Method not allowed'})
+
         s3_client = boto3.client('s3')
-        bucket_name = 'terminal-upload-' + context.invoked_function_arn.split(':')[4] + '-' + boto3.Session().region_name
-        
-        if method == 'GET' and path == '/downloads':
-            # List files in final_responses folder
-            response = s3_client.list_objects_v2(
-                Bucket=bucket_name,
-                Prefix='final_responses/'
-            )
-            
-            files = []
-            if 'Contents' in response:
-                files = [
-                    {
-                        'name': obj['Key'].replace('final_responses/', ''),
-                        'lastModified': obj['LastModified'].isoformat(),
-                        'size': obj['Size']
-                    }
-                    for obj in response['Contents'] 
-                    if not obj['Key'].endswith('/')
-                ]
-                # Sort by last modified date, most recent first
-                files.sort(key=lambda x: x['lastModified'], reverse=True)
-            
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps(files)
-            }
-            
-        elif method == 'GET' and path.startswith('/download/'):
-            # Download specific file - handle both old format and new folder-based format
-            file_path = unquote(path.replace('/download/', ''))
-            
-            # Check if it's the new format with folder path
-            if '/' in file_path:
-                s3_key = file_path  # Already includes folder path
-                filename = file_path.split('/')[-1]  # Extract just the filename for download
-            else:
-                # Legacy format - assume final_responses folder
-                filename = file_path
-                s3_key = f'final_responses/{filename}'
-            
-            try:
-                response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
-                file_content = response['Body'].read()
-                
-                # Determine content type based on file extension
-                content_type = 'application/octet-stream'
-                if filename.endswith('.json'):
-                    content_type = 'application/json'
-                elif filename.endswith('.txt'):
-                    content_type = 'text/plain'
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type',
-                        'Content-Type': content_type,
-                        'Content-Disposition': f'attachment; filename="{filename}"'
-                    },
-                    'body': file_content.decode('utf-8'),
-                    'isBase64Encoded': False
-                }
-            except s3_client.exceptions.NoSuchKey:
-                return {
-                    'statusCode': 404,
-                    'headers': {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type'
-                    },
-                    'body': json.dumps({'error': 'File not found'})
-                }
-        
-        elif method == 'OPTIONS':
-            # Handle CORS preflight requests
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Max-Age': '86400'
-                },
-                'body': ''
-            }
-        
-        return {
-            'statusCode': 404,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            'body': json.dumps({'error': 'Not found'})
+        bucket = _bucket_name(context)
+        if path == '/downloads':
+            return _response(200, list_final_responses(s3_client, bucket))
+        if path.startswith('/download/'):
+            proxy = (event.get('pathParameters') or {}).get('proxy')
+            if proxy is None:
+                proxy = path[len('/download/'):]
+            return download_file(s3_client, bucket, proxy)
+        return _response(404, {'error': 'Not found'})
+    except Exception:
+        logger.exception('Download API error')
+        return _response(500, {'error': 'Internal server error'})
+
+
+def list_final_responses(s3_client: Any, bucket: str) -> list:
+    """List final response files, most recent first."""
+    files = [
+        {
+            'name': obj['Key'][len(common.FINAL_PREFIX):],
+            'lastModified': obj['LastModified'].isoformat(),
+            'size': obj['Size'],
         }
-        
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
-        }
+        for obj in common.iter_objects(s3_client, bucket, common.FINAL_PREFIX)
+        if not obj['Key'].endswith('/')
+    ]
+    files.sort(key=lambda item: item['lastModified'], reverse=True)
+    return files
+
+
+def download_file(s3_client: Any, bucket: str, proxy: str) -> Dict[str, Any]:
+    """Return a file from one of the pipeline prefixes."""
+    try:
+        key = common.validate_download_key(proxy)
+    except ValueError as error:
+        return _response(400, {'error': str(error)})
+
+    file_name = key.split('/')[-1]
+    try:
+        content = s3_client.get_object(Bucket=bucket, Key=key)['Body'].read()
+    except ClientError as error:
+        if error.response.get('Error', {}).get('Code') in ('NoSuchKey',
+                                                           '404'):
+            return _response(404, {'error': 'File not found'})
+        raise
+
+    content_type = 'application/octet-stream'
+    if file_name.endswith('.json'):
+        content_type = 'application/json'
+    elif file_name.endswith('.txt'):
+        content_type = 'text/plain'
+    return _response(
+        200,
+        content.decode('utf-8'),
+        {
+            'Content-Type': content_type,
+            'Content-Disposition': f'attachment; filename="{file_name}"',
+        },
+    )

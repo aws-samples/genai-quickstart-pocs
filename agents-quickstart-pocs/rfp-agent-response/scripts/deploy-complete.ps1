@@ -206,44 +206,15 @@ if (!(Test-Path "temp")) {
 $WebsiteBucket = aws cloudformation describe-stacks --stack-name $WebStackName --region $Region --query "Stacks[0].Outputs[?OutputKey=='WebsiteBucket'].OutputValue" --output text --no-paginate
 $ApiUrl = aws cloudformation describe-stacks --stack-name $WebStackName --region $Region --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayURL'].OutputValue" --output text --no-paginate
 
-# Deploy upload API
-Write-Host "   - Deploying upload API..." -ForegroundColor Gray
-$UploadLambdaFunction = "rfp-upload-api-$WebStackName"
-if (Test-Path "src/upload_api.py") {
-    Compress-Archive -Path "src/upload_api.py" -DestinationPath "temp/upload_api.zip" -Force
-    aws lambda update-function-code --function-name $UploadLambdaFunction --zip-file fileb://temp/upload_api.zip --region $Region --no-paginate | Out-Null
-} else {
-    Write-Host "   WARNING: upload_api.py not found, skipping..." -ForegroundColor Yellow
-}
-
-# Deploy download API
-Write-Host "   - Deploying download API..." -ForegroundColor Gray
-$DownloadLambdaFunction = "rfp-download-api-$WebStackName"
-if (Test-Path "src/download_api.py") {
-    Compress-Archive -Path "src/download_api.py" -DestinationPath "temp/download_api.zip" -Force
-    aws lambda update-function-code --function-name $DownloadLambdaFunction --zip-file fileb://temp/download_api.zip --region $Region --no-paginate | Out-Null
-} else {
-    Write-Host "   WARNING: download_api.py not found, skipping..." -ForegroundColor Yellow
-}
-
-# Deploy status API
-Write-Host "   - Deploying status API..." -ForegroundColor Gray
-$StatusLambdaFunction = "rfp-status-api-$WebStackName"
-if (Test-Path "src/status_api.py") {
-    Compress-Archive -Path "src/status_api.py" -DestinationPath "temp/status_api.zip" -Force
-    aws lambda update-function-code --function-name $StatusLambdaFunction --zip-file fileb://temp/status_api.zip --region $Region --no-paginate | Out-Null
-} else {
-    Write-Host "   WARNING: status_api.py not found, skipping..." -ForegroundColor Yellow
-}
-
-# Deploy list jobs API
-Write-Host "   - Deploying list jobs API..." -ForegroundColor Gray
-$ListJobsLambdaFunction = "rfp-list-jobs-api-$WebStackName"
-if (Test-Path "src/list_jobs_api.py") {
-    Compress-Archive -Path "src/list_jobs_api.py" -DestinationPath "temp/list_jobs_api.zip" -Force
-    aws lambda update-function-code --function-name $ListJobsLambdaFunction --zip-file fileb://temp/list_jobs_api.zip --region $Region --no-paginate | Out-Null
-} else {
-    Write-Host "   WARNING: list_jobs_api.py not found, skipping..." -ForegroundColor Yellow
+# Every web Lambda uses the same package as the pipeline (they share src/common.py)
+$webFunctions = @("rfp-upload-api-$WebStackName", "rfp-download-api-$WebStackName", "rfp-status-api-$WebStackName", "rfp-list-jobs-api-$WebStackName")
+foreach ($webFunction in $webFunctions) {
+    Write-Host "   - Updating $webFunction..." -ForegroundColor Gray
+    aws lambda update-function-code --function-name $webFunction --s3-bucket $DEPLOYMENT_BUCKET --s3-key lambda-function.zip --region $Region --no-paginate | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "   ERROR: Failed to update $webFunction" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host "   Web Lambda functions deployed successfully" -ForegroundColor Green

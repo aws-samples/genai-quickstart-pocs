@@ -373,3 +373,59 @@ def iter_objects(s3_client: Any, bucket: str, prefix: str) -> Iterable[dict]:
     paginator = s3_client.get_paginator('list_objects_v2')
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
         yield from page.get('Contents', [])
+
+
+# ---------------------------------------------------------------------------
+# Helpers for the API Gateway Lambda handlers
+# ---------------------------------------------------------------------------
+
+# File names written by the upload API contain only these characters.
+SAFE_FILE_NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$')
+
+
+def is_safe_file_name(name: Any) -> bool:
+    """Return True if ``name`` is a plain file name the pipeline produces.
+
+    Rejects path separators, ``..``, percent-encoding, control characters
+    and anything else outside ``[A-Za-z0-9._-]``.
+    """
+    return (isinstance(name, str) and bool(SAFE_FILE_NAME.match(name))
+            and '..' not in name)
+
+
+def validate_download_key(path: Any) -> str:
+    """Map a ``/download/{proxy+}`` path to an allowed S3 key.
+
+    Accepted forms are ``<stage-prefix>/<file name>`` for one of the five
+    pipeline prefixes, and a bare ``<file name>``, which refers to
+    ``final_responses/``. Anything else, including ``..`` segments,
+    absolute paths, backslashes and percent-encoded (or double-encoded)
+    characters, is rejected.
+
+    Args:
+        path: The ``proxy`` path parameter from API Gateway.
+
+    Returns:
+        The S3 key to read.
+
+    Raises:
+        ValueError: If the path is not an allowed download.
+    """
+    if not isinstance(path, str) or not path:
+        raise ValueError('A file path is required')
+    # File names never need escaping, so any remaining '%' means the path
+    # was encoded more than once to slip something past this check.
+    if '%' in path or '\\' in path or any(ord(ch) < 32 for ch in path):
+        raise ValueError('Invalid file path')
+
+    parts = path.split('/')
+    if len(parts) == 1:
+        prefix, file_name = FINAL_PREFIX, parts[0]
+    elif len(parts) == 2:
+        prefix, file_name = parts[0] + '/', parts[1]
+    else:
+        raise ValueError('Invalid file path')
+
+    if prefix not in PIPELINE_PREFIXES or not is_safe_file_name(file_name):
+        raise ValueError('Invalid file path')
+    return prefix + file_name

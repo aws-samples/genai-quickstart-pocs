@@ -354,13 +354,22 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
+              # Defense in depth for the path check in download_api.py:
+              # only the five pipeline prefixes are readable.
               - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:ListBucket
+                Action: s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
-                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/*'
+                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
+                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/formatted_questions/*'
+                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/completed_responses/*'
+                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/compliance_reviewed/*'
+                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/final_responses/*'
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
+                Condition:
+                  StringLike:
+                    's3:prefix': 'final_responses/*'
 
   StatusLambda:
     Type: AWS::Lambda::Function
