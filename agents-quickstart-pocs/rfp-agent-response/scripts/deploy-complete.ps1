@@ -246,16 +246,6 @@ if (Test-Path "src/list_jobs_api.py") {
     Write-Host "   WARNING: list_jobs_api.py not found, skipping..." -ForegroundColor Yellow
 }
 
-# Deploy cleanup API
-Write-Host "   - Deploying cleanup API..." -ForegroundColor Gray
-$CleanupLambdaFunction = "rfp-cleanup-api-$WebStackName"
-if (Test-Path "src/cleanup_api.py") {
-    Compress-Archive -Path "src/cleanup_api.py" -DestinationPath "temp/cleanup_api.zip" -Force
-    aws lambda update-function-code --function-name $CleanupLambdaFunction --zip-file fileb://temp/cleanup_api.zip --region $Region --no-paginate | Out-Null
-} else {
-    Write-Host "   WARNING: cleanup_api.py not found, skipping..." -ForegroundColor Yellow
-}
-
 Write-Host "   Web Lambda functions deployed successfully" -ForegroundColor Green
 
 # Step 9: Deploy web interface
@@ -355,14 +345,6 @@ try {
     Write-Host "   - List Jobs API: MAY STILL BE DEPLOYING" -ForegroundColor Yellow
 }
 
-# Test cleanup API (just check if it exists, don't actually run cleanup)
-try {
-    $cleanupResponse = Invoke-RestMethod -Uri "$ApiUrl/cleanup" -Method OPTIONS -TimeoutSec 10 -ErrorAction SilentlyContinue
-    Write-Host "   - Cleanup API: RESPONDING" -ForegroundColor Green
-} catch {
-    Write-Host "   - Cleanup API: MAY STILL BE DEPLOYING" -ForegroundColor Yellow
-}
-
 # Step 11: Cleanup and final output
 Write-Host ""
 Write-Host "11. Cleaning up..." -ForegroundColor Yellow
@@ -392,7 +374,6 @@ Write-Host "  API Gateway:         $ApiUrl" -ForegroundColor Cyan
 Write-Host "  Status Endpoint:     $ApiUrl/status" -ForegroundColor Cyan
 Write-Host "  List Jobs Endpoint:  $ApiUrl/list-jobs" -ForegroundColor Cyan
 Write-Host "  Download Endpoint:   $ApiUrl/download" -ForegroundColor Cyan
-Write-Host "  Cleanup Endpoint:    $ApiUrl/cleanup" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "INFRASTRUCTURE:" -ForegroundColor White
 Write-Host "  Upload Bucket:   $BUCKET_NAME" -ForegroundColor Cyan
@@ -416,7 +397,7 @@ Write-Host "  - Enhanced download API supporting all file types" -ForegroundColo
 Write-Host "  - Automated RFP processing pipeline" -ForegroundColor Gray
 Write-Host "  - Unified navigation across all pages" -ForegroundColor Gray
 Write-Host "  - Admin dashboard for system management" -ForegroundColor Gray
-Write-Host "  - Demo data cleanup functionality for easy resets" -ForegroundColor Gray
+Write-Host "  - Demo data reset with scripts/cleanup.ps1 -DataOnly" -ForegroundColor Gray
 Write-Host ""
 Write-Host "AVAILABLE DOWNLOADS BY STAGE:" -ForegroundColor White
 Write-Host "  - Original RFP (uploaded stage)" -ForegroundColor Gray

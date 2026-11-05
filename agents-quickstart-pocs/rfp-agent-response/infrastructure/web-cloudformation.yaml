@@ -258,50 +258,6 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Origin: true
 
-  # Cleanup API Resource and Methods
-  CleanupApiResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref UploadApi
-      ParentId: !GetAtt UploadApi.RootResourceId
-      PathPart: cleanup
-
-  CleanupApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref UploadApi
-      ResourceId: !Ref CleanupApiResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CleanupLambda.Arn}/invocations'
-
-  CleanupApiOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref UploadApi
-      ResourceId: !Ref CleanupApiResource
-      HttpMethod: OPTIONS
-      AuthorizationType: NONE
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-
   UploadApiDeploymentV2:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -315,8 +271,6 @@ Resources:
       - StatusApiOptionsMethod
       - ListJobsApiMethod
       - ListJobsApiOptionsMethod
-      - CleanupApiMethod
-      - CleanupApiOptionsMethod
     Properties:
       RestApiId: !Ref UploadApi
       StageName: prod
@@ -493,64 +447,6 @@ Resources:
                   - s3:ListBucket
                 Resource: !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
 
-  # Cleanup Lambda Function
-  CleanupLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Sub 'rfp-cleanup-api-${AWS::StackName}'
-      Runtime: python3.14
-      Handler: cleanup_api.lambda_handler
-      Code:
-        ZipFile: |
-          import json
-          def lambda_handler(event, context):
-              return {'statusCode': 200, 'body': 'Placeholder'}
-      Role: !GetAtt CleanupLambdaRole.Arn
-      Timeout: 300
-
-  CleanupLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: S3FullAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:DeleteObject
-                Resource:
-                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
-                  - !Sub 'arn:aws:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/*'
-        - PolicyName: DynamoDBFullAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:Scan
-                  - dynamodb:DeleteItem
-                  - dynamodb:BatchWriteItem
-                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/rfp-processing-status'
-        - PolicyName: STSAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sts:GetCallerIdentity
-                Resource: '*'
-
   UploadLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -582,14 +478,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/GET/list-jobs'
-
-  CleanupLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref CleanupLambda
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/POST/cleanup'
 
   # CloudFront distribution
   CloudFrontDistribution:
@@ -642,9 +530,3 @@ Outputs:
     Value: !Sub 'https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
     Export:
       Name: !Sub '${AWS::StackName}-ApiGatewayURL'
-
-  CleanupLambdaName:
-    Description: 'Cleanup Lambda function name'
-    Value: !Ref CleanupLambda
-    Export:
-      Name: !Sub '${AWS::StackName}-CleanupLambdaName'

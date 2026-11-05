@@ -1,212 +1,180 @@
 #!/usr/bin/env pwsh
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+#
+# Removes the RFP Processing System, or with -DataOnly resets its demo data.
+# Keep in sync with scripts/cleanup.sh.
+#
+# Usage:
+#   ./scripts/cleanup.ps1 [-InfraStackName terminal-upload] [-WebStackName rfp-web-app]
+#                         [-Region us-east-1] [-DataOnly] [-Force]
+#
+#   -DataOnly  Delete every uploaded file, pipeline output and status record,
+#              but keep the stacks deployed.
+#   -Force     Skip the confirmation prompt.
 
 param(
     [string]$InfraStackName = "terminal-upload",
     [string]$WebStackName = "rfp-web-app",
     [string]$Region = "us-east-1",
+    [switch]$DataOnly = $false,
     [switch]$Force = $false
 )
 
+# Native command failures are handled with $LASTEXITCODE. ErrorActionPreference
+# is left at Continue because Windows PowerShell 5.1 turns redirected stderr from
+# native commands into terminating errors when it is set to Stop.
+$env:AWS_PAGER = ""
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectRoot = Split-Path -Parent $scriptDir
+
+function Get-StackOutput {
+    param([string]$StackName, [string]$OutputKey)
+    $value = aws cloudformation describe-stacks --stack-name $StackName --region $Region `
+        --query "Stacks[0].Outputs[?OutputKey=='$OutputKey'].OutputValue" --output text 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $value -or $value -eq "None") { return "" }
+    return $value.Trim()
+}
+
+function Test-StackExists {
+    param([string]$StackName)
+    aws cloudformation describe-stacks --stack-name $StackName --region $Region --output text 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+# Delete every object version and delete marker in a bucket, in batches.
+function Clear-Bucket {
+    param([string]$Bucket)
+    if (-not $Bucket) { return }
+    Write-Host "   - Emptying s3://$Bucket" -ForegroundColor Gray
+    $batchFile = Join-Path ([System.IO.Path]::GetTempPath()) "rfp-delete-batch.json"
+    while ($true) {
+        $json = aws s3api list-object-versions --bucket $Bucket --region $Region --max-items 500 `
+            --query "{Objects: [Versions, DeleteMarkers][][].{Key: Key, VersionId: VersionId}}" --output json
+        if ($LASTEXITCODE -ne 0) { throw "Could not list objects in $Bucket" }
+        $batch = $json | ConvertFrom-Json
+        if (-not $batch.Objects -or $batch.Objects.Count -eq 0) { break }
+        @{ Objects = @($batch.Objects); Quiet = $true } | ConvertTo-Json -Depth 4 -Compress |
+            Set-Content -Path $batchFile -Encoding ascii
+        aws s3api delete-objects --bucket $Bucket --region $Region --delete "file://$batchFile" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Could not delete objects from $Bucket" }
+    }
+    Remove-Item $batchFile -ErrorAction SilentlyContinue
+}
+
+# Delete every item from the status table.
+function Clear-StatusTable {
+    param([string]$TableName)
+    if (-not $TableName) { return }
+    Write-Host "   - Deleting status records from $TableName" -ForegroundColor Gray
+    $keys = aws dynamodb scan --table-name $TableName --region $Region `
+        --projection-expression file_name --query "Items[].file_name.S" --output text
+    if ($LASTEXITCODE -ne 0) { throw "Could not scan $TableName" }
+    $count = 0
+    foreach ($fileName in ($keys -split "\s+" | Where-Object { $_ -and $_ -ne "None" })) {
+        $keyJson = @{ file_name = @{ S = $fileName } } | ConvertTo-Json -Compress
+        $keyFile = Join-Path ([System.IO.Path]::GetTempPath()) "rfp-delete-key.json"
+        Set-Content -Path $keyFile -Value $keyJson -Encoding ascii
+        aws dynamodb delete-item --table-name $TableName --region $Region --key "file://$keyFile" | Out-Null
+        Remove-Item $keyFile -ErrorAction SilentlyContinue
+        $count++
+    }
+    Write-Host "   - Deleted $count status records" -ForegroundColor Gray
+}
+
+$mode = if ($DataOnly) { "DEMO DATA RESET" } else { "CLEANUP" }
 Write-Host "========================================" -ForegroundColor Red
-Write-Host "  RFP Processing System - CLEANUP      " -ForegroundColor Red
+Write-Host "  RFP Processing System - $mode" -ForegroundColor Red
 Write-Host "========================================" -ForegroundColor Red
+Write-Host ""
+Write-Host "Region:               $Region"
+Write-Host "Infrastructure stack: $InfraStackName"
+if (-not $DataOnly) { Write-Host "Web stack:            $WebStackName" }
 Write-Host ""
 
 if (-not $Force) {
-    Write-Host "WARNING: This will delete ALL resources including:" -ForegroundColor Yellow
-    Write-Host "  - All S3 buckets and their contents" -ForegroundColor Yellow
-    Write-Host "  - All Lambda functions" -ForegroundColor Yellow
-    Write-Host "  - DynamoDB table with processing status data" -ForegroundColor Yellow
-    Write-Host "  - CloudFront distribution" -ForegroundColor Yellow
-    Write-Host "  - API Gateway" -ForegroundColor Yellow
-    Write-Host "  - All CloudFormation stacks" -ForegroundColor Yellow
-    Write-Host ""
-    $confirmation = Read-Host "Are you sure you want to continue? Type 'DELETE' to confirm"
-    
-    if ($confirmation -ne "DELETE") {
-        Write-Host "Cleanup cancelled." -ForegroundColor Green
+    if ($DataOnly) {
+        Write-Host "WARNING: This deletes every uploaded RFP, pipeline output and status record." -ForegroundColor Yellow
+        $expected = "RESET"
+    } else {
+        Write-Host "WARNING: This deletes ALL resources, including:" -ForegroundColor Yellow
+        Write-Host "  - All S3 buckets and their contents" -ForegroundColor Yellow
+        Write-Host "  - All Lambda functions" -ForegroundColor Yellow
+        Write-Host "  - The DynamoDB status table" -ForegroundColor Yellow
+        Write-Host "  - The Cognito user pool and its users" -ForegroundColor Yellow
+        Write-Host "  - The CloudFront distribution and API Gateway" -ForegroundColor Yellow
+        $expected = "DELETE"
+    }
+    $confirmation = Read-Host "Type '$expected' to confirm"
+    if ($confirmation -ne $expected) {
+        Write-Host "Cancelled." -ForegroundColor Green
         exit 0
     }
 }
 
 Write-Host ""
-Write-Host "Starting cleanup process..." -ForegroundColor Yellow
-
-# Step 1: Get resource information before deletion
-Write-Host ""
 Write-Host "1. Gathering resource information..." -ForegroundColor Yellow
+$uploadBucket = Get-StackOutput $InfraStackName "BucketName"
+$deployBucket = Get-StackOutput $InfraStackName "DeploymentBucket"
+$tableName = Get-StackOutput $InfraStackName "TableName"
+$websiteBucket = Get-StackOutput $WebStackName "WebsiteBucket"
+Write-Host "   - Upload bucket:     $uploadBucket" -ForegroundColor Gray
+Write-Host "   - Status table:      $tableName" -ForegroundColor Gray
+if (-not $DataOnly) {
+    Write-Host "   - Deployment bucket: $deployBucket" -ForegroundColor Gray
+    Write-Host "   - Website bucket:    $websiteBucket" -ForegroundColor Gray
+}
 
-# Infrastructure stack resources
-$UPLOAD_BUCKET = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' --output text --region $Region 2>$null
-$DEPLOY_BUCKET = aws cloudformation describe-stacks --stack-name $InfraStackName --query 'Stacks[0].Outputs[?OutputKey==`DeploymentBucket`].OutputValue' --output text --region $Region 2>$null
+if ($DataOnly) {
+    if (-not $uploadBucket -or -not $tableName) {
+        Write-Host "ERROR: Stack '$InfraStackName' was not found in $Region." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host ""
+    Write-Host "2. Deleting demo data..." -ForegroundColor Yellow
+    Clear-Bucket $uploadBucket
+    Clear-StatusTable $tableName
+    Write-Host ""
+    Write-Host "Demo data reset complete. The stacks are still deployed." -ForegroundColor Green
+    exit 0
+}
 
-# Web stack resources
-$WEBSITE_BUCKET = aws cloudformation describe-stacks --stack-name $WebStackName --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucket`].OutputValue' --output text --region $Region 2>$null
-
-Write-Host "   - Infrastructure stack: $InfraStackName" -ForegroundColor Gray
-Write-Host "   - Web stack: $WebStackName" -ForegroundColor Gray
-Write-Host "   - Upload bucket: $UPLOAD_BUCKET" -ForegroundColor Gray
-Write-Host "   - Deployment bucket: $DEPLOY_BUCKET" -ForegroundColor Gray
-Write-Host "   - Website bucket: $WEBSITE_BUCKET" -ForegroundColor Gray
-
-# Step 2: Empty and prepare S3 buckets for deletion
 Write-Host ""
 Write-Host "2. Emptying S3 buckets..." -ForegroundColor Yellow
+Clear-Bucket $uploadBucket
+Clear-Bucket $deployBucket
+Clear-Bucket $websiteBucket
 
-if ($UPLOAD_BUCKET -and $UPLOAD_BUCKET -ne "None") {
-    Write-Host "   - Emptying upload bucket: $UPLOAD_BUCKET" -ForegroundColor Gray
-    aws s3 rm s3://$UPLOAD_BUCKET --recursive --region $Region 2>$null
-    
-    # Remove bucket versioning objects if any
-    $versions = aws s3api list-object-versions --bucket $UPLOAD_BUCKET --region $Region --query 'Versions[].{Key:Key,VersionId:VersionId}' --output json 2>$null
-    if ($versions -and $versions -ne "null" -and $versions -ne "[]") {
-        Write-Host "   - Removing versioned objects from upload bucket..." -ForegroundColor Gray
-        $versionsObj = $versions | ConvertFrom-Json
-        foreach ($version in $versionsObj) {
-            aws s3api delete-object --bucket $UPLOAD_BUCKET --key $version.Key --version-id $version.VersionId --region $Region 2>$null
+# The web stack imports values from the infrastructure stack, so delete it first.
+$step = 3
+foreach ($stack in @($WebStackName, $InfraStackName)) {
+    Write-Host ""
+    Write-Host "$step. Deleting stack $stack..." -ForegroundColor Yellow
+    if (Test-StackExists $stack) {
+        aws cloudformation delete-stack --stack-name $stack --region $Region
+        aws cloudformation wait stack-delete-complete --stack-name $stack --region $Region
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "   Stack $stack deleted" -ForegroundColor Green
+        } else {
+            Write-Host "   Stack $stack deletion failed or timed out; check the CloudFormation console" -ForegroundColor Yellow
         }
-    }
-    
-    # Remove delete markers
-    $deleteMarkers = aws s3api list-object-versions --bucket $UPLOAD_BUCKET --region $Region --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output json 2>$null
-    if ($deleteMarkers -and $deleteMarkers -ne "null" -and $deleteMarkers -ne "[]") {
-        Write-Host "   - Removing delete markers from upload bucket..." -ForegroundColor Gray
-        $deleteMarkersObj = $deleteMarkers | ConvertFrom-Json
-        foreach ($marker in $deleteMarkersObj) {
-            aws s3api delete-object --bucket $UPLOAD_BUCKET --key $marker.Key --version-id $marker.VersionId --region $Region 2>$null
-        }
-    }
-}
-
-if ($DEPLOY_BUCKET -and $DEPLOY_BUCKET -ne "None") {
-    Write-Host "   - Emptying deployment bucket: $DEPLOY_BUCKET" -ForegroundColor Gray
-    aws s3 rm s3://$DEPLOY_BUCKET --recursive --region $Region 2>$null
-}
-
-if ($WEBSITE_BUCKET -and $WEBSITE_BUCKET -ne "None") {
-    Write-Host "   - Emptying website bucket: $WEBSITE_BUCKET" -ForegroundColor Gray
-    aws s3 rm s3://$WEBSITE_BUCKET --recursive --region $Region 2>$null
-    
-    # Handle versioned objects for website bucket too
-    $versions = aws s3api list-object-versions --bucket $WEBSITE_BUCKET --region $Region --query 'Versions[].{Key:Key,VersionId:VersionId}' --output json 2>$null
-    if ($versions -and $versions -ne "null" -and $versions -ne "[]") {
-        Write-Host "   - Removing versioned objects from website bucket..." -ForegroundColor Gray
-        $versionsObj = $versions | ConvertFrom-Json
-        foreach ($version in $versionsObj) {
-            aws s3api delete-object --bucket $WEBSITE_BUCKET --key $version.Key --version-id $version.VersionId --region $Region 2>$null
-        }
-    }
-}
-
-Write-Host "   S3 buckets emptied" -ForegroundColor Green
-
-# Step 3: Clear DynamoDB table data (optional - table will be deleted with stack)
-Write-Host ""
-Write-Host "3. Clearing DynamoDB table..." -ForegroundColor Yellow
-
-$tableExists = aws dynamodb describe-table --table-name rfp-processing-status --region $Region 2>$null
-if ($tableExists) {
-    Write-Host "   - Found DynamoDB table: rfp-processing-status" -ForegroundColor Gray
-    Write-Host "   - Table will be deleted with CloudFormation stack" -ForegroundColor Gray
-} else {
-    Write-Host "   - DynamoDB table not found or already deleted" -ForegroundColor Gray
-}
-
-# Step 4: Delete web stack first (due to dependencies)
-Write-Host ""
-Write-Host "4. Deleting web infrastructure stack..." -ForegroundColor Yellow
-
-$webStackExists = aws cloudformation describe-stacks --stack-name $WebStackName --region $Region 2>$null
-if ($webStackExists) {
-    Write-Host "   - Deleting web stack: $WebStackName" -ForegroundColor Gray
-    aws cloudformation delete-stack --stack-name $WebStackName --region $Region
-    
-    Write-Host "   - Waiting for web stack deletion to complete..." -ForegroundColor Gray
-    aws cloudformation wait stack-delete-complete --stack-name $WebStackName --region $Region
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "   Web stack deleted successfully" -ForegroundColor Green
     } else {
-        Write-Host "   Web stack deletion may have failed or timed out" -ForegroundColor Yellow
+        Write-Host "   - Stack not found or already deleted" -ForegroundColor Gray
     }
-} else {
-    Write-Host "   - Web stack not found or already deleted" -ForegroundColor Gray
+    $step++
 }
 
-# Step 5: Delete infrastructure stack
 Write-Host ""
-Write-Host "5. Deleting infrastructure stack..." -ForegroundColor Yellow
-
-$infraStackExists = aws cloudformation describe-stacks --stack-name $InfraStackName --region $Region 2>$null
-if ($infraStackExists) {
-    Write-Host "   - Deleting infrastructure stack: $InfraStackName" -ForegroundColor Gray
-    aws cloudformation delete-stack --stack-name $InfraStackName --region $Region
-    
-    Write-Host "   - Waiting for infrastructure stack deletion to complete..." -ForegroundColor Gray
-    aws cloudformation wait stack-delete-complete --stack-name $InfraStackName --region $Region
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "   Infrastructure stack deleted successfully" -ForegroundColor Green
-    } else {
-        Write-Host "   Infrastructure stack deletion may have failed or timed out" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "   - Infrastructure stack not found or already deleted" -ForegroundColor Gray
+Write-Host "$step. Cleaning up local build files..." -ForegroundColor Yellow
+$buildDir = Join-Path $projectRoot "build"
+if (Test-Path $buildDir) {
+    Remove-Item $buildDir -Recurse -Force
+    Write-Host "   - Removed build/" -ForegroundColor Gray
 }
 
-# Step 6: Clean up any remaining resources
-Write-Host ""
-Write-Host "6. Checking for remaining resources..." -ForegroundColor Yellow
-
-# Check for any remaining Lambda functions
-$remainingLambdas = aws lambda list-functions --region $Region --query "Functions[?contains(FunctionName, 'rfp-') || contains(FunctionName, 'terminal-')].FunctionName" --output text 2>$null
-if ($remainingLambdas -and $remainingLambdas.Trim() -ne "") {
-    Write-Host "   - Found remaining Lambda functions (may be from other deployments):" -ForegroundColor Yellow
-    Write-Host "     $remainingLambdas" -ForegroundColor Gray
-}
-
-# Check for remaining S3 buckets
-$remainingBuckets = aws s3api list-buckets --region $Region --query "Buckets[?contains(Name, 'rfp-') || contains(Name, 'terminal-')].Name" --output text 2>$null
-if ($remainingBuckets -and $remainingBuckets.Trim() -ne "") {
-    Write-Host "   - Found remaining S3 buckets (may be from other deployments):" -ForegroundColor Yellow
-    Write-Host "     $remainingBuckets" -ForegroundColor Gray
-}
-
-# Step 7: Clean up local files
-Write-Host ""
-Write-Host "7. Cleaning up local files..." -ForegroundColor Yellow
-
-$filesToClean = @("lambda-function.zip", "notification.json", "empty-notification.json")
-foreach ($file in $filesToClean) {
-    if (Test-Path "../$file") {
-        Remove-Item "../$file" -Force
-        Write-Host "   - Removed: $file" -ForegroundColor Gray
-    }
-}
-
-if (Test-Path "../temp") {
-    Remove-Item "../temp" -Recurse -Force
-    Write-Host "   - Removed: temp directory" -ForegroundColor Gray
-}
-
-Write-Host "   Local cleanup completed" -ForegroundColor Green
-
-# Final summary
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "         CLEANUP COMPLETED              " -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "RESOURCES CLEANED UP:" -ForegroundColor White
-Write-Host "  - Infrastructure stack: $InfraStackName" -ForegroundColor Gray
-Write-Host "  - Web stack: $WebStackName" -ForegroundColor Gray
-Write-Host "  - S3 buckets and all contents" -ForegroundColor Gray
-Write-Host "  - DynamoDB table: rfp-processing-status" -ForegroundColor Gray
-Write-Host "  - All Lambda functions" -ForegroundColor Gray
-Write-Host "  - API Gateway and CloudFront distribution" -ForegroundColor Gray
-Write-Host "  - IAM roles and policies" -ForegroundColor Gray
-Write-Host "  - Local temporary files" -ForegroundColor Gray
-Write-Host ""
-Write-Host "The RFP Processing System has been completely removed." -ForegroundColor Green
-Write-Host ""
-Write-Host "Note: CloudFront distributions may take up to 15 minutes to fully delete." -ForegroundColor Yellow
+Write-Host "Lambda log groups (/aws/lambda/...) are kept; delete them in CloudWatch if you no longer need them."

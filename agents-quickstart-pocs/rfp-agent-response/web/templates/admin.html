@@ -501,14 +501,12 @@
                         <span>🧹</span>
                         Cleanup Old Files
                     </button>
-                    <button class="btn btn-secondary" onclick="testCleanupAPI()">
-                        <span>🔍</span>
-                        Test Cleanup API
-                    </button>
-                    <button class="btn btn-danger" onclick="cleanupDemoData()">
-                        <span>🗑️</span>
-                        Clean Demo Data
-                    </button>
+                    <p style="color: var(--gray-600); font-size: 0.875rem; line-height: 1.5;">
+                        To reset demo data, run <code>scripts/cleanup.sh --data-only</code>
+                        (macOS/Linux) or <code>scripts\cleanup.ps1 -DataOnly</code> (Windows)
+                        with your own AWS credentials. Destructive operations are not
+                        exposed through the web API.
+                    </p>
                 </div>
             </div>
 
@@ -632,79 +630,6 @@
         function cleanupOldFiles() {
             if (confirm('Are you sure you want to cleanup old files? Files older than 30 days will be removed.')) {
                 showNotification('File cleanup initiated...', 'info');
-            }
-        }
-
-        async function testCleanupAPI() {
-            showNotification('Testing cleanup API endpoint...', 'info');
-            
-            try {
-                // Test with OPTIONS request first
-                const response = await fetch('{{API_GATEWAY_URL}}/cleanup', {
-                    method: 'OPTIONS'
-                });
-                
-                if (response.ok) {
-                    showNotification('Cleanup API endpoint is accessible', 'success');
-                } else {
-                    showNotification(`Cleanup API returned status: ${response.status}`, 'warning');
-                }
-            } catch (error) {
-                console.error('API test error:', error);
-                showNotification(`API test failed: ${error.message}`, 'error');
-            }
-        }
-
-        async function cleanupDemoData() {
-            const confirmation = prompt('This will delete ALL demo data from S3 and DynamoDB.\nType "CLEANUP_DEMO_DATA" to confirm:');
-            if (confirmation !== 'CLEANUP_DEMO_DATA') {
-                return;
-            }
-
-            const secondConfirmation = confirm('Are you absolutely sure? This action cannot be undone and will remove:\n\n• All files from S3 bucket\n• All job records from DynamoDB\n\nClick OK to proceed with cleanup.');
-            if (!secondConfirmation) {
-                return;
-            }
-
-            showNotification('Initiating demo data cleanup...', 'warning');
-            
-            try {
-                const response = await fetch('{{API_GATEWAY_URL}}/cleanup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        confirmation: 'CLEANUP_DEMO_DATA'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    const { results } = result;
-                    let message = `Cleanup completed successfully!\n\n`;
-                    message += `• S3 files deleted: ${results.s3_files_deleted}\n`;
-                    message += `• DynamoDB items deleted: ${results.dynamodb_items_deleted}`;
-                    
-                    if (results.errors && results.errors.length > 0) {
-                        message += `\n\nWarnings:\n${results.errors.join('\n')}`;
-                        showNotification('Demo data cleanup completed with warnings', 'warning');
-                    } else {
-                        showNotification('Demo data cleanup completed successfully', 'success');
-                    }
-                    
-                    // Show detailed results
-                    alert(message);
-                    
-                    // Refresh system stats
-                    refreshSystemStatus();
-                } else {
-                    throw new Error(result.error || 'Cleanup failed');
-                }
-            } catch (error) {
-                console.error('Cleanup error:', error);
-                showNotification(`Cleanup failed: ${error.message}`, 'error');
             }
         }
 
