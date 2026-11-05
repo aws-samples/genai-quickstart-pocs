@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 from nova_sonic_client import NovaSonicTranslator
-from config import is_supported_language, DEFAULT_LANGUAGE
+from config import is_supported_language, DEFAULT_LANGUAGE, SERVER_HOST
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -425,7 +425,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    host = os.getenv("HOST", "0.0.0.0")
+    # Loopback by default; set SERVER_HOST to bind another address (see config.py).
+    host = SERVER_HOST
     port = int(os.getenv("TWO_PARTY_PORT", "8082"))
     
     logger.info(f"🚀 Two-Party Translation Server starting at http://{host}:{port}")

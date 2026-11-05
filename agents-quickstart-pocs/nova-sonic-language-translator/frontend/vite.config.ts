@@ -4,8 +4,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-      host: '0.0.0.0',  // Force IPv4
-
+    // Loopback only (IPv4). Use `npm run dev -- --host <address>` to expose
+    // the dev server on another interface deliberately.
+    host: '127.0.0.1',
     port: 5174,
   },
 });

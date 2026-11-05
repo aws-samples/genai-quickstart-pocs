@@ -310,7 +310,7 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 Every pull request and every push to `main` runs [Bandit](https://bandit.readthedocs.io/) through `.github/workflows/bandit.yml`. Its `bandit-scan` job is a required check on `main`. The job fails on any finding of Medium or higher severity with Medium or higher confidence (`-ll -ii`) that is not already listed in `bandit-baseline.json`. Virtualenvs, `node_modules`, `.ipynb_checkpoints`, and `tests`/`test` directories are not scanned.
 
-`bandit-baseline.json` records the findings that were on `main` when the gate was added, so only new findings fail a PR. Bandit matches baseline entries by file, rule, severity, confidence, and message, not by line number, so unrelated edits to a file do not break the match.
+`bandit-baseline.json` records accepted findings, so only new findings fail a PR. It is currently empty: every finding recorded when the gate was added has since been fixed, so any Medium+ finding fails the check. Bandit matches baseline entries by file, rule, severity, confidence, and message, not by line number, so unrelated edits to a file do not break the match.
 
 To refresh the baseline after fixing a recorded finding, or after a reviewer accepts a new one, run this from the repo root with the Bandit version pinned in the workflow, and commit the result:
 
