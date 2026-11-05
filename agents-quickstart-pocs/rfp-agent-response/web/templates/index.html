@@ -524,7 +524,9 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
+        const { escapeHtml } = RFP;
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const status = document.getElementById('status');
@@ -612,7 +614,12 @@
         }
 
         function showStatus(message, type) {
-            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+            // Messages can contain file names and query string values, so
+            // build the element with textContent instead of innerHTML.
+            const box = document.createElement('div');
+            box.className = `status ${type}`;
+            box.textContent = message;
+            status.replaceChildren(box);
         }
 
 
@@ -660,24 +667,24 @@
             const displayName = statusData.original_filename || statusData.file_name.replace(/_\d{8}_\d{6}\.(txt|pdf)$/, '.$1');
 
             let html = `<div style="margin-bottom: 2rem;">
-                <h3 style="color: var(--gray-800); margin-bottom: 1rem;">Processing: ${displayName}</h3>`;
+                <h3 style="color: var(--gray-800); margin-bottom: 1rem;">Processing: ${escapeHtml(displayName)}</h3>`;
 
             if (statusData.original_filename && statusData.original_filename !== statusData.file_name) {
-                html += `<p style="color: var(--gray-600); font-size: 0.875rem;"><strong>Tracking ID:</strong> ${statusData.file_name}</p>`;
+                html += `<p style="color: var(--gray-600); font-size: 0.875rem;"><strong>Tracking ID:</strong> ${escapeHtml(statusData.file_name)}</p>`;
             }
 
             html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
                 <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
                     <div style="font-size: 0.875rem; color: var(--gray-600);">Overall Status</div>
-                    <div style="font-weight: 600; color: var(--gray-800); text-transform: uppercase;">${statusData.overall_status}</div>
+                    <div style="font-weight: 600; color: var(--gray-800); text-transform: uppercase;">${escapeHtml(statusData.overall_status)}</div>
                 </div>
                 <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
                     <div style="font-size: 0.875rem; color: var(--gray-600);">Current Stage</div>
-                    <div style="font-weight: 600; color: var(--gray-800);">${statusData.current_stage}</div>
+                    <div style="font-weight: 600; color: var(--gray-800);">${escapeHtml(statusData.current_stage)}</div>
                 </div>
                 <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
                     <div style="font-size: 0.875rem; color: var(--gray-600);">Last Updated</div>
-                    <div style="font-weight: 600; color: var(--gray-800);">${new Date(statusData.last_updated).toLocaleString()}</div>
+                    <div style="font-weight: 600; color: var(--gray-800);">${escapeHtml(new Date(statusData.last_updated).toLocaleString())}</div>
                 </div>
             </div></div>`;
 
@@ -708,31 +715,31 @@
                 const downloadLink = stage ? stage.download_link : null;
                 const downloadName = stage ? stage.download_name : null;
 
-                html += `<div class="stage ${stageStatus}">
+                html += `<div class="stage ${escapeHtml(stageStatus)}">
                     <div class="stage-header">
                         <div class="stage-icon">${stageIcons[stageName] || '⚪'}</div>
-                        <div class="stage-title">${stageDescriptions[stageName] || stageName}</div>
-                        <div class="stage-status">${stageStatus}</div>
+                        <div class="stage-title">${escapeHtml(stageDescriptions[stageName] || stageName)}</div>
+                        <div class="stage-status">${escapeHtml(stageStatus)}</div>
                     </div>`;
 
                 if (timestamp) {
                     html += `<div style="font-size: 0.875rem; color: var(--gray-500); margin-top: 0.5rem;">
-                        Completed: ${new Date(timestamp).toLocaleString()}
+                        Completed: ${escapeHtml(new Date(timestamp).toLocaleString())}
                     </div>`;
                 }
 
                 // Add download link if file is completed
                 if (stageStatus === 'completed' && downloadLink && downloadName) {
                     html += `<div style="margin-top: 0.75rem;">
-                        <a href="{{API_GATEWAY_URL}}${downloadLink}" download class="download-link">
+                        <a href="{{API_GATEWAY_URL}}${escapeHtml(downloadLink)}" download class="download-link">
                             <span>⬇</span>
-                            Download ${downloadName}
+                            Download ${escapeHtml(downloadName)}
                         </a>`;
                     
                     // Add JSON explorer link for final JSON files
                     if (downloadName.includes('final.json')) {
                         const jsonFileName = downloadLink.split('/').pop();
-                        html += `<a href="json-explorer.html?file=${encodeURIComponent(jsonFileName)}" class="download-link" style="margin-left: 0.5rem; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));">
+                        html += `<a href="json-explorer.html?file=${escapeHtml(encodeURIComponent(jsonFileName))}" class="download-link" style="margin-left: 0.5rem; background: linear-gradient(135deg, var(--primary-color), var(--primary-light));">
                             <span>🔍</span>
                             Explore JSON
                         </a>`;
@@ -742,9 +749,9 @@
                     const additionalDownloads = stage.additional_downloads;
                     if (additionalDownloads && additionalDownloads.length > 0) {
                         additionalDownloads.forEach(additional => {
-                            html += `<a href="{{API_GATEWAY_URL}}${additional.download_link}" download class="download-link" style="margin-left: 0.5rem;">
+                            html += `<a href="{{API_GATEWAY_URL}}${escapeHtml(additional.download_link)}" download class="download-link" style="margin-left: 0.5rem;">
                                 <span>⬇</span>
-                                Download ${additional.download_name}
+                                Download ${escapeHtml(additional.download_name)}
                             </a>`;
                         });
                     }
@@ -754,7 +761,7 @@
 
                 if (error) {
                     html += `<div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(229, 62, 62, 0.1); border-radius: 6px; color: var(--error-color); font-size: 0.875rem;">
-                        <strong>Error:</strong> ${error}
+                        <strong>Error:</strong> ${escapeHtml(error)}
                     </div>`;
                 }
 

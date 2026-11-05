@@ -469,7 +469,9 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
+        const { escapeHtml } = RFP;
         function groupFilesByRFP(files) {
             const groups = {};
             const ungrouped = [];
@@ -539,7 +541,7 @@
                             html += `<div class="rfp-group">
                                 <div class="rfp-header">
                                     <div class="rfp-icon">📋</div>
-                                    <div class="rfp-title">${displayName}</div>
+                                    <div class="rfp-title">${escapeHtml(displayName)}</div>
                                 </div>
                                 <div class="rfp-content">`;
                             
@@ -555,11 +557,11 @@
                                 html += `<div class="file-row">
                                     <div class="file-icon">${getFileIcon(fileName)}</div>
                                     <div class="file-info">
-                                        <a href="{{API_GATEWAY_URL}}/download/${fileName}" download class="file-name">${fileName}</a>
+                                        <a href="{{API_GATEWAY_URL}}/download/${escapeHtml(encodeURIComponent(fileName))}" download class="file-name">${escapeHtml(fileName)}</a>
                                         <div class="file-type">${getFileTypeDescription(fileName)}</div>
-                                        ${lastModified ? `<div class="file-details">Modified: ${lastModified} ${size}</div>` : ''}
+                                        ${lastModified ? `<div class="file-details">Modified: ${escapeHtml(lastModified)} ${escapeHtml(size)}</div>` : ''}
                                         ${fileName.endsWith('_final.json') ? `<div style="margin-top: 0.75rem;">
-                                            <a href="json-explorer.html?file=${encodeURIComponent(fileName)}" class="btn btn-secondary btn-small" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.875rem; border-radius: 6px; margin-right: 0.5rem;">
+                                            <a href="json-explorer.html?file=${escapeHtml(encodeURIComponent(fileName))}" class="btn btn-secondary btn-small" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.875rem; border-radius: 6px; margin-right: 0.5rem;">
                                                 <span>🔍</span>
                                                 Explore JSON
                                             </a>
@@ -590,11 +592,11 @@
                                     : '';
                                 
                                 html += `<div class="download-item">
-                                    <a href="{{API_GATEWAY_URL}}/download/${fileName}" download>
+                                    <a href="{{API_GATEWAY_URL}}/download/${escapeHtml(encodeURIComponent(fileName))}" download>
                                         <span>📄</span>
-                                        ${fileName}
+                                        ${escapeHtml(fileName)}
                                     </a>
-                                    ${lastModified ? `<div class="file-details">Modified: ${lastModified} ${size}</div>` : ''}
+                                    ${lastModified ? `<div class="file-details">Modified: ${escapeHtml(lastModified)} ${escapeHtml(size)}</div>` : ''}
                                 </div>`;
                             });
                             

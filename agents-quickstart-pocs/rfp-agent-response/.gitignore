@@ -59,4 +59,5 @@ node_modules/
 
 # Generated web files (templates are in web/templates/)
 web/*.html
+web/js/
 !web/templates/

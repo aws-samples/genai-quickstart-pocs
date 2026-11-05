@@ -588,7 +588,9 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
+        const { escapeHtml } = RFP;
         let allJobs = [];
         let filteredJobs = [];
 
@@ -753,12 +755,12 @@
                 html += `<div class="job-card">
                     <div class="job-header">
                         <div class="job-info">
-                            <div class="job-name">${displayName}</div>
-                            <div class="job-id">ID: ${job.file_name}</div>
+                            <div class="job-name">${escapeHtml(displayName)}</div>
+                            <div class="job-id">ID: ${escapeHtml(job.file_name)}</div>
                         </div>
-                        <div class="job-status ${job.overall_status}">
+                        <div class="job-status ${escapeHtml(job.overall_status)}">
                             <span>${getStatusIcon(job.overall_status)}</span>
-                            ${job.overall_status}
+                            ${escapeHtml(job.overall_status)}
                         </div>
                     </div>
                     
@@ -767,8 +769,8 @@
                             <div class="progress-fill" style="width: ${progress}%"></div>
                         </div>
                         <div class="progress-text">
-                            ${progress}% complete • Current: ${currentStage.name}
-                            ${job.last_updated ? ` • Updated: ${new Date(job.last_updated).toLocaleString()}` : ''}
+                            ${progress}% complete • Current: ${escapeHtml(currentStage.name)}
+                            ${job.last_updated ? ` • Updated: ${escapeHtml(new Date(job.last_updated).toLocaleString())}` : ''}
                         </div>
                     </div>
                     
@@ -777,16 +779,16 @@
                     </div>
                     
                     <div class="job-actions">
-                        <button class="btn btn-secondary btn-small" onclick="viewJobDetails('${job.file_name}')">
+                        <a href="index.html?track=${escapeHtml(encodeURIComponent(job.file_name))}" class="btn btn-secondary btn-small">
                             <span>👁️</span>
                             View Details
-                        </button>
+                        </a>
                         ${job.overall_status === 'completed' ? `
                             <a href="downloads.html" class="btn btn-primary btn-small">
                                 <span>📥</span>
                                 Download Files
                             </a>
-                            <a href="json-explorer.html?file=${encodeURIComponent(job.file_name.replace(/\.(txt|pdf)$/, '_final.json'))}" class="btn btn-secondary btn-small">
+                            <a href="json-explorer.html?file=${escapeHtml(encodeURIComponent(job.file_name.replace(/\.(txt|pdf)$/, '_final.json')))}" class="btn btn-secondary btn-small">
                                 <span>🔍</span>
                                 Explore JSON
                             </a>
@@ -841,7 +843,7 @@
                 const stage = job.stages?.find(s => s.name === stageName);
                 const status = stage ? stage.status : 'pending';
                 
-                html += `<div class="stage ${status}">
+                html += `<div class="stage ${escapeHtml(status)}">
                     <div class="stage-icon">${getStageIcon(stageName, status)}</div>
                     <span>${stageNames[stageName]}</span>
                 </div>`;
@@ -864,11 +866,6 @@
             if (status === 'processing') return '⏳';
             if (status === 'error') return '✗';
             return '○';
-        }
-
-        function viewJobDetails(fileName) {
-            // Redirect to main page with job tracking
-            window.location.href = `index.html?track=${encodeURIComponent(fileName)}`;
         }
 
         // Auto-refresh every 2 minutes

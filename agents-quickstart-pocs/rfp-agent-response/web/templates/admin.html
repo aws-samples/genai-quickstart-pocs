@@ -547,7 +547,9 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
+        const { escapeHtml } = RFP;
         // Mock data for demonstration - replace with actual API calls
         const mockSystemData = {
             uptime: "Online",
@@ -579,8 +581,8 @@
             
             Object.entries(mockSystemData.systemInfo).forEach(([key, value]) => {
                 html += `<div class="info-row">
-                    <div class="info-label">${key}</div>
-                    <div class="info-value">${value}</div>
+                    <div class="info-label">${escapeHtml(key)}</div>
+                    <div class="info-value">${escapeHtml(value)}</div>
                 </div>`;
             });
             

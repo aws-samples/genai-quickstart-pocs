@@ -417,6 +417,10 @@ foreach ($webFile in $webFiles) {
     }
 }
 
+# Copy shared JavaScript helpers (escaping, and so on) used by every page
+New-Item -ItemType Directory -Path "web/js" -Force | Out-Null
+Copy-Item "web/templates/js/*" -Destination "web/js" -Force
+
 # Upload web files to S3
 Write-Host "   - Uploading web files to S3..." -ForegroundColor Gray
 aws s3 sync web/ s3://$WebsiteBucket/ --delete --region $Region --no-paginate

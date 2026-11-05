@@ -691,7 +691,9 @@
         </div>
     </div>
 
+    <script src="js/app.js"></script>
     <script>
+        const { escapeHtml, highlightText } = RFP;
         let currentJsonData = null;
         let currentFileName = null;
         let currentFileMetadata = null;
@@ -771,7 +773,7 @@
             noFileSelected.style.display = 'none';
 
             try {
-                const response = await fetch(`{{API_GATEWAY_URL}}/download/${fileName}`);
+                const response = await fetch(`{{API_GATEWAY_URL}}/download/${encodeURIComponent(fileName)}`);
                 if (response.ok) {
                     const jsonText = await response.text();
                     currentJsonData = JSON.parse(jsonText);
@@ -791,7 +793,7 @@
                 }
             } catch (error) {
                 console.error('Failed to load JSON file:', error);
-                jsonViewer.innerHTML = `<div class="error-message">Failed to load JSON file: ${error.message}</div>`;
+                jsonViewer.innerHTML = `<div class="error-message">Failed to load JSON file: ${escapeHtml(error.message)}</div>`;
             }
         }
 
@@ -804,7 +806,7 @@
             }
 
             if (viewMode === 'raw') {
-                jsonViewer.innerHTML = `<pre>${JSON.stringify(currentJsonData, null, 2)}</pre>`;
+                jsonViewer.innerHTML = `<pre>${escapeHtml(JSON.stringify(currentJsonData, null, 2))}</pre>`;
             } else if (viewMode === 'structured') {
                 jsonViewer.innerHTML = renderRFPStructure(currentJsonData, searchTerm);
             } else {
@@ -862,10 +864,10 @@
 
             return `
                 <div class="summary-card">
-                    <div class="summary-title">📋 ${rfpName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                    <div class="summary-title">📋 ${escapeHtml(String(rfpName).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))}</div>
                     <div class="summary-stats">
                         <div class="stat-item">
-                            <div class="stat-number">${questionCount}</div>
+                            <div class="stat-number">${escapeHtml(questionCount)}</div>
                             <div class="stat-label">Total Questions</div>
                         </div>
                         <div class="stat-item">
@@ -873,11 +875,11 @@
                             <div class="stat-label">Answered</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                            <div class="stat-number">${escapeHtml(String(status).charAt(0).toUpperCase() + String(status).slice(1))}</div>
                             <div class="stat-label">Status</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">${generatedDate}</div>
+                            <div class="stat-number">${escapeHtml(generatedDate)}</div>
                             <div class="stat-label">Generated</div>
                         </div>
                     </div>
@@ -910,16 +912,10 @@
             const confidence = question.confidence || question.confidence_score;
             const sources = question.sources || question.source_documents;
 
-            // Apply search highlighting
-            const highlightedQuestion = search && questionText.toLowerCase().includes(search.toLowerCase())
-                ? questionText.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : questionText;
-            const highlightedOriginalAnswer = search && originalAnswer.toLowerCase().includes(search.toLowerCase())
-                ? originalAnswer.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : originalAnswer;
-            const highlightedDraftedAnswer = search && draftedAnswer.toLowerCase().includes(search.toLowerCase())
-                ? draftedAnswer.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : draftedAnswer;
+            // Escape model output and file data; highlight search matches.
+            const highlightedQuestion = highlightText(questionText, search);
+            const highlightedOriginalAnswer = highlightText(originalAnswer, search);
+            const highlightedDraftedAnswer = highlightText(draftedAnswer, search);
 
             let html = `
                 <div class="question-item">
@@ -945,10 +941,7 @@
             const issuesFound = question.issues_found || [];
             const actionTaken = question.action_taken || 'Unknown';
 
-            // Apply search highlighting to compliance data
-            const highlightedComplianceStatus = search && complianceStatus.toLowerCase().includes(search.toLowerCase())
-                ? complianceStatus.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : complianceStatus;
+            const highlightedComplianceStatus = highlightText(complianceStatus, search);
 
             // Compliance Status Section
             html += `<div class="answer-section" style="border-left-color: ${getComplianceColor(complianceStatus)};">
@@ -962,16 +955,14 @@
             html += `<div class="answer-section" style="border-left-color: var(--secondary-color);">
                 <div class="answer-label">Data Classification</div>
                 <div class="answer-text">
-                    <div style="margin-bottom: 0.5rem;"><strong>Contains PII:</strong> ${hasPII}</div>
-                    <div><strong>Privileged Data:</strong> ${hasPrivilegedData}</div>
+                    <div style="margin-bottom: 0.5rem;"><strong>Contains PII:</strong> ${escapeHtml(hasPII)}</div>
+                    <div><strong>Privileged Data:</strong> ${escapeHtml(hasPrivilegedData)}</div>
                 </div>
             </div>`;
 
             // Action Taken Section
             if (actionTaken && actionTaken !== 'Unknown') {
-                const highlightedActionTaken = search && actionTaken.toLowerCase().includes(search.toLowerCase())
-                    ? actionTaken.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                    : actionTaken;
+                const highlightedActionTaken = highlightText(actionTaken, search);
 
                 html += `<div class="answer-section" style="border-left-color: var(--accent-color);">
                     <div class="answer-label">Action Taken</div>
@@ -982,13 +973,11 @@
             // Issues Found Section (if any)
             if (issuesFound && issuesFound.length > 0) {
                 html += `<div class="answer-section" style="border-left-color: var(--error-color);">
-                    <div class="answer-label">Issues Found (${issuesFound.length})</div>
+                    <div class="answer-label">Issues Found (${escapeHtml(issuesFound.length)})</div>
                     <div class="answer-text">`;
 
                 issuesFound.forEach((issue, index) => {
-                    const highlightedIssue = search && issue.toLowerCase().includes(search.toLowerCase())
-                        ? issue.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                        : issue;
+                    const highlightedIssue = highlightText(issue, search);
 
                     html += `<div style="background: rgba(229, 62, 62, 0.1); padding: 0.75rem; margin: ${index > 0 ? '0.5rem' : '0'} 0; border-radius: 6px; border-left: 3px solid var(--error-color);">
                         ${highlightedIssue}
@@ -1009,7 +998,7 @@
                 <div class="rfp-section">
                     <div class="rfp-section-header" onclick="toggleRFPSection(this)">
                         <span>▼</span>
-                        <span>📄 ${displayKey}</span>
+                        <span>📄 ${escapeHtml(displayKey)}</span>
                     </div>
                     <div class="rfp-section-content">
                         ${renderJsonTree(value, '', search)}
@@ -1032,9 +1021,7 @@
         }
 
         function renderDocumentSection(documentContent, search) {
-            const highlightedContent = search && documentContent.toLowerCase().includes(search.toLowerCase())
-                ? documentContent.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : documentContent;
+            const highlightedContent = highlightText(documentContent, search);
 
             return `
                 <div class="rfp-section">
@@ -1052,9 +1039,7 @@
         }
 
         function renderComplianceSection(complianceReasoning, search) {
-            const highlightedContent = search && complianceReasoning.toLowerCase().includes(search.toLowerCase())
-                ? complianceReasoning.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                : complianceReasoning;
+            const highlightedContent = highlightText(complianceReasoning, search);
 
             return `
                 <div class="rfp-section">
@@ -1072,7 +1057,7 @@
         }
 
         function getComplianceColor(status) {
-            switch (status.toLowerCase()) {
+            switch (String(status).toLowerCase()) {
                 case 'approve':
                     return 'var(--success-color)';
                 case 'redact with explanation':
@@ -1091,10 +1076,7 @@
             }
 
             if (typeof obj === 'string') {
-                const highlighted = search && obj.toLowerCase().includes(search.toLowerCase())
-                    ? obj.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                    : obj;
-                return `<span class="json-string">"${highlighted}"</span>`;
+                return `<span class="json-string">"${highlightText(obj, search)}"</span>`;
             }
 
             if (typeof obj === 'number') {
@@ -1133,9 +1115,7 @@
                 html += '<div class="json-content" style="margin-left: 20px;">';
 
                 keys.forEach(key => {
-                    const keyHighlighted = search && key.toLowerCase().includes(search.toLowerCase())
-                        ? key.replace(new RegExp(search, 'gi'), `<mark>$&</mark>`)
-                        : key;
+                    const keyHighlighted = highlightText(key, search);
                     html += `<div><span class="json-key">"${keyHighlighted}":</span> ${renderJsonTree(obj[key], `${path}.${key}`, search)}</div>`;
                 });
 
@@ -1186,7 +1166,7 @@
         function downloadCurrentFile() {
             if (currentFileName) {
                 const link = document.createElement('a');
-                link.href = `{{API_GATEWAY_URL}}/download/${currentFileName}`;
+                link.href = `{{API_GATEWAY_URL}}/download/${encodeURIComponent(currentFileName)}`;
                 link.download = currentFileName;
                 link.click();
             }
