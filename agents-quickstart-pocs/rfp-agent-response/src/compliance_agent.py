@@ -5,6 +5,12 @@
 Triggered by S3 ``ObjectCreated`` events under ``completed_responses/``.
 Asks Claude on Amazon Bedrock to classify every answer and writes the
 results to ``compliance_reviewed/<name>_compliance_reviewed.json``.
+
+The review fails closed. If an answer cannot be reviewed (a Bedrock error,
+a response that is not valid JSON, or no clear approve/redact/reject
+decision), the answer is marked ``withheld``. The drafting stage then
+leaves it out of the client document, and the status API reports how many
+answers were withheld.
 """
 
 import json
@@ -67,6 +73,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         responses = json.loads(obj['Body'].read().decode('utf-8'))
 
         reviewed = review_responses(common.bedrock_runtime_client(), responses)
+        withheld = [item['question_id'] for item in reviewed
+                    if item['compliance_status'] == 'withheld']
 
         output_key = (f'{common.COMPLIANCE_PREFIX}{base_name}'
                       '_compliance_reviewed.json')
@@ -77,8 +85,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             ContentType='application/json',
             Metadata={common.SOURCE_FILE_METADATA_KEY: source_file},
         )
-        logger.info('Saved compliance review to %s', output_key)
-        common.update_processing_status(source_file, STAGE, 'completed')
+        logger.info('Saved compliance review to %s (%d withheld)',
+                    output_key, len(withheld))
+        common.update_processing_status(
+            source_file, STAGE, 'completed',
+            details=common.withheld_details(withheld),
+        )
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -107,30 +119,42 @@ def review_responses(
         delay: Seconds to wait between model calls.
 
     Returns:
-        The response items with ``compliance_review`` and
-        ``compliance_status`` fields added.
+        The response items with ``compliance_review``,
+        ``compliance_decision`` and ``compliance_status`` (``reviewed`` or
+        ``withheld``) fields added.
     """
     reviewed = []
     for index, item in enumerate(responses, 1):
         logger.info('Reviewing response %d/%d', index, len(responses))
         try:
             review = review_answer(bedrock_client, item['answer'])
-            reviewed.append({
+            decision = common.normalize_recommendation(review)
+            result = {
                 **item,
                 'compliance_review': review,
+                'compliance_decision': decision,
                 'compliance_status': 'reviewed',
-            })
+            }
+            if decision == common.WITHHOLD:
+                result['compliance_status'] = 'withheld'
+                result['withheld_reason'] = (
+                    'The compliance review did not return a clear '
+                    'approve, redact or reject decision')
+            reviewed.append(result)
         except Exception as error:
+            # Fail closed: an answer that was not reviewed is never sent on.
             logger.exception('Error reviewing response %d', index)
             reviewed.append({
                 **item,
                 'compliance_review': {
                     'has_pii': 'unknown',
                     'has_privileged_data': 'unknown',
-                    'issues_found': [],
-                    'recommendation': 'Manual review required due to error',
+                    'issues_found': ['Compliance review failed'],
+                    'recommendation': 'withhold - manual review required',
                 },
-                'compliance_status': 'error',
+                'compliance_decision': common.WITHHOLD,
+                'compliance_status': 'withheld',
+                'withheld_reason': 'The compliance review failed',
                 'compliance_error': str(error),
             })
         if index < len(responses) and delay:
@@ -139,22 +163,17 @@ def review_responses(
 
 
 def review_answer(bedrock_client: Any, answer: str) -> Dict[str, Any]:
-    """Ask Claude to classify one answer for PII and privileged data."""
+    """Ask Claude to classify one answer for PII and privileged data.
+
+    Raises:
+        ValueError: If the model's response is not a JSON object.
+    """
     output = common.invoke_claude(
         bedrock_client,
         REVIEW_PROMPT.format(answer=answer),
         max_tokens=MAX_OUTPUT_TOKENS,
     )
-    try:
-        review = common.extract_json(output)
-    except ValueError:
-        logger.warning('Could not parse compliance review: %s', output[:200])
-        return {
-            'has_pii': 'unknown',
-            'has_privileged_data': 'unknown',
-            'issues_found': ['Unable to parse compliance review response'],
-            'recommendation': 'manual review required - parsing error',
-        }
+    review = common.extract_json(output)
     if not isinstance(review, dict):
         raise ValueError('Expected a JSON object from the compliance review')
     return review

@@ -153,8 +153,13 @@ def get_status(
     table = table if table is not None else common.get_status_table()
     item = table.get_item(Key={'file_name': file_name}).get('Item')
     if item:
+        item.setdefault('stages', [])
         item.setdefault('original_filename', display_name(file_name))
         add_download_links(item, file_name)
+        # Surface stage warnings, such as answers withheld by the
+        # compliance review, at the top level for the UI.
+        item['warnings'] = [stage['warning'] for stage in item['stages']
+                            if stage.get('warning')]
         return item
     return status_from_s3(
         s3_client or common.regional_s3_client(),

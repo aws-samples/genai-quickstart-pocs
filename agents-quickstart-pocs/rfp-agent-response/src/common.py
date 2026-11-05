@@ -15,7 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, TypeVar
 
 import boto3
 from botocore.config import Config
@@ -497,3 +497,80 @@ def json_response(
                     'Content-Type': 'application/json'},
         'body': json.dumps(body, default=_json_default),
     }
+
+
+# ---------------------------------------------------------------------------
+# Compliance decisions
+# ---------------------------------------------------------------------------
+
+APPROVE = 'approve'
+REDACT = 'redact'
+REJECT = 'reject'
+WITHHOLD = 'withhold'
+WITHHELD_ANSWER = ('This response is being finalized and will be provided '
+                   'separately after an internal compliance review.')
+
+
+def normalize_recommendation(review: Any) -> str:
+    """Reduce a compliance review to approve, redact, reject or withhold.
+
+    Fails closed: anything that is not a clear decision (a missing or
+    malformed review, an unknown or ambiguous recommendation) becomes
+    ``withhold``, which keeps the answer out of the client document. An
+    "approve" that also reports PII or privileged data becomes "redact".
+
+    Args:
+        review: The ``compliance_review`` object produced by the model.
+
+    Returns:
+        One of :data:`APPROVE`, :data:`REDACT`, :data:`REJECT` or
+        :data:`WITHHOLD`.
+    """
+    if not isinstance(review, dict):
+        return WITHHOLD
+    text = str(review.get('recommendation', '')).lower()
+    words = re.findall(r'[a-z]+', text)
+    decisions = {APPROVE, REDACT, REJECT}
+    found = [word for word in words if word in decisions]
+    # "approve/redact/reject" (the prompt's template echoed back) or any
+    # other answer naming more than one decision is ambiguous.
+    if not found or len(set(found)) > 1:
+        return WITHHOLD
+    decision = found[0]
+    flagged = any(
+        str(review.get(field, '')).strip().lower() in ('yes', 'true')
+        for field in ('has_pii', 'has_privileged_data')
+    )
+    if decision == APPROVE and flagged:
+        return REDACT
+    return decision
+
+
+def item_recommendation(item: Dict[str, Any]) -> str:
+    """Return the effective compliance decision for a reviewed answer."""
+    if item.get('compliance_status') != 'reviewed':
+        return WITHHOLD
+    return normalize_recommendation(item.get('compliance_review'))
+
+
+def withheld_details(withheld: List[Any]) -> Dict[str, Any]:
+    """Build the status details that report withheld answers.
+
+    Args:
+        withheld: IDs of the questions whose answers were withheld.
+
+    Returns:
+        Stage attributes ``withheld_count``, ``withheld_questions`` and, if
+        any answer was withheld, a human-readable ``warning``.
+    """
+    details: Dict[str, Any] = {
+        'withheld_count': len(withheld),
+        'withheld_questions': list(withheld),
+    }
+    if withheld:
+        details['warning'] = (
+            f'{len(withheld)} answer(s) could not be compliance reviewed '
+            'and were withheld from the client document. Review them '
+            'manually: ' + ', '.join(f'Q{qid}' for qid in withheld)
+        )
+    return details

@@ -778,6 +778,10 @@
                     <div class="job-stages">
                         ${renderStages(job)}
                     </div>
+                    ${(job.warnings || []).map(warning => `
+                        <div style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(237, 137, 54, 0.12); border-radius: 6px; font-size: 0.875rem;">
+                            <strong>⚠ Needs review:</strong> ${escapeHtml(warning)}
+                        </div>`).join('')}
                     
                     <div class="job-actions">
                         <a href="index.html?track=${escapeHtml(encodeURIComponent(job.file_name))}" class="btn btn-secondary btn-small">

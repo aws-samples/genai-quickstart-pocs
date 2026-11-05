@@ -7,6 +7,10 @@ Writes two files to ``final_responses/``:
 
 * ``<name>_RFP_Response.txt`` - the response document for the client.
 * ``<name>_final.json`` - per-question drafts and compliance reasoning.
+
+Answers the compliance stage withheld, or that it did not clearly approve,
+redact or reject, are never sent to the model or written to the client
+document. A placeholder takes their place and the status record lists them.
 """
 
 import json
@@ -33,9 +37,11 @@ ANSWER_MAX_TOKENS = 4000
 REASONING_MAX_TOKENS = 6000
 
 ACTION_DESCRIPTIONS = {
-    'approve': 'Response approved and enhanced professionally',
-    'redact': 'Sensitive information removed or generalized',
-    'reject': 'Information withheld due to confidentiality requirements',
+    common.APPROVE: 'Response approved and enhanced professionally',
+    common.REDACT: 'Sensitive information removed or generalized',
+    common.REJECT: 'Information withheld due to confidentiality requirements',
+    common.WITHHOLD: ('Withheld from the client document pending manual '
+                      'compliance review'),
 }
 
 APPROVE_PROMPT = """Enhance this RFP response to be more professional and \
@@ -69,13 +75,6 @@ ISSUES: {issues}
 Provide a courteous explanation of why this information cannot be disclosed \
 while maintaining professionalism."""
 
-DEFAULT_PROMPT = """Create a professional RFP response for this question:
-
-QUESTION: {question}
-ORIGINAL ANSWER: {answer}
-
-Make it professional and client-ready."""
-
 DOCUMENT_PROMPT = """Create a comprehensive, professional RFP response \
 document that is ready to send to a prospective client. This should be a \
 complete, well-formatted document that addresses all questions \
@@ -92,6 +91,8 @@ INSTRUCTIONS:
    - "approve": Enhance the response professionally
    - "redact": Remove or generalize sensitive information
    - "reject": Provide polite explanation that information cannot be shared
+   - "withhold": Do not answer the question. Use exactly this text as the \
+response: "{withheld_text}"
 5. Use formal business language throughout
 6. Structure with clear sections and numbering
 7. Include a professional closing
@@ -161,6 +162,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {'statusCode': 500, 'body': json.dumps({'error': str(error)})}
 
     metadata = {common.SOURCE_FILE_METADATA_KEY: source_file}
+    withheld = [item['question_id'] for item in items
+                if common.item_recommendation(item) == common.WITHHOLD]
     bedrock_client = common.bedrock_runtime_client()
     try:
         document = create_rfp_document(bedrock_client, items)
@@ -182,8 +185,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             Body=json.dumps(structured, indent=2),
             ContentType='application/json', Metadata=metadata,
         )
-        logger.info('Saved %s and %s', text_key, json_key)
-        common.update_processing_status(source_file, STAGE, 'completed')
+        logger.info('Saved %s and %s (%d answers withheld)', text_key,
+                    json_key, len(withheld))
+        common.update_processing_status(
+            source_file, STAGE, 'completed',
+            details=common.withheld_details(withheld),
+        )
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -214,8 +221,19 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 def get_recommendation(item: Dict[str, Any]) -> str:
-    """Return the compliance recommendation recorded for an item."""
-    return item.get('compliance_review', {}).get('recommendation', 'approve')
+    """Return the effective compliance decision for an item (fails closed)."""
+    return common.item_recommendation(item)
+
+
+def fallback_answer(item: Dict[str, Any]) -> str:
+    """Return the text to publish when drafting an answer fails.
+
+    Only approved answers may fall back to the original knowledge base
+    answer; everything else is withheld.
+    """
+    if get_recommendation(item) == common.APPROVE:
+        return item['answer']
+    return common.WITHHELD_ANSWER
 
 
 def get_action_description(recommendation: str) -> str:
@@ -242,8 +260,9 @@ def build_structured_output(
             'question': item['question'],
             'original_answer': item['answer'],
             'drafted_answer': drafts.get(str(item['question_id']),
-                                         item['answer']),
+                                         fallback_answer(item)),
             'compliance_status': recommendation,
+            'withheld': recommendation == common.WITHHOLD,
             'has_pii': review.get('has_pii', 'no'),
             'has_privileged_data': review.get('has_privileged_data', 'no'),
             'issues_found': review.get('issues_found', []),
@@ -267,21 +286,26 @@ def _issues_text(item: Dict[str, Any], default: str) -> str:
     return ', '.join(str(issue) for issue in issues) if issues else default
 
 
-def build_answer_prompt(item: Dict[str, Any]) -> str:
-    """Build the per-question drafting prompt for an item's recommendation."""
+def build_answer_prompt(item: Dict[str, Any]) -> Optional[str]:
+    """Build the per-question drafting prompt for an item's decision.
+
+    Returns:
+        The prompt, or None for a withheld answer, which must not be sent
+        to the model.
+    """
     recommendation = get_recommendation(item)
     fields = {'question': item['question'], 'answer': item['answer']}
-    if recommendation == 'approve':
+    if recommendation == common.APPROVE:
         return APPROVE_PROMPT.format(**fields)
-    if recommendation == 'redact':
+    if recommendation == common.REDACT:
         return REDACT_PROMPT.format(
             issues=_issues_text(item, 'sensitive information'), **fields
         )
-    if recommendation == 'reject':
+    if recommendation == common.REJECT:
         return REJECT_PROMPT.format(
             issues=_issues_text(item, 'confidential information'), **fields
         )
-    return DEFAULT_PROMPT.format(**fields)
+    return None
 
 
 def draft_individual_responses(
@@ -299,14 +323,18 @@ def draft_individual_responses(
         question_id = str(item['question_id'])
         logger.info('Drafting question %s (%s)', question_id,
                     get_recommendation(item))
+        prompt = build_answer_prompt(item)
+        if prompt is None:
+            drafts[question_id] = common.WITHHELD_ANSWER
+            continue
         try:
             drafts[question_id] = common.invoke_claude(
-                bedrock_client, build_answer_prompt(item),
-                max_tokens=ANSWER_MAX_TOKENS,
+                bedrock_client, prompt, max_tokens=ANSWER_MAX_TOKENS,
             )
         except Exception:
+            # Fail closed: never fall back to an unredacted answer.
             logger.exception('Error drafting question %s', question_id)
-            drafts[question_id] = item['answer']
+            drafts[question_id] = fallback_answer(item)
         if delay:
             time.sleep(delay)
     return drafts
@@ -357,14 +385,20 @@ def create_document_section(
     """Draft the response document for a set of questions."""
     qa_content = ''
     for item in items:
+        recommendation = get_recommendation(item)
+        # Withheld answers are not sent to the model at all.
+        answer = ('[WITHHELD]' if recommendation == common.WITHHOLD
+                  else item['answer'])
         qa_content += (
             f"\n\nQUESTION {item['question_id']}: {item['question']}\n"
-            f"ORIGINAL ANSWER: {item['answer']}\n"
-            f"COMPLIANCE STATUS: {get_recommendation(item)}\n"
+            f"ORIGINAL ANSWER: {answer}\n"
+            f"COMPLIANCE STATUS: {recommendation}\n"
             f"ISSUES: {_issues_text(item, 'None')}\n---"
         )
     return common.invoke_claude(
-        bedrock_client, DOCUMENT_PROMPT.format(qa_content=qa_content),
+        bedrock_client,
+        DOCUMENT_PROMPT.format(qa_content=qa_content,
+                               withheld_text=common.WITHHELD_ANSWER),
         max_tokens=DOCUMENT_MAX_TOKENS,
     )
 

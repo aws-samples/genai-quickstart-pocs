@@ -755,6 +755,13 @@
                     </div>`;
                 }
 
+                // For example, answers the compliance review withheld.
+                if (stage && stage.warning) {
+                    html += `<div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(237, 137, 54, 0.12); border-radius: 6px; color: var(--gray-800); font-size: 0.875rem;">
+                        <strong>⚠ Needs review:</strong> ${escapeHtml(stage.warning)}
+                    </div>`;
+                }
+
                 html += '</div>';
             });
 
