@@ -5,8 +5,35 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 import os
-import yaml
+import tomllib
 from typing import Dict
+
+import tomli_w
+
+# Streamlit reads st.secrets from this TOML file, relative to the app directory.
+STREAMLIT_SECRETS_PATH = os.path.join('.streamlit', 'secrets.toml')
+
+
+def write_streamlit_secrets(config: Dict, path: str = STREAMLIT_SECRETS_PATH) -> None:
+    """Write config as TOML to path, readable and writable by the owner only.
+
+    The file is created with mode 0600. If it already exists, it is truncated
+    and its mode is reset to 0600 before anything is written.
+    """
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, mode=0o700, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, 'wb') as f:
+        if hasattr(os, 'fchmod'):  # POSIX only; Windows has no Unix modes
+            os.fchmod(f.fileno(), 0o600)
+        tomli_w.dump(config, f)
+
+
+def read_streamlit_secrets(path: str = STREAMLIT_SECRETS_PATH) -> Dict:
+    """Read a secrets file the same way Streamlit does: as TOML."""
+    with open(path, 'rb') as f:
+        return tomllib.load(f)
 
 
 class SetupManager:
@@ -81,13 +108,11 @@ class SetupManager:
             self.logger.error(f"Error verifying Bedrock access: {e}")
             return False
 
-    def create_streamlit_secrets(self, config: Dict) -> bool:
-        """Create Streamlit secrets file"""
+    def create_streamlit_secrets(self, config: Dict, path: str = STREAMLIT_SECRETS_PATH) -> bool:
+        """Create the Streamlit secrets file (TOML, owner read/write only)"""
         try:
-            os.makedirs('.streamlit', exist_ok=True)
-            with open('.streamlit/secrets.toml', 'w') as f:
-                yaml.dump(config, f)
-            self.logger.info("Created Streamlit secrets file")
+            write_streamlit_secrets(config, path)
+            self.logger.info(f"Created Streamlit secrets file: {path}")
             return True
         except Exception as e:
             self.logger.error(f"Error creating Streamlit secrets: {e}")
