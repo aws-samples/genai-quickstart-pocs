@@ -105,7 +105,7 @@ Create a virtual environment in the project folder. The deploy scripts use it au
 **macOS / Linux**
 
 ```bash
-cd agents-quickstart-pocs/rfp-agent-response
+cd industry-specific-pocs/financial-services/rfp-agent-response
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
@@ -114,7 +114,7 @@ pip install -r requirements-dev.txt
 **Windows (PowerShell)**
 
 ```powershell
-cd agents-quickstart-pocs\rfp-agent-response
+cd industry-specific-pocs\financial-services\rfp-agent-response
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
