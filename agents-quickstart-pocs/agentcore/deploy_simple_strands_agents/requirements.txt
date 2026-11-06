@@ -12,4 +12,4 @@ bedrock-agentcore>=0.1.2
 
 # AgentCore CLI and starter toolkit
 agentcore>=0.1.6
-bedrock-agentcore-starter-toolkit>=0.1.6
+bedrock-agentcore-starter-toolkit>=0.3.14
