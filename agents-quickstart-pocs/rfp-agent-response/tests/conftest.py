@@ -52,7 +52,7 @@ def aws_environment(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch):
-    """Make retry back-off and pacing delays instant."""
+    """Make retry back-off instant."""
     import common
     monkeypatch.setattr(common.time, 'sleep', lambda seconds: None)
 

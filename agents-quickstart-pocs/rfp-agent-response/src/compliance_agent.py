@@ -15,7 +15,6 @@ answers were withheld.
 
 import json
 import logging
-import time
 from typing import Any, Dict, List
 from urllib.parse import unquote_plus
 
@@ -29,7 +28,6 @@ logger.setLevel(logging.INFO)
 STAGE = 'compliance_reviewed'
 SUFFIX = '_responses.json'
 MAX_OUTPUT_TOKENS = 4000
-DELAY_BETWEEN_REVIEWS = 5
 
 REVIEW_PROMPT = """Review the following text for PII (Personally \
 Identifiable Information) and privileged/confidential data that should not be \
@@ -110,14 +108,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 def review_responses(
     bedrock_client: Any,
     responses: List[Dict[str, Any]],
-    delay: float = DELAY_BETWEEN_REVIEWS,
 ) -> List[Dict[str, Any]]:
     """Attach a compliance review to every response item.
 
     Args:
         bedrock_client: A ``bedrock-runtime`` boto3 client.
         responses: Items produced by the question processor.
-        delay: Seconds to wait between model calls.
 
     Returns:
         The response items with ``compliance_review``,
@@ -158,8 +154,6 @@ def review_responses(
                 'withheld_reason': 'The compliance review failed',
                 'compliance_error': str(error),
             })
-        if index < len(responses) and delay:
-            time.sleep(delay)
     return reviewed
 
 

@@ -48,7 +48,7 @@ def test_normalize_recommendation(review, expected):
 def test_bedrock_error_withholds_the_answer(bedrock):
     bedrock.fail('ValidationException')
     reviewed = compliance_agent.review_responses(
-        bedrock.client, [_response(1, 'SSN 123-45-6789')], delay=0)
+        bedrock.client, [_response(1, 'SSN 123-45-6789')])
     assert reviewed[0]['compliance_status'] == 'withheld'
     assert reviewed[0]['compliance_decision'] == common.WITHHOLD
     assert 'compliance_error' in reviewed[0]
@@ -57,21 +57,21 @@ def test_bedrock_error_withholds_the_answer(bedrock):
 def test_unparseable_review_withholds_the_answer(bedrock):
     bedrock.reply('I cannot produce JSON for this.')
     reviewed = compliance_agent.review_responses(
-        bedrock.client, [_response(1, 'answer')], delay=0)
+        bedrock.client, [_response(1, 'answer')])
     assert reviewed[0]['compliance_status'] == 'withheld'
 
 
 def test_ambiguous_review_withholds_the_answer(bedrock):
     bedrock.reply(json.dumps({'recommendation': 'approve or redact'}))
     reviewed = compliance_agent.review_responses(
-        bedrock.client, [_response(1, 'answer')], delay=0)
+        bedrock.client, [_response(1, 'answer')])
     assert reviewed[0]['compliance_status'] == 'withheld'
 
 
 def test_clear_review_is_kept(bedrock):
     bedrock.reply(APPROVED)
     reviewed = compliance_agent.review_responses(
-        bedrock.client, [_response(1, 'answer')], delay=0)
+        bedrock.client, [_response(1, 'answer')])
     assert reviewed[0]['compliance_status'] == 'reviewed'
     assert reviewed[0]['compliance_decision'] == common.APPROVE
 
@@ -115,7 +115,7 @@ def test_withheld_answers_never_reach_the_model_or_document(bedrock):
     ]
     bedrock.reply('Drafted 1')
     drafts = drafting_agent.draft_individual_responses(
-        bedrock.client, items, delay=0)
+        bedrock.client, items)
     bedrock.reply('Document')
     drafting_agent.create_rfp_document(bedrock.client, items)
 
@@ -137,7 +137,7 @@ def test_drafting_failure_does_not_publish_unredacted_answer(bedrock):
     for _ in items:
         bedrock.fail('ValidationException')
     drafts = drafting_agent.draft_individual_responses(
-        bedrock.client, items, delay=0)
+        bedrock.client, items)
     assert drafts == {'1': 'approved answer', '2': common.WITHHELD_ANSWER,
                       '3': common.WITHHELD_ANSWER}
 

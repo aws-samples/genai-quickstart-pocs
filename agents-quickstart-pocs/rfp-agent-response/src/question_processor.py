@@ -15,7 +15,6 @@ listed as a warning on the stage.
 import json
 import logging
 import os
-import time
 from typing import Any, Dict, List
 from urllib.parse import unquote_plus
 
@@ -28,9 +27,6 @@ logger.setLevel(logging.INFO)
 
 STAGE = 'questions_answered'
 SUFFIX = '_questions.json'
-# Pause between knowledge base calls to stay under default request quotas.
-DELAY_BETWEEN_QUESTIONS = 5
-
 # Current Claude models have no default RetrieveAndGenerate prompts, so both
 # templates must be provided. Bedrock fills in the $...$ placeholders; the
 # orchestration template must contain $conversation_history$ and
@@ -74,7 +70,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         questions = json.loads(obj['Body'].read().decode('utf-8'))
 
         responses = answer_questions(
-            boto3.client('bedrock-agent-runtime'),
+            boto3.client('bedrock-agent-runtime',
+                         config=common.client_config()),
             questions,
             knowledge_base_id=_required_env('KNOWLEDGE_BASE_ID'),
             model_arn=_required_env('BEDROCK_INFERENCE_PROFILE_ARN'),
@@ -137,7 +134,6 @@ def answer_questions(
     questions: List[str],
     knowledge_base_id: str,
     model_arn: str,
-    delay: float = DELAY_BETWEEN_QUESTIONS,
 ) -> List[Dict[str, Any]]:
     """Answer each question, recording per-question failures.
 
@@ -146,7 +142,6 @@ def answer_questions(
         questions: Questions to answer.
         knowledge_base_id: Bedrock knowledge base ID.
         model_arn: Inference profile ARN used to generate answers.
-        delay: Seconds to wait between questions.
 
     Returns:
         One response item per question.
@@ -175,8 +170,6 @@ def answer_questions(
                 'error': str(error),
             }
         responses.append(item)
-        if index < len(questions) and delay:
-            time.sleep(delay)
     return responses
 
 

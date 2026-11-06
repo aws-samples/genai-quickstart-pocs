@@ -15,7 +15,6 @@ document. A placeholder takes their place and the status record lists them.
 
 import json
 import logging
-import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import unquote_plus
 
@@ -31,7 +30,6 @@ SUFFIX = '_compliance_reviewed.json'
 # RFPs with more questions than this are drafted in chunks and combined.
 CHUNK_THRESHOLD = 50
 CHUNK_SIZE = 25
-DELAY_BETWEEN_DRAFTS = 2
 DOCUMENT_MAX_TOKENS = 16000
 ANSWER_MAX_TOKENS = 4000
 REASONING_MAX_TOKENS = 6000
@@ -311,7 +309,6 @@ def build_answer_prompt(item: Dict[str, Any]) -> Optional[str]:
 def draft_individual_responses(
     bedrock_client: Any,
     items: List[Dict[str, Any]],
-    delay: float = DELAY_BETWEEN_DRAFTS,
 ) -> Dict[str, str]:
     """Draft a client-ready answer for every question.
 
@@ -335,8 +332,6 @@ def draft_individual_responses(
             # Fail closed: never fall back to an unredacted answer.
             logger.exception('Error drafting question %s', question_id)
             drafts[question_id] = fallback_answer(item)
-        if delay:
-            time.sleep(delay)
     return drafts
 
 

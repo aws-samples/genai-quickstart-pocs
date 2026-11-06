@@ -96,13 +96,20 @@ def bedrock_runtime_client(read_timeout: int = 300) -> Any:
     Returns:
         A ``bedrock-runtime`` boto3 client.
     """
-    return boto3.client(
-        'bedrock-runtime',
-        config=Config(
-            read_timeout=read_timeout,
-            connect_timeout=60,
-            retries={'max_attempts': 3, 'mode': 'standard'},
-        ),
+    return boto3.client('bedrock-runtime', config=client_config(read_timeout))
+
+
+def client_config(read_timeout: int = 300) -> Config:
+    """Return the boto3 config for Bedrock clients.
+
+    botocore's own retries are turned off: :func:`call_with_retry` retries
+    throttling and transient errors with exponential backoff and logs each
+    retry, so throttling shows up in the Lambda logs.
+    """
+    return Config(
+        read_timeout=read_timeout,
+        connect_timeout=60,
+        retries={'total_max_attempts': 1, 'mode': 'standard'},
     )
 
 
