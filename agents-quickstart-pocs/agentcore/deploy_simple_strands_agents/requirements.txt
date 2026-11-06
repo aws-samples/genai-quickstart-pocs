@@ -8,7 +8,7 @@ requests>=2.34.2
 strands-agents>=1.64.0
 
 # Amazon Bedrock AgentCore Runtime
-bedrock-agentcore>=0.1.2
+bedrock-agentcore>=0.1.7
 
 # AgentCore CLI and starter toolkit
 agentcore>=0.1.6
