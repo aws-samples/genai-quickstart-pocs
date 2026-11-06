@@ -1,5 +1,5 @@
 # Core dependencies for SFHDF Document Processor POC
-streamlit>=1.28.0
+streamlit>=1.66.1
 boto3>=1.43.121
 botocore>=1.29.0
 pandas>=1.5.0
