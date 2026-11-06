@@ -76,7 +76,7 @@ rfp-agent-response/
 ├── web/templates/                  # Static web UI (index, status, downloads, json-explorer, admin)
 │   └── js/app.js                   # Sign-in, API calls, escaping helpers
 ├── example-data/
-│   ├── sample-rfps/                # Sample RFPs (.txt)
+│   ├── sample-rfps/                # Sample RFPs (.txt and .pdf)
 │   └── knowledge-base-docs/        # Sample knowledge base documents (.md)
 ├── tests/                          # Unit tests (pytest, moto, botocore Stubber)
 ├── requirements-dev.txt            # Test and lint tools
@@ -206,6 +206,7 @@ To try it, upload one of the samples in `example-data/sample-rfps/`:
 - `banking-core-system-rfp.txt`
 - `payment-processing-rfp.txt`
 - `cybersecurity-services-rfp.txt`
+- `treasury-management-rfp.pdf` (a two-page PDF, to try PDF text extraction)
 
 The pipeline takes a few minutes per RFP, depending on the number of questions.
 
