@@ -529,11 +529,18 @@ def normalize_recommendation(review: Any) -> str:
     if not isinstance(review, dict):
         return WITHHOLD
     text = str(review.get('recommendation', '')).lower()
-    words = re.findall(r'[a-z]+', text)
     decisions = {APPROVE, REDACT, REJECT}
-    found = [word for word in words if word in decisions]
-    # "approve/redact/reject" (the prompt's template echoed back) or any
-    # other answer naming more than one decision is ambiguous.
+
+    def named(fragment: str) -> List[str]:
+        return [w for w in re.findall(r'[a-z]+', fragment) if w in decisions]
+
+    # The decision is normally the head of the value ("approve: because
+    # ..."); the explanation after it may mention other decisions.
+    found = named(re.split(r'[:\-\u2013\u2014.(]', text, maxsplit=1)[0])
+    if not found:
+        found = named(text)
+    # "approve/redact/reject" (the prompt's template echoed back), "approve
+    # or redact", or no decision at all is not a clear decision.
     if not found or len(set(found)) > 1:
         return WITHHOLD
     decision = found[0]

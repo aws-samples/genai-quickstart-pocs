@@ -29,6 +29,14 @@ def _response(question_id, answer):
     ({'recommendation': 'approve/redact/reject with explanation'},
      common.WITHHOLD),
     ({'recommendation': 'manual review required'}, common.WITHHOLD),
+    # Seen in live testing: the explanation mentions another decision.
+    ({'recommendation': 'approve: no PII and no financial data that should '
+                        'be redacted'}, common.APPROVE),
+    ({'recommendation': 'redact: includes internal pricing; do not approve '
+                        'as is'}, common.REDACT),
+    ({'recommendation': 'approve or redact'}, common.WITHHOLD),
+    ({'recommendation': 'redact', 'explanation': 'internal pricing'},
+     common.REDACT),
     ({}, common.WITHHOLD),
     (None, common.WITHHOLD),
     ('approve', common.WITHHOLD),

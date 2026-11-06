@@ -45,12 +45,13 @@ proprietary details)
 3. Financial data that should be restricted
 4. Any other sensitive information
 
-Return your analysis in JSON format:
+Return only a JSON object in this format:
 {{
-  "has_pii": "yes/no",
-  "has_privileged_data": "yes/no",
+  "has_pii": "yes" or "no",
+  "has_privileged_data": "yes" or "no",
   "issues_found": ["list of specific issues found"],
-  "recommendation": "approve/redact/reject with explanation"
+  "recommendation": exactly one of "approve", "redact" or "reject",
+  "explanation": "why you chose that recommendation"
 }}"""
 
 
