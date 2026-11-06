@@ -85,7 +85,7 @@ done
 step "2. Checking S3 bucket structure..."
 for prefix in uploaded_rfp_requests formatted_questions completed_responses compliance_reviewed final_responses; do
     COUNT="$(aws s3api list-objects-v2 --bucket "$BUCKET_NAME" --region "$REGION" --prefix "$prefix/" \
-        --query 'KeyCount' --output text 2>/dev/null || echo error)"
+        --query 'length(Contents || `[]`)' --output json 2>/dev/null || echo error)"
     if [ "$COUNT" = "error" ]; then
         bad "$prefix/: error checking"
     elif [ "$COUNT" = "0" ]; then
@@ -130,7 +130,7 @@ START_MS="$(( $(date +%s) - 3600 ))000"
 for fn in $(printf '%s' "$FUNCTIONS" | tr ',' ' '); do
     ERRORS="$(aws logs filter-log-events --log-group-name "/aws/lambda/$fn" --region "$REGION" \
         --start-time "$START_MS" --filter-pattern ERROR --max-items 50 \
-        --query 'length(events)' --output text 2>/dev/null || echo none)"
+        --query 'length(events)' --output json 2>/dev/null || echo none)"
     if [ "$ERRORS" = "none" ]; then
         note "$fn: no logs yet"
     elif [ "$ERRORS" = "0" ]; then

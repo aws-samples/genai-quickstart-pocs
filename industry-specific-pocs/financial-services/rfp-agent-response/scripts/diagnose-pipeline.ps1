@@ -49,7 +49,7 @@ foreach ($fn in $functions) { Write-Good "Function: $fn" }
 Write-Step "2. Checking S3 bucket structure..."
 foreach ($prefix in @("uploaded_rfp_requests", "formatted_questions", "completed_responses", "compliance_reviewed", "final_responses")) {
     $count = aws s3api list-objects-v2 --bucket $bucketName --region $Region --prefix "$prefix/" `
-        --query "KeyCount" --output text 2>$null
+        --query "length(Contents || ``[]``)" --output json 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Bad "${prefix}/: error checking"
     } elseif ("$count".Trim() -eq "0") {
@@ -89,7 +89,7 @@ Write-Step "5. Checking Lambda logs for errors in the last hour..."
 $startMs = [DateTimeOffset]::UtcNow.AddHours(-1).ToUnixTimeMilliseconds()
 foreach ($fn in $functions) {
     $errors = aws logs filter-log-events --log-group-name "/aws/lambda/$fn" --region $Region `
-        --start-time $startMs --filter-pattern ERROR --max-items 50 --query "length(events)" --output text 2>$null
+        --start-time $startMs --filter-pattern ERROR --max-items 50 --query "length(events)" --output json 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Note "${fn}: no logs yet"
     } elseif ("$errors".Trim() -eq "0") {
