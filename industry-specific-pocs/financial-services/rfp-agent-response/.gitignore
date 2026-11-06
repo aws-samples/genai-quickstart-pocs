@@ -1,0 +1,53 @@
+# Deployment artifacts (packages, rendered web site, stack outputs)
+build/
+
+# Test files
+temp_rfp.txt
+test-rfp-*.txt
+response.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv/
+venv/
+env/
+ENV/
+
+# IDE and Editor files
+.vscode/
+.kiro/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS and deployment
+.aws/
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Node modules (if any web dependencies)
+node_modules/
+
+# Backup files
+*.bak
+*.backup
+*.orig

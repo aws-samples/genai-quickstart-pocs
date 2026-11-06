@@ -1,0 +1,108 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Title (Request for Proposal: Treasury Management System) /Producer (rfp-agent-response sample) >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 7 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+7 0 obj
+<< /Length 3044 >>
+stream
+BT /F2 16 Tf 60 719 Td (Request for Proposal: Treasury Management System) Tj ET
+BT /F1 11 Tf 60 703 Td () Tj ET
+BT /F1 11 Tf 60 687 Td (Issued by: Example Regional Bank \(fictional\)) Tj ET
+BT /F1 11 Tf 60 671 Td (RFP number: ERB-2026-TMS-014) Tj ET
+BT /F1 11 Tf 60 655 Td (Response due: 15 January 2027) Tj ET
+BT /F1 11 Tf 60 639 Td () Tj ET
+BT /F2 11 Tf 60 623 Td (1. Introduction) Tj ET
+BT /F1 11 Tf 60 607 Td (Example Regional Bank is seeking a vendor to provide a cloud-based treasury management) Tj ET
+BT /F1 11 Tf 60 591 Td (system for its commercial banking clients and its internal treasury team. This RFP describes) Tj ET
+BT /F1 11 Tf 60 575 Td (our requirements. Vendors must respond to every requirement in Section 3.) Tj ET
+BT /F1 11 Tf 60 559 Td () Tj ET
+BT /F2 11 Tf 60 543 Td (2. Background) Tj ET
+BT /F1 11 Tf 60 527 Td (Example Regional Bank serves approximately 4,000 commercial clients across three states. Our) Tj ET
+BT /F1 11 Tf 60 511 Td (current treasury platform is an on-premises system that is reaching end of support. We want) Tj ET
+BT /F1 11 Tf 60 495 Td (to modernize cash visibility, payments, liquidity forecasting and risk management, while) Tj ET
+BT /F1 11 Tf 60 479 Td (meeting our regulatory obligations.) Tj ET
+BT /F1 11 Tf 60 463 Td () Tj ET
+BT /F2 11 Tf 60 447 Td (3. Requirements) Tj ET
+BT /F1 11 Tf 60 431 Td () Tj ET
+BT /F2 11 Tf 60 415 Td (3.1 Company and experience) Tj ET
+BT /F1 11 Tf 60 399 Td (- Describe your company history, ownership and financial stability.) Tj ET
+BT /F1 11 Tf 60 383 Td (- Provide at least three references from banks of similar size.) Tj ET
+BT /F1 11 Tf 60 367 Td () Tj ET
+BT /F2 11 Tf 60 351 Td (3.2 Cash management and visibility) Tj ET
+BT /F1 11 Tf 60 335 Td (- The system must provide real-time cash positions across all client accounts and banks.) Tj ET
+BT /F1 11 Tf 60 319 Td (- The system must support automated bank statement reconciliation \(BAI2 and ISO 20022) Tj ET
+BT /F1 11 Tf 60 303 Td (  camt.053\).) Tj ET
+BT /F1 11 Tf 60 287 Td (- Describe your approach to cash pooling and sweeping.) Tj ET
+BT /F1 11 Tf 60 271 Td () Tj ET
+BT /F2 11 Tf 60 255 Td (3.3 Payments) Tj ET
+BT /F1 11 Tf 60 239 Td (- The system must support ACH, wire, RTP and FedNow payments with configurable approval) Tj ET
+BT /F1 11 Tf 60 223 Td (  workflows.) Tj ET
+BT /F1 11 Tf 60 207 Td (- Describe your payment fraud detection and prevention capabilities.) Tj ET
+BT /F1 11 Tf 60 191 Td () Tj ET
+BT /F2 11 Tf 60 175 Td (3.4 Liquidity and forecasting) Tj ET
+BT /F1 11 Tf 60 159 Td (- The system must provide cash flow forecasting with at least a 13-week horizon.) Tj ET
+BT /F1 11 Tf 60 143 Td (- Describe how your forecasting uses historical data and machine learning.) Tj ET
+BT /F1 11 Tf 60 127 Td () Tj ET
+BT /F2 11 Tf 60 111 Td (3.5 Risk management) Tj ET
+BT /F1 11 Tf 60 95 Td (- The system must support foreign exchange and interest rate risk monitoring.) Tj ET
+BT /F1 11 Tf 60 79 Td (- Describe your counterparty risk and limit management features.) Tj ET
+BT /F1 11 Tf 60 63 Td () Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 9 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+9 0 obj
+<< /Length 1312 >>
+stream
+BT /F2 11 Tf 60 724 Td (3.6 Security and compliance) Tj ET
+BT /F1 11 Tf 60 708 Td (- List your security certifications and audit reports \(for example SOC 2 Type II, ISO 27001,) Tj ET
+BT /F1 11 Tf 60 692 Td (  PCI DSS\).) Tj ET
+BT /F1 11 Tf 60 676 Td (- Describe how you support FFIEC, SOX and data residency requirements.) Tj ET
+BT /F1 11 Tf 60 660 Td (- Vendors must demonstrate encryption of data in transit and at rest, and multi-factor) Tj ET
+BT /F1 11 Tf 60 644 Td (  authentication.) Tj ET
+BT /F1 11 Tf 60 628 Td () Tj ET
+BT /F2 11 Tf 60 612 Td (3.7 Implementation and support) Tj ET
+BT /F1 11 Tf 60 596 Td (- Describe your implementation methodology and a typical timeline.) Tj ET
+BT /F1 11 Tf 60 580 Td (- Describe your support model, service levels and uptime commitment.) Tj ET
+BT /F1 11 Tf 60 564 Td () Tj ET
+BT /F2 11 Tf 60 548 Td (3.8 Pricing) Tj ET
+BT /F1 11 Tf 60 532 Td (- Provide your pricing model, including implementation fees and annual subscription costs.) Tj ET
+BT /F1 11 Tf 60 516 Td () Tj ET
+BT /F2 11 Tf 60 500 Td (4. Submission instructions) Tj ET
+BT /F1 11 Tf 60 484 Td (Responses must be submitted electronically as a single PDF. Questions about this RFP may be) Tj ET
+BT /F1 11 Tf 60 468 Td (sent to the procurement contact listed in the cover letter until 15 December 2026.) Tj ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000383 00000 n 
+0000000519 00000 n 
+0000003615 00000 n 
+0000003751 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R /Info 5 0 R >>
+startxref
+5115
+%%EOF
