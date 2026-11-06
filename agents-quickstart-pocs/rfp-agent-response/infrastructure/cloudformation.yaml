@@ -206,11 +206,14 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
+          # RetrieveAndGenerate also calls GetInferenceProfile with the
+          # caller's credentials when given an inference profile ARN.
           - Sid: InvokeInferenceProfile
             Effect: Allow
             Action:
               - bedrock:InvokeModel
               - bedrock:InvokeModelWithResponseStream
+              - bedrock:GetInferenceProfile
             Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}'
           # A cross-Region inference profile routes each request to the
           # foundation model in one of several destination Regions, so the

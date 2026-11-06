@@ -5,6 +5,11 @@
 Triggered by S3 ``ObjectCreated`` events under ``formatted_questions/``.
 Calls ``RetrieveAndGenerate`` once per question and writes the answers to
 ``completed_responses/<name>_responses.json``.
+
+If no question can be answered (for example, the knowledge base or model is
+not reachable), the stage fails and the pipeline stops, instead of passing
+placeholder answers on to drafting. Questions that fail individually are
+listed as a warning on the stage.
 """
 
 import json
@@ -25,6 +30,29 @@ STAGE = 'questions_answered'
 SUFFIX = '_questions.json'
 # Pause between knowledge base calls to stay under default request quotas.
 DELAY_BETWEEN_QUESTIONS = 5
+
+# Current Claude models have no default RetrieveAndGenerate prompts, so both
+# templates must be provided. Bedrock fills in the $...$ placeholders; the
+# orchestration template must contain $conversation_history$ and
+# $output_format_instructions$, and the generation template $search_results$.
+ORCHESTRATION_PROMPT = (
+    'You turn a question from a Request for Proposal (RFP) into a concise '
+    'search query for a company knowledge base.\n\n'
+    '<conversation_history>\n$conversation_history$\n'
+    '</conversation_history>\n\n'
+    '$output_format_instructions$\n\n'
+    'Question: $query$'
+)
+GENERATION_PROMPT = (
+    'You answer questions from a Request for Proposal (RFP) on behalf of the '
+    'company, using only the information in the search results below. If the '
+    'search results do not contain the answer, say that the information is '
+    'not available in the knowledge base. Do not invent facts, figures or '
+    'certifications.\n\n'
+    '<search_results>\n$search_results$\n</search_results>\n\n'
+    'Question: $query$\n\n'
+    '$output_format_instructions$'
+)
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -52,6 +80,14 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_arn=_required_env('BEDROCK_INFERENCE_PROFILE_ARN'),
         )
 
+        failed = [item['question_id'] for item in responses
+                  if item['status'] != 'answered']
+        if responses and len(failed) == len(responses):
+            raise RuntimeError(
+                f'None of the {len(responses)} questions could be answered '
+                'from the knowledge base. First error: '
+                f"{responses[0].get('error', 'unknown')}")
+
         output_key = f'{common.RESPONSES_PREFIX}{base_name}_responses.json'
         s3_client.put_object(
             Bucket=bucket,
@@ -60,8 +96,19 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             ContentType='application/json',
             Metadata={common.SOURCE_FILE_METADATA_KEY: source_file},
         )
-        logger.info('Saved %d responses to %s', len(responses), output_key)
-        common.update_processing_status(source_file, STAGE, 'completed')
+        logger.info('Saved %d responses to %s (%d failed)', len(responses),
+                    output_key, len(failed))
+        details = None
+        if failed:
+            details = {
+                'failed_questions': failed,
+                'warning': (
+                    f'{len(failed)} question(s) could not be answered from '
+                    'the knowledge base: '
+                    + ', '.join(f'Q{qid}' for qid in failed)),
+            }
+        common.update_processing_status(source_file, STAGE, 'completed',
+                                        details=details)
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -142,7 +189,7 @@ def query_knowledge_base(
     """Retrieve context for ``question`` and generate an answer.
 
     ``RetrieveAndGenerate`` needs the full ARN of the inference profile,
-    not just its ID.
+    not just its ID, and explicit orchestration and generation prompts.
     """
     response = common.call_with_retry(
         lambda: kb_client.retrieve_and_generate(
@@ -152,6 +199,14 @@ def query_knowledge_base(
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': knowledge_base_id,
                     'modelArn': model_arn,
+                    'orchestrationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': ORCHESTRATION_PROMPT},
+                    },
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': GENERATION_PROMPT},
+                    },
                 },
             },
         )

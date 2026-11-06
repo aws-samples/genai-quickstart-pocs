@@ -36,7 +36,7 @@ All Lambda functions run on Python 3.14 and are deployed from one package built 
 
 1. **Upload.** The browser asks `POST /upload` for permission to upload. The API checks the file type and size and returns a presigned S3 POST for `uploaded_rfp_requests/<name>_<timestamp>.<ext>`. The browser uploads the file straight to S3; the presigned policy caps the size (10 MB by default), so S3 rejects larger files.
 2. **Question extraction** (`rfp_question_extractor.py`). Reads the PDF (with [pypdf](https://pypi.org/project/pypdf/)) or text file and asks Claude to turn every requirement into a question. Output: `formatted_questions/<name>_questions.json`.
-3. **Answers** (`question_processor.py`). Calls Bedrock `RetrieveAndGenerate` against your knowledge base for each question. Output: `completed_responses/<name>_responses.json`.
+3. **Answers** (`question_processor.py`). Calls Bedrock `RetrieveAndGenerate` against your knowledge base for each question, with custom orchestration and generation prompts that tell the model to answer only from the retrieved content. Output: `completed_responses/<name>_responses.json`. If no question can be answered (for example, the knowledge base can't be reached), the stage fails and the pipeline stops; questions that fail individually are flagged as "Needs review".
 4. **Compliance review** (`compliance_agent.py`). Asks Claude whether each answer contains PII or privileged information and whether to approve, redact or reject it. Output: `compliance_reviewed/<name>_compliance_reviewed.json`.
 5. **Drafting** (`drafting_agent.py`). Drafts a polished answer per question and a complete response document, applying each compliance decision. Output:
    - `final_responses/<name>_RFP_Response.txt`: the client-ready response document.
