@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "InlineAgent"
 description = "Lightweight SDK for Amazon Bedrock Inline Agents"
 dependencies = [
-  "boto3 == 1.43.121",
+  "boto3 == 1.43.123",
   "pydantic == 2.11.10",
   "termcolor == 2.5.0",
   "rich == 13.9.4",
@@ -20,7 +20,7 @@ dependencies = [
   "openinference-semantic-conventions == 0.1.16",
   "pydantic-settings == 2.8.1",
   "wrapt == 1.17.2",
-  "botocore == 1.43.121",
+  "botocore == 1.43.123",
   "mcp == 1.30.0",
   "loguru == 0.7.3",
   # Data handling and analysis

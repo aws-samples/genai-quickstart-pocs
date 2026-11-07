@@ -1,6 +1,6 @@
 # Amazon Bedrock NVIDIA Nemotron POC
-streamlit>=1.36.0
-boto3>=1.43.121
+streamlit>=1.66.1
+boto3>=1.43.123
 numpy>=1.26.0
 
 # Guardrails (primary engine). If these are unavailable at runtime, the app
