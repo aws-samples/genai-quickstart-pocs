@@ -10,8 +10,8 @@
   <ItemGroup>
 	<PackageReference Include="AWSSDK.Bedrock" Version="3.7.515.6" />
 	<PackageReference Include="AWSSDK.BedrockAgent" Version="3.7.503.47" />
-	<PackageReference Include="AWSSDK.BedrockAgentRuntime" Version="3.7.305.6" />
-	<PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.302.5" />
+	<PackageReference Include="AWSSDK.BedrockAgentRuntime" Version="3.7.504.47" />
+	<PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.514.21" />
 	<PackageReference Include="LangChain" Version="0.13.0" />
 	<PackageReference Include="LangChain.Core" Version="0.13.0" />
 	<PackageReference Include="LangChain.Databases.Sqlite" Version="0.14.0" />
