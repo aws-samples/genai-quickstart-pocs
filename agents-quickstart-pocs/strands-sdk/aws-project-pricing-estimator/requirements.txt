@@ -2,12 +2,12 @@
 # UV will automatically resolve and install additional dependencies
 
 # Core dependencies
-strands-agents>=1.62.0
+strands-agents>=1.63.0
 mcp>=1.13.0
-streamlit>=1.48.0
+streamlit>=1.66.1
 
 # AWS SDK
-boto3>=1.43.121
+boto3>=1.43.123
 botocore>=1.40.0
 
 # HTTP and async support

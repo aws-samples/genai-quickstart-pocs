@@ -1,6 +1,6 @@
 # Core dependencies for AWS and configuration
 PyYAML>=6.0.3
-boto3>=1.43.121
+boto3>=1.43.123
 flask>=2.3.3
 requests>=2.34.2
 
@@ -8,8 +8,8 @@ requests>=2.34.2
 strands-agents>=1.64.0
 
 # Amazon Bedrock AgentCore Runtime
-bedrock-agentcore>=0.1.2
+bedrock-agentcore>=0.1.7
 
 # AgentCore CLI and starter toolkit
 agentcore>=0.1.6
-bedrock-agentcore-starter-toolkit>=0.1.6
+bedrock-agentcore-starter-toolkit>=0.3.14
