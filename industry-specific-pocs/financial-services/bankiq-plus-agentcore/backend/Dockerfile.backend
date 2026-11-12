@@ -1,5 +1,5 @@
 # BankIQ+ Backend - ECS Fargate
-FROM public.ecr.aws/docker/library/node:24-alpine
+FROM public.ecr.aws/docker/library/node:26-alpine
 
 # Install Python3 and pip for PDF processing
 RUN apk add --no-cache python3 py3-pip
