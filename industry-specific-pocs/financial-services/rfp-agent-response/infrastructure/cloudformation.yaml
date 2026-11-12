@@ -1,0 +1,552 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RFP Processing System with Knowledge Base Integration'
+
+Parameters:
+  KnowledgeBaseId:
+    Type: String
+    Description: 'The ID of the Amazon Bedrock Knowledge Base to use for RFP response generation'
+    AllowedPattern: '^[0-9A-Z]{10}$'
+    ConstraintDescription: 'Must be a 10-character knowledge base ID such as ABC123DEF4'
+
+  BedrockModelId:
+    Type: String
+    Default: 'us.anthropic.claude-haiku-5-5'
+    Description: >-
+      Cross-Region inference profile ID of the Claude model used by every
+      pipeline stage (for example us.anthropic.claude-haiku-5-5). The first
+      segment is the geography prefix, the rest is the foundation model ID.
+    AllowedPattern: '^[a-z]+\.[a-z0-9-]+\.[A-Za-z0-9.:-]+$'
+    ConstraintDescription: 'Must be an inference profile ID such as us.anthropic.claude-haiku-5-5'
+
+  WebAppOrigin:
+    Type: String
+    Default: ''
+    Description: >-
+      Origin of the web app (https://<distribution>.cloudfront.net), allowed
+      by the upload bucket's CORS rule for browser uploads. Leave empty on the
+      first deployment; the deploy scripts set it after the web stack exists.
+    AllowedPattern: '^(https://[A-Za-z0-9.-]+)?$'
+
+Conditions:
+  HasWebAppOrigin: !Not [!Equals [!Ref WebAppOrigin, '']]
+
+Resources:
+  DeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'terminal-deploy-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  DeploymentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DeploymentBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt DeploymentBucket.Arn
+              - !Sub '${DeploymentBucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
+
+  # Holds the uploaded RFPs and the output of every pipeline stage, one
+  # prefix per stage. Each stage is triggered by an event notification on
+  # the previous stage's prefix.
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    # The notification configuration below is validated when it is applied,
+    # so the Lambda permissions must exist first. The permissions reference
+    # the bucket by its constructed ARN rather than !GetAtt, which avoids a
+    # circular dependency.
+    DependsOn:
+      - ProcessorInvokePermission
+      - QuestionProcessorInvokePermission
+      - ComplianceAgentInvokePermission
+      - DraftingAgentInvokePermission
+    Properties:
+      BucketName: !Sub 'terminal-upload-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      VersioningConfiguration:
+        Status: Enabled
+      # Browsers upload RFPs (presigned POST) and read pipeline files
+      # (presigned GET) straight from this bucket. The presigned URLs are
+      # issued by the authenticated upload and download APIs.
+      CorsConfiguration: !If
+        - HasWebAppOrigin
+        - CorsRules:
+            - AllowedOrigins:
+                - !Ref WebAppOrigin
+              AllowedMethods:
+                - GET
+                - POST
+              AllowedHeaders:
+                - '*'
+              MaxAge: 3000
+        - !Ref AWS::NoValue
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt ProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: uploaded_rfp_requests/
+                  - Name: suffix
+                    Value: .txt
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt ProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: uploaded_rfp_requests/
+                  - Name: suffix
+                    Value: .pdf
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt QuestionProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: formatted_questions/
+                  - Name: suffix
+                    Value: .json
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt ComplianceAgentFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: completed_responses/
+                  - Name: suffix
+                    Value: .json
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt DraftingAgentFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: compliance_reviewed/
+                  - Name: suffix
+                    Value: .json
+
+  UploadBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UploadBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt UploadBucket.Arn
+              - !Sub '${UploadBucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
+
+  ProcessingStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: rfp-processing-status
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: file_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: file_name
+          KeyType: HASH
+
+  # ---------------------------------------------------------------------
+  # Shared least-privilege policies
+  # ---------------------------------------------------------------------
+
+  StatusTableWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: 'Read and write pipeline status records'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt ProcessingStatusTable.Arn
+
+  BedrockInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: 'Invoke the configured Claude model through its cross-Region inference profile only'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # RetrieveAndGenerate also calls GetInferenceProfile with the
+          # caller's credentials when given an inference profile ARN.
+          - Sid: InvokeInferenceProfile
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+              - bedrock:GetInferenceProfile
+            Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}'
+          # A cross-Region inference profile routes each request to the
+          # foundation model in one of several destination Regions, so the
+          # foundation model must be allowed in every Region. The condition
+          # restricts this to requests made through the profile above.
+          - Sid: InvokeFoundationModelThroughProfile
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+            Resource: !Sub
+              - 'arn:${AWS::Partition}:bedrock:*::foundation-model/${FoundationModelId}'
+              - FoundationModelId: !Join
+                  - '.'
+                  - - !Select [1, !Split ['.', !Ref BedrockModelId]]
+                    - !Select [2, !Split ['.', !Ref BedrockModelId]]
+            Condition:
+              StringLike:
+                'bedrock:InferenceProfileArn': !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}'
+
+  # ---------------------------------------------------------------------
+  # Stage 1: question extraction
+  # ---------------------------------------------------------------------
+
+  ProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Ref StatusTableWritePolicy
+        - !Ref BedrockInvokePolicy
+      Policies:
+        - PolicyName: PipelineObjects
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/formatted_questions/*'
+
+  ProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-processor-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.14
+      Handler: rfp_question_extractor.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          TABLE_NAME: !Ref ProcessingStatusTable
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt ProcessorRole.Arn
+      MemorySize: 512
+      Timeout: 900
+
+  ProcessorInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
+
+  # ---------------------------------------------------------------------
+  # Stage 2: knowledge base answers
+  # ---------------------------------------------------------------------
+
+  QuestionProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Ref StatusTableWritePolicy
+        # RetrieveAndGenerate invokes the model with the caller's permissions.
+        - !Ref BedrockInvokePolicy
+      Policies:
+        - PolicyName: PipelineObjects
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/formatted_questions/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/completed_responses/*'
+        - PolicyName: KnowledgeBase
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: bedrock:Retrieve
+                Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/${KnowledgeBaseId}'
+              # bedrock:RetrieveAndGenerate does not support resource-level
+              # permissions. The knowledge base and model it can use are
+              # limited by the Retrieve and InvokeModel statements.
+              - Effect: Allow
+                Action: bedrock:RetrieveAndGenerate
+                Resource: '*'
+
+  QuestionProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'question-processor-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.14
+      Handler: question_processor.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt QuestionProcessorRole.Arn
+      MemorySize: 256
+      Timeout: 900
+      Environment:
+        Variables:
+          KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          # RetrieveAndGenerate needs the full inference profile ARN.
+          BEDROCK_INFERENCE_PROFILE_ARN: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}'
+          TABLE_NAME: !Ref ProcessingStatusTable
+
+  QuestionProcessorInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref QuestionProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
+
+  # ---------------------------------------------------------------------
+  # Stage 3: compliance review
+  # ---------------------------------------------------------------------
+
+  ComplianceAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Ref StatusTableWritePolicy
+        - !Ref BedrockInvokePolicy
+      Policies:
+        - PolicyName: PipelineObjects
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/completed_responses/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/compliance_reviewed/*'
+
+  ComplianceAgentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'compliance-agent-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.14
+      Handler: compliance_agent.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          TABLE_NAME: !Ref ProcessingStatusTable
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt ComplianceAgentRole.Arn
+      MemorySize: 256
+      Timeout: 900
+
+  ComplianceAgentInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ComplianceAgentFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
+
+  # ---------------------------------------------------------------------
+  # Stage 4: drafting
+  # ---------------------------------------------------------------------
+
+  DraftingAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Ref StatusTableWritePolicy
+        - !Ref BedrockInvokePolicy
+      Policies:
+        - PolicyName: PipelineObjects
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/compliance_reviewed/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/uploaded_rfp_requests/*'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}/final_responses/*'
+
+  DraftingAgentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'drafting-agent-${AWS::AccountId}-${AWS::Region}'
+      Runtime: python3.14
+      Handler: drafting_agent.lambda_handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          TABLE_NAME: !Ref ProcessingStatusTable
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder - will be updated'}
+      Role: !GetAtt DraftingAgentRole.Arn
+      MemorySize: 256
+      Timeout: 900
+
+  DraftingAgentInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DraftingAgentFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub 'arn:${AWS::Partition}:s3:::terminal-upload-${AWS::AccountId}-${AWS::Region}'
+
+Outputs:
+  BucketName:
+    Description: 'Name of the S3 bucket for uploads'
+    Value: !Ref UploadBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+
+  DeploymentBucket:
+    Description: 'Name of the S3 bucket for deployments'
+    Value: !Ref DeploymentBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-DeploymentBucket'
+
+  TableName:
+    Description: 'Name of the DynamoDB processing status table'
+    Value: !Ref ProcessingStatusTable
+    Export:
+      Name: !Sub '${AWS::StackName}-TableName'
+
+  TableArn:
+    Description: 'ARN of the DynamoDB processing status table'
+    Value: !GetAtt ProcessingStatusTable.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-TableArn'
+
+  FunctionName:
+    Description: 'Name of the RFP processor Lambda function'
+    Value: !Ref ProcessorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+
+  QuestionProcessorFunctionName:
+    Description: 'Name of the question processor Lambda function'
+    Value: !Ref QuestionProcessorFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-QuestionProcessorFunctionName'
+
+  ComplianceAgentFunctionName:
+    Description: 'Name of the compliance agent Lambda function'
+    Value: !Ref ComplianceAgentFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-ComplianceAgentFunctionName'
+
+  DraftingAgentFunctionName:
+    Description: 'Name of the drafting agent Lambda function'
+    Value: !Ref DraftingAgentFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-DraftingAgentFunctionName'
+
+  LambdaFunctionNames:
+    Description: 'Comma-separated names of every Lambda function in this stack (used by the deploy scripts)'
+    Value: !Join
+      - ','
+      - - !Ref ProcessorFunction
+        - !Ref QuestionProcessorFunction
+        - !Ref ComplianceAgentFunction
+        - !Ref DraftingAgentFunction
+
+  BedrockModelId:
+    Description: 'Inference profile ID used by the pipeline'
+    Value: !Ref BedrockModelId

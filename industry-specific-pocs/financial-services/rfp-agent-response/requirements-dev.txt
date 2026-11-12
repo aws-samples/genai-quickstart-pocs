@@ -1,0 +1,7 @@
+# Development and test dependencies (Lambda runtime dependencies are in
+# src/requirements.txt).
+-r src/requirements.txt
+pytest>=8
+moto[s3,dynamodb]>=5
+flake8>=7
+cfn-lint>=1
