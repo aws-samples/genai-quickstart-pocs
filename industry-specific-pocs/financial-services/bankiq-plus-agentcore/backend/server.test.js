@@ -10,7 +10,7 @@ let app;
 
 beforeAll(async () => {
   process.env.AUTH_ENABLED = 'false';
-  // AWS SDK is configured at import time but never invoked by these routes.
+  // The S3 client is created at import time but never invoked by these routes.
   const mod = await import('./server.js');
   app = mod.default || mod;
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const https = require('https');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -37,8 +37,9 @@ const logger = {
   }
 };
 
-// Configure AWS SDK - will automatically use ECS task role
-AWS.config.update({
+// AWS SDK v3 S3 client - credentials come from the default provider chain
+// (the ECS task role when deployed)
+const s3Client = new S3Client({
   region: process.env.REGION || 'us-east-1',
   logger: DEBUG_MODE ? console : undefined // Enable AWS SDK logging in debug mode
 });
@@ -89,6 +90,10 @@ setInterval(() => {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Loopback by default so a local `node server.js` is not reachable from other
+// machines. The container image sets HOST=0.0.0.0 so the ALB can reach the
+// task; the ECS security group only admits traffic from the ALB.
+const HOST = process.env.HOST || '127.0.0.1';
 
 // Log startup configuration
 logger.info('='.repeat(80));
@@ -660,9 +665,6 @@ app.post('/api/upload-pdf', expensiveLimiter, async (req, res) => {
       // Step 2: Upload to S3
       let s3Key = null;
       try {
-        const AWS = require('aws-sdk');
-        const s3 = new AWS.S3();
-
         // Generate S3 key: uploaded-docs/{bank_name}/{year}/{form_type}/{filename}
         const sanitizedBankName = metadata.bank_name.replace(/[^a-zA-Z0-9]/g, '_');
         s3Key = `uploaded-docs/${sanitizedBankName}/${metadata.year}/${metadata.form_type}/${file.name}`;
@@ -670,7 +672,7 @@ app.post('/api/upload-pdf', expensiveLimiter, async (req, res) => {
         // Decode base64 and upload
         const pdfBuffer = Buffer.from(file.content, 'base64');
 
-        await s3.putObject({
+        await s3Client.send(new PutObjectCommand({
           Bucket: process.env.UPLOADED_DOCS_BUCKET || 'bankiq-uploaded-docs-prod',
           Key: s3Key,
           Body: pdfBuffer,
@@ -681,7 +683,7 @@ app.post('/api/upload-pdf', expensiveLimiter, async (req, res) => {
             'year': metadata.year.toString(),
             'original-filename': file.name
           }
-        }).promise();
+        }));
 
         console.log(`[${new Date().toISOString()}] ✅ Uploaded to S3: ${s3Key}`);
       } catch (s3Error) {
@@ -1316,8 +1318,8 @@ app.post('/api/admin/clear-cache', (req, res) => {
 // imported by tests. This keeps `node server.js` behavior identical while
 // allowing supertest to exercise the Express app without binding a port.
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`✅ BankIQ+ Backend running on port ${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`✅ BankIQ+ Backend running on ${HOST}:${PORT}`);
     console.log(`   Health check: http://localhost:${PORT}/health`);
     console.log(`   Chat API (async): http://localhost:${PORT}/api/chat`);
     console.log(`   Agent API (direct): http://localhost:${PORT}/api/invoke-agent`);
