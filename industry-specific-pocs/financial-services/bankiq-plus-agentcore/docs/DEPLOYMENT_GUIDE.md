@@ -61,13 +61,13 @@ choco install docker-desktop -y
 docker --version
 ```
 
-**Node.js 20+:**
+**Node.js 24+:**
 ```bash
 # macOS
-brew install node@22
+brew install node@24
 
 # Linux
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Windows (PowerShell as Admin)
@@ -412,7 +412,7 @@ To delete all resources:
 - [ ] AWS CLI configured
 - [ ] AgentCore CLI installed
 - [ ] Docker installed
-- [ ] Node.js 20+ installed
+- [ ] Node.js 24+ installed
 - [ ] Repository cloned
 - [ ] `./cfn/scripts/deploy-all.sh` completed
 - [ ] CloudFront URL accessible

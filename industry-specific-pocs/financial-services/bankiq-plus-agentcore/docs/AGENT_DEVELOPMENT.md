@@ -14,7 +14,7 @@
 ### 2. **Backend Container** (Node.js - ECS)
 - **File**: `Dockerfile.backend`
 - **Purpose**: Express API server
-- **Base**: `public.ecr.aws/docker/library/node:22-alpine`
+- **Base**: `public.ecr.aws/docker/library/node:24-alpine`
 - **Runs**: `server.js`
 - **Port**: 3001
 - **Deployed by**: Docker build + ECR push + ECS update
