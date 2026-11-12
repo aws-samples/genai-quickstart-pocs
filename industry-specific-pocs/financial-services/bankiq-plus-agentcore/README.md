@@ -142,7 +142,7 @@ Amazon Bedrock AgentCore is a **managed agent runtime** that handles:
 - AWS Account with administrative access
 - AWS Bedrock access enabled (see setup below)
 - AWS CLI configured (`aws configure`)
-- Node.js 18+ (for frontend build)
+- Node.js 26+ (for frontend build and running the backend locally)
 - Python 3.11+ (for AgentCore CLI)
 - AgentCore CLI: `pip install bedrock-agentcore-starter-toolkit`
 

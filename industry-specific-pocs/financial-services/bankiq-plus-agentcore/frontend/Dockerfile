@@ -1,5 +1,5 @@
 # Multi-stage build for React UI
-FROM node:18-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 COPY package*.json ./
@@ -10,7 +10,7 @@ ENV VITE_PROXY_URL=http://bankiq-platform-alb-614395446.us-east-1.elb.amazonaws.
 RUN npm run build
 
 # Production stage with serve
-FROM --platform=linux/amd64 node:18-alpine
+FROM --platform=linux/amd64 node:26-alpine
 RUN npm install -g serve
 WORKDIR /app
 COPY --from=build /app/build ./build

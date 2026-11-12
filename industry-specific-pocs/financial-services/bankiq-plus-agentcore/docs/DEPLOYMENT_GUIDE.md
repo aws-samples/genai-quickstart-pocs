@@ -61,13 +61,13 @@ choco install docker-desktop -y
 docker --version
 ```
 
-**Node.js 18+:**
+**Node.js 26+:**
 ```bash
 # macOS
-brew install node@18
+brew install node   # current Homebrew node is 26.x; check with `node -v`
 
 # Linux
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_26.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Windows (PowerShell as Admin)
@@ -255,6 +255,7 @@ The agent remembers "their" = Webster Financial from the first query.
 - `UPLOADED_DOCS_BUCKET` - S3 bucket for documents (bankiq-uploaded-docs-prod)
 - `REGION` - AWS region (us-east-1)
 - `PORT` - Backend port (3001)
+- `HOST` - Interface the backend listens on. Defaults to `127.0.0.1`; the backend image sets `0.0.0.0` so the ALB can reach the task
 
 ### Frontend Configuration
 Edit `frontend/src/config.js`:
@@ -411,7 +412,7 @@ To delete all resources:
 - [ ] AWS CLI configured
 - [ ] AgentCore CLI installed
 - [ ] Docker installed
-- [ ] Node.js 18+ installed
+- [ ] Node.js 26+ installed
 - [ ] Repository cloned
 - [ ] `./cfn/scripts/deploy-all.sh` completed
 - [ ] CloudFront URL accessible

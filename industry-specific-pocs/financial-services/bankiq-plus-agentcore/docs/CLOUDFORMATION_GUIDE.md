@@ -69,7 +69,7 @@ cd package
 
 **For Package Creator:**
 - Docker installed
-- Node.js 18+
+- Node.js 26+
 - npm installed
 - Project built and tested
 
