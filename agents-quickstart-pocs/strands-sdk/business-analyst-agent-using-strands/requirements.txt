@@ -76,7 +76,7 @@ seaborn==0.13.2
 six==1.17.0
 slack-bolt==1.30.0
 slack-sdk==3.45.0
-soupsieve==3.0.3
+soupsieve==4.0
 sse-starlette==3.5.0
 starlette==1.8.0
 strands-agents-tools==0.8.12
