@@ -10,6 +10,9 @@
 @using Amazon.BedrockAgent.Model
 @using Amazon.BedrockAgentRuntime
 @using Amazon.BedrockAgentRuntime.Model
+@* AWSSDK.Bedrock 3.7.5xx also defines RetrieveAndGenerateType and SearchType; this page uses the Agent Runtime ones. *@
+@using RetrieveAndGenerateType = Amazon.BedrockAgentRuntime.RetrieveAndGenerateType
+@using SearchType = Amazon.BedrockAgentRuntime.SearchType
 @using Amazon.BedrockRuntime;
 @using Amazon.BedrockRuntime.Model;
 @using Amazon.Runtime.EventStreams;

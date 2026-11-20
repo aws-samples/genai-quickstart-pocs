@@ -26,7 +26,7 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
 - **Perform incident managemnt, change managemnt,knowlegebase management with natural language prompts.**
 - **Modern Streamlit UI**: User-friendly chat interface for ITSM operations.
 - **LLM integration**: Works with Bedrock or other 3rd party LLMs.
-- **Easy extensibility**: Add new ServiceNow tools to the MCP server and they become available instantly. Incorporates Strands's `swarm` tool for multi-agent collaboration.
+- **Easy extensibility**: Add new ServiceNow tools to the MCP server and they become available instantly.
 - **Query ServiceNow records and tables**: Use natural language to retrieve any record or table in ServiceNow.
 - **Create, update, and delete ServiceNow records**: Perform full CRUD operations on ServiceNow data.
 - **Natural language interface for all MCP tools**: Any tool exposed by the MCP server is available to the agent via natural language queries.
@@ -92,28 +92,23 @@ MCP ServiceNow Helpdesk Assistant is an AI-powered chatbot for ServiceNow incide
    - See [echelon-ai-labs/servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) for setup instructions.
    - Skip the Setup #3  under installation of this repository if you are using below config file within your application to start the MCP server.
    
-5. **Configure  ServiceNow MCP server with your application :**
+5. **Configure the ServiceNow MCP server:**
 
-Edit `config.py` with your ServiceNow MCP server details.  
-If you install the servicenow‑mcp server at `C:/my-mcp-servers`, then your command should look like this:
+`config.py` reads the ServiceNow settings from environment variables, or from a `.env` file in this directory. Nothing is hard-coded. Copy the template and fill it in:
 
-```powershell
-"C:\\my-mcp-servers\\servicenow-mcp\\.venv\\Scripts\\python.exe"
-
+```bash
+cp .env.example .env
 ```
 
-```python
-SERVICENOW_MCP_CONFIG = {
-    "command": "path_to_servicenow_mcp_server\\.venv\\Scripts\\python.exe",
-    "args": ["-m", "servicenow_mcp.cli"],
-    "env": {
-        "SERVICENOW_INSTANCE_URL": "https://your-instance.service-now.com",
-        "SERVICENOW_USERNAME": "your-username",
-        "SERVICENOW_PASSWORD": "your-password",
-        "SERVICENOW_AUTH_TYPE": "basic"
-    }
-}
-```
+| Variable | Required | Description |
+|---|---|---|
+| `SERVICENOW_MCP_COMMAND` | yes | Python interpreter of your servicenow-mcp install, e.g. `/path/to/servicenow-mcp/.venv/bin/python` or `C:\path\to\servicenow-mcp\.venv\Scripts\python.exe` |
+| `SERVICENOW_INSTANCE_URL` | yes | Your instance, e.g. `https://your-instance.service-now.com` |
+| `SERVICENOW_USERNAME` | yes | The ServiceNow user the agent acts as |
+| `SERVICENOW_PASSWORD` | yes | That user's password |
+| `SERVICENOW_AUTH_TYPE` | no | Defaults to `basic` |
+
+If a required variable is missing, the agent prints an error that names each missing variable and does not start the MCP server. `.env` is git-ignored; don't commit real credentials.
 
 ## Usage
 
@@ -194,7 +189,7 @@ Here are some example prompts you can use with the MCP ServiceNow Helpdesk Assis
 ## Resources
 
 - [Strands Agents SDK](https://pypi.org/project/strands-agents/)
-- [strands-agents-tools](https://pypi.org/project/strands-agents-tools/)
+- [Strands vended tools](https://strandsagents.com/docs/user-guide/migrate/strands-agents-tools/) (replace the deprecated strands-agents-tools package)
 - [ServiceNow MCP server](https://github.com/echelon-ai-labs/servicenow-mcp) 
 - [Streamlit] (https://streamlit.io/)
 

@@ -1,0 +1,186 @@
+# Dependabot configuration for genai-quickstart-pocs
+#
+# This repo is a monorepo of independent sample POCs, each with its own
+# manifests, so an unrestricted config could open hundreds of PRs. The
+# choices below keep the volume low:
+#
+# - Version updates run monthly, with a small open-pull-requests-limit
+#   per ecosystem and a 7-day cooldown, so brand-new releases settle
+#   before they are proposed.
+# - Version updates are grouped by dependency name across directories
+#   (group-by: dependency-name): one PR bumps one dependency in every POC
+#   that uses it, instead of one PR per POC.
+# - Semver-major version updates are ignored. Majors in sample code need
+#   hand testing, so we do those in our own PRs. This ignore rule does not
+#   suppress security updates: Dependabot skips update-types ignores when
+#   it computes a security fix.
+# - Security updates are grouped per ecosystem (applies-to:
+#   security-updates), so fixes arrive as one PR per ecosystem.
+# - Groups do not use update-types filters. Those compare against the
+#   newest registry release and can leave updates ungrouped.
+# - Commit messages and PR titles use "chore(deps): ..." to match the
+#   repo's conventional-commit style.
+#
+# Python: three POCs use uv (uv.lock). They are listed under the uv
+# ecosystem and deliberately left out of the pip list. If pip covered
+# them too, it would edit pyproject.toml without updating uv.lock, and
+# both ecosystems would open duplicate PRs. When you add a new uv-based
+# POC, add it under uv. Other Python POCs outside
+# genai-quickstart-pocs-python/ must be added to the pip list explicitly.
+#
+# .NET: the five project directories are listed directly. The .sln files
+# are not, because a solution directory and its project directories
+# would cover the same .csproj twice.
+#
+# There are no GitHub Actions workflows in this repo today, so the
+# github-actions ecosystem is not configured.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/**/*"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      npm-version-updates:
+        applies-to: version-updates
+        group-by: dependency-name
+        patterns: ["*"]
+      npm-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "pip"
+    directories:
+      # Every POC under genai-quickstart-pocs-python/ uses pip.
+      - "/genai-quickstart-pocs-python/**/*"
+      # agents-quickstart-pocs/ (strands-sdk/mcp-aws-documentation-server uses uv)
+      - "/agents-quickstart-pocs/agentcore/deploy_simple_strands_agents"
+      - "/agents-quickstart-pocs/amazon-bedrock-agent-text-to-speech-poc/streamlit_app"
+      - "/agents-quickstart-pocs/banking-connect-ai"
+      - "/agents-quickstart-pocs/fsi-agents-with-mcp/src"
+      - "/agents-quickstart-pocs/fsi-agents-with-mcp/src/InlineAgent"
+      - "/agents-quickstart-pocs/mcp-helpdesk-servicenow-agent"
+      - "/agents-quickstart-pocs/mcp-shipment-weather-monitor"
+      - "/agents-quickstart-pocs/mcp-shipment-weather-monitor/database"
+      - "/agents-quickstart-pocs/mcp-shipment-weather-monitor/email_service"
+      - "/agents-quickstart-pocs/mcp-shipment-weather-monitor/weather"
+      - "/agents-quickstart-pocs/nova-sonic-language-translator/backend"
+      - "/agents-quickstart-pocs/strands-sdk/aws-project-pricing-estimator"
+      - "/agents-quickstart-pocs/strands-sdk/business-analyst-agent-using-strands"
+      # industry-specific-pocs/ (swarm_Automated_FinancialResearchAnalysis and
+      # pe_fund_redemptions/genai use uv)
+      - "/industry-specific-pocs/financial-services/Strands-Multi-Agent-Collaboration/graph_IntelligentLoanUnderwriting"
+      - "/industry-specific-pocs/financial-services/Strands-Multi-Agent-Collaboration/swarm_DemandLetters"
+      - "/industry-specific-pocs/financial-services/Strands-Multi-Agent-Collaboration/workflow_ClaimsAdjudication"
+      - "/industry-specific-pocs/financial-services/bankiq-plus-agentcore/backend"
+      - "/industry-specific-pocs/financial-services/intelligent-document-processing/sample-loan-automation-app"
+      - "/industry-specific-pocs/financial-services/intelligent-document-processing/standard_flood_hazard_determination_form"
+      - "/industry-specific-pocs/financial-services/pe_fund_redemptions/agent_core_config/archived_mcp_tools/database-query"
+      - "/industry-specific-pocs/financial-services/pe_fund_redemptions/agent_core_config/archived_mcp_tools/fund-documents"
+      - "/industry-specific-pocs/financial-services/pe_fund_redemptions/agent_core_config/fund-document-service"
+      - "/industry-specific-pocs/financial-services/pe_fund_redemptions/agent_core_config/pe-data-service"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      pip-version-updates:
+        applies-to: version-updates
+        group-by: dependency-name
+        patterns: ["*"]
+      pip-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "uv"
+    directories:
+      - "/agents-quickstart-pocs/strands-sdk/mcp-aws-documentation-server"
+      - "/industry-specific-pocs/financial-services/Strands-Multi-Agent-Collaboration/swarm_Automated_FinancialResearchAnalysis"
+      - "/industry-specific-pocs/financial-services/pe_fund_redemptions/genai"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      uv-version-updates:
+        applies-to: version-updates
+        group-by: dependency-name
+        patterns: ["*"]
+      uv-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/**/*"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      docker-version-updates:
+        applies-to: version-updates
+        group-by: dependency-name
+        patterns: ["*"]
+      docker-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "nuget"
+    directories:
+      - "/genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Converse.Api.Poc/Amazon.Bedrock.Converse.Api"
+      - "/genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Document.Generator.Poc"
+      - "/genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Guardrail.Poc/Amazon.Bedrock.Guardrail"
+      - "/genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Knowledgebases.Rag.Poc"
+      - "/genai-quickstart-pocs-dot-net/Genai.Quickstart.Pocs/Amazon.Bedrock.Rag.Kendra.Poc"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      nuget-version-updates:
+        applies-to: version-updates
+        group-by: dependency-name
+        patterns: ["*"]
+      nuget-security-updates:
+        applies-to: security-updates
+        patterns: ["*"]

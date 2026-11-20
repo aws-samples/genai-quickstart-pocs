@@ -170,7 +170,7 @@ function App() {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <ServiceDetails
-              model="Nova Sonic 2"
+              model="Nova 2.5 Sonic"
               region="us-east-1"
               languages="EN ↔ ES"
               latency="<500ms"

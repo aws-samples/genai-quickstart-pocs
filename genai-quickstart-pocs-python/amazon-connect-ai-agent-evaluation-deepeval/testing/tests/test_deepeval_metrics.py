@@ -7,6 +7,12 @@ Teams that prefer test-runner semantics can run:
 This produces the same evaluation results as ``python -m src``, but surfaces
 each assertion as a distinct pytest outcome. Useful for integration into
 existing pytest-driven CI pipelines.
+
+Every test here is an integration test (``-m integration``): it calls the
+deployed agent (Amazon Lex V2 for the ``connect`` invoker, the AgentCore
+Gateway for ``gateway``) and an Amazon Bedrock judge model. When the target
+isn't configured (scripts/setup_env.sh or setup_env.ps1 not run), the tests
+are skipped with a message saying which environment variables are missing.
 """
 
 from __future__ import annotations
@@ -44,9 +50,38 @@ def _load_test_cases_for_pytest():
 
 _CONFIG, _CASES = _load_test_cases_for_pytest()
 
+pytestmark = pytest.mark.integration
+
+
+def _missing_target_env(invoker_name: str, config) -> list:
+    """Return the environment variables the chosen invoker needs but doesn't have."""
+    if invoker_name == "connect":
+        required = [config.invoker.connect.bot_id_env, config.invoker.connect.bot_alias_id_env]
+        return [name for name in required if not os.environ.get(name)]
+    if invoker_name == "gateway":
+        gateway_id_env = config.invoker.gateway.gateway_id_env
+        if os.environ.get(gateway_id_env) or os.environ.get("AGENTCORE_GATEWAY_URL"):
+            return []
+        return [f"{gateway_id_env} (or AGENTCORE_GATEWAY_URL)"]
+    return []
+
 
 @pytest.fixture(scope="session")
-def metrics():
+def integration_target():
+    """Skip the suite, with a reason, unless the deployed agent is configured."""
+    name = os.environ.get("HARNESS_INVOKER") or _CONFIG.invoker.default
+    missing = _missing_target_env(name, _CONFIG)
+    if missing:
+        pytest.skip(
+            f"integration test: the {name!r} invoker needs {', '.join(missing)}. "
+            "Deploy the sample and run scripts/setup_env.sh (or setup_env.ps1), "
+            "with AWS credentials that can call Amazon Bedrock, to run it."
+        )
+    return name
+
+
+@pytest.fixture(scope="session")
+def metrics(integration_target):
     judge = get_bedrock_judge(
         model_id=_CONFIG.aws.bedrock_model_id,
         region=_CONFIG.aws.region,
@@ -60,15 +95,14 @@ def metrics():
 
 
 @pytest.fixture(scope="session")
-def invoker():
-    name = os.environ.get("HARNESS_INVOKER") or _CONFIG.invoker.default
-    inv = build_invoker(name, _CONFIG)
+def invoker(integration_target):
+    inv = build_invoker(integration_target, _CONFIG)
     yield inv
     inv.close()
 
 
 @pytest.mark.parametrize("case", _CASES, ids=[c.test_id for c in _CASES])
-def test_agent_response(case, invoker, metrics):
+def test_agent_response(case, integration_target, invoker, metrics):
     if assert_test is None:  # pragma: no cover
         pytest.skip("deepeval is not installed")
 

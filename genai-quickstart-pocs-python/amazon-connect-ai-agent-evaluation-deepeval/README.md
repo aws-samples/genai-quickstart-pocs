@@ -272,6 +272,8 @@ deepeval test run tests/test_deepeval_metrics.py
 
 The pytest path honors the `HARNESS_CONFIG`, `HARNESS_TEST_CASES`, and `HARNESS_INVOKER` environment variables.
 
+These tests are marked `integration`. They call the deployed agent and the Bedrock judge, so they need the environment from `scripts/setup_env.sh` (or `setup_env.ps1`) and AWS credentials. Without that environment, pytest skips them and prints the variables that are missing. Deselect them with `-m "not integration"`.
+
 ## Configuration reference
 
 Any value in `config/default.yaml` can be overridden by passing an alternate file with `--config`.

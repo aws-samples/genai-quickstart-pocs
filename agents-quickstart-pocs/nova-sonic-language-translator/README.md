@@ -2,7 +2,7 @@
 
 **⚠️ NON-PRODUCTION USE ONLY - This is a proof-of-concept demonstration**
 
-Real-time bidirectional speech-to-speech translation powered by Amazon Nova Sonic 2, enabling communication between speakers of different languages.
+Real-time bidirectional speech-to-speech translation powered by Amazon Nova 2.5 Sonic, enabling communication between speakers of different languages.
 
 ## Overview
 
@@ -32,7 +32,7 @@ This PoC demonstrates AI-powered real-time translation for communication scenari
                      │
                      ▼
          ┌───────────────────────┐
-         │  Amazon Nova Sonic 2  │
+         │ Amazon Nova 2.5 Sonic │
          │  (Amazon Bedrock)     │
          │  Bidirectional Stream │
          └───────────────────────┘
@@ -42,7 +42,7 @@ This PoC demonstrates AI-powered real-time translation for communication scenari
 
 - **Backend**: Python 3.11+ with FastAPI, WebSockets, aws-sdk-bedrock-runtime
 - **Frontend**: React 18 + Vite + Tailwind CSS (main app) + Standalone HTML (2-party demo)
-- **AI Model**: Amazon Nova Sonic 2 (`amazon.nova-2-sonic-v1:0`)
+- **AI Model**: Amazon Nova 2.5 Sonic (`amazon.nova-2-5-sonic`)
 - **Cloud**: Amazon Bedrock (us-east-1)
 
 ## Supported Languages
@@ -93,9 +93,14 @@ Ensure AWS credentials are available via one of:
 ```bash
 cd packages/backend-python
 source venv/bin/activate
-python two_party_server.py
-# Server starts on ws://localhost:8082
+python two_party_server_fastapi.py
+# Server starts on ws://127.0.0.1:8082 (loopback only)
 ```
+
+The backend binds to `127.0.0.1` by default. To bind another address on
+purpose (for example `0.0.0.0` inside a container), set `SERVER_HOST`. See
+[backend/README.md](backend/README.md#network-binding) before exposing it:
+the servers have no authentication.
 
 **Terminal 2 - Frontend:**
 ```bash
@@ -132,7 +137,7 @@ npm run dev --workspace=packages/frontend
 | Server | Port | Description |
 |--------|------|-------------|
 | `server.py` | 3001 | Single-user mode with speaker toggle |
-| `two_party_server.py` | 8082 | 2-party mode (recommended for demo) |
+| `two_party_server_fastapi.py` | 8082 | 2-party mode (recommended for demo) |
 | Frontend (Vite) | 5173 | React app + static HTML demo |
 
 ## Features

@@ -9,11 +9,12 @@ import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from strands import Agent, tool
-from strands_tools import swarm, file_write
+# strands-agents-tools 0.9.0 removed its tools; strands.vended_tools.write replaces file_write.
+from strands.vended_tools import write
 from config import CHATBOT_CONFIG
 from mcp import StdioServerParameters, stdio_client
 from strands.tools.mcp import MCPClient
-from config import SERVICENOW_MCP_CONFIG
+from config import get_servicenow_mcp_config
 from config import AWS_CONFIG
 
 class ServiceNowChatbot:
@@ -29,13 +30,17 @@ class ServiceNowChatbot:
     def initialize_agent(self):
         """Initialize the chatbot agent with tools and system prompt"""
         try:
+            # Read ServiceNow settings from the environment; raises a clear
+            # error naming any missing setting (see .env.example).
+            servicenow_mcp_config = get_servicenow_mcp_config()
+
             # Connect to ServiceNow MCP server and discover tools
             self.mcp_client = MCPClient(
                 lambda: stdio_client(
                     StdioServerParameters(
-                        command=SERVICENOW_MCP_CONFIG["command"],
-                        args=SERVICENOW_MCP_CONFIG["args"],
-                        env=SERVICENOW_MCP_CONFIG["env"]
+                        command=servicenow_mcp_config["command"],
+                        args=servicenow_mcp_config["args"],
+                        env=servicenow_mcp_config["env"]
                     )
                 )
             )
@@ -81,7 +86,7 @@ class ServiceNowChatbot:
                 
                 Use the available tools to perform actions and provide helpful responses to users.
                 """,
-                tools=self.tools + [file_write]
+                tools=self.tools + [write]
             )
         except Exception as e:
             print(f"Error initializing agent: {str(e)}")

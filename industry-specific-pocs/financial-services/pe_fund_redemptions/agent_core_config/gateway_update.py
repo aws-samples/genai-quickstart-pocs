@@ -60,7 +60,9 @@ def main():
     if not lambda_arn:
         return
     
-    print(f"✅ Found existing gateway: {gateway_config['gateway_id']}")
+    # gateway_config comes from the 'pe_mcp_auth' secret, which also holds the
+    # OAuth client secret, so none of its values are printed.
+    print("✅ Found existing gateway configuration in Secrets Manager secret 'pe_mcp_auth'")
     print(f"✅ Found Lambda function: {lambda_arn}")
     
     # Setup the client
@@ -138,8 +140,7 @@ def main():
             return
     
     print(f"\n🎉 Gateway update complete!")
-    print(f"Gateway ID: {gateway_config['gateway_id']}")
-    print(f"Gateway URL: {gateway_config['gateway_url']}")
+    print("Gateway ID and URL: printed by gateway_deploy.py, and stored in the 'pe_mcp_auth' secret")
     print(f"Lambda ARN: {lambda_arn}")
     print(f"\n📝 Next steps:")
     print("1. Test with: AWS_PROFILE=your-profile uv run test_mcp_gateway.py")

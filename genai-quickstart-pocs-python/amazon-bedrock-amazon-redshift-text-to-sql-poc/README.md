@@ -193,7 +193,7 @@ This will automatically remove all created AWS resources including the Redshift 
     - Check that you saved the .env file after editing
 
 - **"App won't start**:
-    - Ensure Python 3.8+ is installed: python --version
+    - Ensure Python 3.11+ is installed: python --version
     - Install requirements: pip install -r requirements.txt
     - Try: python -m streamlit run app.py
 
