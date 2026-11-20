@@ -25,7 +25,7 @@ This project provides a Streamlit-based chatbot app and agent tools for interact
 
 ### Prerequisites
 
-- Python 3.11 or newer (Pillow 13 requires 3.11+)
+- Python 3.11.5 or newer (Pillow 13 requires 3.11+; soupsieve 4 requires 3.11.5+)
 - Git (for cloning the repository)
 - Internet connection (for installing dependencies and accessing AWS docs)
 - AWS credentials (optional, for enhanced functionality)
@@ -124,7 +124,7 @@ python agent.py
 ## Troubleshooting
 
 ### Common Issues
-- **Dependencies:** Ensure you are using Python 3.11+ and all dependencies are installed.
+- **Dependencies:** Ensure you are using Python 3.11.5+ and all dependencies are installed.
 - **AWS Credentials:** If you use AWS services, make sure your credentials are set up (see [AWS docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)).
 - **Port in Use:** If port 8501 is busy, Streamlit will suggest an alternative or you can specify one:
   ```bash
