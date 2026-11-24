@@ -6,6 +6,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const crypto = require('crypto');
 const { verifyToken } = require('./auth-middleware');
+const { signAgentCoreRequest, credentials } = require('./agentcore-signer');
 const NodeCache = require('node-cache');
 const rateLimit = require('express-rate-limit');
 
@@ -179,7 +180,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Enhanced diagnostics endpoint (only in debug mode)
-app.get('/api/diagnostics', (req, res) => {
+app.get('/api/diagnostics', async (req, res) => {
   if (!DEBUG_MODE) {
     return res.status(403).json({ error: 'Diagnostics only available in debug mode' });
   }
@@ -187,9 +188,11 @@ app.get('/api/diagnostics', (req, res) => {
   const agentRuntimeArn = process.env.AGENTCORE_AGENT_ARN;
 
   if (!agentRuntimeArn) {
-    throw new Error('AGENTCORE_AGENT_ARN environment variable not set');
+    // async handler: Express 4 does not catch a thrown error here, so reply.
+    return res.status(500).json({ error: 'AGENTCORE_AGENT_ARN environment variable not set' });
   }
   const region = agentRuntimeArn.split(':')[3] || 'us-east-1';
+  const hasCredentials = await credentials().then(() => true, () => false);
 
   res.json({
     service: 'BankIQ+ Backend',
@@ -208,8 +211,8 @@ app.get('/api/diagnostics', (req, res) => {
       endpoint: `bedrock-agentcore.${region}.amazonaws.com`
     },
     aws: {
-      hasCredentials: !!AWS.config.credentials,
-      credentialsType: AWS.config.credentials?.constructor?.name || 'None'
+      hasCredentials,
+      credentialsType: 'defaultProvider (@aws-sdk/credential-provider-node)'
     },
     memory: {
       heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
@@ -333,35 +336,23 @@ async function invokeAgent(req, res) {
 
     logger.info(`Invoking AgentCore via HTTPS API...`);
 
-    // Ensure credentials are loaded
-    logger.debug('Loading AWS credentials...');
-    await new Promise((resolve, reject) => {
-      AWS.config.getCredentials((err) => {
-        if (err) {
-          logger.error('Failed to load AWS credentials:', err);
-          reject(err);
-        } else {
-          logger.debug('AWS credentials loaded successfully');
-          logger.debug(`Access Key ID: ${AWS.config.credentials.accessKeyId.substring(0, 10)}...`);
-          resolve();
-        }
-      });
-    });
-
-    // Sign the request using AWS Signature V4
-    const endpoint = new AWS.Endpoint(host);
-    const request = new AWS.HttpRequest(endpoint, region);
-
-    request.method = 'POST';
-    request.path = path;
-    request.headers['Host'] = host;
-    request.headers['Content-Type'] = 'application/json';
-    request.headers['X-Amzn-Bedrock-AgentCore-Runtime-Session-Id'] = runtimeSessionId;
-    request.body = payload;
-
-    // Sign the request
-    const signer = new AWS.Signers.V4(request, 'bedrock-agentcore');
-    signer.addAuthorization(AWS.config.credentials, new Date());
+    // Sign the request using AWS Signature V4 (SDK v3 signer, default
+    // credential provider chain)
+    logger.debug('Signing AgentCore request...');
+    const request = {
+      method: 'POST',
+      path,
+      headers: await signAgentCoreRequest({
+        region,
+        host,
+        path,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': runtimeSessionId
+        },
+        body: payload
+      })
+    };
 
     // Make HTTPS request
     logger.debug('Sending HTTPS request to AgentCore...');
@@ -375,7 +366,8 @@ async function invokeAgent(req, res) {
         headers: request.headers
       };
 
-      logger.debug(`Request headers: ${JSON.stringify(request.headers, null, 2)}`);
+      // Header names only: the values include the SigV4 signature and session token.
+      logger.debug(`Request headers: ${Object.keys(request.headers).join(', ')}`);
 
       const req = https.request(options, (res) => {
         let data = '';
@@ -503,25 +495,20 @@ Use professional banking terminology and provide quantitative insights with spec
     const host = `bedrock-agentcore.${region}.amazonaws.com`;
     const path = `/runtimes/${encodeURIComponent(agentRuntimeArn)}/invocations`;
 
-    await new Promise((resolve, reject) => {
-      AWS.config.getCredentials((err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-
-    const endpoint = new AWS.Endpoint(host);
-    const request = new AWS.HttpRequest(endpoint, region);
-
-    request.method = 'POST';
-    request.path = path;
-    request.headers['Host'] = host;
-    request.headers['Content-Type'] = 'application/json';
-    request.headers['X-Amzn-Bedrock-AgentCore-Runtime-Session-Id'] = runtimeSessionId;
-    request.body = payload;
-
-    const signer = new AWS.Signers.V4(request, 'bedrock-agentcore');
-    signer.addAuthorization(AWS.config.credentials, new Date());
+    const request = {
+      method: 'POST',
+      path,
+      headers: await signAgentCoreRequest({
+        region,
+        host,
+        path,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': runtimeSessionId
+        },
+        body: payload
+      })
+    };
 
     const response = await new Promise((resolve, reject) => {
       const options = {
@@ -1129,32 +1116,21 @@ async function processJob(jobId) {
 
     console.log(`[${new Date().toISOString()}] Job ${jobId} - Calling AgentCore at ${host}${path}`);
 
-    // Ensure credentials are loaded
-    await new Promise((resolve, reject) => {
-      AWS.config.getCredentials((err) => {
-        if (err) {
-          console.error(`[${new Date().toISOString()}] Job ${jobId} - AWS credentials error:`, err);
-          reject(err);
-        } else {
-          console.log(`[${new Date().toISOString()}] Job ${jobId} - AWS credentials loaded`);
-          resolve();
-        }
-      });
-    });
-
-    // Sign the request
-    const endpoint = new AWS.Endpoint(host);
-    const request = new AWS.HttpRequest(endpoint, region);
-
-    request.method = 'POST';
-    request.path = path;
-    request.headers['Host'] = host;
-    request.headers['Content-Type'] = 'application/json';
-    request.headers['X-Amzn-Bedrock-AgentCore-Runtime-Session-Id'] = runtimeSessionId;
-    request.body = payload;
-
-    const signer = new AWS.Signers.V4(request, 'bedrock-agentcore');
-    signer.addAuthorization(AWS.config.credentials, new Date());
+    // Sign the request (SDK v3 SigV4, default credential provider chain)
+    const request = {
+      method: 'POST',
+      path,
+      headers: await signAgentCoreRequest({
+        region,
+        host,
+        path,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': runtimeSessionId
+        },
+        body: payload
+      })
+    };
 
     // Make HTTPS request (no timeout limit)
     const response = await new Promise((resolve, reject) => {
