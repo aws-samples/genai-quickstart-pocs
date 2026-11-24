@@ -3,7 +3,9 @@ const jwksClient = require('jwks-rsa');
 
 const COGNITO_REGION = process.env.COGNITO_REGION || 'us-east-1';
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
-const AUTH_ENABLED = process.env.AUTH_ENABLED === 'true';
+// Fail closed: token verification is on unless AUTH_ENABLED is explicitly
+// 'false' (local development without Cognito only).
+const AUTH_ENABLED = process.env.AUTH_ENABLED !== 'false';
 
 // JWKS client to get Cognito public keys
 const client = jwksClient({
@@ -25,10 +27,18 @@ function getKey(header, callback) {
   });
 }
 
+// Refuse to serve without token checks on anything but loopback, so a
+// deployment can never run with AUTH_ENABLED=false.
+function assertAuthConfig(host) {
+  if (!AUTH_ENABLED && host !== '127.0.0.1') {
+    throw new Error(`AUTH_ENABLED=false is only allowed when HOST is 127.0.0.1 (got HOST=${host})`);
+  }
+}
+
 const verifyToken = (req, res, next) => {
   // If auth is disabled, skip verification
   if (!AUTH_ENABLED) {
-    console.log('[Auth] Authentication disabled - skipping token verification');
+    console.log('[Auth] Authentication disabled (AUTH_ENABLED=false) - skipping token verification');
     return next();
   }
 
@@ -56,4 +66,4 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-module.exports = { verifyToken };
+module.exports = { verifyToken, assertAuthConfig };

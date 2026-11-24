@@ -294,13 +294,14 @@ BankIQ+ uses **node-cache** for in-memory caching to dramatically improve perfor
 - **Bank Search**: 500ms → 1ms (7 day cache)
 - **FDIC Data**: 1500ms → 1ms (1 hour cache)
 
-**Cache Management:**
+**Cache Management** (every `/api` route except `/api/health` needs a Cognito ID token; `$ID_TOKEN` is the ID token of a signed-in user):
 ```bash
 # View cache statistics
-curl http://localhost:3001/api/admin/cache-stats
+curl -H "Authorization: Bearer $ID_TOKEN" http://localhost:3001/api/admin/cache-stats
 
 # Clear all caches
 curl -X POST http://localhost:3001/api/admin/clear-cache \
+  -H "Authorization: Bearer $ID_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"type": "all"}'
 ```

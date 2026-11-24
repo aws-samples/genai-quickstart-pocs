@@ -30,7 +30,7 @@ describe('verifyToken middleware', () => {
     process.env = { ...ORIG_ENV };
   });
 
-  it('calls next() without checking a token when AUTH_ENABLED is not "true"', async () => {
+  it('calls next() without checking a token when AUTH_ENABLED is "false"', async () => {
     process.env.AUTH_ENABLED = 'false';
     const { verifyToken } = await import('./auth-middleware.js');
     const req = { headers: {} };
@@ -41,6 +41,20 @@ describe('verifyToken middleware', () => {
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
+  });
+
+  it('enforces the token when AUTH_ENABLED is unset (fail closed)', async () => {
+    delete process.env.AUTH_ENABLED;
+    process.env.COGNITO_USER_POOL_ID = 'us-east-1_test';
+    const { verifyToken } = await import('./auth-middleware.js');
+    const req = { headers: {} };
+    const res = makeRes();
+    const next = vi.fn();
+
+    verifyToken(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('returns 401 when no Authorization header is present (auth enabled)', async () => {
@@ -71,5 +85,35 @@ describe('verifyToken middleware', () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.body).toEqual({ error: 'No authentication token provided' });
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe('assertAuthConfig (startup guard)', () => {
+  const ORIG_ENV = { ...process.env };
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    process.env = { ...ORIG_ENV };
+  });
+
+  it('refuses AUTH_ENABLED=false on a non-loopback host', async () => {
+    process.env.AUTH_ENABLED = 'false';
+    const { assertAuthConfig } = await import('./auth-middleware.js');
+    expect(() => assertAuthConfig('0.0.0.0')).toThrow(/only allowed when HOST is 127.0.0.1/);
+  });
+
+  it('allows AUTH_ENABLED=false on 127.0.0.1', async () => {
+    process.env.AUTH_ENABLED = 'false';
+    const { assertAuthConfig } = await import('./auth-middleware.js');
+    expect(() => assertAuthConfig('127.0.0.1')).not.toThrow();
+  });
+
+  it('allows any host when auth is enabled', async () => {
+    delete process.env.AUTH_ENABLED;
+    const { assertAuthConfig } = await import('./auth-middleware.js');
+    expect(() => assertAuthConfig('0.0.0.0')).not.toThrow();
   });
 });

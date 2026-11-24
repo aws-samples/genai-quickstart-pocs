@@ -2,8 +2,9 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 
 // server.js exports the Express `app` (it only calls app.listen when run
-// directly). AUTH_ENABLED defaults off, so protected routes are reachable.
-// These tests lock the behavior of the routes that need NO live AWS call:
+// directly). These tests opt out of token verification with
+// AUTH_ENABLED=false (auth-routes.test.js covers the token gate itself).
+// They lock the behavior of the routes that need NO live AWS call:
 // health, diagnostics gating, request validation, job 404s, and cache admin.
 
 let app;

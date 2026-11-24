@@ -5,7 +5,7 @@ const https = require('https');
 const { spawn } = require('child_process');
 const path = require('path');
 const crypto = require('crypto');
-const { verifyToken } = require('./auth-middleware');
+const { verifyToken, assertAuthConfig } = require('./auth-middleware');
 const { signAgentCoreRequest, credentials } = require('./agentcore-signer');
 const NodeCache = require('node-cache');
 const rateLimit = require('express-rate-limit');
@@ -106,7 +106,7 @@ logger.info(`Region: ${process.env.REGION || 'us-east-1'}`);
 logger.info(`Port: ${PORT}`);
 
 // Log auth configuration
-const AUTH_ENABLED = process.env.AUTH_ENABLED === 'true';
+const AUTH_ENABLED = process.env.AUTH_ENABLED !== 'false';
 logger.info(`Authentication: ${AUTH_ENABLED ? 'ENABLED' : 'DISABLED'}`);
 if (AUTH_ENABLED) {
   logger.info(`User Pool ID: ${process.env.COGNITO_USER_POOL_ID}`);
@@ -178,6 +178,12 @@ app.get('/health', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', service: 'BankIQ+ Backend' });
 });
+
+// Every /api route registered below this line requires a valid Cognito token.
+// The health checks above stay open for the ALB and the container HEALTHCHECK.
+// No admin group exists in the Cognito user pool (cfn/templates/auth.yaml),
+// so /api/admin/* is protected by login only.
+app.use('/api', verifyToken);
 
 // Enhanced diagnostics endpoint (only in debug mode)
 app.get('/api/diagnostics', async (req, res) => {
@@ -292,8 +298,8 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Main agent invocation endpoint (protected)
-app.post('/api/invoke-agent', expensiveLimiter, verifyToken, async (req, res) => {
+// Main agent invocation endpoint (token checked by the /api middleware above)
+app.post('/api/invoke-agent', expensiveLimiter, async (req, res) => {
   return invokeAgent(req, res);
 });
 
@@ -459,7 +465,7 @@ app.post('/api/store-csv-data', (req, res) => {
   res.json({ success: true, message: 'CSV data received', rows: data.length });
 });
 
-// Analyze local CSV data endpoint (auth handled by frontend)
+// Analyze local CSV data endpoint
 app.post('/api/analyze-local-data', expensiveLimiter, async (req, res) => {
   const { data, baseBank, peerBanks, metric } = req.body;
 
@@ -987,7 +993,7 @@ app.post('/api/search-banks', async (req, res) => {
   }
 });
 
-// Async job submission endpoint (auth handled by frontend)
+// Async job submission endpoint
 app.post('/api/jobs/submit', async (req, res) => {
   const { inputText, sessionId, jobType } = req.body;
 
@@ -1294,6 +1300,7 @@ app.post('/api/admin/clear-cache', (req, res) => {
 // imported by tests. This keeps `node server.js` behavior identical while
 // allowing supertest to exercise the Express app without binding a port.
 if (require.main === module) {
+  assertAuthConfig(HOST);
   app.listen(PORT, HOST, () => {
     console.log(`✅ BankIQ+ Backend running on ${HOST}:${PORT}`);
     console.log(`   Health check: http://localhost:${PORT}/health`);

@@ -6,7 +6,7 @@ import {
   CircularProgress, Alert, Divider
 } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { api } from '../services/api';
+import { api, getAuthHeaders } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
@@ -393,11 +393,11 @@ function PeerAnalytics() {
                       setUploadedData(data);
 
                       // Store CSV data in backend
-                      fetch(`${BACKEND_URL}/api/store-csv-data`, {
+                      getAuthHeaders().then(headers => fetch(`${BACKEND_URL}/api/store-csv-data`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify({ data: data, filename: file.name })
-                      }).catch(err => console.log('CSV storage failed:', err));
+                      })).catch(err => console.log('CSV storage failed:', err));
 
                       // Auto-populate fields from uploaded data
                       if (data.length > 0) {
