@@ -1,0 +1,881 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RFP web app: CloudFront and S3 static site, Cognito sign-in, and an authenticated API Gateway REST API'
+
+Parameters:
+  ProcessingStackName:
+    Type: String
+    Default: 'terminal-upload'
+    Description: 'Name of the processing stack (infrastructure/cloudformation.yaml) whose bucket and table this app uses'
+
+  AdminEmail:
+    Type: String
+    Default: ''
+    Description: >-
+      Optional. Email address of the first user. Cognito emails this address
+      a temporary password. Leave empty to create users yourself with
+      aws cognito-idp admin-create-user.
+    AllowedPattern: '^$|^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    ConstraintDescription: 'Must be empty or an email address'
+
+  MaxUploadBytes:
+    Type: Number
+    Default: 10485760
+    MinValue: 1024
+    MaxValue: 104857600
+    Description: 'Largest RFP file, in bytes, that the upload API will authorize (default 10 MB)'
+
+  ApiThrottleRateLimit:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: 'Steady-state requests per second allowed across the API'
+
+  ApiThrottleBurstLimit:
+    Type: Number
+    Default: 20
+    MinValue: 1
+    Description: 'Burst request limit for the API'
+
+Conditions:
+  CreateAdminUser: !Not [!Equals [!Ref AdminEmail, '']]
+
+Resources:
+  # ---------------------------------------------------------------------
+  # Static site: private S3 bucket served through CloudFront (OAC)
+  # ---------------------------------------------------------------------
+
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'rfp-webapp-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      VersioningConfiguration:
+        Status: Enabled
+
+  # amazonq-ignore-next-line
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-OAC'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Only this stack's distribution can read the bucket.
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt WebsiteBucket.Arn
+              - !Sub '${WebsiteBucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: 'RFP response web app'
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+          # Managed-SecurityHeadersPolicy: HSTS, nosniff, X-Frame-Options,
+          # Referrer-Policy.
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+        Enabled: true
+        HttpVersion: http2
+        DefaultRootObject: index.html
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  # ---------------------------------------------------------------------
+  # Authentication: Cognito user pool with the hosted sign-in UI
+  # ---------------------------------------------------------------------
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${AWS::StackName}-users'
+      # No self sign-up: an administrator creates every user.
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailSubject: 'Your RFP response demo account'
+          EmailMessage: !Sub 'Sign in at https://${CloudFrontDistribution.DomainName} with username {username} and temporary password {####}'
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      # Unique per stack, without exposing the account ID.
+      Domain: !Join
+        - '-'
+        - - 'rfp'
+          - !Select [2, !Split ['/', !Ref AWS::StackId]]
+
+  # Public client for the browser: authorization code flow with PKCE.
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${AWS::StackName}-web'
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - openid
+        - email
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - !Sub 'https://${CloudFrontDistribution.DomainName}/index.html'
+      LogoutURLs:
+        - !Sub 'https://${CloudFrontDistribution.DomainName}/index.html'
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      IdTokenValidity: 60
+      AccessTokenValidity: 60
+      RefreshTokenValidity: 12
+      TokenValidityUnits:
+        IdToken: minutes
+        AccessToken: minutes
+        RefreshToken: hours
+
+  AdminUser:
+    Type: AWS::Cognito::UserPoolUser
+    Condition: CreateAdminUser
+    Properties:
+      UserPoolId: !Ref UserPool
+      Username: !Ref AdminEmail
+      DesiredDeliveryMediums:
+        - EMAIL
+      UserAttributes:
+        - Name: email
+          Value: !Ref AdminEmail
+        - Name: email_verified
+          Value: 'true'
+
+  # ---------------------------------------------------------------------
+  # API Gateway: every method except CORS preflight requires a Cognito ID
+  # token in the Authorization header.
+  # ---------------------------------------------------------------------
+
+  UploadApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'rfp-upload-api-${AWS::StackName}'
+      Description: 'API for RFP uploads, status and downloads'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  CognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: CognitoUserPool
+      RestApiId: !Ref UploadApi
+      Type: COGNITO_USER_POOLS
+      IdentitySource: method.request.header.Authorization
+      ProviderARNs:
+        - !GetAtt UserPool.Arn
+
+  # Return CORS headers on API Gateway's own errors (401 from the
+  # authorizer, 429 from throttling) so the browser can read them.
+  GatewayResponseDefault4XX:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResponseType: DEFAULT_4XX
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  GatewayResponseDefault5XX:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResponseType: DEFAULT_5XX
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  # POST /upload
+  UploadApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !GetAtt UploadApi.RootResourceId
+      PathPart: upload
+
+  UploadApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref UploadApiResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UploadLambda.Arn}/invocations'
+
+  UploadApiOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref UploadApiResource
+      HttpMethod: OPTIONS
+      # CORS preflight requests carry no credentials and return no data.
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # GET /downloads
+  DownloadApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !GetAtt UploadApi.RootResourceId
+      PathPart: downloads
+
+  DownloadApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref DownloadApiResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DownloadLambda.Arn}/invocations'
+
+  DownloadApiOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref DownloadApiResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # GET /download/{proxy+}
+  DownloadFileResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !GetAtt UploadApi.RootResourceId
+      PathPart: download
+
+  DownloadFileProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !Ref DownloadFileResource
+      PathPart: '{proxy+}'
+
+  DownloadFileMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref DownloadFileProxyResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DownloadLambda.Arn}/invocations'
+
+  DownloadFileOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref DownloadFileProxyResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # GET /status?fileName=
+  StatusApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !GetAtt UploadApi.RootResourceId
+      PathPart: status
+
+  StatusApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref StatusApiResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambda.Arn}/invocations'
+
+  StatusApiOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref StatusApiResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # GET /list-jobs
+  ListJobsApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UploadApi
+      ParentId: !GetAtt UploadApi.RootResourceId
+      PathPart: list-jobs
+
+  ListJobsApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref ListJobsApiResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListJobsLambda.Arn}/invocations'
+
+  ListJobsApiOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UploadApi
+      ResourceId: !Ref ListJobsApiResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # API Gateway does not redeploy when methods change. Rename this resource
+  # (V4 -> V5, ...) whenever methods, authorizers or gateway responses change.
+  UploadApiDeploymentV4:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - UploadApiMethod
+      - UploadApiOptionsMethod
+      - DownloadApiMethod
+      - DownloadApiOptionsMethod
+      - DownloadFileMethod
+      - DownloadFileOptionsMethod
+      - StatusApiMethod
+      - StatusApiOptionsMethod
+      - ListJobsApiMethod
+      - ListJobsApiOptionsMethod
+      - GatewayResponseDefault4XX
+      - GatewayResponseDefault5XX
+    Properties:
+      RestApiId: !Ref UploadApi
+      Description: 'RFP API deployment'
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref UploadApi
+      DeploymentId: !Ref UploadApiDeploymentV4
+      StageName: v1
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingRateLimit: !Ref ApiThrottleRateLimit
+          ThrottlingBurstLimit: !Ref ApiThrottleBurstLimit
+
+  # ---------------------------------------------------------------------
+  # API Lambda functions. The deploy scripts replace the placeholder code
+  # with the package built from src/.
+  # ---------------------------------------------------------------------
+
+  UploadLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-upload-api-${AWS::StackName}'
+      Runtime: python3.14
+      Handler: upload_api.lambda_handler
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+          TABLE_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-TableName'
+          MAX_UPLOAD_BYTES: !Ref MaxUploadBytes
+          UPLOAD_URL_TTL_SECONDS: '300'
+          ALLOWED_ORIGIN: !Sub 'https://${CloudFrontDistribution.DomainName}'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 503, 'body': 'Not deployed yet'}
+      Role: !GetAtt UploadLambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+
+  UploadLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Presigned POSTs are signed with this role, so it can only
+              # authorize uploads to the upload prefix.
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub
+                  - 'arn:${AWS::Partition}:s3:::${Bucket}/uploaded_rfp_requests/*'
+                  - Bucket:
+                      Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource:
+                  Fn::ImportValue: !Sub '${ProcessingStackName}-TableArn'
+
+  DownloadLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-download-api-${AWS::StackName}'
+      Runtime: python3.14
+      Handler: download_api.lambda_handler
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+          DOWNLOAD_URL_TTL_SECONDS: '300'
+          ALLOWED_ORIGIN: !Sub 'https://${CloudFrontDistribution.DomainName}'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 503, 'body': 'Not deployed yet'}
+      Role: !GetAtt DownloadLambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+
+  DownloadLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Defense in depth for the path check in download_api.py:
+              # presigned download URLs are signed with this role, so they
+              # can only ever read the five pipeline prefixes.
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/uploaded_rfp_requests/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/formatted_questions/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/completed_responses/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/compliance_reviewed/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/final_responses/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub
+                  - 'arn:${AWS::Partition}:s3:::${Bucket}'
+                  - Bucket:
+                      Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                Condition:
+                  StringLike:
+                    's3:prefix': 'final_responses/*'
+
+  StatusLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-status-api-${AWS::StackName}'
+      Runtime: python3.14
+      Handler: status_api.lambda_handler
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+          TABLE_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-TableName'
+          ALLOWED_ORIGIN: !Sub 'https://${CloudFrontDistribution.DomainName}'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 503, 'body': 'Not deployed yet'}
+      Role: !GetAtt StatusLambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+
+  StatusLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:GetItem
+                Resource:
+                  Fn::ImportValue: !Sub '${ProcessingStackName}-TableArn'
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # HeadObject (authorized by s3:GetObject) checks which stage
+              # outputs exist when there is no status record.
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/uploaded_rfp_requests/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/formatted_questions/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/completed_responses/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/compliance_reviewed/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                  - !Sub
+                    - 'arn:${AWS::Partition}:s3:::${Bucket}/final_responses/*'
+                    - Bucket:
+                        Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+              # Lets HeadObject return 404 rather than 403 for missing files.
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub
+                  - 'arn:${AWS::Partition}:s3:::${Bucket}'
+                  - Bucket:
+                      Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+
+  ListJobsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rfp-list-jobs-api-${AWS::StackName}'
+      Runtime: python3.14
+      Handler: list_jobs_api.lambda_handler
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+          ALLOWED_ORIGIN: !Sub 'https://${CloudFrontDistribution.DomainName}'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 503, 'body': 'Not deployed yet'}
+      Role: !GetAtt ListJobsLambdaRole.Arn
+      MemorySize: 256
+      Timeout: 30
+
+  ListJobsLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub
+                  - 'arn:${AWS::Partition}:s3:::${Bucket}'
+                  - Bucket:
+                      Fn::ImportValue: !Sub '${ProcessingStackName}-BucketName'
+                Condition:
+                  StringLike:
+                    's3:prefix': 'uploaded_rfp_requests/*'
+
+  UploadLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UploadLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/POST/upload'
+
+  DownloadListLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DownloadLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/GET/downloads'
+
+  DownloadFileLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DownloadLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/GET/download/*'
+
+  StatusLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref StatusLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/GET/status'
+
+  ListJobsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ListJobsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${UploadApi}/*/GET/list-jobs'
+
+Outputs:
+  WebsiteBucket:
+    Description: 'S3 bucket for hosting the web app'
+    Value: !Ref WebsiteBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteBucket'
+
+  CloudFrontURL:
+    Description: 'CloudFront distribution URL'
+    Value: !Sub 'https://${CloudFrontDistribution.DomainName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-CloudFrontURL'
+
+  CloudFrontDistributionId:
+    Description: 'CloudFront distribution ID for cache invalidation'
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${AWS::StackName}-CloudFrontDistributionId'
+
+  ApiGatewayURL:
+    Description: 'API Gateway URL'
+    Value: !Sub 'https://${UploadApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${ApiStage}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiGatewayURL'
+
+  UserPoolId:
+    Description: 'Cognito user pool ID (create users with aws cognito-idp admin-create-user)'
+    Value: !Ref UserPool
+
+  UserPoolClientId:
+    Description: 'Cognito app client ID used by the web app'
+    Value: !Ref UserPoolClient
+
+  CognitoDomain:
+    Description: 'Cognito hosted sign-in domain'
+    Value: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com'
+
+  MaxUploadBytes:
+    Description: 'Largest RFP file, in bytes, that the upload API authorizes'
+    Value: !Ref MaxUploadBytes
+
+  Region:
+    Description: 'Region of the web stack'
+    Value: !Ref AWS::Region
+
+  LambdaFunctionNames:
+    Description: 'Comma-separated names of every Lambda function in this stack (used by the deploy scripts)'
+    Value: !Join
+      - ','
+      - - !Ref UploadLambda
+        - !Ref DownloadLambda
+        - !Ref StatusLambda
+        - !Ref ListJobsLambda
