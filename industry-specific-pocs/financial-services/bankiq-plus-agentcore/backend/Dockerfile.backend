@@ -17,6 +17,7 @@ RUN npm install --production
 # Copy application code
 COPY server.js ./
 COPY auth-middleware.js ./
+COPY agentcore-signer.js ./
 COPY extract_pdf_metadata.py ./
 
 # Listen on all interfaces inside the container so the ALB can reach the task.
