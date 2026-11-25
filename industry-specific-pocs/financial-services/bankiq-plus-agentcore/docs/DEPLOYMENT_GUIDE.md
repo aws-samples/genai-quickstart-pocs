@@ -188,7 +188,20 @@ aws cognito-idp admin-create-user \
   --desired-delivery-mediums EMAIL \
   --region us-east-1
 ```
-The invitation expires after 7 days (`TemporaryPasswordValidityDays`). To send a new one, run the same command with `--message-action RESEND`. The default Cognito email sender has a low daily sending quota; for more than a handful of users, configure Amazon SES in `auth.yaml`.
+Keep `--desired-delivery-mediums EMAIL`: `AdminCreateUser` sends the invitation by SMS when no medium is given, and this pool has no SMS configuration.
+
+The invitation expires after 7 days (`TemporaryPasswordValidityDays`). To send a new one:
+```bash
+aws cognito-idp admin-create-user \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --message-action RESEND \
+  --desired-delivery-mediums EMAIL \
+  --region us-east-1
+```
+`RESEND` works only while the user has not signed in yet (status `FORCE_CHANGE_PASSWORD`). After the first sign-in, use the "Forgot your password?" link on the sign-in page instead.
+
+The default Cognito email sender has a low daily sending quota; for more than a handful of users, configure Amazon SES in `auth.yaml`.
 
 ### First Login
 1. Open CloudFront URL
@@ -388,9 +401,11 @@ aws ecs update-service --cluster bankiq-cluster --service bankiq-backend-service
 
 ### Update Frontend
 `frontend/src/config.js` (your CloudFront URL and Cognito IDs) is generated and gitignored. Regenerate it from the deployed stacks before every build; a build without it uses the placeholders from `config.example.js` and **cannot sign anyone in**. (`phase4-frontend.sh` creates the CloudFront stack, so it cannot be re-run for an update.)
+If `AWS_DEFAULT_REGION` is set in your shell, the script uses it and ignores the region argument, like the other `phase*.sh` scripts. Unset it or set it to the deployment's region first.
 ```bash
 ./cfn/scripts/generate-frontend-config.sh bankiq us-east-1   # stack name and region
 cd frontend
+npm ci
 npm run build
 aws s3 sync build/ s3://bankiq-frontend-<account-id>-prod/ --delete
 aws cloudfront create-invalidation --distribution-id <dist-id> --paths "/*"

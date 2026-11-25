@@ -257,9 +257,10 @@ After deployment completes, you'll see:
 > **Sign-up is admin-only.** The Cognito user pool does not allow self-signup, so a new deployment has no users until you create one. Create your first user right after deploying:
 > ```bash
 > aws cognito-idp admin-create-user \
->   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
+>   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
 >   --username you@example.com \
 >   --user-attributes Name=email,Value=you@example.com Name=email_verified,Value=true \
+>   --desired-delivery-mediums EMAIL \
 >   --region us-east-1
 > ```
 > Cognito emails the user a temporary password. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication) for details, including how to update a stack you deployed before this change.
