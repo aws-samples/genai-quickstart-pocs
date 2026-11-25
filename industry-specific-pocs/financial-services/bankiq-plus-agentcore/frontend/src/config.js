@@ -1,17 +1,19 @@
-// Auto-generated - CloudFront + ECS Backend + Cognito Auth
-export const API_URL = 'https://d3ips4uebwo7az.cloudfront.net';
+// Placeholder values. cfn/scripts/phase4-frontend.sh overwrites this file with
+// your deployment's CloudFront URL and Cognito settings before it builds the
+// frontend, so you do not need to edit it for a scripted deployment.
+export const API_URL = 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net';
 export const ENVIRONMENT = 'production';
-export const CLOUDFRONT_URL = 'https://d3ips4uebwo7az.cloudfront.net';
+export const CLOUDFRONT_URL = 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net';
 
 export const cognitoConfig = {
   region: 'us-east-1',
-  userPoolId: 'us-east-1_Yg5k3NMAR',
-  userPoolWebClientId: '768po13m24fsbhvi03tffjkmkf',
+  userPoolId: 'us-east-1_XXXXXXXXX',
+  userPoolWebClientId: 'YOUR_COGNITO_APP_CLIENT_ID',
   oauth: {
-    domain: 'bankiq-auth-164543933824.auth.us-east-1.amazoncognito.com',
+    domain: 'YOUR_COGNITO_DOMAIN.auth.us-east-1.amazoncognito.com',
     scope: ['email', 'openid', 'profile'],
-    redirectSignIn: 'https://d3ips4uebwo7az.cloudfront.net',
-    redirectSignOut: 'https://d3ips4uebwo7az.cloudfront.net',
+    redirectSignIn: 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net',
+    redirectSignOut: 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net',
     responseType: 'code'
   }
 };

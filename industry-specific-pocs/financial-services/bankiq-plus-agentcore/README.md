@@ -254,6 +254,9 @@ After deployment completes, you'll see:
 3. Click 'Sign up' to create your account
 4. Verify your email and log in
 
+> [!WARNING]
+> **Self-signup is on by default**, so anyone who can reach the login page can register and use every backend API. To allow only users you create, set `AllowAdminCreateUserOnly: true` in `cfn/templates/auth.yaml` and update the `bankiq-auth` stack. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication).
+
 ## 🔍 Verify Deployment
 
 **Check Health:**

@@ -15,6 +15,7 @@ const childProcess = require('child_process');
 
 const VALID = 'valid-test-token';
 const POOL = 'us-east-1_testpool';
+const CLIENT = 'test-app-client';
 
 function fakeExtractor() {
   const child = new EventEmitter();
@@ -62,9 +63,10 @@ beforeAll(async () => {
   delete process.env.AGENTCORE_AGENT_ARN;
   process.env.COGNITO_REGION = 'us-east-1';
   process.env.COGNITO_USER_POOL_ID = POOL;
+  process.env.COGNITO_APP_CLIENT_ID = CLIENT;
   process.env.UPLOADED_DOCS_BUCKET = 'test-bucket';
   verifySpy = vi.spyOn(jwt, 'verify').mockImplementation((token, getKey, opts, cb) => {
-    if (token === VALID) cb(null, { sub: 'user-1', email: 'u@example.com' });
+    if (token === VALID) cb(null, { sub: 'user-1', email: 'u@example.com', token_use: 'id', aud: CLIENT });
     else cb(new Error('invalid signature'));
   });
   vi.spyOn(childProcess, 'spawn').mockImplementation(fakeExtractor);
@@ -111,11 +113,12 @@ describe.each(PROTECTED)('%s %s', (method, path, body, okStatus) => {
 });
 
 describe('token verification', () => {
-  it('verifies RS256 tokens against the Cognito user pool issuer', () => {
+  it('verifies RS256 tokens against the pool issuer and the app client audience', () => {
     const opts = verifySpy.mock.calls.find((c) => c[0] === VALID)[2];
     expect(opts).toEqual({
       algorithms: ['RS256'],
       issuer: `https://cognito-idp.us-east-1.amazonaws.com/${POOL}`,
+      audience: CLIENT,
     });
   });
 

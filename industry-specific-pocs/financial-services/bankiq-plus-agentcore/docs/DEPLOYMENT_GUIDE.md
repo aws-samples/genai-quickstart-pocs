@@ -173,6 +173,9 @@ BankIQ+ uses AWS Cognito for secure authentication:
 - **JWT Verification** - Backend validates tokens on every request
 - **Session Management** - Automatic token refresh
 
+> [!WARNING]
+> **Self-signup is on by default.** `cfn/templates/auth.yaml` sets `AllowAdminCreateUserOnly: false`, so anyone who can reach the Hosted UI can register, confirm an email address, and then call every backend API (agent invocations, PDF uploads to S3, cache admin). To restrict access to users you create, set `AllowAdminCreateUserOnly: true` under `AdminCreateUserConfig` in `cfn/templates/auth.yaml`, deploy it as an update to the `bankiq-auth` stack, and add users with `admin-create-user` (below).
+
 ### First Login
 1. Open CloudFront URL
 2. Click "Sign In with AWS Cognito"
@@ -262,6 +265,8 @@ The agent remembers "their" = Webster Financial from the first query.
 - `HOST` - Interface the backend listens on. Defaults to `127.0.0.1`; the backend image sets `0.0.0.0` so the ALB can reach the task
 - `AUTH_ENABLED` - Cognito token check on every `/api` route except `/api/health`. On unless set to `false`; the template sets `true`. The server refuses to start with `AUTH_ENABLED=false` unless `HOST` is `127.0.0.1` (local development)
 - `COGNITO_USER_POOL_ID`, `COGNITO_REGION` - User pool whose ID tokens the backend accepts
+- `COGNITO_APP_CLIENT_ID` - The frontend's app client (`UserPoolClientId` output of the auth stack, imported by `backend.yaml`). Only ID tokens (`token_use: id`) whose `aud` is this client are accepted. With auth on, the server refuses to start if this or `COGNITO_USER_POOL_ID` is unset
+- `DEBUG_MODE`, `LOG_LEVEL` - The template sets `false` and `info`. `DEBUG_MODE=true` enables `/api/diagnostics` and verbose request logging; use it only for troubleshooting
 
 ### Frontend Configuration
 Edit `frontend/src/config.js`:
