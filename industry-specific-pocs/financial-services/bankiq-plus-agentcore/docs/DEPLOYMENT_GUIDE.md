@@ -168,30 +168,50 @@ open https://$CLOUDFRONT_URL
 
 ### Cognito User Pool
 BankIQ+ uses AWS Cognito for secure authentication:
-- **Self-Service Signup** - Users can create accounts via Hosted UI
+- **Admin-only sign-up** - There is no self-service registration. An administrator creates each user with `admin-create-user` (below)
 - **OAuth 2.0 + JWT** - Industry-standard authentication
 - **JWT Verification** - Backend validates tokens on every request
 - **Session Management** - Automatic token refresh
 
-> [!WARNING]
-> **Self-signup is on by default.** `cfn/templates/auth.yaml` sets `AllowAdminCreateUserOnly: false`, so anyone who can reach the Hosted UI can register, confirm an email address, and then call every backend API (agent invocations, PDF uploads to S3, cache admin). To restrict access to users you create, set `AllowAdminCreateUserOnly: true` under `AdminCreateUserConfig` in `cfn/templates/auth.yaml`, deploy it as an update to the `bankiq-auth` stack, and add users with `admin-create-user` (below).
+`cfn/templates/auth.yaml` sets `AllowAdminCreateUserOnly: true`, so the Hosted UI shows no "Sign up" link and the `SignUp` API is rejected. A new deployment starts with no users, so create the first one right after deploying.
+
+### Create users
+Each user gets a temporary password that Cognito generates and emails to them. Do not set `--temporary-password` yourself: a password you type ends up in your shell history and in the invitation text.
+```bash
+USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 \
+  --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
+
+aws cognito-idp admin-create-user \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true \
+  --desired-delivery-mediums EMAIL \
+  --region us-east-1
+```
+The invitation expires after 7 days (`TemporaryPasswordValidityDays`). To send a new one, run the same command with `--message-action RESEND`. The default Cognito email sender has a low daily sending quota; for more than a handful of users, configure Amazon SES in `auth.yaml`.
 
 ### First Login
 1. Open CloudFront URL
 2. Click "Sign In with AWS Cognito"
-3. Click "Sign up" on Cognito Hosted UI
-4. Enter email and password
-5. Verify email (check spam folder)
-6. Login with credentials
+3. Enter the email address and the temporary password from the invitation email
+4. Choose a new password when prompted
+5. You are signed in
 
-### Create Additional Users
+### Updating a deployment that allowed self-signup
+`phase0-auth.sh` skips an existing auth stack, so a stack deployed before this change still allows self-signup until you update it. Changing `AllowAdminCreateUserOnly` is an in-place update ("No interruption" in the CloudFormation reference for `AdminCreateUserConfig`): the user pool, its users and the app client are not replaced.
 ```bash
-aws cognito-idp admin-create-user \
-  --user-pool-id $(aws cloudformation describe-stacks --stack-name bankiq-auth --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text) \
-  --username user@example.com \
-  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true \
-  --temporary-password TempPass123! \
-  --region us-east-1
+aws cloudformation update-stack --stack-name bankiq-auth --region us-east-1 \
+  --template-body file://cfn/templates/auth.yaml \
+  --parameters ParameterKey=ProjectName,UsePreviousValue=true \
+               ParameterKey=CallbackURL,UsePreviousValue=true \
+               ParameterKey=Environment,UsePreviousValue=true
+aws cloudformation wait stack-update-complete --stack-name bankiq-auth --region us-east-1
+```
+Keep `UsePreviousValue=true` for every parameter. Turning off sign-up does **not** remove accounts that already registered. Review them and delete the ones you do not recognize:
+```bash
+aws cognito-idp list-users --user-pool-id "$USER_POOL_ID" --region us-east-1 \
+  --query 'Users[].[Username,UserStatus,UserCreateDate]' --output table
+aws cognito-idp admin-delete-user --user-pool-id "$USER_POOL_ID" --username <username> --region us-east-1
 ```
 
 ### Authentication Flow

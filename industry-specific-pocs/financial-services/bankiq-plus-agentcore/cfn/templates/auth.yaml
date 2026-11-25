@@ -50,7 +50,7 @@ Resources:
           - Name: verified_email
             Priority: 1
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false  # Allow self-signup
+        AllowAdminCreateUserOnly: true  # No self-signup: an administrator creates each user (admin-create-user)
       UserAttributeUpdateSettings:
         AttributesRequireVerificationBeforeUpdate:
           - email

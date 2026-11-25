@@ -251,11 +251,18 @@ After deployment completes, you'll see:
 **Next Steps:**
 1. Visit the Application URL
 2. Click 'Sign In with AWS Cognito'
-3. Click 'Sign up' to create your account
-4. Verify your email and log in
+3. Sign in with the account you created (see below), using the temporary password from the invitation email, then choose a new password
 
-> [!WARNING]
-> **Self-signup is on by default**, so anyone who can reach the login page can register and use every backend API. To allow only users you create, set `AllowAdminCreateUserOnly: true` in `cfn/templates/auth.yaml` and update the `bankiq-auth` stack. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication).
+> [!IMPORTANT]
+> **Sign-up is admin-only.** The Cognito user pool does not allow self-signup, so a new deployment has no users until you create one. Create your first user right after deploying:
+> ```bash
+> aws cognito-idp admin-create-user \
+>   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
+>   --username you@example.com \
+>   --user-attributes Name=email,Value=you@example.com Name=email_verified,Value=true \
+>   --region us-east-1
+> ```
+> Cognito emails the user a temporary password. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication) for details, including how to update a stack you deployed before this change.
 
 ## 🔍 Verify Deployment
 
