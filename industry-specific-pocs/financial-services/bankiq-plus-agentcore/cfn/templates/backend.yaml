@@ -203,10 +203,13 @@ Resources:
             - Name: COGNITO_USER_POOL_ID
               Value:
                 Fn::ImportValue: !Sub '${ProjectName}-auth-UserPoolId'
+            - Name: COGNITO_APP_CLIENT_ID
+              Value:
+                Fn::ImportValue: !Sub '${ProjectName}-auth-UserPoolClientId'
             - Name: DEBUG_MODE
-              Value: 'true'
+              Value: 'false'
             - Name: LOG_LEVEL
-              Value: 'debug'
+              Value: 'info'
             - Name: NODE_ENV
               Value: 'production'
           LogConfiguration:

@@ -1,3 +1,5 @@
+import { getAuthHeaders } from './api';
+
 /**
  * AgentCore Service - Handles communication with AgentCore backend
  * Updated to use async jobs for reliability (no 30s timeout)
@@ -6,7 +8,6 @@ class AgentService {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_GATEWAY_URL || window.location.origin;
     this.websocket = null;
-    this.eventSource = null;
     this.listeners = new Map();
     this.connected = false;
   }
@@ -14,7 +15,7 @@ class AgentService {
   // HTTP connection for Strands agent
   async connectAgent() {
     try {
-      const response = await fetch(`${this.baseURL}/api/agent-status`);
+      const response = await fetch(`${this.baseURL}/api/agent-status`, { headers: await getAuthHeaders() });
       const status = await response.json();
       
       if (status.status === 'connected') {
@@ -53,7 +54,7 @@ class AgentService {
     try {
       const jobResponse = await fetch(`${this.baseURL}/api/jobs/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({
           inputText: `Use the answer_banking_question tool to answer: "${question}" about ${bankName || 'general banking'}`,
           jobType: 'chat'
@@ -66,11 +67,11 @@ class AgentService {
       for (let i = 0; i < 60; i++) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`);
+        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`, { headers: await getAuthHeaders() });
         const status = await statusResponse.json();
         
         if (status.status === 'completed' || status.status === 'failed') {
-          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`);
+          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`, { headers: await getAuthHeaders() });
           const result = await resultResponse.json();
           
           if (result.status === 'failed') {
@@ -103,7 +104,7 @@ class AgentService {
     try {
       const jobResponse = await fetch(`${this.baseURL}/api/jobs/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({
           inputText: `Use the generate_bank_report tool to create a comprehensive financial analysis report for ${bankName}. Call generate_bank_report with bank_name: "${bankName}".`,
           jobType: 'full-report'
@@ -119,7 +120,7 @@ class AgentService {
       for (let i = 0; i < 120; i++) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`);
+        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`, { headers: await getAuthHeaders() });
         const status = await statusResponse.json();
         
         // Emit progress
@@ -134,7 +135,7 @@ class AgentService {
         });
         
         if (status.status === 'completed' || status.status === 'failed') {
-          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`);
+          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`, { headers: await getAuthHeaders() });
           const result = await resultResponse.json();
           
           if (result.status === 'failed') {
@@ -164,38 +165,6 @@ class AgentService {
     }
   }
 
-  // SSE fallback for report generation
-  generateReportSSE(bankName, mode) {
-    return new Promise((resolve, reject) => {
-      this.eventSource = new EventSource(`${this.baseURL}/api/generate-report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bankName, mode })
-      });
-
-      this.eventSource.onmessage = (event) => {
-        if (event.data === '[DONE]') {
-          this.eventSource.close();
-          resolve({ streaming: true, method: 'sse', status: 'complete' });
-          return;
-        }
-
-        try {
-          const data = JSON.parse(event.data);
-          this.emit('report_chunk', data);
-        } catch (e) {
-          this.emit('report_chunk', { chunk: event.data });
-        }
-      };
-
-      this.eventSource.onerror = (error) => {
-        console.error('SSE error:', error);
-        this.eventSource.close();
-        reject(error);
-      };
-    });
-  }
-
   // Peer analysis using agents (async jobs for reliability)
   async analyzePeers(baseBank, peerBanks, metric) {
     // Try WebSocket first
@@ -211,7 +180,7 @@ class AgentService {
     try {
       const jobResponse = await fetch(`${this.baseURL}/api/jobs/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({
           inputText: `Compare ${baseBank} vs ${peerBanks.join(', ')} using ${metric}. Provide comprehensive analysis with data.`,
           jobType: 'peer-analysis'
@@ -224,11 +193,11 @@ class AgentService {
       for (let i = 0; i < 60; i++) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`);
+        const statusResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}`, { headers: await getAuthHeaders() });
         const status = await statusResponse.json();
         
         if (status.status === 'completed' || status.status === 'failed') {
-          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`);
+          const resultResponse = await fetch(`${this.baseURL}/api/jobs/${job.jobId}/result`, { headers: await getAuthHeaders() });
           const result = await resultResponse.json();
           
           if (result.status === 'failed') {
@@ -285,10 +254,6 @@ class AgentService {
     if (this.websocket) {
       this.websocket.close();
       this.websocket = null;
-    }
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
     }
     this.listeners.clear();
   }

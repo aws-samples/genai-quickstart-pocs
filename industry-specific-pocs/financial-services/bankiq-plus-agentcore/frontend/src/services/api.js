@@ -4,7 +4,7 @@ import { fetchAuthSession } from '@aws-amplify/auth';
 // Use CloudFront URL for production
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || API_URL;
 
-async function getAuthHeaders() {
+export async function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
   
   try {
@@ -29,7 +29,7 @@ export const api = {
       try {
         const response = await fetch(`${BACKEND_URL}/api/get-sec-filings`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ bankName, cik })
         });
         
@@ -309,7 +309,7 @@ Your detailed analysis here...`;
   },
 
   async checkJobStatus(jobId) {
-    const response = await fetch(`${BACKEND_URL}/api/jobs/${jobId}`);
+    const response = await fetch(`${BACKEND_URL}/api/jobs/${jobId}`, { headers: await getAuthHeaders() });
     
     if (!response.ok) {
       throw new Error(`Job status check failed: ${response.status}`);
@@ -319,7 +319,7 @@ Your detailed analysis here...`;
   },
 
   async getJobResult(jobId) {
-    const response = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/result`);
+    const response = await fetch(`${BACKEND_URL}/api/jobs/${jobId}/result`, { headers: await getAuthHeaders() });
     
     const data = await response.json();
     
@@ -352,7 +352,7 @@ Your detailed analysis here...`;
     try {
       const response = await fetch(`${BACKEND_URL}/api/search-banks`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({ query })
       });
       
@@ -402,7 +402,7 @@ Call chat_with_documents with these parameters to get the answer from the docume
       console.log('Attempting agent-powered PDF upload...');
       const response = await fetch(`${BACKEND_URL}/api/upload-pdf-agent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({ files, bankName })
       });
       
@@ -422,7 +422,7 @@ Call chat_with_documents with these parameters to get the answer from the docume
     console.log('Using direct upload method...');
     const response = await fetch(`${BACKEND_URL}/api/upload-pdf`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({ files, bankName })
     });
     
@@ -432,42 +432,5 @@ Call chat_with_documents with these parameters to get the answer from the docume
     
     const result = await response.json();
     return { ...result, method: 'direct' };
-  },
-
-  // Streaming method
-  async callAgentStream(inputText, onChunk, onComplete, onError) {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/invoke-agent-stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputText })
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
-            if (data.chunk) {
-              onChunk(data.chunk);
-            } else if (data.done) {
-              onComplete();
-            } else if (data.error) {
-              onError(data.error);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      onError(error.message);
-    }
   }
 };
