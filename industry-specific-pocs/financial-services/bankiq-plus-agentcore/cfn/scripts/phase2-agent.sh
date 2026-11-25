@@ -53,7 +53,13 @@ if [ -f .bedrock_agentcore.yaml ]; then
     
     # If a specific execution_role is set (not auto-created), use the correct one from CloudFormation
     if grep -q "execution_role: arn:aws:iam::" .bedrock_agentcore.yaml; then
-        RUNTIME_ROLE="arn:aws:iam::164543933824:role/AmazonBedrockAgentCoreSDKRuntime-${AWS_DEFAULT_REGION}-${STACK_NAME:-bankiq}"
+        # The role created by the infrastructure stack (prerequisites.yaml) lives in the
+        # caller's own account. Build its ARN from the caller identity, with the right
+        # partition. If this fails, set -e stops the script before any role is changed.
+        CALLER_ARN=$(aws sts get-caller-identity --query Arn --output text)
+        ARN_PARTITION=$(echo "$CALLER_ARN" | cut -d: -f2)
+        ACCOUNT_ID=$(echo "$CALLER_ARN" | cut -d: -f5)
+        RUNTIME_ROLE="arn:${ARN_PARTITION}:iam::${ACCOUNT_ID}:role/AmazonBedrockAgentCoreSDKRuntime-${AWS_DEFAULT_REGION}-${STACK_NAME:-bankiq}"
         echo "🔧 Setting execution role to: $RUNTIME_ROLE"
         sed -i.bak "s|execution_role: arn:aws:iam::[^[:space:]]*|execution_role: $RUNTIME_ROLE|" .bedrock_agentcore.yaml
         sed -i.bak 's/execution_role_auto_create: true/execution_role_auto_create: false/' .bedrock_agentcore.yaml

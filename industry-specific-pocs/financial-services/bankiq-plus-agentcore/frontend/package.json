@@ -32,6 +32,12 @@
     "tinypool": ">=2.1.2"
   },
   "scripts": {
+    "ensure-config": "node scripts/ensure-config.js",
+    "prestart": "npm run ensure-config",
+    "predev": "npm run ensure-config",
+    "prebuild": "npm run ensure-config",
+    "pretest": "npm run ensure-config",
+    "pretest:watch": "npm run ensure-config",
     "start": "vite",
     "dev": "vite",
     "build": "vite build",

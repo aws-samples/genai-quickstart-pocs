@@ -33,36 +33,10 @@ aws cloudformation create-stack \
 echo "⏳ Waiting for CloudFront distribution (10-15 minutes)..."
 aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME}-frontend --region $REGION
 
-# Get CloudFront URL
-CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME}-frontend --region $REGION --query 'Stacks[0].Outputs[?OutputKey==`ApplicationUrl`].OutputValue' --output text)
-
-# Get Cognito config
-COGNITO_USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME}-auth --region $REGION --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
-COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME}-auth --region $REGION --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text)
-COGNITO_DOMAIN=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME}-auth --region $REGION --query 'Stacks[0].Outputs[?OutputKey==`CognitoDomain`].OutputValue' --output text)
-
-# Update frontend config with CloudFront URL and Cognito
+# Write frontend/src/config.js (gitignored) from the CloudFront and Cognito stack outputs
 echo "🚀 Configuring frontend with CloudFront URL and Cognito..."
+"${SCRIPT_DIR}/generate-frontend-config.sh" "$STACK_NAME" "$REGION"
 cd "${SCRIPT_DIR}/../../frontend"
-cat > src/config.js << EOF
-// Auto-generated - CloudFront + ECS Backend + Cognito Auth
-export const API_URL = '$CLOUDFRONT_URL';
-export const ENVIRONMENT = 'production';
-export const CLOUDFRONT_URL = '$CLOUDFRONT_URL';
-
-export const cognitoConfig = {
-  region: '$REGION',
-  userPoolId: '$COGNITO_USER_POOL_ID',
-  userPoolWebClientId: '$COGNITO_CLIENT_ID',
-  oauth: {
-    domain: '$COGNITO_DOMAIN.auth.$REGION.amazoncognito.com',
-    scope: ['email', 'openid', 'profile'],
-    redirectSignIn: '$CLOUDFRONT_URL',
-    redirectSignOut: '$CLOUDFRONT_URL',
-    responseType: 'code'
-  }
-};
-EOF
 
 # Build and upload frontend
 echo "🚀 Installing dependencies..."
