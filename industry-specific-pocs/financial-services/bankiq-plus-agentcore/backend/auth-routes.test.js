@@ -38,7 +38,7 @@ const file = { name: 'r.pdf', size: pdf.length, content: pdf.toString('base64') 
 
 // [method, path, body, status the handler returns once past the gate]
 const PROTECTED = [
-  ['get', '/api/diagnostics', undefined, 500], // AGENTCORE_AGENT_ARN unset -> handler's own 500
+  ['get', '/api/diagnostics', undefined, 403], // admins only; see diagnostics-debug-*.test.js
   ['post', '/api/chat', {}, 400],
   ['post', '/api/invoke-agent', {}, 400],
   ['post', '/api/store-csv-data', { data: [{ a: 1 }], filename: 'a.csv' }, 200],

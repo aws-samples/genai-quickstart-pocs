@@ -79,7 +79,7 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// Cognito group allowed on /api/admin/*. An empty or unset ADMIN_GROUP_NAME
+// Cognito group allowed on /api/admin/* and /api/diagnostics. An empty or unset ADMIN_GROUP_NAME
 // falls back to 'admins'; it can never mean "any signed-in user".
 const ADMIN_GROUP_NAME = (process.env.ADMIN_GROUP_NAME || '').trim() || 'admins';
 

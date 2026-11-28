@@ -93,10 +93,13 @@ describe('AgentCore handlers sign with SDK v3', () => {
     expectSignedCall();
   });
 
-  it('GET /api/diagnostics reports credentials without aws-sdk v2', async () => {
+  // /api/diagnostics is admin-only, and with AUTH_ENABLED=false there is no
+  // verified token, so it is closed here. Its credential reporting through the
+  // v3 provider chain is covered with an admin token in
+  // diagnostics-debug-on.test.js.
+  it('GET /api/diagnostics returns 403 without a verified admin token', async () => {
     const res = await request(app).get('/api/diagnostics');
-    expect(res.status).toBe(200);
-    expect(res.body.aws.hasCredentials).toBe(true);
-    expect(res.body.agent.region).toBe('us-west-2');
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: 'Admin access required' });
   });
 });

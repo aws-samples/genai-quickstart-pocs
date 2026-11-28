@@ -111,14 +111,14 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
 
   # ============================================================================
-  # COGNITO ADMIN GROUP (required by the backend for /api/admin/*)
+  # COGNITO ADMIN GROUP (required by the backend for /api/admin/* and /api/diagnostics)
   # ============================================================================
 
   AdminsGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
       GroupName: admins  # must match the backend's ADMIN_GROUP_NAME (default: admins)
-      Description: BankIQ+ administrators. Members can call /api/admin/* (cache statistics and cache clearing).
+      Description: BankIQ+ administrators. Members can call /api/admin/* (cache statistics and cache clearing) and /api/diagnostics (when DEBUG_MODE is on).
       UserPoolId: !Ref UserPool
 
 Outputs:
@@ -141,7 +141,7 @@ Outputs:
       Name: !Sub '${AWS::StackName}-UserPoolClientId'
   
   AdminGroupName:
-    Description: Cognito group whose members can call /api/admin/*
+    Description: Cognito group whose members can call /api/admin/* and /api/diagnostics
     Value: !Ref AdminsGroup
     Export:
       Name: !Sub '${AWS::StackName}-AdminGroupName'

@@ -263,7 +263,7 @@ After deployment completes, you'll see:
 >   --desired-delivery-mediums EMAIL \
 >   --region us-east-1
 > ```
-> Cognito emails the user a temporary password. To let this user call the admin routes (`/api/admin/*`), add them to the `admins` group:
+> Cognito emails the user a temporary password. To let this user call the admin routes (`/api/admin/*`, and `/api/diagnostics` when `DEBUG_MODE=true`), add them to the `admins` group:
 > ```bash
 > aws cognito-idp admin-add-user-to-group \
 >   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \

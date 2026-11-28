@@ -5,8 +5,8 @@ import request from 'supertest';
 // directly). These tests opt out of token verification with
 // AUTH_ENABLED=false (auth-routes.test.js covers the token gate itself).
 // They lock the behavior of the routes that need NO live AWS call:
-// health, diagnostics gating, request validation, job 404s, and the admin
-// routes staying closed without a verified token.
+// health, request validation, job 404s, and the admin routes staying closed
+// without a verified token (diagnostics: diagnostics-debug-*.test.js).
 
 let app;
 

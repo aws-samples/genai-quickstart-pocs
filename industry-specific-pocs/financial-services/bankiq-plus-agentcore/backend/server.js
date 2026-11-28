@@ -181,13 +181,16 @@ app.get('/api/health', (req, res) => {
 
 // Every /api route registered below this line requires a valid Cognito token.
 // The health checks above stay open for the ALB and the container HEALTHCHECK.
-// /api/admin/* additionally requires the Cognito admins group (the
-// AdminsGroup resource in cfn/templates/auth.yaml); requireAdmin fails closed.
+// /api/admin/* and /api/diagnostics additionally require the Cognito admins
+// group (the AdminsGroup resource in cfn/templates/auth.yaml); requireAdmin
+// fails closed.
 app.use('/api', verifyToken);
 app.use('/api/admin', requireAdmin);
 
-// Enhanced diagnostics endpoint (only in debug mode)
-app.get('/api/diagnostics', async (req, res) => {
+// Enhanced diagnostics endpoint (admins only, and only in debug mode).
+// requireAdmin runs before the DEBUG_MODE check, so a non-admin gets the same
+// 403 whether debug mode is on or off and learns nothing about the setting.
+app.get('/api/diagnostics', requireAdmin, async (req, res) => {
   if (!DEBUG_MODE) {
     return res.status(403).json({ error: 'Diagnostics only available in debug mode' });
   }
