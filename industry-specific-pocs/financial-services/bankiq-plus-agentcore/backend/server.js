@@ -5,7 +5,7 @@ const https = require('https');
 const { spawn } = require('child_process');
 const path = require('path');
 const crypto = require('crypto');
-const { verifyToken, assertAuthConfig } = require('./auth-middleware');
+const { verifyToken, requireAdmin, assertAuthConfig } = require('./auth-middleware');
 const { signAgentCoreRequest, credentials } = require('./agentcore-signer');
 const NodeCache = require('node-cache');
 const rateLimit = require('express-rate-limit');
@@ -181,9 +181,10 @@ app.get('/api/health', (req, res) => {
 
 // Every /api route registered below this line requires a valid Cognito token.
 // The health checks above stay open for the ALB and the container HEALTHCHECK.
-// No admin group exists in the Cognito user pool (cfn/templates/auth.yaml),
-// so /api/admin/* is protected by login only.
+// /api/admin/* additionally requires the Cognito admins group (the
+// AdminsGroup resource in cfn/templates/auth.yaml); requireAdmin fails closed.
 app.use('/api', verifyToken);
+app.use('/api/admin', requireAdmin);
 
 // Enhanced diagnostics endpoint (only in debug mode)
 app.get('/api/diagnostics', async (req, res) => {

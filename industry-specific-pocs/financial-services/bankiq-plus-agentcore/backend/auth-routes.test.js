@@ -50,8 +50,10 @@ const PROTECTED = [
   ['post', '/api/jobs/submit', { inputText: 'hello' }, 200],
   ['get', '/api/jobs/unknown-job', undefined, 404],
   ['get', '/api/jobs/unknown-job/result', undefined, 404],
-  ['get', '/api/admin/cache-stats', undefined, 200],
-  ['post', '/api/admin/clear-cache', { type: 'all' }, 200],
+  // The valid token here has no cognito:groups, so admin routes stop at the
+  // group check; admin-routes.test.js covers members of the admins group.
+  ['get', '/api/admin/cache-stats', undefined, 403],
+  ['post', '/api/admin/clear-cache', { type: 'all' }, 403],
 ];
 
 let app;

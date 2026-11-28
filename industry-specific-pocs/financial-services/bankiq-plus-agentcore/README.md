@@ -263,7 +263,15 @@ After deployment completes, you'll see:
 >   --desired-delivery-mediums EMAIL \
 >   --region us-east-1
 > ```
-> Cognito emails the user a temporary password. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication) for details, including how to update a stack you deployed before this change.
+> Cognito emails the user a temporary password. To let this user call the admin routes (`/api/admin/*`), add them to the `admins` group:
+> ```bash
+> aws cognito-idp admin-add-user-to-group \
+>   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
+>   --username you@example.com \
+>   --group-name admins \
+>   --region us-east-1
+> ```
+> The group appears in the user's ID token only after they sign in again. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication) for details, including how to update a stack you deployed before this change.
 
 ## 🔍 Verify Deployment
 
@@ -305,7 +313,7 @@ BankIQ+ uses **node-cache** for in-memory caching to dramatically improve perfor
 - **Bank Search**: 500ms → 1ms (7 day cache)
 - **FDIC Data**: 1500ms → 1ms (1 hour cache)
 
-**Cache Management** (every `/api` route except `/api/health` needs a Cognito ID token; `$ID_TOKEN` is the ID token of a signed-in user):
+**Cache Management** (admin routes: `$ID_TOKEN` must be the ID token of a signed-in member of the `admins` group; other users get 403):
 ```bash
 # View cache statistics
 curl -H "Authorization: Bearer $ID_TOKEN" http://localhost:3001/api/admin/cache-stats

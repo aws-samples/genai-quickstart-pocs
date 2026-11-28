@@ -169,6 +169,7 @@ open https://$CLOUDFRONT_URL
 ### Cognito User Pool
 BankIQ+ uses AWS Cognito for secure authentication:
 - **Admin-only sign-up** - There is no self-service registration. An administrator creates each user with `admin-create-user` (below)
+- **Admin group** - `/api/admin/*` is limited to members of the `admins` group
 - **OAuth 2.0 + JWT** - Industry-standard authentication
 - **JWT Verification** - Backend validates tokens on every request
 - **Session Management** - Automatic token refresh
@@ -203,6 +204,17 @@ aws cognito-idp admin-create-user \
 
 The default Cognito email sender has a low daily sending quota; for more than a handful of users, configure Amazon SES in `auth.yaml`.
 
+### Admin users
+`/api/admin/cache-stats` and `/api/admin/clear-cache` require membership in the Cognito `admins` group, which `auth.yaml` creates (`AdminsGroup`). Any other signed-in user gets `403 Admin access required`, and so does every caller when the backend runs with `AUTH_ENABLED=false`. Add your first user to the group:
+```bash
+aws cognito-idp admin-add-user-to-group \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --group-name admins \
+  --region us-east-1
+```
+The group is a `cognito:groups` claim in the ID token, so it takes effect only after the user signs in again (or the frontend refreshes the token). The backend reads the group name from `ADMIN_GROUP_NAME` (default `admins`; an empty value also means `admins`). If you rename the group in `auth.yaml`, set the same value on the backend.
+
 ### First Login
 1. Open CloudFront URL
 2. Click "Sign In with AWS Cognito"
@@ -211,7 +223,7 @@ The default Cognito email sender has a low daily sending quota; for more than a 
 5. You are signed in
 
 ### Updating a deployment that allowed self-signup
-`phase0-auth.sh` skips an existing auth stack, so a stack deployed before this change still allows self-signup until you update it. Changing `AllowAdminCreateUserOnly` is an in-place update ("No interruption" in the CloudFormation reference for `AdminCreateUserConfig`): the user pool, its users and the app client are not replaced.
+`phase0-auth.sh` skips an existing auth stack, so a stack deployed before this change still allows self-signup and has no `admins` group until you update it. The update below does both. Changing `AllowAdminCreateUserOnly` is an in-place update ("No interruption" in the CloudFormation reference for `AdminCreateUserConfig`), and the group is a new `AWS::Cognito::UserPoolGroup` resource: the user pool, its users and the app client are not replaced. After the update, add your admins to the group (see "Admin users"); until then, nobody can call `/api/admin/*`.
 ```bash
 aws cloudformation update-stack --stack-name bankiq-auth --region us-east-1 \
   --template-body file://cfn/templates/auth.yaml \
@@ -299,6 +311,7 @@ The agent remembers "their" = Webster Financial from the first query.
 - `AUTH_ENABLED` - Cognito token check on every `/api` route except `/api/health`. On unless set to `false`; the template sets `true`. The server refuses to start with `AUTH_ENABLED=false` unless `HOST` is `127.0.0.1` (local development)
 - `COGNITO_USER_POOL_ID`, `COGNITO_REGION` - User pool whose ID tokens the backend accepts
 - `COGNITO_APP_CLIENT_ID` - The frontend's app client (`UserPoolClientId` output of the auth stack, imported by `backend.yaml`). Only ID tokens (`token_use: id`) whose `aud` is this client are accepted. With auth on, the server refuses to start if this or `COGNITO_USER_POOL_ID` is unset
+- `ADMIN_GROUP_NAME` - Cognito group allowed on `/api/admin/*`. Defaults to `admins`, the group `auth.yaml` creates; an empty value also means `admins`, never "any user". The template does not set it
 - `DEBUG_MODE`, `LOG_LEVEL` - The template sets `false` and `info`. `DEBUG_MODE=true` enables `/api/diagnostics`, debug-level log lines, AWS SDK client logging and stack traces in error responses. Request and status log lines are written regardless. Use it only for troubleshooting
 
 ### Frontend Configuration

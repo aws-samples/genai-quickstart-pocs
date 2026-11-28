@@ -79,4 +79,21 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-module.exports = { verifyToken, assertAuthConfig };
+// Cognito group allowed on /api/admin/*. An empty or unset ADMIN_GROUP_NAME
+// falls back to 'admins'; it can never mean "any signed-in user".
+const ADMIN_GROUP_NAME = (process.env.ADMIN_GROUP_NAME || '').trim() || 'admins';
+
+// Mount after verifyToken. Reads the cognito:groups claim from the ID token
+// verifyToken already verified (req.user) and fails closed: no verified
+// payload (including AUTH_ENABLED=false), no claim, or a claim without the
+// admin group is a 403.
+const requireAdmin = (req, res, next) => {
+  const groups = req.user && req.user['cognito:groups'];
+  if (!Array.isArray(groups) || !groups.includes(ADMIN_GROUP_NAME)) {
+    console.log('[Auth] Admin route denied for user:', req.user ? req.user.sub : '(no verified token)');
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+module.exports = { verifyToken, requireAdmin, assertAuthConfig };
