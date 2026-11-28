@@ -1,6 +1,9 @@
-// Placeholder values. cfn/scripts/phase4-frontend.sh overwrites this file with
-// your deployment's CloudFront URL and Cognito settings before it builds the
-// frontend, so you do not need to edit it for a scripted deployment.
+// Placeholder values (committed). src/config.js is generated and gitignored:
+//  - cfn/scripts/phase4-frontend.sh (via generate-frontend-config.sh) writes it with
+//    your deployment's CloudFront URL and Cognito settings;
+//  - if it is missing, scripts/ensure-config.js copies this file to src/config.js so
+//    `npm run build`, `npm start` and `npm test` work from a fresh clone. A build made
+//    from the placeholders cannot sign anyone in.
 export const API_URL = 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net';
 export const ENVIRONMENT = 'production';
 export const CLOUDFRONT_URL = 'https://YOUR_CLOUDFRONT_DOMAIN.cloudfront.net';

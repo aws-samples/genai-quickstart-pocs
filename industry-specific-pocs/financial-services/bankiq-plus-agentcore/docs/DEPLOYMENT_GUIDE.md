@@ -168,30 +168,75 @@ open https://$CLOUDFRONT_URL
 
 ### Cognito User Pool
 BankIQ+ uses AWS Cognito for secure authentication:
-- **Self-Service Signup** - Users can create accounts via Hosted UI
+- **Admin-only sign-up** - There is no self-service registration. An administrator creates each user with `admin-create-user` (below)
+- **Admin group** - `/api/admin/*` and `/api/diagnostics` are limited to members of the `admins` group
 - **OAuth 2.0 + JWT** - Industry-standard authentication
 - **JWT Verification** - Backend validates tokens on every request
 - **Session Management** - Automatic token refresh
 
-> [!WARNING]
-> **Self-signup is on by default.** `cfn/templates/auth.yaml` sets `AllowAdminCreateUserOnly: false`, so anyone who can reach the Hosted UI can register, confirm an email address, and then call every backend API (agent invocations, PDF uploads to S3, cache admin). To restrict access to users you create, set `AllowAdminCreateUserOnly: true` under `AdminCreateUserConfig` in `cfn/templates/auth.yaml`, deploy it as an update to the `bankiq-auth` stack, and add users with `admin-create-user` (below).
+`cfn/templates/auth.yaml` sets `AllowAdminCreateUserOnly: true`, so the Hosted UI shows no "Sign up" link and the `SignUp` API is rejected. A new deployment starts with no users, so create the first one right after deploying.
+
+### Create users
+Each user gets a temporary password that Cognito generates and emails to them. Do not set `--temporary-password` yourself: a password you type ends up in your shell history and in the invitation text.
+```bash
+USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 \
+  --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
+
+aws cognito-idp admin-create-user \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true \
+  --desired-delivery-mediums EMAIL \
+  --region us-east-1
+```
+Keep `--desired-delivery-mediums EMAIL`: `AdminCreateUser` sends the invitation by SMS when no medium is given, and this pool has no SMS configuration.
+
+The invitation expires after 7 days (`TemporaryPasswordValidityDays`). To send a new one:
+```bash
+aws cognito-idp admin-create-user \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --message-action RESEND \
+  --desired-delivery-mediums EMAIL \
+  --region us-east-1
+```
+`RESEND` works only while the user has not signed in yet (status `FORCE_CHANGE_PASSWORD`). After the first sign-in, use the "Forgot your password?" link on the sign-in page instead.
+
+The default Cognito email sender has a low daily sending quota; for more than a handful of users, configure Amazon SES in `auth.yaml`.
+
+### Admin users
+`/api/admin/cache-stats`, `/api/admin/clear-cache` and `/api/diagnostics` require membership in the Cognito `admins` group, which `auth.yaml` creates (`AdminsGroup`). Any other signed-in user gets `403 Admin access required`, and so does every caller when the backend runs with `AUTH_ENABLED=false`. `/api/diagnostics` is also off unless `DEBUG_MODE=true`: the admin check runs first, so a non-admin gets the same 403 either way, and an admin gets `403 Diagnostics only available in debug mode` while debug mode is off. Add your first user to the group:
+```bash
+aws cognito-idp admin-add-user-to-group \
+  --user-pool-id "$USER_POOL_ID" \
+  --username user@example.com \
+  --group-name admins \
+  --region us-east-1
+```
+The group is a `cognito:groups` claim in the ID token, so it takes effect only after the user signs in again (or the frontend refreshes the token). The backend reads the group name from `ADMIN_GROUP_NAME` (default `admins`; an empty value also means `admins`). If you rename the group in `auth.yaml`, set the same value on the backend.
 
 ### First Login
 1. Open CloudFront URL
 2. Click "Sign In with AWS Cognito"
-3. Click "Sign up" on Cognito Hosted UI
-4. Enter email and password
-5. Verify email (check spam folder)
-6. Login with credentials
+3. Enter the email address and the temporary password from the invitation email
+4. Choose a new password when prompted
+5. You are signed in
 
-### Create Additional Users
+### Updating a deployment that allowed self-signup
+`phase0-auth.sh` skips an existing auth stack, so a stack deployed before this change still allows self-signup and has no `admins` group until you update it. The update below does both. Changing `AllowAdminCreateUserOnly` is an in-place update ("No interruption" in the CloudFormation reference for `AdminCreateUserConfig`), and the group is a new `AWS::Cognito::UserPoolGroup` resource: the user pool, its users and the app client are not replaced. After the update, add your admins to the group (see "Admin users"); until then, nobody can call `/api/admin/*` or `/api/diagnostics`.
 ```bash
-aws cognito-idp admin-create-user \
-  --user-pool-id $(aws cloudformation describe-stacks --stack-name bankiq-auth --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text) \
-  --username user@example.com \
-  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true \
-  --temporary-password TempPass123! \
-  --region us-east-1
+aws cloudformation update-stack --stack-name bankiq-auth --region us-east-1 \
+  --template-body file://cfn/templates/auth.yaml \
+  --parameters ParameterKey=ProjectName,UsePreviousValue=true \
+               ParameterKey=CallbackURL,UsePreviousValue=true \
+               ParameterKey=Environment,UsePreviousValue=true
+aws cloudformation wait stack-update-complete --stack-name bankiq-auth --region us-east-1
+```
+Keep `UsePreviousValue=true` for every parameter. Turning off sign-up does **not** remove accounts that already registered. Review them and delete the ones you do not recognize:
+```bash
+aws cognito-idp list-users --user-pool-id "$USER_POOL_ID" --region us-east-1 \
+  --query 'Users[].[Username,UserStatus,UserCreateDate]' --output table
+aws cognito-idp admin-delete-user --user-pool-id "$USER_POOL_ID" --username <username> --region us-east-1
 ```
 
 ### Authentication Flow
@@ -266,14 +311,11 @@ The agent remembers "their" = Webster Financial from the first query.
 - `AUTH_ENABLED` - Cognito token check on every `/api` route except `/api/health`. On unless set to `false`; the template sets `true`. The server refuses to start with `AUTH_ENABLED=false` unless `HOST` is `127.0.0.1` (local development)
 - `COGNITO_USER_POOL_ID`, `COGNITO_REGION` - User pool whose ID tokens the backend accepts
 - `COGNITO_APP_CLIENT_ID` - The frontend's app client (`UserPoolClientId` output of the auth stack, imported by `backend.yaml`). Only ID tokens (`token_use: id`) whose `aud` is this client are accepted. With auth on, the server refuses to start if this or `COGNITO_USER_POOL_ID` is unset
-- `DEBUG_MODE`, `LOG_LEVEL` - The template sets `false` and `info`. `DEBUG_MODE=true` enables `/api/diagnostics` and verbose request logging; use it only for troubleshooting
+- `ADMIN_GROUP_NAME` - Cognito group allowed on `/api/admin/*` and `/api/diagnostics`. Defaults to `admins`, the group `auth.yaml` creates; an empty value also means `admins`, never "any user". The template does not set it
+- `DEBUG_MODE`, `LOG_LEVEL` - The template sets `false` and `info`. `DEBUG_MODE=true` enables `/api/diagnostics` for members of the `admins` group only (everyone else still gets 403), plus debug-level log lines, AWS SDK client logging and stack traces in error responses. Request and status log lines are written regardless. Use it only for troubleshooting
 
 ### Frontend Configuration
-Edit `frontend/src/config.js`:
-```javascript
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  'https://your-cloudfront-url.cloudfront.net';
-```
+`frontend/src/config.js` holds your CloudFront URL and Cognito settings. It is generated by `cfn/scripts/generate-frontend-config.sh` (run by `phase4-frontend.sh`) and is gitignored, so you do not edit or commit it. The committed `frontend/src/config.example.js` holds placeholders; on a fresh clone `npm run build`, `npm start` and `npm test` copy it to `config.js` when none exists.
 
 ## 📊 Monitoring
 
@@ -371,8 +413,12 @@ aws ecs update-service --cluster bankiq-cluster --service bankiq-backend-service
 ```
 
 ### Update Frontend
+`frontend/src/config.js` (your CloudFront URL and Cognito IDs) is generated and gitignored. Regenerate it from the deployed stacks before every build; a build without it uses the placeholders from `config.example.js` and **cannot sign anyone in**. (`phase4-frontend.sh` creates the CloudFront stack, so it cannot be re-run for an update.)
+If `AWS_DEFAULT_REGION` is set in your shell, the script uses it and ignores the region argument, like the other `phase*.sh` scripts. Unset it or set it to the deployment's region first.
 ```bash
+./cfn/scripts/generate-frontend-config.sh bankiq us-east-1   # stack name and region
 cd frontend
+npm ci
 npm run build
 aws s3 sync build/ s3://bankiq-frontend-<account-id>-prod/ --delete
 aws cloudfront create-invalidation --distribution-id <dist-id> --paths "/*"

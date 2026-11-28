@@ -38,7 +38,7 @@ const file = { name: 'r.pdf', size: pdf.length, content: pdf.toString('base64') 
 
 // [method, path, body, status the handler returns once past the gate]
 const PROTECTED = [
-  ['get', '/api/diagnostics', undefined, 500], // AGENTCORE_AGENT_ARN unset -> handler's own 500
+  ['get', '/api/diagnostics', undefined, 403], // admins only; see diagnostics-debug-*.test.js
   ['post', '/api/chat', {}, 400],
   ['post', '/api/invoke-agent', {}, 400],
   ['post', '/api/store-csv-data', { data: [{ a: 1 }], filename: 'a.csv' }, 200],
@@ -50,8 +50,10 @@ const PROTECTED = [
   ['post', '/api/jobs/submit', { inputText: 'hello' }, 200],
   ['get', '/api/jobs/unknown-job', undefined, 404],
   ['get', '/api/jobs/unknown-job/result', undefined, 404],
-  ['get', '/api/admin/cache-stats', undefined, 200],
-  ['post', '/api/admin/clear-cache', { type: 'all' }, 200],
+  // The valid token here has no cognito:groups, so admin routes stop at the
+  // group check; admin-routes.test.js covers members of the admins group.
+  ['get', '/api/admin/cache-stats', undefined, 403],
+  ['post', '/api/admin/clear-cache', { type: 'all' }, 403],
 ];
 
 let app;

@@ -36,6 +36,6 @@ AgentCore's CodeBuild found wrong Dockerfile and built Node.js backend instead o
 
 ## Current Working Agent
 
-- **ARN**: `arn:aws:bedrock-agentcore:us-east-1:164543933824:runtime/bank_iq_agent_v1-f98stM8Sv9`
+- **ARN**: `arn:aws:bedrock-agentcore:<region>:<account-id>:runtime/<runtime-id>` (printed by `agentcore status` and saved to `/tmp/agent_arn.txt` by `phase2-agent.sh`)
 - **Status**: ✅ Working
 - **Test**: `agentcore invoke '{"prompt": "Hello"}'`

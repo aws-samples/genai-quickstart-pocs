@@ -50,7 +50,7 @@ Resources:
           - Name: verified_email
             Priority: 1
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false  # Allow self-signup
+        AllowAdminCreateUserOnly: true  # No self-signup: an administrator creates each user (admin-create-user)
       UserAttributeUpdateSettings:
         AttributesRequireVerificationBeforeUpdate:
           - email
@@ -110,6 +110,17 @@ Resources:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
 
+  # ============================================================================
+  # COGNITO ADMIN GROUP (required by the backend for /api/admin/* and /api/diagnostics)
+  # ============================================================================
+
+  AdminsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admins  # must match the backend's ADMIN_GROUP_NAME (default: admins)
+      Description: BankIQ+ administrators. Members can call /api/admin/* (cache statistics and cache clearing) and /api/diagnostics (when DEBUG_MODE is on).
+      UserPoolId: !Ref UserPool
+
 Outputs:
   UserPoolId:
     Description: Cognito User Pool ID
@@ -128,6 +139,12 @@ Outputs:
     Value: !Ref UserPoolClient
     Export:
       Name: !Sub '${AWS::StackName}-UserPoolClientId'
+  
+  AdminGroupName:
+    Description: Cognito group whose members can call /api/admin/* and /api/diagnostics
+    Value: !Ref AdminsGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AdminGroupName'
   
   HostedUIUrl:
     Description: Cognito Hosted UI URL

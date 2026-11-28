@@ -5,7 +5,8 @@ import request from 'supertest';
 // directly). These tests opt out of token verification with
 // AUTH_ENABLED=false (auth-routes.test.js covers the token gate itself).
 // They lock the behavior of the routes that need NO live AWS call:
-// health, diagnostics gating, request validation, job 404s, and cache admin.
+// health, request validation, job 404s, and the admin routes staying closed
+// without a verified token (diagnostics: diagnostics-debug-*.test.js).
 
 let app;
 
@@ -52,32 +53,16 @@ describe('async job lookups', () => {
   });
 });
 
-describe('cache admin endpoints', () => {
-  it('GET /api/admin/cache-stats returns per-cache metric blocks', async () => {
-    const res = await request(app).get('/api/admin/cache-stats');
-    expect(res.status).toBe(200);
-    for (const key of ['sec', 'fdic', 'search']) {
-      expect(res.body).toHaveProperty(key);
-      expect(res.body[key]).toHaveProperty('hitRate');
-      expect(res.body[key]).toHaveProperty('hits');
-      expect(res.body[key]).toHaveProperty('misses');
-    }
-  });
-
-  it('POST /api/admin/clear-cache rejects an invalid cache type with 400', async () => {
-    const res = await request(app).post('/api/admin/clear-cache').send({ type: 'bogus' });
-    expect(res.status).toBe(400);
-    expect(res.body).toEqual({
-      error: 'Invalid cache type. Use: sec, fdic, search, or all',
-    });
-  });
-
-  it('POST /api/admin/clear-cache clears a valid cache type', async () => {
-    const res = await request(app).post('/api/admin/clear-cache').send({ type: 'all' });
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      message: 'all cache cleared successfully',
-    });
+describe('cache admin endpoints with auth disabled', () => {
+  // No verified token means no admin group, so the admin routes stay closed
+  // even in local development. Their behavior for admins is covered in
+  // admin-routes.test.js.
+  it.each([
+    ['get', '/api/admin/cache-stats'],
+    ['post', '/api/admin/clear-cache'],
+  ])('%s %s returns 403', async (method, path) => {
+    const res = await request(app)[method](path).send({ type: 'all' });
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: 'Admin access required' });
   });
 });

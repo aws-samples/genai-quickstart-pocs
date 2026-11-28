@@ -89,8 +89,13 @@ build/
 # AWS
 .aws/
 
-# AgentCore config (contains sensitive ARNs and account info)
+# AgentCore config (contains sensitive ARNs and account info) and its generated backups
 backend/.bedrock_agentcore.yaml
+*.bak
+
+# Generated at deploy time by cfn/scripts/generate-frontend-config.sh (your Cognito and CloudFront IDs).
+# frontend/src/config.example.js holds the committed placeholders.
+frontend/src/config.js
 
 # Temporary deployment files
 cfn/scripts/temp/

@@ -47,7 +47,7 @@ const Login = ({ onCognitoLogin }) => {
         </Button>
         
         <Typography variant="caption" color="text.secondary" sx={{ mt: 3, display: 'block' }}>
-          New users can sign up on the login page
+          Accounts are created by an administrator. Contact yours if you need access.
         </Typography>
       </Paper>
     </Box>

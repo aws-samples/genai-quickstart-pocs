@@ -251,11 +251,27 @@ After deployment completes, you'll see:
 **Next Steps:**
 1. Visit the Application URL
 2. Click 'Sign In with AWS Cognito'
-3. Click 'Sign up' to create your account
-4. Verify your email and log in
+3. Sign in with the account you created (see below), using the temporary password from the invitation email, then choose a new password
 
-> [!WARNING]
-> **Self-signup is on by default**, so anyone who can reach the login page can register and use every backend API. To allow only users you create, set `AllowAdminCreateUserOnly: true` in `cfn/templates/auth.yaml` and update the `bankiq-auth` stack. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication).
+> [!IMPORTANT]
+> **Sign-up is admin-only.** The Cognito user pool does not allow self-signup, so a new deployment has no users until you create one. Create your first user right after deploying:
+> ```bash
+> aws cognito-idp admin-create-user \
+>   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
+>   --username you@example.com \
+>   --user-attributes Name=email,Value=you@example.com Name=email_verified,Value=true \
+>   --desired-delivery-mediums EMAIL \
+>   --region us-east-1
+> ```
+> Cognito emails the user a temporary password. To let this user call the admin routes (`/api/admin/*`, and `/api/diagnostics` when `DEBUG_MODE=true`), add them to the `admins` group:
+> ```bash
+> aws cognito-idp admin-add-user-to-group \
+>   --user-pool-id "$(aws cloudformation describe-stacks --stack-name bankiq-auth --region us-east-1 --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)" \
+>   --username you@example.com \
+>   --group-name admins \
+>   --region us-east-1
+> ```
+> The group appears in the user's ID token only after they sign in again. See [Authentication in the Deployment Guide](docs/DEPLOYMENT_GUIDE.md#-authentication) for details, including how to update a stack you deployed before this change.
 
 ## 🔍 Verify Deployment
 
@@ -297,7 +313,7 @@ BankIQ+ uses **node-cache** for in-memory caching to dramatically improve perfor
 - **Bank Search**: 500ms → 1ms (7 day cache)
 - **FDIC Data**: 1500ms → 1ms (1 hour cache)
 
-**Cache Management** (every `/api` route except `/api/health` needs a Cognito ID token; `$ID_TOKEN` is the ID token of a signed-in user):
+**Cache Management** (admin routes: `$ID_TOKEN` must be the ID token of a signed-in member of the `admins` group; other users get 403):
 ```bash
 # View cache statistics
 curl -H "Authorization: Bearer $ID_TOKEN" http://localhost:3001/api/admin/cache-stats
